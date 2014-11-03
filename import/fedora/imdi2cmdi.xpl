@@ -28,9 +28,7 @@
             <p:with-option name="href" select="$imdi"/>
         </p:load>
         <p:xslt name="transform">
-            <p:input port="parameters">
-                <p:empty/>
-            </p:input>
+            <p:with-param name="uri-base" select="$cmdi"/>
             <p:input port="stylesheet">
                 <p:document href="file:///Users/menzowindhouwer/Documents/Projects/MetadataTranslator/src/Translator/src/main/resources/templates/imdi2cmdi/imdi2cmdi.xslt"/>
             </p:input>
