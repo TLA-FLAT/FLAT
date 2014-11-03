@@ -9,17 +9,18 @@
     <p:output port="result" primary="true" sequence="true">
         <p:pipe port="result" step="reports"/>
     </p:output>
+	<p:variable name="dir" select="'file:///Users/menzowindhouwer/Documents/Projects/EasyLAT/test/'"/>
     <p:import href="http://xproc.org/library/recursive-directory-list.xpl"/>
     <p:import href="http://xproc.org/library/xml-schema-report.xpl"/>
-    <l:recursive-directory-list>
-        <p:with-option name="path" select="'file:///Users/menzowindhouwer/Documents/Projects/LAT-fedora/test'"/>
+    <l:recursive-directory-list exclude-filter="corpman|sessions">
+        <p:with-option name="path" select="$dir"/>
     </l:recursive-directory-list>
     <p:add-xml-base all="true" relative="false"/>
     <p:for-each name="reports">
         <p:output port="result" primary="true" sequence="true">
             <p:pipe port="result" step="report"/>
         </p:output>
-        <p:iteration-source select="//(:c:directory[@name='text_types_non-rec']/:)c:file[ends-with(@name,'.imdi')][not(starts-with(@name,'.'))]"/>
+        <p:iteration-source select="//c:file[ends-with(@name,'.imdi')][not(starts-with(@name,'.'))]"/>
         <p:variable name="imdi" select="p:resolve-uri(/*/@name,/*/@xml:base)"/>
         <p:variable name="cmdi" select="replace($imdi,'.imdi','.cmdi')"/>
     	<p:variable name="dc" select="replace($imdi,'.imdi','.dc')"/>
@@ -30,7 +31,7 @@
         <p:xslt name="transform">
             <p:with-param name="uri-base" select="$cmdi"/>
             <p:input port="stylesheet">
-                <p:document href="file:///Users/menzowindhouwer/Documents/Projects/MetadataTranslator/src/Translator/src/main/resources/templates/imdi2cmdi/imdi2cmdi.xslt"/>
+                <p:document href="./includes/imdi2cmdi.xslt"/>
             </p:input>
         </p:xslt>
         <p:try name="schema">
@@ -54,7 +55,7 @@
             			<p:empty/>
             		</p:input>
             		<p:input port="stylesheet">
-            			<p:document href="file:/Users/menzowindhouwer/Documents/Projects/LAT-CMDI/src/makeCmdiXsdOpen.xsl"/>
+            			<p:document href="./includes/makeCmdiXsdOpen.xsl"/>
             		</p:input>
             	</p:xslt>
                 <p:store>
@@ -100,61 +101,61 @@
     			<p:empty/>
     		</p:input>
     		<p:input port="stylesheet">
-    			<p:document href="file:///Users/menzowindhouwer/Documents/Projects/OAI/provider/src/web/imdi_3_0_olac_dc.xsl"/>
+    			<p:document href="./includes/imdi_3_0_olac_dc.xsl"/>
     		</p:input>
     	</p:xslt>
     	<p:store>
     		<p:with-option name="href" select="$dc"/>
     	</p:store>
-<!--    	<!-\- also generate FOXML -\->
-    	<p:xslt>
-    		<p:input port="source">
-    			<p:pipe port="result" step="transform"/>
-    		</p:input>
-    		<p:input port="parameters">
-    			<p:empty/>
-    		</p:input>
-    		<p:input port="stylesheet">
-    			<p:document href="file:/Users/menzowindhouwer/Documents/Projects/LAT-fedora/src/cmd2fox.xsl"/>
-    		</p:input>
-    	</p:xslt>
-    	<p:store>
-    		<p:with-option name="href" select="$fox"/>
-    	</p:store>
--->    </p:for-each>
+    </p:for-each>
 	<p:xslt>
 		<p:input port="source">
 			<p:inline>
 				<null/>
 			</p:inline>
 		</p:input>
-		<p:input port="parameters">
-			<p:empty/>
-		</p:input>
+		<p:with-param name="dir" select="$dir"/>
 		<p:input port="stylesheet">
-			<p:document href="file:/Users/menzowindhouwer/Documents/Projects/LAT-fedora/src/cmd2rels.xsl"/>
+			<p:document href="./cmd2rels.xsl"/>
 		</p:input>
 	</p:xslt>
-	<p:store href="file:/Users/menzowindhouwer/Documents/Projects/LAT-fedora/test/relations.xml"/>
+	<p:store>
+		<p:with-option name="href" select="p:resolve-uri('./relations.xml',$dir)"/>
+	</p:store>
+	<l:recursive-directory-list>
+		<p:with-option name="path" select="$dir"/>
+	</l:recursive-directory-list>
+	<p:add-xml-base all="true" relative="false"/>
 	<p:for-each>
-		<p:iteration-source select="//(:c:directory[@name='text_types_non-rec']/:)c:file[ends-with(@name,'.imdi')][not(starts-with(@name,'.'))]"/>
-		<p:variable name="imdi" select="p:resolve-uri(/*/@name,/*/@xml:base)"/>
-		<p:variable name="cmdi" select="replace($imdi,'.imdi','.cmdi')"/>
-		<p:variable name="fox" select="replace($imdi,'.imdi','.fox')"/>
+		<p:iteration-source select="//c:file[ends-with(@name,'.cmdi')][not(starts-with(@name,'.'))]"/>
+		<p:variable name="cmdi" select="p:resolve-uri(/*/@name,/*/@xml:base)"/>
+		<p:variable name="fox" select="replace($cmdi,'.cmdi','.fox')"/>
 		<p:load name="load">
 			<p:with-option name="href" select="$cmdi"/>
 		</p:load>
 		<!-- generate FOXML -->
-		<p:xslt>
-			<p:input port="parameters">
-				<p:empty/>
-			</p:input>
+		<p:xslt name="fox">
+			<p:with-param name="rels-uri" select="p:resolve-uri('./relations.xml',$dir)"/>
 			<p:input port="stylesheet">
-				<p:document href="file:/Users/menzowindhouwer/Documents/Projects/LAT-fedora/src/cmd2fox.xsl"/>
+				<p:document href="./cmd2fox.xsl"/>
 			</p:input>
 		</p:xslt>
 		<p:store>
 			<p:with-option name="href" select="$fox"/>
 		</p:store>
+		<p:for-each>
+			<p:iteration-source>
+				<p:pipe port="secondary" step="fox"/>
+			</p:iteration-source>
+			<p:variable name="path" select="base-uri(/*)"/>
+			<p:choose>
+				<p:when test="starts-with($path, 'file:')">
+					<p:store>
+						<p:with-option name="href" select="$path"/>
+					</p:store>
+				</p:when>
+				<!-- TODO: report the outliers! -->
+			</p:choose>
+		</p:for-each>
 	</p:for-each>
 </p:declare-step>

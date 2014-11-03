@@ -10,14 +10,17 @@
 	
 	<xsl:variable name="rec" select="/"/>
 	
-	<xsl:param name="rels-doc" select="document('file:/Users/menzowindhouwer/Documents/Projects/LAT-fedora/test/relations.xml')"/>
+	<xsl:param name="rels-uri" select="'./relations.xml'"/>
+	<xsl:variable name="rels-doc" select="document($rels-uri)"/>
 	<xsl:key name="rels-from" match="relation" use="from"/>
 	<xsl:key name="rels-to" match="relation" use="to"/>
 	
 	<xsl:function name="cmd:tla">
 		<xsl:param name="prefix"/>
 		<xsl:param name="pid"/>
-		<xsl:sequence select="concat($prefix,replace(replace(replace(replace($pid,'http://hdl.handle.net/','hdl:'),'@format=.+',''),'[^a-zA-Z0-9]','_'),'^hdl_',''))"/>
+		<xsl:variable name="suffix" select="replace(replace(replace(replace($pid,'http://hdl.handle.net/','hdl:'),'@format=.+',''),'[^a-zA-Z0-9]','_'),'^hdl_','')"/>
+		<xsl:variable name="length" select="min((string-length($suffix), (64 - string-length($prefix))))"/>
+		<xsl:sequence select="concat($prefix,substring($suffix,string-length($suffix) - $length + 1))"/>
 	</xsl:function>
 	
 	<xsl:template match="/">
@@ -106,8 +109,8 @@
 				<xsl:variable name="resID" select="cmd:tla('tla:',$resPID)"/>
 				<!-- take the PID (maybe should take the filepart of the localURI?) -->
 				<xsl:variable name="resTitle" select="$resPID"/>
-				<xsl:message>DBG: resource FOX[<xsl:value-of select="$res"/>.fox][<xsl:value-of select="not(doc-available(concat($res,'.fox')))"/>][<xsl:value-of select="empty(preceding-sibling::cmd:ResourceProxy[@lcl:localURI=current()/@lcl:localURI])"/>][<xsl:value-of select="not(doc-available(concat($res,'.fox'))) and empty(preceding-sibling::cmd:ResourceProxy[@lcl:localURI=current()/@lcl:localURI])"/>]</xsl:message>
-				<xsl:if test="not(doc-available(concat($res,'.fox'))) and empty(preceding-sibling::cmd:ResourceProxy[@lcl:localURI=current()/@lcl:localURI])">
+				<xsl:message>DBG: resource FOX[<xsl:value-of select="$res"/>.fox][<xsl:value-of select="not(doc-available(concat($res,'.fox')))"/>][<xsl:value-of select="empty(preceding-sibling::cmd:ResourceProxy[cmd:ResourceRef/@lcl:localURI=current()/cmd:ResourceRef/@lcl:localURI])"/>][<xsl:value-of select="not(doc-available(concat($res,'.fox'))) and empty(preceding-sibling::cmd:ResourceProxy[cmd:ResourceRef/@lcl:localURI=current()/cmd:ResourceRef/@lcl:localURI])"/>]</xsl:message>
+				<xsl:if test="not(doc-available(concat($res,'.fox'))) and empty(preceding-sibling::cmd:ResourceProxy[cmd:ResourceRef/@lcl:localURI=current()/cmd:ResourceRef/@lcl:localURI])">
 					<xsl:message>DBG: creating resource FOX[<xsl:value-of select="$res"/>.fox]</xsl:message>
 					<xsl:result-document href="{$res}.fox">
 						<foxml:digitalObject 

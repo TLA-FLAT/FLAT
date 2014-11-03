@@ -5,9 +5,11 @@
 	exclude-result-prefixes="xs"
 	version="2.0">
 	
+	<xsl:param name="dir" select="'./'"/>
+	
 	<xsl:template name="main">
 		<relations>
-			<xsl:for-each select="collection('file:///Users/menzowindhouwer/Documents/Projects/LAT-fedora/test?select=*.cmdi;recurse=yes')">
+			<xsl:for-each select="collection(concat($dir,'?select=*.cmdi;recurse=yes'))">
 				<xsl:variable name="rec" select="current()"/>
 				<xsl:variable name="src" select="base-uri($rec)"/>
 				<xsl:variable name="frm" select="$rec/cmd:CMD/cmd:Header/cmd:MdSelfLink"/>
