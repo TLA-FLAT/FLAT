@@ -7,12 +7,13 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns:ann="http://www.clarin.eu">
     <p:output port="result" primary="true" sequence="true">
-        <p:pipe port="result" step="reports"/>
+        <!--<p:pipe port="result" step="reports"/>-->
+    	<p:empty/>
     </p:output>
 	<p:variable name="dir" select="'file:///Users/menzowindhouwer/Documents/Projects/EasyLAT/test/'"/>
     <p:import href="http://xproc.org/library/recursive-directory-list.xpl"/>
     <p:import href="http://xproc.org/library/xml-schema-report.xpl"/>
-    <l:recursive-directory-list exclude-filter="corpman|sessions">
+    <l:recursive-directory-list>
         <p:with-option name="path" select="$dir"/>
     </l:recursive-directory-list>
     <p:add-xml-base all="true" relative="false"/>
@@ -20,11 +21,10 @@
         <p:output port="result" primary="true" sequence="true">
             <p:pipe port="result" step="report"/>
         </p:output>
-        <p:iteration-source select="//c:file[ends-with(@name,'.imdi')][not(starts-with(@name,'.'))]"/>
+        <p:iteration-source select="//c:file[ends-with(@name,'.imdi')][not(starts-with(@name,'.'))][empty(ancestor::c:directory[@name=('corpman','sessions')])]"/>
         <p:variable name="imdi" select="p:resolve-uri(/*/@name,/*/@xml:base)"/>
         <p:variable name="cmdi" select="replace($imdi,'.imdi','.cmdi')"/>
     	<p:variable name="dc" select="replace($imdi,'.imdi','.dc')"/>
-    	<p:variable name="fox" select="replace($imdi,'.imdi','.fox')"/>
     	<p:load name="load">
             <p:with-option name="href" select="$imdi"/>
         </p:load>
@@ -126,8 +126,8 @@
 		<p:with-option name="path" select="$dir"/>
 	</l:recursive-directory-list>
 	<p:add-xml-base all="true" relative="false"/>
-	<p:for-each>
-		<p:iteration-source select="//c:file[ends-with(@name,'.cmdi')][not(starts-with(@name,'.'))]"/>
+	<p:for-each name="foxes">
+		<p:iteration-source select="//c:file[ends-with(@name,'.cmdi')][not(starts-with(@name,'.'))][empty(ancestor::c:directory[@name=('corpman','sessions')])]"/>
 		<p:variable name="cmdi" select="p:resolve-uri(/*/@name,/*/@xml:base)"/>
 		<p:variable name="fox" select="replace($cmdi,'.cmdi','.fox')"/>
 		<p:load name="load">
@@ -148,14 +148,9 @@
 				<p:pipe port="secondary" step="fox"/>
 			</p:iteration-source>
 			<p:variable name="path" select="base-uri(/*)"/>
-			<p:choose>
-				<p:when test="starts-with($path, 'file:')">
-					<p:store>
-						<p:with-option name="href" select="$path"/>
-					</p:store>
-				</p:when>
-				<!-- TODO: report the outliers! -->
-			</p:choose>
+			<p:store>
+				<p:with-option name="href" select="$path"/>
+			</p:store>
 		</p:for-each>
 	</p:for-each>
 </p:declare-step>
