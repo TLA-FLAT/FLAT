@@ -125,10 +125,10 @@ RUN mkdir /tmp/tuque &&\
 ADD tuque/HttpConnection.php /var/www/html/drupal/sites/all/libraries/tuque/HttpConnection.php
 
 RUN mkdir /tmp/islandora
+RUN mkdir /var/www/html/drupal/sites/all/modules/contrib
 RUN cd /tmp/islandora &&\
     wget "https://github.com/Islandora/islandora/archive/7.x-1.3.tar.gz" &&\
-    tar -xf 7.x-1.3.tar.gz -C /var/www/html/drupal/modules/
-RUN mkdir /var/www/html/drupal/sites/all/modules/contrib
+    tar -xf 7.x-1.3.tar.gz -C /var/www/html/drupal/sites/all/modules/contrib/
 RUN cd /tmp/islandora &&\
 	wget "https://github.com/islandora/islandora_solution_pack_collection/archive/7.x-1.3.zip" &&\
 	mv 7.x-1.3.zip islandora_solution_pack_collection-7.x-1.3.zip &&\
