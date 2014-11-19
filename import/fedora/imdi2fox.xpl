@@ -5,16 +5,20 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:cmd="http://www.clarin.eu/cmd/"
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    xmlns:ann="http://www.clarin.eu">
+    xmlns:ann="http://www.clarin.eu"
+    xmlns:cxf="http://xmlcalabash.com/ns/extensions/fileutils">
+	<!-- no output -->
+	<p:output port="result" primary="true" sequence="true">
+		<p:empty/>
+	</p:output>
 	<!-- some external libraries -->
 	<p:import href="http://xproc.org/library/recursive-directory-list.xpl"/>
 	<p:import href="http://xproc.org/library/xml-schema-report.xpl"/>
-	<!-- no output -->
-    <p:output port="result" primary="true" sequence="true">
-    	<p:empty/>
-    </p:output>
+	<p:import href="http://xmlcalabash.com/extension/steps/fileutils.xpl"/>
 	<!-- the dir with IMDI files and resources to import into Fedora/Islandora -->
-	<p:variable name="dir" select="'file:///Users/menzowindhouwer/Documents/Projects/EasyLAT/test/'"/>
+	<p:variable name="dir" select="'file:/Users/menzowindhouwer/Documents/Projects/EasyLAT/test/'"/>
+	<p:variable name="fdir" select="'/Users/menzowindhouwer/Documents/Projects/EasyLAT/test/fox/'"/>
+	<!--<p:variable name="idir" select="'/UNIX/'"/>-->
 	<!-- find all the files in the dir and its subdirs -->
     <l:recursive-directory-list>
         <p:with-option name="path" select="$dir"/>
@@ -189,11 +193,11 @@
 		<p:output port="fox-validation-reports" primary="false" sequence="true">
 			<p:pipe step="validate-fox-report" port="result"/>
 		</p:output>
-		<p:output port="resource-fox-validation-reports" primary="false" sequence="true">
+		<!--<p:output port="resource-fox-validation-reports" primary="false" sequence="true">
 			<p:pipe step="resource-foxes" port="validate-resource-fox-report"/>
-		</p:output>
+		</p:output>-->
 		<p:log port="fox-validation-reports" href="./fox-validation-reports.xml"/>
-		<p:log port="resource-fox-validation-reports" href="./resource-fox-validation-reports.xml"/>
+		<!--<p:log port="resource-fox-validation-reports" href="./resource-fox-validation-reports.xml"/>-->
 		<!-- select only CMD files, skip hidden files and the corpman and sessions directories -->
 		<p:iteration-source select="//c:file[ends-with(@name,'.cmdi')][not(starts-with(@name,'.'))][empty(ancestor::c:directory[@name=('corpman','sessions')])]"/>
 		<!-- a CMD file -->
@@ -207,6 +211,8 @@
 		<!-- convert the CMD file to FOXML -->
 		<p:xslt name="cmd2fox">
 			<p:with-param name="rels-uri" select="p:resolve-uri('./relations.xml',$dir)"/>
+			<!--<p:with-param name="conversion-base" select="$dir"/>
+			<p:with-param name="import-base" select="$idir"/>-->
 			<p:input port="stylesheet">
 				<p:document href="./cmd2fox.xsl"/>
 			</p:input>
@@ -241,7 +247,7 @@
 			<p:with-option name="href" select="$fox"/>
 		</p:store>
 		<!-- all the FOX files related to resources are on the secondary output, store these as well -->
-		<p:for-each name="resource-foxes">
+		<!--<p:for-each name="resource-foxes">
 			<p:output port="validate-resource-fox-report">
 				<p:pipe port="result" step="validate-resource-fox-report"></p:pipe>
 			</p:output>
@@ -249,13 +255,16 @@
 				<p:pipe port="secondary" step="cmd2fox"/>
 			</p:iteration-source>
 			<p:variable name="path" select="base-uri(/*)"/>
-			<!-- validate the FOX file -->
+			<!-\- validate the FOX file -\->
 			<l:xml-schema-report name="validate-resource-fox">
 				<p:input port="schema">
 					<p:document href="./includes/foxml1-1.xsd"/>
 				</p:input>
 			</l:xml-schema-report>
-			<!-- report the FOX validation results -->
+			<p:store>
+				<p:with-option name="href" select="$path"/>
+			</p:store>
+			<!-\- report the FOX validation results -\->
 			<p:for-each name="validate-resource-fox-report">
 				<p:iteration-source>
 					<p:pipe port="report" step="validate-resource-fox"/>
@@ -268,9 +277,29 @@
 					<p:with-option name="attribute-value" select="$path"/>
 				</p:add-attribute>
 			</p:for-each>
-			<p:store>
-				<p:with-option name="href" select="$path"/>
-			</p:store>
-		</p:for-each>
+		</p:for-each>-->
+	</p:for-each>
+	<!-- mimic directory structure with the FOX files -->
+	<!-- find all the files in the dir and its subdirs -->
+	<l:recursive-directory-list>
+		<p:with-option name="path" select="$dir"/>
+	</l:recursive-directory-list>
+	<!-- make sure the files have a base URI -->
+	<p:add-xml-base all="true" relative="false"/>
+	<!-- create the FOX dirs -->
+	<p:for-each name="create-fox-dirs">
+		<!-- select only CMD files, skip hidden files and the corpman and sessions directories -->
+		<p:iteration-source select="//c:file[ends-with(@name,'.fox')][not(starts-with(@name,'.'))][empty(ancestor::c:directory[@name=('corpman','sessions')])]"/>
+		<!-- a CMD file -->
+		<p:variable name="fox" select="p:resolve-uri(/*/@name,/*/@xml:base)"/>
+		<!-- make the FOX dir -->
+		<cxf:mkdir>
+			<p:with-option name="href" select="replace(replace($fox,replace($dir,'file://?/?','/'),$fdir),'(.*)/.*','$1')"/>
+		</cxf:mkdir>
+		<!-- copy the FOX file -->
+		<cxf:copy>
+			<p:with-option name="href" select="$fox"/>
+			<p:with-option name="target" select="replace($fox,replace($dir,'file://?/?','/'),$fdir)"/>
+		</cxf:copy>
 	</p:for-each>
 </p:declare-step>

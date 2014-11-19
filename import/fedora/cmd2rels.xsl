@@ -2,6 +2,7 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 	xmlns:xs="http://www.w3.org/2001/XMLSchema"
 	xmlns:cmd="http://www.clarin.eu/cmd/"
+	xmlns:lcl="http://www.clarin.eu/cmd/extension"
 	exclude-result-prefixes="xs"
 	version="2.0">
 	
@@ -31,6 +32,9 @@
 								</xsl:otherwise>
 							</xsl:choose>
 						</to>
+						<dst>
+							<xsl:value-of select="cmd:ResourceRef/@lcl:localURI"/>
+						</dst>
 						<type>
 							<xsl:value-of select="cmd:ResourceType"/>
 						</type>

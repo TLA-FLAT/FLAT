@@ -128,7 +128,9 @@ RUN mkdir /tmp/islandora
 RUN mkdir /var/www/html/drupal/sites/all/modules/contrib
 RUN cd /tmp/islandora &&\
     wget "https://github.com/Islandora/islandora/archive/7.x-1.3.tar.gz" &&\
-    tar -xf 7.x-1.3.tar.gz -C /var/www/html/drupal/sites/all/modules/contrib/
+    tar -xf 7.x-1.3.tar.gz -C /var/www/html/drupal/modules/
+# TODO: extract to ../modules/contrib/, but currently seems to upset Drupal (maybe something hard in the DB dump used?)
+#    tar -xf 7.x-1.3.tar.gz -C /var/www/html/drupal/sites/all/modules/contrib/
 RUN cd /tmp/islandora &&\
 	wget "https://github.com/islandora/islandora_solution_pack_collection/archive/7.x-1.3.zip" &&\
 	mv 7.x-1.3.zip islandora_solution_pack_collection-7.x-1.3.zip &&\
@@ -150,6 +152,7 @@ RUN export FEDORA_HOME=/var/www/fedora/ &&\
     /tmp/wait.sh
 RUN rm -v /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/deny-purge-*
 ADD fedora/permit-anything-to-localhost.xml /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/permit-anything-to-localhost.xml
+ADD fedora/deny-unallowed-file-resolution.xml /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/deny-unallowed-file-resolution.xml
 RUN mkdir /var/www/fedora/data/fedora-xacml-policies/repository-policies/islandora &&\
     cd /var/www/fedora/data/fedora-xacml-policies/repository-policies/islandora &&\
     wget https://raw.githubusercontent.com/Islandora/islandora/7.x-1.3/policies/permit-apim-to-authenticated-user.xml &&\
