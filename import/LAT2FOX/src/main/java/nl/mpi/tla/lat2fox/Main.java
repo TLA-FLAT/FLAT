@@ -110,7 +110,8 @@ public class Main {
                     XsltTransformer fox = cmd2fox.load();
                     fox.setParameter(new QName("rels-uri"), new XdmAtomicValue("file:"+map.getAbsolutePath()));
                     fox.setParameter(new QName("conversion-base"), new XdmAtomicValue(dir));
-                    fox.setParameter(new QName("import-base"), new XdmAtomicValue(idir));
+                    if (idir != null)
+                        fox.setParameter(new QName("import-base"), new XdmAtomicValue(idir));
                     fox.setParameter(new QName("fox-base"), new XdmAtomicValue(fdir));
                     fox.setSource(new StreamSource(input));
                     destination = new XdmDestination();
