@@ -51,10 +51,10 @@ public class Main {
     
     private static void showHelp() {
         System.err.println("INF: lat2fox <options> -- <DIR>");
-        System.err.println("INF: <DIR>     directory to recurse for CMDI files");
+        System.err.println("INF: <DIR>     source directory to recurse for CMD files");
         System.err.println("INF: lat2fox options:");
         System.err.println("INF: -f=<DIR>  directory to store the FOX files (optional)");
-        System.err.println("INF: -i=<DIR>  replace source <DIR> path by this <DIR> path in the FOX files (optional)");
+        System.err.println("INF: -i=<DIR>  replace source <DIR> by this <DIR> in the FOX files (optional)");
     }
 
     public static void main(String[] args) {
