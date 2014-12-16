@@ -34,9 +34,11 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmAtomicValue;
 import net.sf.saxon.s9api.XdmDestination;
+import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XsltExecutable;
 import net.sf.saxon.s9api.XsltTransformer;
 import nl.mpi.tla.schemanon.Message;
@@ -50,20 +52,24 @@ import org.apache.commons.io.FileUtils;
 public class Main {
     
     private static void showHelp() {
-        System.err.println("INF: lat2fox <options> -- <DIR>");
-        System.err.println("INF: <DIR>     source directory to recurse for CMD files");
+        System.err.println("INF: lat2fox <options> -- <DIR>?");
+        System.err.println("INF: <DIR>     source directory to recurse for CMD files (default: .)");
         System.err.println("INF: lat2fox options:");
+        System.err.println("INF: -r=<FILE> load/store the relations map from/in this <FILE> (optional)");
         System.err.println("INF: -f=<DIR>  directory to store the FOX files (optional)");
         System.err.println("INF: -i=<DIR>  replace source <DIR> by this <DIR> in the FOX files (optional)");
     }
 
     public static void main(String[] args) {
+        File   rfile = null;
         String dir = ".";
         String fdir = null;
         String idir = null;
         // check command line
-        OptionParser parser = new OptionParser( "f:i:?*" );
+        OptionParser parser = new OptionParser( "r:f:i:?*" );
         OptionSet options = parser.parse(args);
+        if (options.has("r"))
+            rfile = new File((String)options.valueOf("r"));
         if (options.has("f"))
             fdir = (String)options.valueOf("f");
         if (options.has("i"))
@@ -74,12 +80,13 @@ public class Main {
         }
         
         List arg = options.nonOptionArguments();
-        if (arg.size()!=1) {
-            System.err.println("FTL: missing the source <DIR> argument!");
+        if (arg.size()>1) {
+            System.err.println("FTL: only one source <DIR> argument is allowed!");
             showHelp();
             System.exit(1);
         }
-        dir = (String)arg.get(0);
+        if (arg.size() == 1)
+            dir = (String)arg.get(0);
 
         try {
             SaxonExtensionFunctions.registerAll(SaxonUtils.getProcessor().getUnderlyingConfiguration());
@@ -90,15 +97,24 @@ public class Main {
         try {
             if (fdir == null)
                 fdir = dir + "/fox";
-            // create lookup document for relations
-            XsltTransformer rels = SaxonUtils.buildTransformer(Main.class.getResource("/cmd2rels.xsl")).load();
-            rels.setParameter(new QName("dir"), new XdmAtomicValue("file:"+dir));
-            rels.setSource(new StreamSource(Main.class.getResource("/null.xml").toString()));
-            XdmDestination destination = new XdmDestination();
-            rels.setDestination(destination);
-            rels.transform();
-            File map = new File(dir+"/relations.xml");
-            TransformerFactory.newInstance().newTransformer().transform(destination.getXdmNode().asSource(),new StreamResult(map));
+            XdmNode relsDoc = null;
+            if (rfile != null && rfile.exists()) {
+                relsDoc = SaxonUtils.buildDocument(new StreamSource(rfile));
+                System.err.println("DBG: loaded["+rfile.getAbsolutePath()+"]");
+            } else {
+                // create lookup document for relations
+                XsltTransformer rels = SaxonUtils.buildTransformer(Main.class.getResource("/cmd2rels.xsl")).load();
+                rels.setParameter(new QName("dir"), new XdmAtomicValue("file:"+dir));
+                rels.setSource(new StreamSource(Main.class.getResource("/null.xml").toString()));
+                XdmDestination dest = new XdmDestination();
+                rels.setDestination(dest);
+                rels.transform();
+                relsDoc = dest.getXdmNode();
+                if (rfile != null) {
+                    TransformerFactory.newInstance().newTransformer().transform(relsDoc.asSource(),new StreamResult(rfile));
+                    System.err.println("DBG: saved["+rfile.getAbsolutePath()+"]");
+                }
+            }
             // CMDI 2 FOX
             // create the fox dir
             FileUtils.forceMkdir(new File(fdir));
@@ -108,13 +124,14 @@ public class Main {
             for (File input:inputs) {
                 if (!input.isHidden() && !input.getAbsolutePath().matches(".*/(corpman|sessions)/.*")) {
                     XsltTransformer fox = cmd2fox.load();
-                    fox.setParameter(new QName("rels-uri"), new XdmAtomicValue("file:"+map.getAbsolutePath()));
+                    //fox.setParameter(new QName("rels-uri"), new XdmAtomicValue("file:"+map.getAbsolutePath()));
+                    fox.setParameter(new QName("rels-doc"), relsDoc);
                     fox.setParameter(new QName("conversion-base"), new XdmAtomicValue(dir));
                     if (idir != null)
                         fox.setParameter(new QName("import-base"), new XdmAtomicValue(idir));
                     fox.setParameter(new QName("fox-base"), new XdmAtomicValue(fdir));
                     fox.setSource(new StreamSource(input));
-                    destination = new XdmDestination();
+                    XdmDestination destination = new XdmDestination();
                     fox.setDestination(destination);
                     fox.transform();
                     File out = new File(fdir + "/lat-"+(++i)+".xml");

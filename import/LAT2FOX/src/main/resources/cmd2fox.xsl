@@ -4,7 +4,7 @@
 	<xsl:variable name="rec" select="/"/>
 
 	<xsl:param name="rels-uri" select="'./relations.xml'"/>
-	<xsl:variable name="rels-doc" select="document($rels-uri)"/>
+	<xsl:param name="rels-doc" select="document($rels-uri)"/>
 	<xsl:key name="rels-from" match="relation" use="from"/>
 	<xsl:key name="rels-to" match="relation" use="to"/>
 
@@ -89,9 +89,10 @@
 			<xsl:for-each-group select="/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Resource']" group-by="cmd:ResourceRef/@lat:localURI">
 				<xsl:variable name="res" select="current-group()[1]"/>
 				<xsl:variable name="resURI" select="resolve-uri($res/cmd:ResourceRef/@lat:localURI,base-uri())"/>
-				<xsl:variable name="resFOX" select="concat($fox-base,'/',replace($resURI,'[^a-zA-Z0-9]','_'),'.xml')"/>
 				<xsl:variable name="resPID" select="$res/cmd:ResourceRef"/>
 				<xsl:variable name="resID" select="cmd:lat('lat:',$resPID)"/>
+				<!--<xsl:variable name="resFOX" select="concat($fox-base,'/',replace($resURI,'[^a-zA-Z0-9]','_'),'.xml')"/>-->
+				<xsl:variable name="resFOX" select="concat($fox-base,'/',replace($resID,'[^a-zA-Z0-9]','_'),'.xml')"/>
 				<xsl:message>DBG: resourceProxy[<xsl:value-of select="$resURI"/>][<xsl:value-of select="$resFOX"/>][<xsl:value-of select="$resPID"/>][<xsl:value-of select="$resID"/>]</xsl:message>
 				<!-- CHECK: take the filepart of the localURI as the resource title? -->
 				<xsl:variable name="resTitle" select="replace($resURI,'.*/','')"/>
