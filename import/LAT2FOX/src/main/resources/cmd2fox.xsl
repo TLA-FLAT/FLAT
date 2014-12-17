@@ -29,7 +29,7 @@
 				<!-- [A]ctive state -->
 				<foxml:property NAME="info:fedora/fedora-system:def/model#state" VALUE="A"/>
 				<!-- take the first corpus or session title found (only works for IMDI-based data) -->
-				<foxml:property NAME="info:fedora/fedora-system:def/model#label" VALUE="{(//(cmd:Corpus|cmd:Session)/cmd:Title)[1]}"/>
+				<foxml:property NAME="info:fedora/fedora-system:def/model#label" VALUE="{substring((//(cmd:Corpus|cmd:Session)/cmd:Title)[1],1,255)}"/>
 			</foxml:objectProperties>
 			<!-- Metadata: Dublin Core -->
 			<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="DC" STATE="A" CONTROL_GROUP="X">
@@ -125,7 +125,7 @@
 							<foxml:objectProperties>
 								<!-- [A]ctive state -->
 								<foxml:property NAME="info:fedora/fedora-system:def/model#state" VALUE="A"/>
-								<foxml:property NAME="info:fedora/fedora-system:def/model#label" VALUE="{$resTitle}"/>
+								<foxml:property NAME="info:fedora/fedora-system:def/model#label" VALUE="{substring($resTitle,1,255)}"/>
 							</foxml:objectProperties>
 							<!-- Metadata: Dublin Core -->
 							<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="DC" STATE="A" CONTROL_GROUP="X">
@@ -181,7 +181,7 @@
 										<xsl:attribute name="CONTROL_GROUP" select="'R'"/>
 									</xsl:otherwise>
 								</xsl:choose>
-								<foxml:datastreamVersion ID="RESOURCE.0" LABEL="{$resTitle}" MIMETYPE="{$res/cmd:ResourceType/@mimetype}">
+								<foxml:datastreamVersion ID="RESOURCE.0" LABEL="{substring($resTitle,1,255)}" MIMETYPE="{$res/cmd:ResourceType/@mimetype}">
 									<foxml:contentLocation TYPE="URL">
 										<xsl:choose>
 											<xsl:when test="starts-with($resURI,'file:') and exists($import-base)">
