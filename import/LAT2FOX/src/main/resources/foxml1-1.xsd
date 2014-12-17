@@ -210,7 +210,8 @@
 			</sch:phase>
 			<!-- PRELIMINARY INGEST RULES PATTERN: -->
 			<!-- These rules are to be applied to objects no matter what phase of the object lifecycle they are in.-->
-			<sch:pattern name="Preliminary Object Checks" id="preliminary">		
+			<sch:pattern id="preliminary">
+				<sch:title>Preliminary Object Checks</sch:title>
 				<!-- RULE:  check that the Fedora AUDIT datastream is not versioned.-->
 				<sch:rule context="foxml:datastream[@ID='AUDIT']">
 					<sch:assert test="count(foxml:datastreamVersion) = 1">The AUDIT Datastream can only have ONE version since it is a non-versionable datastream. (foxml: datastreamVersion)</sch:assert>
@@ -252,7 +253,8 @@
 			<!-- These rules are to be applied to objects when they are considered completed and ready to be stored persistently in the repository.-->
 			<!-- These are attributes that are optional in the FOXML XML Schema (i.e., to support ingest files), but that ultimately must be assigned by the system. -->
 			<!-- This validation may be unnecessary if we accept that the Fedora server will ensure this programmatically. -->
-			<sch:pattern name="Completed Object Checks" id="completed">
+			<sch:pattern id="completed">
+				<sch:title>Completed Object Checks</sch:title>
 				<sch:rule context="foxml:digitalObject">
 					<sch:assert test="string(@PID)">The digital object must have a PID.  (foxml:digitalObject: value of PID is missing)</sch:assert>
 					<sch:assert test="string-length(@PID) &lt;= 64">Digital Object PID must not exceed length of 64 (foxml:digitalObject PID)</sch:assert>

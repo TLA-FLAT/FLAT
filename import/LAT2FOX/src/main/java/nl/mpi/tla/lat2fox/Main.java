@@ -58,6 +58,7 @@ public class Main {
         System.err.println("INF: -r=<FILE> load/store the relations map from/in this <FILE> (optional)");
         System.err.println("INF: -f=<DIR>  directory to store the FOX files (optional)");
         System.err.println("INF: -i=<DIR>  replace source <DIR> by this <DIR> in the FOX files (optional)");
+        System.err.println("INF: -v        validate the FOX files (optional)");
     }
 
     public static void main(String[] args) {
@@ -65,9 +66,12 @@ public class Main {
         String dir = ".";
         String fdir = null;
         String idir = null;
+        boolean validateFOX = false;
         // check command line
-        OptionParser parser = new OptionParser( "r:f:i:?*" );
+        OptionParser parser = new OptionParser( "vr:f:i:?*" );
         OptionSet options = parser.parse(args);
+        if (options.has("v"))
+            validateFOX = true;
         if (options.has("r"))
             rfile = new File((String)options.valueOf("r"));
         if (options.has("f"))
@@ -137,6 +141,20 @@ public class Main {
                     File out = new File(fdir + "/lat-"+(++i)+".xml");
                     TransformerFactory.newInstance().newTransformer().transform(destination.getXdmNode().asSource(),new StreamResult(out));
                     System.err.println("DBG: created["+out.getAbsolutePath()+"]");
+                }
+            }
+            if (validateFOX) {
+                SchemAnon tron = new SchemAnon(Main.class.getResource("/foxml1-1.xsd"),"ingest");
+                for (File input:FileUtils.listFiles(new File(fdir),new String[] {"xml"},true)) {
+                    // validate FOX
+                    if (!tron.validate(input)) {
+                        System.err.println("ERR: invalid file["+input.getAbsolutePath()+"]");
+                        for (Message msg : tron.getMessages()) {
+                            System.out.println("" + (msg.isError() ? "ERR: " : "WRN: ") + (msg.getLocation() != null ? "at " + msg.getLocation() : ""));
+                            System.out.println("" + (msg.isError() ? "ERR: " : "WRN: ") + msg.getText());
+                        }
+                    } else
+                        System.err.println("DBG: valid file["+input.getAbsolutePath()+"]");
                 }
             }
         } catch(Exception ex) {
