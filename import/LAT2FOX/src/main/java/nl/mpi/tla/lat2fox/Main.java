@@ -59,6 +59,7 @@ public class Main {
         System.err.println("INF: -f=<DIR>  directory to store the FOX files (optional)");
         System.err.println("INF: -i=<DIR>  replace source <DIR> by this <DIR> in the FOX files (optional)");
         System.err.println("INF: -v        validate the FOX files (optional)");
+        System.err.println("INF: -l        lax check if a local resource exists (optional)");
     }
 
     public static void main(String[] args) {
@@ -67,9 +68,12 @@ public class Main {
         String fdir = null;
         String idir = null;
         boolean validateFOX = false;
+        boolean laxResourceCheck = false;
         // check command line
-        OptionParser parser = new OptionParser( "vr:f:i:?*" );
+        OptionParser parser = new OptionParser( "lvr:f:i:?*" );
         OptionSet options = parser.parse(args);
+        if (options.has("l"))
+            laxResourceCheck = true;
         if (options.has("v"))
             validateFOX = true;
         if (options.has("r"))
@@ -134,6 +138,7 @@ public class Main {
                     if (idir != null)
                         fox.setParameter(new QName("import-base"), new XdmAtomicValue(idir));
                     fox.setParameter(new QName("fox-base"), new XdmAtomicValue(fdir));
+                    fox.setParameter(new QName("lax-resource-check"),new XdmAtomicValue(laxResourceCheck));
                     fox.setSource(new StreamSource(input));
                     XdmDestination destination = new XdmDestination();
                     fox.setDestination(destination);

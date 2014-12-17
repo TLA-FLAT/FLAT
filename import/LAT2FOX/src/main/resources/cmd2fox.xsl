@@ -11,6 +11,7 @@
 	<xsl:param name="conversion-base" select="()"/>
 	<xsl:param name="import-base" select="()"/>
 	<xsl:param name="fox-base" select="'./fox'"/>
+	<xsl:param name="lax-resource-check" select="false()"/>
 
 	<xsl:function name="cmd:lat">
 		<xsl:param name="prefix"/>
@@ -97,90 +98,105 @@
 				<!-- CHECK: take the filepart of the localURI as the resource title? -->
 				<xsl:variable name="resTitle" select="replace($resURI,'.*/','')"/>
 				<xsl:message>DBG: creating FOX[<xsl:value-of select="$resFOX"/>]?[<xsl:value-of select="not(doc-available($resFOX))"/>]</xsl:message>
-				<xsl:choose>
-					<xsl:when test="starts-with($resURI,'file:') and not(sx:fileExists($resURI))">
-						<xsl:message>ERR: resource[<xsl:value-of select="$resURI"/>] linked from [<xsl:value-of select="base-uri()"/>] doesn't exist!</xsl:message>
-					</xsl:when>
-					<xsl:when test="not(doc-available($resFOX))">
-						<xsl:message>DBG: creating resource FOX[<xsl:value-of select="$resFOX"/>]</xsl:message>
-						<xsl:result-document href="{$resFOX}">
-							<foxml:digitalObject VERSION="1.1" PID="{$resID}" xmlns:xsii="http://www.w3.org/2001/XMLSchema-instance" xsii:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/definitions/1/0/foxml1-1.xsd">
-								<foxml:objectProperties>
-									<!-- [A]ctive state -->
-									<foxml:property NAME="info:fedora/fedora-system:def/model#state" VALUE="A"/>
-									<foxml:property NAME="info:fedora/fedora-system:def/model#label" VALUE="{$resTitle}"/>
-								</foxml:objectProperties>
-								<!-- Metadata: Dublin Core -->
-								<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="DC" STATE="A" CONTROL_GROUP="X">
-									<foxml:datastreamVersion ID="DC.0" FORMAT_URI="http://www.openarchives.org/OAI/2.0/oai_dc/" MIMETYPE="text/xml" LABEL="Dublin Core Record for this object">
-										<foxml:xmlContent>
-											<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
-												<dc:title>
-													<xsl:value-of select="$resTitle"/>
-												</dc:title>
-											</oai_dc:dc>
-										</foxml:xmlContent>
-									</foxml:datastreamVersion>
-								</foxml:datastream>
-								<!-- Relations: RELS-EXT -->
-								<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="RELS-EXT" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
-									<foxml:datastreamVersion ID="RELS-EXT.0" LABEL="RDF Statements about this object" MIMETYPE="text/xml">
-										<foxml:xmlContent>
-											<rdf:RDF xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:fedora-model="info:fedora/fedora-system:def/model#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-												<rdf:Description rdf:about="info:fedora/{$resID}">
-													<!-- relationships to (parent) compounds -->
-													<xsl:variable name="compounds" select="$rels-doc/key('rels-to',$resPID)[type='Resource']/from"/>
-													<xsl:for-each select="$compounds">
-														<fedora:isConstituentOf rdf:resource="info:fedora/{cmd:lat('lat:',current())}"/>
-													</xsl:for-each>
-													<!-- resource has to become a member of the collection the compound is a member of -->
-													<xsl:variable name="collections" select="distinct-values(for $c in $compounds return $rels-doc/key('rels-to',$c)[type='Metadata']/from)"/>
-													<xsl:choose>
-														<xsl:when test="exists($collections)">
-															<xsl:for-each select="$collections">
-																<fedora:isMemberOfCollection rdf:resource="info:fedora/{cmd:lat('lat:',current())}"/>
-															</xsl:for-each>
-														</xsl:when>
-														<xsl:otherwise>
-															<fedora:isMemberOfCollection rdf:resource="info:fedora/islandora:compound_collection"/>
-														</xsl:otherwise>
-													</xsl:choose>
-												</rdf:Description>
-											</rdf:RDF>
-										</foxml:xmlContent>
-									</foxml:datastreamVersion>
-								</foxml:datastream>
-								<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="RESOURCE" STATE="A">
-									<!--- CHECK: CONTROL_GROUP indicates the kind of datastream, either
-									Externally Referenced Content (E), 
-									Redirected Content (R), 
-									Managed Content (M) or 
-									Inline XML (X) -->
-									<xsl:choose>
-										<xsl:when test="starts-with($resURI,'file:')">
-											<xsl:attribute name="CONTROL_GROUP" select="'E'"/>
-										</xsl:when>
-										<xsl:otherwise>
-											<xsl:attribute name="CONTROL_GROUP" select="'R'"/>
-										</xsl:otherwise>
-									</xsl:choose>
-									<foxml:datastreamVersion ID="RESOURCE.0" LABEL="{$resTitle}" MIMETYPE="{$res/cmd:ResourceType/@mimetype}">
-										<foxml:contentLocation TYPE="URL">
-											<xsl:choose>
-												<xsl:when test="starts-with($resURI,'file:') and exists($import-base)">
-													<xsl:attribute name="REF" select="replace($resURI,$conversion-base,$import-base)"/>
-												</xsl:when>
-												<xsl:otherwise>
-													<xsl:attribute name="REF" select="$resURI"/>
-												</xsl:otherwise>
-											</xsl:choose>
-										</foxml:contentLocation>
-									</foxml:datastreamVersion>
-								</foxml:datastream>
-							</foxml:digitalObject>
-						</xsl:result-document>
-					</xsl:when>
-				</xsl:choose>
+				<xsl:variable name="resourceExists" as="xs:boolean">
+					<xsl:choose>
+						<xsl:when test="starts-with($resURI,'file:') and not(sx:fileExists($resURI))">
+							<xsl:message>ERR: resource[<xsl:value-of select="$resURI"/>] linked from [<xsl:value-of select="base-uri()"/>] doesn't exist!</xsl:message>
+							<xsl:choose>
+								<xsl:when test="$lax-resource-check">
+									<xsl:message>WRN: resource FOX[<xsl:value-of select="$resFOX"/>] will be created anyway</xsl:message>
+									<xsl:sequence select="true()"/>
+								</xsl:when>
+								<xsl:otherwise>
+									<xsl:message>WRN: resource FOX[<xsl:value-of select="$resFOX"/>] will not be created!</xsl:message>
+									<xsl:sequence select="false()"/>
+								</xsl:otherwise>
+							</xsl:choose>
+						</xsl:when>
+						<xsl:otherwise>
+							<xsl:sequence select="true()"/>
+						</xsl:otherwise>
+					</xsl:choose>
+				</xsl:variable>
+				<xsl:if test="$resourceExists and not(doc-available($resFOX))">
+					<xsl:message>DBG: creating resource FOX[<xsl:value-of select="$resFOX"/>]</xsl:message>
+					<xsl:result-document href="{$resFOX}">
+						<foxml:digitalObject VERSION="1.1" PID="{$resID}" xmlns:xsii="http://www.w3.org/2001/XMLSchema-instance" xsii:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/definitions/1/0/foxml1-1.xsd">
+							<foxml:objectProperties>
+								<!-- [A]ctive state -->
+								<foxml:property NAME="info:fedora/fedora-system:def/model#state" VALUE="A"/>
+								<foxml:property NAME="info:fedora/fedora-system:def/model#label" VALUE="{$resTitle}"/>
+							</foxml:objectProperties>
+							<!-- Metadata: Dublin Core -->
+							<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="DC" STATE="A" CONTROL_GROUP="X">
+								<foxml:datastreamVersion ID="DC.0" FORMAT_URI="http://www.openarchives.org/OAI/2.0/oai_dc/" MIMETYPE="text/xml" LABEL="Dublin Core Record for this object">
+									<foxml:xmlContent>
+										<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
+											<dc:title>
+												<xsl:value-of select="$resTitle"/>
+											</dc:title>
+										</oai_dc:dc>
+									</foxml:xmlContent>
+								</foxml:datastreamVersion>
+							</foxml:datastream>
+							<!-- Relations: RELS-EXT -->
+							<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="RELS-EXT" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
+								<foxml:datastreamVersion ID="RELS-EXT.0" LABEL="RDF Statements about this object" MIMETYPE="text/xml">
+									<foxml:xmlContent>
+										<rdf:RDF xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:fedora-model="info:fedora/fedora-system:def/model#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+											<rdf:Description rdf:about="info:fedora/{$resID}">
+												<!-- relationships to (parent) compounds -->
+												<xsl:variable name="compounds" select="$rels-doc/key('rels-to',$resPID)[type='Resource']/from"/>
+												<xsl:for-each select="$compounds">
+													<fedora:isConstituentOf rdf:resource="info:fedora/{cmd:lat('lat:',current())}"/>
+												</xsl:for-each>
+												<!-- resource has to become a member of the collection the compound is a member of -->
+												<xsl:variable name="collections" select="distinct-values(for $c in $compounds return $rels-doc/key('rels-to',$c)[type='Metadata']/from)"/>
+												<xsl:choose>
+													<xsl:when test="exists($collections)">
+														<xsl:for-each select="$collections">
+															<fedora:isMemberOfCollection rdf:resource="info:fedora/{cmd:lat('lat:',current())}"/>
+														</xsl:for-each>
+													</xsl:when>
+													<xsl:otherwise>
+														<fedora:isMemberOfCollection rdf:resource="info:fedora/islandora:compound_collection"/>
+													</xsl:otherwise>
+												</xsl:choose>
+											</rdf:Description>
+										</rdf:RDF>
+									</foxml:xmlContent>
+								</foxml:datastreamVersion>
+							</foxml:datastream>
+							<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="RESOURCE" STATE="A">
+								<!--- CHECK: CONTROL_GROUP indicates the kind of datastream, either
+                                                            Externally Referenced Content (E), 
+                                                            Redirected Content (R), 
+                                                            Managed Content (M) or 
+                                                            Inline XML (X) -->
+								<xsl:choose>
+									<xsl:when test="starts-with($resURI,'file:')">
+										<xsl:attribute name="CONTROL_GROUP" select="'E'"/>
+									</xsl:when>
+									<xsl:otherwise>
+										<xsl:attribute name="CONTROL_GROUP" select="'R'"/>
+									</xsl:otherwise>
+								</xsl:choose>
+								<foxml:datastreamVersion ID="RESOURCE.0" LABEL="{$resTitle}" MIMETYPE="{$res/cmd:ResourceType/@mimetype}">
+									<foxml:contentLocation TYPE="URL">
+										<xsl:choose>
+											<xsl:when test="starts-with($resURI,'file:') and exists($import-base)">
+												<xsl:attribute name="REF" select="replace($resURI,$conversion-base,$import-base)"/>
+											</xsl:when>
+											<xsl:otherwise>
+												<xsl:attribute name="REF" select="$resURI"/>
+											</xsl:otherwise>
+										</xsl:choose>
+									</foxml:contentLocation>
+								</foxml:datastreamVersion>
+							</foxml:datastream>
+						</foxml:digitalObject>
+					</xsl:result-document>
+				</xsl:if>
 			</xsl:for-each-group>
 		</foxml:digitalObject>
 	</xsl:template>
