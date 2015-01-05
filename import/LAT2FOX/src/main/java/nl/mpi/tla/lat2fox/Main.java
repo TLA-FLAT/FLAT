@@ -58,6 +58,7 @@ public class Main {
         System.err.println("INF: -r=<FILE> load/store the relations map from/in this <FILE> (optional)");
         System.err.println("INF: -f=<DIR>  directory to store the FOX files (optional)");
         System.err.println("INF: -i=<DIR>  replace source <DIR> by this <DIR> in the FOX files (optional)");
+        System.err.println("INF: -n=<NUM>  create subdirectories to contain <NUM> FOX files (optional)");
         System.err.println("INF: -v        validate the FOX files (optional)");
         System.err.println("INF: -l        lax check if a local resource exists (optional)");
     }
@@ -69,8 +70,9 @@ public class Main {
         String idir = null;
         boolean validateFOX = false;
         boolean laxResourceCheck = false;
+        int ndir = 0;
         // check command line
-        OptionParser parser = new OptionParser( "lvr:f:i:?*" );
+        OptionParser parser = new OptionParser( "lvr:f:i:n:?*" );
         OptionSet options = parser.parse(args);
         if (options.has("l"))
             laxResourceCheck = true;
@@ -82,6 +84,15 @@ public class Main {
             fdir = (String)options.valueOf("f");
         if (options.has("i"))
             idir = (String)options.valueOf("i");
+        if (options.has("n")) {
+            try {
+                ndir = Integer.parseInt((String)options.valueOf("n"));
+            } catch(NumberFormatException e) {
+                System.err.println("FTL: -n expects a numeric argument!");
+                showHelp();
+                System.exit(1);
+            }
+        }
         if (options.has("?")) {
             showHelp();
             System.exit(0);
@@ -146,6 +157,16 @@ public class Main {
                     File out = new File(fdir + "/lat-"+(++i)+".xml");
                     TransformerFactory.newInstance().newTransformer().transform(destination.getXdmNode().asSource(),new StreamResult(out));
                     System.err.println("DBG: created["+out.getAbsolutePath()+"]");
+                }
+            }
+            if (ndir > 0) {
+                int n = 0;
+                int d = 0;
+                for (File input:FileUtils.listFiles(new File(fdir),new String[] {"xml"},true)) {
+                    if (n == ndir)
+                        n = 0;
+                    n++;
+                    FileUtils.moveFileToDirectory(input,new File(fdir+"/"+(n==1?d++:d)),true);
                 }
             }
             if (validateFOX) {
