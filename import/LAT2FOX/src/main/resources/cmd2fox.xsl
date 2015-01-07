@@ -233,6 +233,10 @@
 			<xsl:apply-templates select="cmd:Components/*/cmd:Resources/cmd:WrittenResource/cmd:*" mode="#current"/>
 			<xsl:apply-templates select="cmd:Components/*/cmd:Resources/cmd:Source/cmd:*" mode="#current"/>
 			<xsl:apply-templates select="cmd:Components/*/cmd:References/cmd:*" mode="#current"/>
+			<xsl:comment>extra dc:description to enable full text search of the CMD record</xsl:comment>
+			<dc:description>
+				<xsl:value-of select="string-join((cmd:Header,cmd:Components)/tokenize(.,'\s+')[normalize-space(.)!=''],' ')"/>
+			</dc:description>
 		</oai_dc:dc>
 	</xsl:template>
 
