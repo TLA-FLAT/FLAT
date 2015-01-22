@@ -2,6 +2,8 @@ package nl.mpi.tla.lat2fox;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
@@ -44,6 +46,7 @@ public final class SaxonExtensionFunctions {
     public static void registerAll(Configuration config) 
         throws Exception {
         config.registerExtensionFunction(new FileExistsDefinition());
+        config.registerExtensionFunction(new CheckURLDefinition());
     }
 
     // -----------------------------------------------------------------------
@@ -88,6 +91,64 @@ public final class SaxonExtensionFunctions {
                         boolean exists = (new java.io.File(path)).exists();
                         System.err.println("DBG: file["+path+"] exists?["+exists+"]");
                         seq = (new XdmAtomicValue(exists)).getUnderlyingValue();
+                    } catch(Exception e) {
+                        System.err.println("ERR: "+e.getMessage());
+                        e.printStackTrace(System.err);
+                    }
+                    return seq;
+                }
+            };
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // sx:checkURL
+    // -----------------------------------------------------------------------
+
+    public static final class CheckURLDefinition 
+                        extends ExtensionFunctionDefinition {
+        public StructuredQName getFunctionQName() {
+            return new StructuredQName("sx", 
+                                       "java:nl.mpi.tla.saxon", 
+                                       "checkURL");
+        }
+
+        public int getMinimumNumberOfArguments() {
+            return 1;
+        }
+
+        public int getMaximumNumberOfArguments() {
+            return 1;
+        }
+
+        public SequenceType[] getArgumentTypes() {
+            return new SequenceType[] { SequenceType.SINGLE_STRING };
+        }
+
+        public SequenceType getResultType(SequenceType[] suppliedArgTypes) {
+            return SequenceType.SINGLE_BOOLEAN;
+        }
+        
+        public boolean dependsOnFocus() {
+           return false;
+        }
+
+        public ExtensionFunctionCall makeCallExpression() {
+            return new ExtensionFunctionCall() {
+                @Override
+                public Sequence call(XPathContext context, Sequence[] arguments) throws XPathException {
+                    Sequence seq = null;
+                    try {
+                        String url = ((StringValue) arguments[0].head()).getStringValue();
+                        boolean valid = true;
+                        try {
+                            URL u = new URL(url);
+                        } catch(MalformedURLException e) {
+                            valid = false;
+                            System.err.println("WRN: URL["+url+"] is invalid["+e+"]!");
+                        }
+                        //System.err.println("DBG: URL["+url+"] valid?["+valid+"]");
+                        seq = (new XdmAtomicValue(valid)).getUnderlyingValue();
                     } catch(Exception e) {
                         System.err.println("ERR: "+e.getMessage());
                         e.printStackTrace(System.err);

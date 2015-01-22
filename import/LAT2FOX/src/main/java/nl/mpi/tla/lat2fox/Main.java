@@ -134,6 +134,13 @@ public class Main {
                     System.err.println("DBG: saved["+rfile.getAbsolutePath()+"]");
                 }
             }
+            // Check the relations
+            XsltTransformer rcheck = SaxonUtils.buildTransformer(Main.class.getResource("/checkRels.xsl")).load();
+            rcheck.setParameter(new QName("rels-doc"), relsDoc);
+            rcheck.setSource(new StreamSource(Main.class.getResource("/null.xml").toString()));
+            XdmDestination dest = new XdmDestination();
+            rcheck.setDestination(dest);
+            rcheck.transform();
             // CMDI 2 FOX
             // create the fox dir
             FileUtils.forceMkdir(new File(fdir));
@@ -142,21 +149,26 @@ public class Main {
             int i = 0;
             for (File input:inputs) {
                 if (!input.isHidden() && !input.getAbsolutePath().matches(".*/(corpman|sessions)/.*")) {
-                    XsltTransformer fox = cmd2fox.load();
-                    //fox.setParameter(new QName("rels-uri"), new XdmAtomicValue("file:"+map.getAbsolutePath()));
-                    fox.setParameter(new QName("rels-doc"), relsDoc);
-                    fox.setParameter(new QName("conversion-base"), new XdmAtomicValue(dir));
-                    if (idir != null)
-                        fox.setParameter(new QName("import-base"), new XdmAtomicValue(idir));
-                    fox.setParameter(new QName("fox-base"), new XdmAtomicValue(fdir));
-                    fox.setParameter(new QName("lax-resource-check"),new XdmAtomicValue(laxResourceCheck));
-                    fox.setSource(new StreamSource(input));
-                    XdmDestination destination = new XdmDestination();
-                    fox.setDestination(destination);
-                    fox.transform();
-                    File out = new File(fdir + "/lat-"+(++i)+".xml");
-                    TransformerFactory.newInstance().newTransformer().transform(destination.getXdmNode().asSource(),new StreamResult(out));
-                    System.err.println("DBG: created["+out.getAbsolutePath()+"]");
+                    try {
+                        XsltTransformer fox = cmd2fox.load();
+                        //fox.setParameter(new QName("rels-uri"), new XdmAtomicValue("file:"+map.getAbsolutePath()));
+                        fox.setParameter(new QName("rels-doc"), relsDoc);
+                        fox.setParameter(new QName("conversion-base"), new XdmAtomicValue(dir));
+                        if (idir != null)
+                            fox.setParameter(new QName("import-base"), new XdmAtomicValue(idir));
+                        fox.setParameter(new QName("fox-base"), new XdmAtomicValue(fdir));
+                        fox.setParameter(new QName("lax-resource-check"),new XdmAtomicValue(laxResourceCheck));
+                        fox.setSource(new StreamSource(input));
+                        XdmDestination destination = new XdmDestination();
+                        fox.setDestination(destination);
+                        fox.transform();
+                        File out = new File(fdir + "/lat-"+(++i)+".xml");
+                        TransformerFactory.newInstance().newTransformer().transform(destination.getXdmNode().asSource(),new StreamResult(out));
+                        System.err.println("DBG: created["+out.getAbsolutePath()+"]");
+                    } catch (Exception e) {
+                        System.err.println("ERR: "+e);
+                        System.err.println("WRN: skipping file["+input.getAbsolutePath()+"]");
+                    }
                 }
             }
             if (ndir > 0) {

@@ -22,8 +22,14 @@
 	</xsl:function>
 
 	<xsl:template match="/">
-		<xsl:variable name="fid" select="cmd:lat('lat:',/cmd:CMD/cmd:Header/cmd:MdSelfLink)"/>
-		<xsl:message>DBG: CMDI2FOX[<xsl:value-of select="$fid"/>]</xsl:message>
+		<xsl:variable name="pid" select="/cmd:CMD/cmd:Header/cmd:MdSelfLink"/>
+		<xsl:variable name="fid" select="cmd:lat('lat:',$pid)"/>
+		<xsl:message>DBG: CMDI2FOX[<xsl:value-of select="$pid"/>][<xsl:value-of select="$fid"/>]</xsl:message>
+		<xsl:message>DBG: [<xsl:value-of select="$rels-doc/key('rels-from',$pid)[1]/src"/>]!=[<xsl:value-of select="base-uri()"/>] => [<xsl:value-of select="$rels-doc/key('rels-from',$pid)[1]/src!=base-uri()"/>]</xsl:message>
+		<xsl:if test="$rels-doc/key('rels-from',$pid)[1]/src!=base-uri()">
+			<xsl:message>ERR: record[<xsl:value-of select="base-uri()"/>] has an already used PID URI[<xsl:value-of select="$pid"/>][<xsl:value-of select="(key('rels-from',$pid))[1]/src"/>]!</xsl:message>
+			<xsl:message terminate="yes">WRN: resource FOX[<xsl:value-of select="$fid"/>] will not be created!</xsl:message>
+		</xsl:if>
 		<foxml:digitalObject VERSION="1.1" PID="{$fid}" xmlns:xsii="http://www.w3.org/2001/XMLSchema-instance" xsii:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/definitions/1/0/foxml1-1.xsd">
 			<foxml:objectProperties>
 				<!-- [A]ctive state -->
@@ -98,8 +104,18 @@
 				<!-- CHECK: take the filepart of the localURI as the resource title? -->
 				<xsl:variable name="resTitle" select="replace($resURI,'.*/','')"/>
 				<xsl:message>DBG: creating FOX[<xsl:value-of select="$resFOX"/>]?[<xsl:value-of select="not(doc-available($resFOX))"/>]</xsl:message>
-				<xsl:variable name="resourceExists" as="xs:boolean">
+				<xsl:variable name="createFOX" as="xs:boolean">
 					<xsl:choose>
+						<xsl:when test="(key('rels-to',$resPID))[1]/resolve-uri(dst,src)!=$resURI">
+							<xsl:message>ERR: resource[<xsl:value-of select="$resURI"/>] has an already used PID URI[<xsl:value-of select="$resPID"/>][<xsl:value-of select="(key('rels-to',$resPID))[1]/resolve-uri(dst,src)"/>]!</xsl:message>
+							<xsl:message>WRN: resource FOX[<xsl:value-of select="$resFOX"/>] will not be created!</xsl:message>
+							<xsl:sequence select="false()"/>
+						</xsl:when>
+						<xsl:when test="not(sx:checkURL(replace($resPID,'^hdl:','http://hdl.handle.net/')))">
+							<xsl:message>ERR: resource[<xsl:value-of select="$resURI"/>] has an invalid PID URI[<xsl:value-of select="$resPID"/>]!</xsl:message>
+							<xsl:message>WRN: resource FOX[<xsl:value-of select="$resFOX"/>] will not be created!</xsl:message>
+							<xsl:sequence select="false()"/>
+						</xsl:when>
 						<xsl:when test="starts-with($resURI,'file:') and not(sx:fileExists($resURI))">
 							<xsl:message>ERR: resource[<xsl:value-of select="$resURI"/>] linked from [<xsl:value-of select="base-uri()"/>] doesn't exist!</xsl:message>
 							<xsl:choose>
@@ -118,7 +134,7 @@
 						</xsl:otherwise>
 					</xsl:choose>
 				</xsl:variable>
-				<xsl:if test="$resourceExists and not(doc-available($resFOX))">
+				<xsl:if test="$createFOX and not(doc-available($resFOX))">
 					<xsl:message>DBG: creating resource FOX[<xsl:value-of select="$resFOX"/>]</xsl:message>
 					<xsl:result-document href="{$resFOX}">
 						<foxml:digitalObject VERSION="1.1" PID="{$resID}" xmlns:xsii="http://www.w3.org/2001/XMLSchema-instance" xsii:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/definitions/1/0/foxml1-1.xsd">

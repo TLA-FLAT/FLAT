@@ -2,7 +2,7 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 	xmlns:xs="http://www.w3.org/2001/XMLSchema"
 	xmlns:cmd="http://www.clarin.eu/cmd/"
-	xmlns:lcl="http://www.clarin.eu/cmd/extension"
+	xmlns:lat="http://lat.mpi.nl/"
 	exclude-result-prefixes="xs"
 	version="2.0">
 	
@@ -33,7 +33,7 @@
 							</xsl:choose>
 						</to>
 						<dst>
-							<xsl:value-of select="cmd:ResourceRef/@lcl:localURI"/>
+							<xsl:value-of select="cmd:ResourceRef/@lat:localURI"/>
 						</dst>
 						<type>
 							<xsl:value-of select="cmd:ResourceType"/>
