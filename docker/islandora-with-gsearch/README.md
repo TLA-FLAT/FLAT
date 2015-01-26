@@ -19,3 +19,7 @@ docker run -i -p 80:80 -p 8443:8443 -p 8080:8080 -h fedora.test.lan -t easylat/i
 
 Installing Solr and GSearch:
  * https://wiki.duraspace.org/display/ISLANDORA714/Installing+Solr+and+GSearch
+Islandora Solr Search:
+ * https://wiki.duraspace.org/display/ISLANDORA714/Islandora+Solr+Search
+Search & Discovery in islandora:
+ * https://wiki.duraspace.org/pages/viewpage.action?pageId=64326523
