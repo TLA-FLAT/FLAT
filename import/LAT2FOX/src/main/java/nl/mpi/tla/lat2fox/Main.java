@@ -162,7 +162,13 @@ public class Main {
                         XdmDestination destination = new XdmDestination();
                         fox.setDestination(destination);
                         fox.transform();
-                        File out = new File(fdir + "/lat-"+(++i)+".xml");
+                        String fid = SaxonUtils.evaluateXPath(destination.getXdmNode(),"/*/@PID").evaluateSingle().getStringValue();
+                        File out = new File(fdir + "/"+fid.replaceAll("[^a-zA-Z0-9]", "_")+".xml");
+                        if (out.exists()) {
+                            System.err.println("ERR: FOX["+out.getAbsolutePath()+"] already exists!");
+                            out = new File("lat-"+(++i)+".xml");
+                            System.err.println("WRN: saved to FOX["+out.getAbsolutePath()+"] instead!");
+                        }
                         TransformerFactory.newInstance().newTransformer().transform(destination.getXdmNode().asSource(),new StreamResult(out));
                         System.err.println("DBG: created["+out.getAbsolutePath()+"]");
                     } catch (Exception e) {

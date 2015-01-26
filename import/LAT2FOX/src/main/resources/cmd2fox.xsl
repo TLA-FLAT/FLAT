@@ -111,6 +111,11 @@
 							<xsl:message>WRN: resource FOX[<xsl:value-of select="$resFOX"/>] will not be created!</xsl:message>
 							<xsl:sequence select="false()"/>
 						</xsl:when>
+						<xsl:when test="exists(key('rels-from',$resPID)[Type='Resource'])">
+							<xsl:message>ERR: resource[<xsl:value-of select="$resURI"/>] has a PID[<xsl:value-of select="$resPID"/>] already used by one or more CMDI records[<xsl:value-of select="string-join(key('rels-from',$resPID)[Type='Resource']/src,', ')"/>]!</xsl:message>
+							<xsl:message>WRN: resource FOX[<xsl:value-of select="$resFOX"/>] will not be created!</xsl:message>
+							<xsl:sequence select="false()"/>
+						</xsl:when>
 						<xsl:when test="not(sx:checkURL(replace($resPID,'^hdl:','http://hdl.handle.net/')))">
 							<xsl:message>ERR: resource[<xsl:value-of select="$resURI"/>] has an invalid PID URI[<xsl:value-of select="$resPID"/>]!</xsl:message>
 							<xsl:message>WRN: resource FOX[<xsl:value-of select="$resFOX"/>] will not be created!</xsl:message>

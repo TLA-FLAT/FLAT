@@ -19,6 +19,9 @@
 			<xsl:if test="not(sx:checkURL(replace(current-grouping-key(),'^hdl:','http://hdl.handle.net/')))">
 				<xsl:message>WRN: malformed URL[<xsl:value-of select="current-grouping-key()"/>] appears in [<xsl:value-of select="string-join(distinct-values(current-group()/src),', ')"/>]!</xsl:message>
 			</xsl:if>
+			<xsl:if test="exists($rels-doc/key('rels-to',current-grouping-key())[type='Resource'])">
+				<xsl:message>WRN: metadata PID[<xsl:value-of select="current-grouping-key()"/>] is also used as Resource PID to [<xsl:value-of select="string-join($rels-doc/key('rels-to',current-grouping-key())[type='Resource']/dst,', ')"/>] by [<xsl:value-of select="string-join($rels-doc/key('rels-to',current-grouping-key())[type='Resource']/src,', ')"/>]!</xsl:message>
+			</xsl:if>
 		</xsl:for-each-group>
 		<xsl:for-each-group select="$rels-doc//relation" group-by="to">
 			<xsl:variable name="res" select="distinct-values(current-group()[type='Resource'][normalize-space(dst)!='']/resolve-uri(dst,src))"/>
