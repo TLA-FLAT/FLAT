@@ -25,6 +25,8 @@ When you run the image as is, some manual configuration steps are required to ac
  
 Optionally commit your changes to a new local image
 
+After this, you may be interested in adapting the indexing of records and resources. For more information, see the [instructons on customising GSearch and Solr](https://wiki.duraspace.org/display/ISLANDORA714/Customizing+GSearch+and+Solr) from the Islandora documentation.
+
 # References #
 
 Installing Solr and GSearch:
