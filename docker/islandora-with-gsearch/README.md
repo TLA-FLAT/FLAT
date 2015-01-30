@@ -15,6 +15,16 @@ docker build -t easylat/islandora-gsearch .
 # Running the image #
 docker run -i -p 80:80 -p 8443:8443 -p 8080:8080 -h fedora.test.lan -t easylat/islandora-gsearch:latest /sbin/my_init -- bash -l
 
+## Manual configuration ##
+
+When you run the image as is, some manual configuration steps are required to actually enable search is Islandora:
+
+ * go to http://{docker-ip}/drupal and loging (admin:admin)
+ * go to 'Modules' (in the top menu bar)
+ * scroll all the way down and enable the modules under 'ISLANDORA SEARCH'
+ 
+Optionally commit your changes to a new local image
+
 # References #
 
 Installing Solr and GSearch:
