@@ -7,10 +7,11 @@
 	version="2.0">
 	
 	<xsl:param name="dir" select="'./'"/>
+        <xsl:param name="ext" select="'cmdi'"/>
 	
 	<xsl:template name="main">
 		<relations>
-			<xsl:for-each select="collection(concat($dir,'?select=*.cmdi;recurse=yes'))">
+			<xsl:for-each select="collection(concat($dir,concat('?select=*.',$ext,';recurse=yes')))">
 				<xsl:variable name="rec" select="current()"/>
 				<xsl:variable name="src" select="base-uri($rec)"/>
 				<xsl:variable name="frm" select="$rec/cmd:CMD/cmd:Header/cmd:MdSelfLink"/>

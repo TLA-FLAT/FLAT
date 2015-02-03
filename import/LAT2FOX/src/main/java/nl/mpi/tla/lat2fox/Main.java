@@ -55,10 +55,11 @@ public class Main {
         System.err.println("INF: lat2fox <options> -- <DIR>?");
         System.err.println("INF: <DIR>     source directory to recurse for CMD files (default: .)");
         System.err.println("INF: lat2fox options:");
+        System.err.println("INF: -e=<EXT>  the extension of CMDI files (default: cmdi)");
         System.err.println("INF: -r=<FILE> load/store the relations map from/in this <FILE> (optional)");
-        System.err.println("INF: -f=<DIR>  directory to store the FOX files (optional)");
+        System.err.println("INF: -f=<DIR>  directory to store the FOX files (default: ./fox)");
         System.err.println("INF: -i=<DIR>  replace source <DIR> by this <DIR> in the FOX files (optional)");
-        System.err.println("INF: -n=<NUM>  create subdirectories to contain <NUM> FOX files (optional)");
+        System.err.println("INF: -n=<NUM>  create subdirectories to contain <NUM> FOX files (default: 0, i.e., no subdirectories)");
         System.err.println("INF: -v        validate the FOX files (optional)");
         System.err.println("INF: -l        lax check if a local resource exists (optional)");
     }
@@ -68,16 +69,19 @@ public class Main {
         String dir = ".";
         String fdir = null;
         String idir = null;
+        String cext = "cmdi";
         boolean validateFOX = false;
         boolean laxResourceCheck = false;
         int ndir = 0;
         // check command line
-        OptionParser parser = new OptionParser( "lvr:f:i:n:?*" );
+        OptionParser parser = new OptionParser( "lve:r:f:i:n:?*" );
         OptionSet options = parser.parse(args);
         if (options.has("l"))
             laxResourceCheck = true;
         if (options.has("v"))
             validateFOX = true;
+        if (options.has("e"))
+            cext = (String)options.valueOf("e");
         if (options.has("r"))
             rfile = new File((String)options.valueOf("r"));
         if (options.has("f"))
@@ -123,6 +127,7 @@ public class Main {
             } else {
                 // create lookup document for relations
                 XsltTransformer rels = SaxonUtils.buildTransformer(Main.class.getResource("/cmd2rels.xsl")).load();
+                rels.setParameter(new QName("ext"), new XdmAtomicValue(cext));
                 rels.setParameter(new QName("dir"), new XdmAtomicValue("file:"+dir));
                 rels.setSource(new StreamSource(Main.class.getResource("/null.xml").toString()));
                 XdmDestination dest = new XdmDestination();
@@ -144,7 +149,7 @@ public class Main {
             // CMDI 2 FOX
             // create the fox dir
             FileUtils.forceMkdir(new File(fdir));
-            Collection<File> inputs = FileUtils.listFiles(new File(dir),new String[] {"cmdi"},true);
+            Collection<File> inputs = FileUtils.listFiles(new File(dir),new String[] {cext},true);
             XsltExecutable cmd2fox = SaxonUtils.buildTransformer(Main.class.getResource("/cmd2fox.xsl"));
             int i = 0;
             for (File input:inputs) {
