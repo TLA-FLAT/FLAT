@@ -171,7 +171,7 @@ public class Main {
                         File out = new File(fdir + "/"+fid.replaceAll("[^a-zA-Z0-9]", "_")+".xml");
                         if (out.exists()) {
                             System.err.println("ERR: FOX["+out.getAbsolutePath()+"] already exists!");
-                            out = new File("lat-"+(++i)+".xml");
+                            out = new File(fdir + "/lat-"+(++i)+".xml");
                             System.err.println("WRN: saved to FOX["+out.getAbsolutePath()+"] instead!");
                         }
                         TransformerFactory.newInstance().newTransformer().transform(destination.getXdmNode().asSource(),new StreamResult(out));
