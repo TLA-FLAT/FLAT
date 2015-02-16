@@ -5,8 +5,8 @@
 
 	<xsl:param name="rels-uri" select="'./relations.xml'"/>
 	<xsl:param name="rels-doc" select="document($rels-uri)"/>
-	<xsl:key name="rels-from" match="relation" use="from"/>
-	<xsl:key name="rels-to" match="relation" use="to"/>
+	<xsl:key name="rels-from" match="relation" use="src|from"/>
+	<xsl:key name="rels-to" match="relation" use="dst|to"/>
 
 	<xsl:param name="conversion-base" select="()"/>
 	<xsl:param name="import-base" select="()"/>
@@ -35,7 +35,7 @@
 				<!-- [A]ctive state -->
 				<foxml:property NAME="info:fedora/fedora-system:def/model#state" VALUE="A"/>
 				<!-- take the first corpus or session title found (only works for IMDI-based data) -->
-				<foxml:property NAME="info:fedora/fedora-system:def/model#label" VALUE="{substring((//(cmd:Corpus|cmd:Session)/cmd:Title)[1],1,255)}"/>
+				<foxml:property NAME="info:fedora/fedora-system:def/model#label" VALUE="{substring((//cmd:Components/*/cmd:Title)[1],1,255)}"/>
 			</foxml:objectProperties>
 			<!-- Metadata: Dublin Core -->
 			<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="DC" STATE="A" CONTROL_GROUP="X">
@@ -64,7 +64,10 @@
 									<xsl:value-of select="cmd:lat('oai:lat.mpi.nl:',/cmd:CMD/cmd:Header/cmd:MdSelfLink)"/>
 								</oai:itemID>
 								<!-- relationships to (parent) collections -->
-								<xsl:variable name="parents" select="$rels-doc/key('rels-to',$rec/cmd:CMD/cmd:Header/cmd:MdSelfLink)[type='Metadata']/from"/>
+								<xsl:variable name="base" select="base-uri()"/>
+								<xsl:message>DBG: look for parents (rels-to:dst|to) of [<xsl:value-of select="$rec/cmd:CMD/cmd:Header/cmd:MdSelfLink"/>] or [<xsl:value-of select="$base"/>] </xsl:message>
+								<xsl:variable name="parents" select="distinct-values($rels-doc/key('rels-to',($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink,$base))[type='Metadata']/from)"/>
+								<xsl:message>DBG: parents[<xsl:value-of select="string-join($parents,', ')"/>] </xsl:message>
 								<xsl:choose>
 									<xsl:when test="exists($parents)">
 										<xsl:for-each select="$parents">
@@ -72,6 +75,7 @@
 										</xsl:for-each>
 									</xsl:when>
 									<xsl:otherwise>
+										<xsl:message>DBG: NO parents[<xsl:value-of select="string-join($parents,', ')"/>] </xsl:message>
 										<fedora:isMemberOfCollection rdf:resource="info:fedora/islandora:compound_collection"/>
 									</xsl:otherwise>
 								</xsl:choose>
@@ -91,10 +95,11 @@
 			<!-- Resource Proxies -->
 			<xsl:message>DBG: resourceProxies[<xsl:value-of select="count(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Resource'])"/>]</xsl:message>
 			<xsl:for-each select="/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Resource']">
-				<xsl:message>DBG: resourceProxy[<xsl:value-of select="position()"/>][<xsl:value-of select="cmd:ResourceRef/@lat:localURI"/>]</xsl:message>
+        <xsl:message>DBG: resourceProxy[<xsl:value-of select="position()"/>][<xsl:value-of select="cmd:ResourceRef"/>][<xsl:value-of select="cmd:ResourceRef/@lat:localURI"/>]</xsl:message>
 			</xsl:for-each>
-			<xsl:for-each-group select="/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Resource']" group-by="cmd:ResourceRef/@lat:localURI">
-				<xsl:variable name="res" select="current-group()[1]"/>
+      <xsl:for-each-group select="/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Resource']" group-by="cmd:ResourceRef/normalize-space(@lat:localURI)">
+        <xsl:for-each select="if (current-grouping-key()='') then (current-group()) else (current-group()[1])">
+				<xsl:variable name="res" select="current()"/>
 				<xsl:variable name="resURI" select="resolve-uri($res/cmd:ResourceRef/@lat:localURI,base-uri())"/>
 				<xsl:variable name="resPID" select="$res/cmd:ResourceRef"/>
 				<xsl:variable name="resID" select="cmd:lat('lat:',$resPID)"/>
@@ -122,13 +127,14 @@
 							<xsl:sequence select="false()"/>
 						</xsl:when>
 						<xsl:when test="starts-with($resURI,'file:') and not(sx:fileExists($resURI))">
-							<xsl:message>ERR: resource[<xsl:value-of select="$resURI"/>] linked from [<xsl:value-of select="base-uri()"/>] doesn't exist!</xsl:message>
 							<xsl:choose>
 								<xsl:when test="$lax-resource-check">
+									<xsl:message>WRN: resource[<xsl:value-of select="$resURI"/>] linked from [<xsl:value-of select="base-uri()"/>] doesn't exist!</xsl:message>
 									<xsl:message>WRN: resource FOX[<xsl:value-of select="$resFOX"/>] will be created anyway</xsl:message>
 									<xsl:sequence select="true()"/>
 								</xsl:when>
 								<xsl:otherwise>
+									<xsl:message>ERR: resource[<xsl:value-of select="$resURI"/>] linked from [<xsl:value-of select="base-uri()"/>] doesn't exist!</xsl:message>
 									<xsl:message>WRN: resource FOX[<xsl:value-of select="$resFOX"/>] will not be created!</xsl:message>
 									<xsl:sequence select="false()"/>
 								</xsl:otherwise>
@@ -167,7 +173,7 @@
 										<rdf:RDF xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:fedora-model="info:fedora/fedora-system:def/model#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 											<rdf:Description rdf:about="info:fedora/{$resID}">
 												<!-- relationships to (parent) compounds -->
-												<xsl:variable name="compounds" select="$rels-doc/key('rels-to',$resPID)[type='Resource']/from"/>
+												<xsl:variable name="compounds" select="distinct-values($rels-doc/key('rels-to',($resPID,$resURI))[type='Resource']/from)"/>
 												<xsl:for-each select="$compounds">
 													<fedora:isConstituentOf rdf:resource="info:fedora/{cmd:lat('lat:',current())}"/>
 												</xsl:for-each>
@@ -217,7 +223,8 @@
 							</foxml:datastream>
 						</foxml:digitalObject>
 					</xsl:result-document>
-				</xsl:if>
+        </xsl:if>
+        </xsl:for-each>
 			</xsl:for-each-group>
 		</foxml:digitalObject>
 	</xsl:template>
@@ -230,10 +237,48 @@
 			<xsl:apply-templates select="@*|node()" mode="#current"/>
 		</xsl:copy>
 	</xsl:template>
+	
+	<xsl:template match="cmd:ResourceRef" mode="cmdi">
+		<xsl:variable name="pid"  select="resolve-uri(.,base-uri())"/>
+		<xsl:variable name="lcl"  select="resolve-uri(@lat:localURI,base-uri())"/>
+		<xsl:choose>
+			<xsl:when test="starts-with($pid,'file:') or starts-with($lcl,'file:')">
+				<xsl:variable name="to"   select="$rels-doc/key('rels-to',($pid,$lcl))"/>
+				<xsl:variable name="from" select="$rels-doc/key('rels-from',($pid,$lcl))"/>
+				<xsl:variable name="refs" select="distinct-values(($from/src,$from/from,$to/dst,$to/to))[normalize-space(.)!='']"/>
+				<xsl:variable name="hdl"  select="$refs[starts-with(.,'hdl:')]"/>
+				<xsl:choose>
+					<xsl:when test="count($hdl) eq 0">
+						<xsl:message>ERR: the handle for resource[<xsl:value-of select="string-join($refs,', ')"/>] can't be determined!</xsl:message>
+						<xsl:copy>
+							<xsl:apply-templates select="@*|node()" mode="#current"/>
+						</xsl:copy>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:if test="count($hdl) gt 1">
+							<xsl:message>ERR: there are multiple handles[<xsl:value-of select="string-join($hdl,', ')"/>] for resource[<xsl:value-of select="string-join($refs,', ')"/>] can't be determined! Using the first one ...</xsl:message>
+						</xsl:if>
+						<xsl:copy>
+							<xsl:apply-templates select="@* except @lat:localURI" mode="#current"/>
+							<xsl:attribute name="lat:localURI" xmlns:lat="http://lat.mpi.nl/">
+								<xsl:value-of select="cmd:lat('lat:',($hdl)[1])"/>
+							</xsl:attribute>
+							<xsl:value-of select="($hdl)[1]"/>
+						</xsl:copy>
+					</xsl:otherwise>
+				</xsl:choose>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:copy>
+					<xsl:apply-templates select="@*|node()" mode="#current"/>
+				</xsl:copy>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
 
-	<!-- strip out the CMDI-invalid @lat:localURI -->
-	<xsl:template match="@lat:*" priority="1" mode="cmdi">
-		<xsl:attribute name="lat:{local-name()}" xmlns:lat="http://lat.mpi.nl/">
+	<!-- turn @lat:localURI into a lat: reference -->
+	<xsl:template match="@lat:localURI" priority="1" mode="cmdi">
+		<xsl:attribute name="lat:localURI" xmlns:lat="http://lat.mpi.nl/">
 			<xsl:value-of select="cmd:lat('lat:',parent::cmd:ResourceRef)"/>
 		</xsl:attribute>
 	</xsl:template>

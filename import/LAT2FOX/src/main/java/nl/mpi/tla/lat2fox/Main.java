@@ -146,6 +146,7 @@ public class Main {
             XdmDestination dest = new XdmDestination();
             rcheck.setDestination(dest);
             rcheck.transform();
+            //System.exit(0);
             // CMDI 2 FOX
             // create the fox dir
             FileUtils.forceMkdir(new File(fdir));
@@ -189,7 +190,7 @@ public class Main {
                     if (n == ndir)
                         n = 0;
                     n++;
-                    FileUtils.moveFileToDirectory(input,new File(fdir+"/"+(n==1?d++:d)),true);
+                    FileUtils.moveFileToDirectory(input,new File(fdir+"/"+(n==1?++d:d)),true);
                 }
             }
             if (validateFOX) {

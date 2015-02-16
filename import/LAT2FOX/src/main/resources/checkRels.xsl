@@ -7,8 +7,8 @@
 	
 	<xsl:param name="rels-uri" select="'./relations.xml'"/>
 	<xsl:param name="rels-doc" select="document($rels-uri)"/>
-	<xsl:key name="rels-from" match="relation" use="from"/>
-	<xsl:key name="rels-to" match="relation" use="to"/>
+	<xsl:key name="rels-from" match="relation" use="src|from"/>
+	<xsl:key name="rels-to" match="relation" use="dst|to"/>
 	
 	<xsl:template name="main">
 		<xsl:for-each-group select="$rels-doc//relation" group-by="from">

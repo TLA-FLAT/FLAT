@@ -11,7 +11,7 @@
 	
 	<xsl:template name="main">
 		<relations>
-			<xsl:for-each select="collection(concat($dir,concat('?select=*.',$ext,';recurse=yes')))">
+			<xsl:for-each select="collection(concat($dir,concat('?select=*.',$ext,';recurse=yes;on-error=warning')))">
 				<xsl:variable name="rec" select="current()"/>
 				<xsl:variable name="src" select="base-uri($rec)"/>
 				<xsl:variable name="frm" select="$rec/cmd:CMD/cmd:Header/cmd:MdSelfLink"/>
@@ -34,7 +34,14 @@
 							</xsl:choose>
 						</to>
 						<dst>
-							<xsl:value-of select="cmd:ResourceRef/@lat:localURI"/>
+							<xsl:choose>
+								<xsl:when test="starts-with(cmd:ResourceRef/@lat:localURI,'hdl:')">
+									<xsl:value-of select="cmd:ResourceRef/@lat:localURI"/>
+								</xsl:when>
+								<xsl:otherwise>
+									<xsl:value-of select="resolve-uri(cmd:ResourceRef/@lat:localURI,$src)"/>
+								</xsl:otherwise>
+							</xsl:choose>
 						</dst>
 						<type>
 							<xsl:value-of select="cmd:ResourceType"/>
