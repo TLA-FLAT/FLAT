@@ -58,6 +58,7 @@ public class Main {
         System.err.println("INF: -e=<EXT>  the extension of CMDI files (default: cmdi)");
         System.err.println("INF: -r=<FILE> load/store the relations map from/in this <FILE> (optional)");
         System.err.println("INF: -f=<DIR>  directory to store the FOX files (default: ./fox)");
+        System.err.println("INF: -x=<DIR>  directory to store the FOX files with problems (default: ./fox-error)");
         System.err.println("INF: -i=<DIR>  replace source <DIR> by this <DIR> in the FOX files (optional)");
         System.err.println("INF: -n=<NUM>  create subdirectories to contain <NUM> FOX files (default: 0, i.e., no subdirectories)");
         System.err.println("INF: -v        validate the FOX files (optional)");
@@ -69,12 +70,13 @@ public class Main {
         String dir = ".";
         String fdir = null;
         String idir = null;
+        String xdir = null;
         String cext = "cmdi";
         boolean validateFOX = false;
         boolean laxResourceCheck = false;
         int ndir = 0;
         // check command line
-        OptionParser parser = new OptionParser( "lve:r:f:i:n:?*" );
+        OptionParser parser = new OptionParser( "lve:r:f:i:x:n:?*" );
         OptionSet options = parser.parse(args);
         if (options.has("l"))
             laxResourceCheck = true;
@@ -88,6 +90,8 @@ public class Main {
             fdir = (String)options.valueOf("f");
         if (options.has("i"))
             idir = (String)options.valueOf("i");
+        if (options.has("x"))
+            xdir = (String)options.valueOf("x");
         if (options.has("n")) {
             try {
                 ndir = Integer.parseInt((String)options.valueOf("n"));
@@ -120,6 +124,8 @@ public class Main {
         try {
             if (fdir == null)
                 fdir = dir + "/fox";
+            if (xdir == null)
+                xdir = dir + "/fox-error";
             XdmNode relsDoc = null;
             if (rfile != null && rfile.exists()) {
                 relsDoc = SaxonUtils.buildDocument(new StreamSource(rfile));
@@ -152,8 +158,11 @@ public class Main {
             FileUtils.forceMkdir(new File(fdir));
             Collection<File> inputs = FileUtils.listFiles(new File(dir),new String[] {cext},true);
             XsltExecutable cmd2fox = SaxonUtils.buildTransformer(Main.class.getResource("/cmd2fox.xsl"));
+            int err = 0;
             int i = 0;
+            int s = inputs.size();
             for (File input:inputs) {
+                i++;
                 if (!input.isHidden() && !input.getAbsolutePath().matches(".*/(corpman|sessions)/.*")) {
                     try {
                         XsltTransformer fox = cmd2fox.load();
@@ -171,40 +180,50 @@ public class Main {
                         String fid = SaxonUtils.evaluateXPath(destination.getXdmNode(),"/*/@PID").evaluateSingle().getStringValue();
                         File out = new File(fdir + "/"+fid.replaceAll("[^a-zA-Z0-9]", "_")+".xml");
                         if (out.exists()) {
-                            System.err.println("ERR: FOX["+out.getAbsolutePath()+"] already exists!");
-                            out = new File(fdir + "/lat-"+(++i)+".xml");
-                            System.err.println("WRN: saved to FOX["+out.getAbsolutePath()+"] instead!");
+                            System.err.println("ERR:"+i+"/"+s+": FOX["+out.getAbsolutePath()+"] already exists!");
+                            out = new File(xdir + "/lat-error-"+(++err)+".xml");
+                            System.err.println("WRN:"+i+"/"+s+": saved to FOX["+out.getAbsolutePath()+"] instead!");
                         }
                         TransformerFactory.newInstance().newTransformer().transform(destination.getXdmNode().asSource(),new StreamResult(out));
-                        System.err.println("DBG: created["+out.getAbsolutePath()+"]");
+                        System.err.println("DBG:"+i+"/"+s+": created["+out.getAbsolutePath()+"]");
                     } catch (Exception e) {
-                        System.err.println("ERR: "+e);
-                        System.err.println("WRN: skipping file["+input.getAbsolutePath()+"]");
+                        System.err.println("ERR:"+i+"/"+s+": "+e);
+                        System.err.println("WRN:"+i+"/"+s+": skipping file["+input.getAbsolutePath()+"]");
                     }
                 }
             }
             if (ndir > 0) {
                 int n = 0;
                 int d = 0;
-                for (File input:FileUtils.listFiles(new File(fdir),new String[] {"xml"},true)) {
+                inputs = FileUtils.listFiles(new File(fdir),new String[] {"xml"},true);
+                i = 0;
+                s = inputs.size();
+                for (File input:inputs) {
+                    i++;
                     if (n == ndir)
                         n = 0;
                     n++;
                     FileUtils.moveFileToDirectory(input,new File(fdir+"/"+(n==1?++d:d)),true);
+                    if (n==1)
+                        System.err.println("DBG:"+i+"/"+s+": moved to dir["+fdir+"/"+d+"]");
                 }
             }
             if (validateFOX) {
                 SchemAnon tron = new SchemAnon(Main.class.getResource("/foxml1-1.xsd"),"ingest");
-                for (File input:FileUtils.listFiles(new File(fdir),new String[] {"xml"},true)) {
+                inputs = FileUtils.listFiles(new File(fdir),new String[] {"xml"},true);
+                i = 0;
+                s = inputs.size();
+                for (File input:inputs) {
+                    i++;
                     // validate FOX
                     if (!tron.validate(input)) {
-                        System.err.println("ERR: invalid file["+input.getAbsolutePath()+"]");
+                        System.err.println("ERR:"+i+"/"+s+": invalid file["+input.getAbsolutePath()+"]");
                         for (Message msg : tron.getMessages()) {
-                            System.out.println("" + (msg.isError() ? "ERR: " : "WRN: ") + (msg.getLocation() != null ? "at " + msg.getLocation() : ""));
-                            System.out.println("" + (msg.isError() ? "ERR: " : "WRN: ") + msg.getText());
+                            System.out.println("" + (msg.isError() ? "ERR: " : "WRN: ") + i+"/"+s+": " + (msg.getLocation() != null ? "at " + msg.getLocation() : ""));
+                            System.out.println("" + (msg.isError() ? "ERR: " : "WRN: ") + i+"/"+s+": " + msg.getText());
                         }
                     } else
-                        System.err.println("DBG: valid file["+input.getAbsolutePath()+"]");
+                        System.err.println("DBG:"+i+"/"+s+": valid file["+input.getAbsolutePath()+"]");
                 }
             }
         } catch(Exception ex) {
