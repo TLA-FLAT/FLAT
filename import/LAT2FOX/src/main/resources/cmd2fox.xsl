@@ -12,6 +12,8 @@
 	<xsl:param name="import-base" select="()"/>
 	<xsl:param name="fox-base" select="'./fox'"/>
 	<xsl:param name="lax-resource-check" select="false()"/>
+	
+	<xsl:param name="create-cmd-object" select="true()"/>
 
 	<xsl:function name="cmd:lat">
 		<xsl:param name="prefix"/>
@@ -20,14 +22,59 @@
 		<xsl:variable name="length" select="min((string-length($suffix), (64 - string-length($prefix))))"/>
 		<xsl:sequence select="concat($prefix,substring($suffix,string-length($suffix) - $length + 1))"/>
 	</xsl:function>
+	
+	<xsl:function name="cmd:pid">
+		<xsl:param name="locs"/>
+		<xsl:variable name="to" select="$rels-doc/key('rels-to',$locs)"/>
+		<xsl:variable name="from" select="$rels-doc/key('rels-from',$locs)"/>
+		<xsl:variable name="refs" select="distinct-values(($from/src,$from/from,$to/dst,$to/to))[normalize-space(.)!='']"/>
+		<xsl:variable name="hdl" select="$refs[starts-with(.,'hdl:')]"/>
+		<xsl:choose>
+			<xsl:when test="count($hdl) eq 0">
+				<xsl:message>ERR: the handle for resource[<xsl:value-of select="string-join($refs,', ')"/>] can't be determined!</xsl:message>
+				<xsl:sequence select="()"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:if test="count($hdl) gt 1">
+					<xsl:message>ERR: there are multiple handles[<xsl:value-of select="string-join($hdl,', ')"/>] for resource[<xsl:value-of select="string-join($refs,', ')"/>]! Using the first one ...</xsl:message>
+				</xsl:if>
+				<xsl:sequence select="($hdl)[1]"/>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:function>
 
 	<xsl:template match="/">
-		<xsl:variable name="pid" select="/cmd:CMD/cmd:Header/cmd:MdSelfLink"/>
-		<xsl:variable name="fid" select="cmd:lat('lat:',$pid)"/>
+		<xsl:variable name="base" select="base-uri()"/>
+		<xsl:variable name="self" select="normalize-space($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink)"/>
+		<xsl:variable name="pid">
+			<xsl:choose>
+				<xsl:when test="normalize-space($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink)=''">
+					<xsl:message>ERR: CMD record[<xsl:value-of select="$base"/>] has no or empty MdSelfLink!</xsl:message>
+					<xsl:variable name="hdl" select="cmd:pid($base)"/>
+					<xsl:choose>
+						<xsl:when test="normalize-space($hdl)!=''">
+							<xsl:message>WRN: found handle[<xsl:value-of select="$hdl"/>] for CMD record[<xsl:value-of select="$base"/>]</xsl:message>
+							<xsl:sequence select="$hdl"/>
+						</xsl:when>
+						<xsl:otherwise>
+							<xsl:message>WRN: using base URI instead.</xsl:message>
+							<xsl:sequence select="$base"/>
+						</xsl:otherwise>
+					</xsl:choose>
+				</xsl:when>
+				<xsl:when test="starts-with($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink,'hdl:') or starts-with($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink,'http://hdl.handle.net/')">
+					<xsl:sequence select="replace(replace($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink,'http://hdl.handle.net/','hdl:'),'@format=.+','')"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:sequence select="normalize-space($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink)"/>
+				</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+		<xsl:variable name="fid"  select="cmd:lat('lat:',$pid)"/>
 		<xsl:message>DBG: CMDI2FOX[<xsl:value-of select="$pid"/>][<xsl:value-of select="$fid"/>]</xsl:message>
 		<!--<xsl:message>DBG: [<xsl:value-of select="$rels-doc/key('rels-from',$pid)[1]/src"/>]!=[<xsl:value-of select="base-uri()"/>] => [<xsl:value-of select="$rels-doc/key('rels-from',$pid)[1]/src!=base-uri()"/>]</xsl:message>-->
-		<xsl:if test="$rels-doc/key('rels-from',$pid)[1]/src!=base-uri()">
-			<xsl:message>ERR: record[<xsl:value-of select="base-uri()"/>] has an already used PID URI[<xsl:value-of select="$pid"/>][<xsl:value-of select="(key('rels-from',$pid))[1]/src"/>]!</xsl:message>
+		<xsl:if test="$rels-doc/key('rels-from',$pid)[1]/src!=$base">
+			<xsl:message>ERR: record[<xsl:value-of select="$base"/>] has an already used PID URI[<xsl:value-of select="$pid"/>][<xsl:value-of select="(key('rels-from',$pid))[1]/src"/>]!</xsl:message>
 			<xsl:message terminate="yes">WRN: resource FOX[<xsl:value-of select="$fid"/>] will not be created!</xsl:message>
 		</xsl:if>
 		<xsl:variable name="dc">
@@ -42,7 +89,7 @@
 				<!-- [A]ctive state -->
 				<foxml:property NAME="info:fedora/fedora-system:def/model#state" VALUE="A"/>
 				<!-- take the first title found in the Dublin Core -->
-				<foxml:property NAME="info:fedora/fedora-system:def/model#label" VALUE="{substring((//cmd:Components/*/cmd:Title)[1],1,255)}">
+				<foxml:property NAME="info:fedora/fedora-system:def/model#label">
 					<xsl:variable name="label" select="($dc//dc:title[normalize-space()!=''])[1]" xmlns:dc="http://purl.org/dc/elements/1.1/"/>
 					<xsl:choose>
 						<xsl:when test="exists($label)">
@@ -62,14 +109,104 @@
 					</foxml:xmlContent>
 				</foxml:datastreamVersion>
 			</foxml:datastream>
-			<!-- Metadata: CMDI -->
-			<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="CMDI" STATE="A" CONTROL_GROUP="X">
-				<foxml:datastreamVersion ID="CMDI.0" FORMAT_URI="{/cmd:CMD/@xsii:schemaLocation}" LABEL="CMDI Record for this object" MIMETYPE="text/xml">
-					<foxml:xmlContent>
-						<xsl:apply-templates mode="cmdi"/>
-					</foxml:xmlContent>
-				</foxml:datastreamVersion>
-			</foxml:datastream>
+			<!-- Metadata: CMD -->
+			<xsl:choose>
+				<xsl:when test="$create-cmd-object">
+					<xsl:variable name="cmdID" select="cmd:lat('lat:',concat($pid,'-CMD'))"/>
+					<xsl:variable name="cmdFOX" select="concat($fox-base,'/',replace($cmdID,'[^a-zA-Z0-9]','_'),'.xml')"/>
+					<xsl:choose>
+						<xsl:when test="not(doc-available($cmdFOX))">
+							<xsl:message>DBG: creating CMD FOX[<xsl:value-of select="$cmdFOX"/>]</xsl:message>
+							<xsl:result-document href="{$cmdFOX}">
+								<foxml:digitalObject VERSION="1.1" PID="{$cmdID}" xmlns:xsii="http://www.w3.org/2001/XMLSchema-instance" xsii:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/definitions/1/0/foxml1-1.xsd">
+									<xsl:comment>
+									<xsl:text>Source: </xsl:text>
+									<xsl:value-of select="base-uri()"/>
+								</xsl:comment>
+									<foxml:objectProperties>
+										<!-- [A]ctive state -->
+										<foxml:property NAME="info:fedora/fedora-system:def/model#state" VALUE="A"/>
+										<!-- take the first title found in the Dublin Core -->
+										<foxml:property NAME="info:fedora/fedora-system:def/model#label">
+											<xsl:variable name="label" select="($dc//dc:title[normalize-space()!=''])[1]" xmlns:dc="http://purl.org/dc/elements/1.1/"/>
+											<xsl:choose>
+												<xsl:when test="exists($label)">
+													<xsl:attribute name="VALUE" select="substring($label,1,255)"/>
+												</xsl:when>
+												<xsl:otherwise>
+													<xsl:attribute name="VALUE" select="$pid"/>
+												</xsl:otherwise>
+											</xsl:choose>
+										</foxml:property>
+									</foxml:objectProperties>
+									<!-- Metadata: Dublin Core -->
+									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="DC" STATE="A" CONTROL_GROUP="X">
+										<foxml:datastreamVersion ID="DC.0" FORMAT_URI="http://www.openarchives.org/OAI/2.0/oai_dc/" MIMETYPE="text/xml" LABEL="Dublin Core Record for this object">
+											<foxml:xmlContent>
+												<xsl:copy-of select="$dc"/>
+											</foxml:xmlContent>
+										</foxml:datastreamVersion>
+									</foxml:datastream>
+									<!-- Relations: RELS-EXT -->
+									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="RELS-EXT" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
+										<foxml:datastreamVersion ID="RELS-EXT.0" LABEL="RDF Statements about this object" MIMETYPE="text/xml">
+											<foxml:xmlContent>
+												<rdf:RDF xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:fedora-model="info:fedora/fedora-system:def/model#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:islandora="http://islandora.ca/ontology/relsext#">
+													<rdf:Description rdf:about="info:fedora/{$cmdID}">
+														<!-- relationship to the compound -->
+														<fedora:isConstituentOf rdf:resource="info:fedora/{$fid}"/>
+														<!-- make it the first object in the compound -->
+														<xsl:element name="{concat('islandora:isSequenceNumberOf',replace($fid,':','_'))}">
+															<xsl:text>1</xsl:text>
+														</xsl:element>
+														<!-- CMD object has to become a member of the collections the compound is a member of -->
+														<xsl:variable name="parents" select="distinct-values($rels-doc/key('rels-to',($pid,$base))[type='Metadata']/from)"/>
+														<xsl:choose>
+															<xsl:when test="exists($parents)">
+																<xsl:for-each select="$parents">
+																	<fedora:isMemberOfCollection rdf:resource="info:fedora/{cmd:lat('lat:',current())}"/>
+																</xsl:for-each>
+															</xsl:when>
+															<xsl:otherwise>
+																<fedora:isMemberOfCollection rdf:resource="info:fedora/islandora:compound_collection"/>
+															</xsl:otherwise>
+														</xsl:choose>
+													</rdf:Description>
+												</rdf:RDF>
+											</foxml:xmlContent>
+										</foxml:datastreamVersion>
+									</foxml:datastream>
+									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="CMD" STATE="A" CONTROL_GROUP="X">
+										<foxml:datastreamVersion ID="CMD.0" FORMAT_URI="{/cmd:CMD/@xsii:schemaLocation}" LABEL="CMD Record for this object" MIMETYPE="text/xml">
+											<foxml:xmlContent>
+												<xsl:apply-templates mode="cmd">
+													<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
+													<xsl:with-param name="base" select="$base" tunnel="yes"/>
+												</xsl:apply-templates>
+											</foxml:xmlContent>
+										</foxml:datastreamVersion>
+									</foxml:datastream>
+								</foxml:digitalObject>
+							</xsl:result-document>
+						</xsl:when>
+						<xsl:otherwise>
+							<xsl:message>WRN: skipped creating CMD FOX[<xsl:value-of select="$cmdFOX"/>], it already exists!</xsl:message>
+						</xsl:otherwise>
+					</xsl:choose>
+				</xsl:when>
+				<xsl:otherwise>
+					<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="CMD" STATE="A" CONTROL_GROUP="X">
+						<foxml:datastreamVersion ID="CMD.0" FORMAT_URI="{/cmd:CMD/@xsii:schemaLocation}" LABEL="CMD Record for this object" MIMETYPE="text/xml">
+							<foxml:xmlContent>
+								<xsl:apply-templates mode="cmd">
+									<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
+									<xsl:with-param name="base" select="$base" tunnel="yes"/>
+								</xsl:apply-templates>
+							</foxml:xmlContent>
+						</foxml:datastreamVersion>
+					</foxml:datastream>
+				</xsl:otherwise>
+			</xsl:choose>
 			<!-- Relations: RELS-EXT -->
 			<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="RELS-EXT" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
 				<foxml:datastreamVersion ID="RELS-EXT.0" LABEL="RDF Statements about this object" MIMETYPE="text/xml">
@@ -81,9 +218,8 @@
 									<xsl:value-of select="cmd:lat('oai:lat.mpi.nl:',/cmd:CMD/cmd:Header/cmd:MdSelfLink)"/>
 								</oai:itemID>
 								<!-- relationships to (parent) collections -->
-								<xsl:variable name="base" select="base-uri()"/>
-								<!--<xsl:message>DBG: look for parents (rels-to:dst|to) of [<xsl:value-of select="$rec/cmd:CMD/cmd:Header/cmd:MdSelfLink"/>] or [<xsl:value-of select="$base"/>] </xsl:message>-->
-								<xsl:variable name="parents" select="distinct-values($rels-doc/key('rels-to',($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink,$base))[type='Metadata']/from)"/>
+								<!--<xsl:message>DBG: look for parents (rels-to:dst|to) of [<xsl:value-of select="$pid"/>] or [<xsl:value-of select="$base"/>] </xsl:message>-->
+								<xsl:variable name="parents" select="distinct-values($rels-doc/key('rels-to',($pid,$base))[type='Metadata']/from)"/>
 								<!--<xsl:message>DBG: parents[<xsl:value-of select="string-join($parents,', ')"/>] </xsl:message>-->
 								<xsl:choose>
 									<xsl:when test="exists($parents)">
@@ -96,12 +232,12 @@
 										<fedora:isMemberOfCollection rdf:resource="info:fedora/islandora:compound_collection"/>
 									</xsl:otherwise>
 								</xsl:choose>
-								<!-- if the CMDI has references to other metadata files it's a collection -->
+								<!-- if the CMD has references to other metadata files it's a collection -->
 								<xsl:if test="exists(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Metadata'])">
 									<fedora-model:hasModel rdf:resource="info:fedora/islandora:collectionCModel"/>
 								</xsl:if>
-								<!-- if the CMDI has references to resources it's a compound -->
-								<xsl:if test="exists(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Resource'])">
+								<!-- if the CMD is a separate object and/or the CMD has references to resources it's a compound -->
+								<xsl:if test="$create-cmd-object or exists(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Resource'])">
 									<fedora-model:hasModel rdf:resource="info:fedora/islandora:compoundCModel"/>
 								</xsl:if>
 							</rdf:Description>
@@ -117,13 +253,31 @@
 			<xsl:for-each-group select="/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Resource']" group-by="cmd:ResourceRef/normalize-space(@lat:localURI)">
 				<xsl:for-each select="if (current-grouping-key()='') then (current-group()) else (current-group()[1])">
 					<xsl:variable name="res" select="current()"/>
-					<xsl:variable name="resURI" select="resolve-uri($res/cmd:ResourceRef/@lat:localURI,base-uri())"/>
-					<xsl:variable name="resPID" select="$res/cmd:ResourceRef"/>
+					<xsl:variable name="resPID">
+						<xsl:choose>
+							<xsl:when test="starts-with($res/cmd:ResourceRef,'hdl:') or starts-with($res/cmd:ResourceRef,'http://hdl.handle.net/')">
+								<xsl:sequence select="replace(replace(cmd:ResourceRef,'http://hdl.handle.net/','hdl:'),'@format=.+','')"/>
+							</xsl:when>
+							<xsl:otherwise>
+								<xsl:sequence select="resolve-uri($res/cmd:ResourceRef,$base)"/>
+							</xsl:otherwise>
+						</xsl:choose>
+					</xsl:variable>
+					<xsl:variable name="resURI">
+						<xsl:choose>
+							<xsl:when test="normalize-space($res/cmd:ResourceRef/@lat:localURI)!=''">
+								<xsl:sequence select="resolve-uri($res/cmd:ResourceRef/@lat:localURI,$base)"/>
+							</xsl:when>
+							<xsl:when test="normalize-space($resPID)!=''">
+								<xsl:sequence select="resolve-uri($resPID,$base)"/>
+							</xsl:when>
+						</xsl:choose>
+					</xsl:variable>
 					<xsl:variable name="resID" select="cmd:lat('lat:',$resPID)"/>
 					<!--<xsl:variable name="resFOX" select="concat($fox-base,'/',replace($resURI,'[^a-zA-Z0-9]','_'),'.xml')"/>-->
 					<xsl:variable name="resFOX" select="concat($fox-base,'/',replace($resID,'[^a-zA-Z0-9]','_'),'.xml')"/>
 					<!--<xsl:message>DBG: resourceProxy[<xsl:value-of select="$resURI"/>][<xsl:value-of select="$resFOX"/>][<xsl:value-of select="$resPID"/>][<xsl:value-of select="$resID"/>]</xsl:message>-->
-					<!-- CHECK: take the filepart of the localURI as the resource title? -->
+					<!-- take the filepart of the localURI as the resource title -->
 					<xsl:variable name="resTitle" select="replace($resURI,'.*/','')"/>
 					<!--<xsl:message>DBG: creating FOX[<xsl:value-of select="$resFOX"/>]?[<xsl:value-of select="not(doc-available($resFOX))"/>]</xsl:message>-->
 					<xsl:variable name="createFOX" as="xs:boolean">
@@ -140,6 +294,11 @@
 							</xsl:when>
 							<xsl:when test="not(sx:checkURL(replace($resPID,'^hdl:','http://hdl.handle.net/')))">
 								<xsl:message>ERR: resource[<xsl:value-of select="$resURI"/>] has an invalid PID URI[<xsl:value-of select="$resPID"/>]!</xsl:message>
+								<xsl:message>WRN: resource FOX[<xsl:value-of select="$resFOX"/>] will not be created!</xsl:message>
+								<xsl:sequence select="false()"/>
+							</xsl:when>
+							<xsl:when test="normalize-space($resURI)=''">
+								<xsl:message>ERR: resource URI is empty, i.e., unknown!</xsl:message>
 								<xsl:message>WRN: resource FOX[<xsl:value-of select="$resFOX"/>] will not be created!</xsl:message>
 								<xsl:sequence select="false()"/>
 							</xsl:when>
@@ -256,38 +415,64 @@
 	<!-- CMDI -->
 
 	<!-- identity copy -->
-	<xsl:template match="@*|node()" mode="cmdi">
+	<xsl:template match="@*|node()" mode="cmd">
 		<xsl:copy>
 			<xsl:apply-templates select="@*|node()" mode="#current"/>
 		</xsl:copy>
 	</xsl:template>
-
-	<xsl:template match="cmd:ResourceRef" mode="cmdi">
-		<xsl:variable name="pid" select="resolve-uri(.,base-uri())"/>
-		<xsl:variable name="lcl" select="resolve-uri(@lat:localURI,base-uri())"/>
+	
+	<xsl:template match="cmd:Header" mode="cmd">
+		<xsl:param name="pid" tunnel="yes"/>
+		<xsl:copy>
+			<xsl:apply-templates select="@*" mode="#current"/>
+			<xsl:apply-templates select="cmd:MdCreator|cmd:MdCreationDate" mode="#current"/>
+			<xsl:element name="cmd:MdSelfLink">
+				<xsl:copy-of select="cmd:MdSelfLink/@* except @lat:localURI"/>
+				<xsl:attribute name="lat:localURI" select="cmd:lat('lat:',$pid)"/>
+				<xsl:value-of select="$pid"/>
+			</xsl:element>
+			<xsl:apply-templates select="node() except (cmd:MdCreator|cmd:MdCreationDate|cmd:MdSelfLink)" mode="#current"/>
+		</xsl:copy>
+	</xsl:template>
+	
+	<xsl:template match="cmd:ResourceRef" mode="cmd">
+		<xsl:param name="base" tunnel="yes"/>
+		<xsl:variable name="pid">
+			<xsl:choose>
+				<xsl:when test="normalize-space(.)=''">
+					<xsl:sequence select="()"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:sequence select="resolve-uri(.,$base)"/>
+				</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+		<xsl:variable name="lcl">
+			<xsl:choose>
+				<xsl:when test="normalize-space(@lat:localURI)=''">
+					<xsl:sequence select="()"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:sequence select="resolve-uri(@lat:localURI,$base)"/>
+				</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
 		<xsl:choose>
 			<xsl:when test="starts-with($pid,'file:') or starts-with($lcl,'file:')">
-				<xsl:variable name="to" select="$rels-doc/key('rels-to',($pid,$lcl))"/>
-				<xsl:variable name="from" select="$rels-doc/key('rels-from',($pid,$lcl))"/>
-				<xsl:variable name="refs" select="distinct-values(($from/src,$from/from,$to/dst,$to/to))[normalize-space(.)!='']"/>
-				<xsl:variable name="hdl" select="$refs[starts-with(.,'hdl:')]"/>
+				<xsl:variable name="hdl" select="cmd:pid(($pid,$lcl))"/>
 				<xsl:choose>
-					<xsl:when test="count($hdl) eq 0">
-						<xsl:message>ERR: the handle for resource[<xsl:value-of select="string-join($refs,', ')"/>] can't be determined!</xsl:message>
+					<xsl:when test="empty($hdl)">
 						<xsl:copy>
 							<xsl:apply-templates select="@*|node()" mode="#current"/>
 						</xsl:copy>
 					</xsl:when>
 					<xsl:otherwise>
-						<xsl:if test="count($hdl) gt 1">
-							<xsl:message>ERR: there are multiple handles[<xsl:value-of select="string-join($hdl,', ')"/>] for resource[<xsl:value-of select="string-join($refs,', ')"/>] can't be determined! Using the first one ...</xsl:message>
-						</xsl:if>
 						<xsl:copy>
 							<xsl:apply-templates select="@* except @lat:localURI" mode="#current"/>
 							<xsl:attribute name="lat:localURI" xmlns:lat="http://lat.mpi.nl/">
-								<xsl:value-of select="cmd:lat('lat:',($hdl)[1])"/>
+								<xsl:value-of select="cmd:lat('lat:',$hdl)"/>
 							</xsl:attribute>
-							<xsl:value-of select="($hdl)[1]"/>
+							<xsl:value-of select="$hdl"/>
 						</xsl:copy>
 					</xsl:otherwise>
 				</xsl:choose>
@@ -301,7 +486,7 @@
 	</xsl:template>
 
 	<!-- turn @lat:localURI into a lat: reference -->
-	<xsl:template match="@lat:localURI" priority="1" mode="cmdi">
+	<xsl:template match="@lat:localURI" priority="1" mode="cmd">
 		<xsl:attribute name="lat:localURI" xmlns:lat="http://lat.mpi.nl/">
 			<xsl:value-of select="cmd:lat('lat:',parent::cmd:ResourceRef)"/>
 		</xsl:attribute>

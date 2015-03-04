@@ -154,8 +154,9 @@ public class Main {
             rcheck.transform();
             //System.exit(0);
             // CMDI 2 FOX
-            // create the fox dir
+            // create the fox dirs
             FileUtils.forceMkdir(new File(fdir));
+            FileUtils.forceMkdir(new File(xdir));
             Collection<File> inputs = FileUtils.listFiles(new File(dir),new String[] {cext},true);
             XsltExecutable cmd2fox = SaxonUtils.buildTransformer(Main.class.getResource("/cmd2fox.xsl"));
             int err = 0;

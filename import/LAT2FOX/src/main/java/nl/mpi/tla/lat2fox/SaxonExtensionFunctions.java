@@ -89,7 +89,7 @@ public final class SaxonExtensionFunctions {
                     try {
                         String path = ((StringValue) arguments[0].head()).getStringValue().replaceAll("^file://?/?","/");
                         boolean exists = (new java.io.File(path)).exists();
-                        System.err.println("DBG: file["+path+"] exists?["+exists+"]");
+                        //System.err.println("DBG: file["+path+"] exists?["+exists+"]");
                         seq = (new XdmAtomicValue(exists)).getUnderlyingValue();
                     } catch(Exception e) {
                         System.err.println("ERR: "+e.getMessage());

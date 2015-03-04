@@ -11,7 +11,7 @@
 	<xsl:key name="rels-to" match="relation" use="dst|to"/>
 	
 	<xsl:template name="main">
-		<xsl:for-each-group select="$rels-doc//relation" group-by="from">
+		<xsl:for-each-group select="$rels-doc//relation" group-by="from[normalize-space(.)!='']">
 			<xsl:variable name="recs" select="distinct-values(current-group()/src)"/>
 			<xsl:if test="count($recs)!=1">
 				<xsl:message>WRN: handle[<xsl:value-of select="current-grouping-key()"/>] is used for multiple records[<xsl:value-of select="string-join($recs,', ')"/>]!</xsl:message>
@@ -23,7 +23,7 @@
 				<xsl:message>WRN: metadata PID[<xsl:value-of select="current-grouping-key()"/>] is also used as Resource PID to [<xsl:value-of select="string-join($rels-doc/key('rels-to',current-grouping-key())[type='Resource']/dst,', ')"/>] by [<xsl:value-of select="string-join($rels-doc/key('rels-to',current-grouping-key())[type='Resource']/src,', ')"/>]!</xsl:message>
 			</xsl:if>
 		</xsl:for-each-group>
-		<xsl:for-each-group select="$rels-doc//relation" group-by="to">
+		<xsl:for-each-group select="$rels-doc//relation" group-by="to[normalize-space(.)!='']">
 			<xsl:variable name="res" select="distinct-values(current-group()[type='Resource'][normalize-space(dst)!='']/resolve-uri(dst,src))"/>
 			<xsl:if test="count($res) gt 1">
 				<xsl:message>WRN: handle[<xsl:value-of select="current-grouping-key()"/>] is used for multiple resources[<xsl:value-of select="count($res)"/>][<xsl:value-of select="string-join($res,', ')"/>]!</xsl:message>
