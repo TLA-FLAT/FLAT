@@ -413,7 +413,7 @@
 													<xsl:attribute name="REF" select="replace($resURI,$conversion-base,$import-base)"/>
 												</xsl:when>
 												<xsl:otherwise>
-													<xsl:attribute name="REF" select="$resURI"/>
+													<xsl:attribute name="REF" select="replace($resURI,'^hdl:','http://hdl.handle.net/')"/>
 												</xsl:otherwise>
 											</xsl:choose>
 										</foxml:contentLocation>
@@ -441,11 +441,11 @@
 		<xsl:copy>
 			<xsl:apply-templates select="@*" mode="#current"/>
 			<xsl:apply-templates select="cmd:MdCreator|cmd:MdCreationDate" mode="#current"/>
-			<xsl:element name="cmd:MdSelfLink">
+			<MdSelfLink xmlns="http://www.clarin.eu/cmd/">
 				<xsl:copy-of select="cmd:MdSelfLink/@* except @lat:localURI"/>
 				<xsl:attribute name="lat:localURI" select="cmd:lat('lat:',$pid)"/>
 				<xsl:value-of select="$pid"/>
-			</xsl:element>
+			</MdSelfLink>
 			<xsl:apply-templates select="node() except (cmd:MdCreator|cmd:MdCreationDate|cmd:MdSelfLink)" mode="#current"/>
 		</xsl:copy>
 	</xsl:template>
