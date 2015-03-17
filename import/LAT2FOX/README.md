@@ -5,7 +5,7 @@ This tool creates FOX files from CMD records.
 Build
 -----
 ```sh
-mvn clean install
+MAVEN_OPTS="-Xss10M" mvn clean install
 ```
 
 Run

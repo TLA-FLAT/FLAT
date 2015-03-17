@@ -14,31 +14,36 @@
 	<xsl:param name="lax-resource-check" select="false()"/>
 	
 	<xsl:param name="create-cmd-object" select="true()"/>
+	
+	<xsl:function name="cmd:hdl">
+		<xsl:param name="pid"/>
+		<xsl:sequence select="replace(replace($pid,'^http://hdl.handle.net/','hdl:'),'@format=[a-z]+','')"/>
+	</xsl:function>
 
 	<xsl:function name="cmd:lat">
 		<xsl:param name="prefix"/>
 		<xsl:param name="pid"/>
-		<xsl:variable name="suffix" select="replace(replace(replace(replace($pid,'http://hdl.handle.net/','hdl:'),'@format=.+',''),'[^a-zA-Z0-9]','_'),'^hdl_','')"/>
+		<xsl:variable name="suffix" select="replace(replace(cmd:hdl($pid),'[^a-zA-Z0-9]','_'),'^hdl_','')"/>
 		<xsl:variable name="length" select="min((string-length($suffix), (64 - string-length($prefix))))"/>
 		<xsl:sequence select="concat($prefix,substring($suffix,string-length($suffix) - $length + 1))"/>
 	</xsl:function>
 	
 	<xsl:function name="cmd:pid">
 		<xsl:param name="locs"/>
-		<xsl:variable name="to" select="$rels-doc/key('rels-to',$locs)"/>
-		<xsl:variable name="from" select="$rels-doc/key('rels-from',$locs)"/>
+		<xsl:variable name="to" select="$rels-doc/key('rels-to',for $l in $locs return cmd:hdl($l))"/>
+		<xsl:variable name="from" select="$rels-doc/key('rels-from',for $l in $locs return cmd:hdl($l))"/>
 		<xsl:variable name="refs" select="distinct-values(($from/src,$from/from,$to/dst,$to/to))[normalize-space(.)!='']"/>
 		<xsl:variable name="hdl" select="$refs[starts-with(.,'hdl:')]"/>
 		<xsl:choose>
 			<xsl:when test="count($hdl) eq 0">
-				<xsl:message>ERR: the handle for resource[<xsl:value-of select="string-join($refs,', ')"/>] can't be determined!</xsl:message>
+				<xsl:message>ERR: the handle for resource[<xsl:value-of select="for $l in $locs return cmd:hdl($l)"/>][<xsl:value-of select="string-join($refs,', ')"/>] can't be determined!</xsl:message>
 				<xsl:sequence select="()"/>
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:if test="count($hdl) gt 1">
-					<xsl:message>ERR: there are multiple handles[<xsl:value-of select="string-join($hdl,', ')"/>] for resource[<xsl:value-of select="string-join($refs,', ')"/>]! Using the first one ...</xsl:message>
+					<xsl:message>ERR: there are multiple handles[<xsl:value-of select="string-join($hdl,', ')"/>] for resource[<xsl:value-of select="for $l in $locs return cmd:hdl($l)"/>][<xsl:value-of select="string-join($refs,', ')"/>]! Using the first one ...</xsl:message>
 				</xsl:if>
-				<xsl:sequence select="($hdl)[1]"/>
+				<xsl:sequence select="cmd:hdl(($hdl)[1])"/>
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:function>
@@ -62,8 +67,8 @@
 						</xsl:otherwise>
 					</xsl:choose>
 				</xsl:when>
-				<xsl:when test="starts-with($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink,'hdl:') or starts-with($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink,'http://hdl.handle.net/')">
-					<xsl:sequence select="replace(replace($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink,'http://hdl.handle.net/','hdl:'),'@format=.+','')"/>
+				<xsl:when test="starts-with(cmd:hdl($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink),'hdl:')">
+					<xsl:sequence select="cmd:hdl($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink)"/>
 				</xsl:when>
 				<xsl:otherwise>
 					<xsl:sequence select="normalize-space($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink)"/>
@@ -255,8 +260,8 @@
 					<xsl:variable name="res" select="current()"/>
 					<xsl:variable name="resPID">
 						<xsl:choose>
-							<xsl:when test="starts-with($res/cmd:ResourceRef,'hdl:') or starts-with($res/cmd:ResourceRef,'http://hdl.handle.net/')">
-								<xsl:sequence select="replace(replace(cmd:ResourceRef,'http://hdl.handle.net/','hdl:'),'@format=.+','')"/>
+							<xsl:when test="starts-with(cmd:hdl($res/cmd:ResourceRef),'hdl:')">
+								<xsl:sequence select="cmd:hdl($res/cmd:ResourceRef)"/>
 							</xsl:when>
 							<xsl:otherwise>
 								<xsl:sequence select="resolve-uri($res/cmd:ResourceRef,$base)"/>
@@ -306,14 +311,24 @@
 								<xsl:sequence select="true()"/>
 							</xsl:when>
 							<xsl:when test="starts-with($resURI,'file:') and not(sx:fileExists($resURI))">
+								<xsl:variable name="uri">
+									<xsl:choose>
+										<xsl:when test="exists($import-base)">
+											<xsl:sequence select="replace($resURI,$conversion-base,$import-base)"/>
+										</xsl:when>
+										<xsl:otherwise>
+											<xsl:sequence select="$resURI"/>
+										</xsl:otherwise>
+									</xsl:choose>
+								</xsl:variable>
 								<xsl:choose>
 									<xsl:when test="$lax-resource-check">
-										<xsl:message>WRN: resource[<xsl:value-of select="$resURI"/>] linked from [<xsl:value-of select="base-uri()"/>] doesn't exist!</xsl:message>
+										<xsl:message>WRN: resource[<xsl:value-of select="$uri"/>] linked from [<xsl:value-of select="base-uri()"/>] doesn't exist!</xsl:message>
 										<xsl:message>WRN: resource FOX[<xsl:value-of select="$resFOX"/>] will be created anyway</xsl:message>
 										<xsl:sequence select="true()"/>
 									</xsl:when>
 									<xsl:otherwise>
-										<xsl:message>ERR: resource[<xsl:value-of select="$resURI"/>] linked from [<xsl:value-of select="base-uri()"/>] doesn't exist!</xsl:message>
+										<xsl:message>ERR: resource[<xsl:value-of select="$uri"/>] linked from [<xsl:value-of select="base-uri()"/>] doesn't exist!</xsl:message>
 										<xsl:message>WRN: resource FOX[<xsl:value-of select="$resFOX"/>] will not be created!</xsl:message>
 										<xsl:sequence select="false()"/>
 									</xsl:otherwise>
@@ -457,9 +472,9 @@
 				</xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
+		<xsl:variable name="hdl" select="cmd:pid(($pid,$lcl))"/>
 		<xsl:choose>
 			<xsl:when test="starts-with($pid,'file:') or starts-with($lcl,'file:')">
-				<xsl:variable name="hdl" select="cmd:pid(($pid,$lcl))"/>
 				<xsl:choose>
 					<xsl:when test="empty($hdl)">
 						<xsl:copy>
@@ -479,7 +494,15 @@
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:copy>
-					<xsl:apply-templates select="@*|node()" mode="#current"/>
+					<xsl:apply-templates select="@*" mode="#current"/>
+					<xsl:choose>
+						<xsl:when test="empty($hdl)">
+							<xsl:apply-templates select="node()" mode="#current"/>
+						</xsl:when>
+						<xsl:otherwise>
+							<xsl:value-of select="$hdl"/>
+						</xsl:otherwise>
+					</xsl:choose>
 				</xsl:copy>
 			</xsl:otherwise>
 		</xsl:choose>
@@ -493,7 +516,6 @@
 	</xsl:template>
 
 	<!-- Dublin Core -->
-
 	<xsl:template match="cmd:CMD" mode="dc">
 		<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
 			<xsl:apply-templates select="cmd:Components/*/cmd:Name" mode="#current"/>
