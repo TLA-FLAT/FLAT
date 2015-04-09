@@ -3,10 +3,10 @@
 export FEDORA_HOME="/var/www/fedora"
 
 echo "START: `date --rfc-3339=seconds`"
-if [ -f /lat/log ]; then
-	rm /lat/log
+if [ -f /import/log ]; then
+	rm /import/log
 fi
-for DIR in `find /lat/fox/ -type d | sed '1d'`; do
+for DIR in `find /import/fox/ -type d | sed '1d'`; do
   if [ -f STOP ]; then
 	echo "FORCED STOP: `date --rfc-3339=seconds`"
 	rm STOP
@@ -23,15 +23,15 @@ for DIR in `find /lat/fox/ -type d | sed '1d'`; do
   BEGIN="`date --rfc-3339=seconds`"
   echo "BEGIN DIR: $DIR,`date --rfc-3339=seconds`"
   B="`date '+%s'`"
-  $FEDORA_HOME/client/bin/fedora-batch-ingest.sh $DIR /lat/log xml info:fedora/fedora-system:FOXML-1.1 localhost:8443 fedoraAdmin fedora https fedora
+  $FEDORA_HOME/client/bin/fedora-batch-ingest.sh $DIR /import/log xml info:fedora/fedora-system:FOXML-1.1 localhost:8443 fedoraAdmin fedora https fedora
   E="`date '+%s'`"
   RES="FAILED"
   CNT="-1"
-  if [ -f /lat/log ]; then
-  	cat /lat/log
+  if [ -f /import/log ]; then
+  	cat /import/log
 	RES="SUCCESS"
-        CNT="`grep path2object /lat/log | wc -l`"
-	rm /lat/log
+        CNT="`grep path2object /import/log | wc -l`"
+	rm /import/log
   fi
   echo "END DIR: $DIR,$RES,$CNT,$BEGIN,`date --rfc-3339=seconds`,`expr $E - $B`"
 done

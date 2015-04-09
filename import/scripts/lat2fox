@@ -1,0 +1,5 @@
+#!/bin/sh
+
+java -Xmx4096m -jar /import/lib/lat2fox.jar $*
+
+exit $?
