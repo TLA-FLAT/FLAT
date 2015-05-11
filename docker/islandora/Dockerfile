@@ -54,9 +54,9 @@ CMD ["/sbin/my_init"]
 #
 # Update and install all system libraries
 #
-RUN apt-get update
-RUN apt-get -y dist-upgrade
-RUN apt-get -y install curl wget openssl apache2 postgresql php5 php5-gd php5-pgsql php5-xsl php5-curl unzip default-jre libapache2-mod-jk expect ssh rsync
+RUN apt-get update &&\
+    apt-get -y dist-upgrade &&\
+    apt-get -y install curl wget openssl apache2 postgresql php5 php5-gd php5-pgsql php5-xsl php5-curl unzip default-jre libapache2-mod-jk expect ssh rsync
 
 #
 # Configure apache
