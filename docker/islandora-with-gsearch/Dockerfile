@@ -16,8 +16,8 @@
 #   docker run -i -p 80:80 -p 8443:8443 -p 8080:8080 -h fedora.test.lan -t easylat/islandora-gsearch:latest /sbin/my_init -- bash -l
 #
 #
-FROM           tlatest04.mpi.nl:5000/islandora:latest
-MAINTAINER	Willem Elbers <willem.elbers@mpi.nl>
+FROM            easylat
+MAINTAINER	Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 
 ENV FEDORA_HOME /var/www/fedora/
 ENV CATALINA_HOME /var/www/fedora/tomcat/

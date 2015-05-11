@@ -37,9 +37,8 @@
 # /var/www/html/drupal
 #
 
-#FROM      	ubuntu
 FROM            phusion/baseimage
-MAINTAINER	Willem Elbers <willem.elbers@mpi.nl>
+MAINTAINER	Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 
 # Set correct environment variables.
 ENV HOME /root

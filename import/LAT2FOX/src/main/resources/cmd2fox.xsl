@@ -30,23 +30,29 @@
 	
 	<xsl:function name="cmd:pid">
 		<xsl:param name="locs"/>
+                <xsl:param name="lvl"/>
 		<xsl:variable name="to" select="$rels-doc/key('rels-to',for $l in $locs return cmd:hdl($l))"/>
 		<xsl:variable name="from" select="$rels-doc/key('rels-from',for $l in $locs return cmd:hdl($l))"/>
 		<xsl:variable name="refs" select="distinct-values(($from/src,$from/from,$to/dst,$to/to))[normalize-space(.)!='']"/>
 		<xsl:variable name="hdl" select="$refs[starts-with(.,'hdl:')]"/>
 		<xsl:choose>
 			<xsl:when test="count($hdl) eq 0">
-				<xsl:message>ERR: the handle for resource[<xsl:value-of select="for $l in $locs return cmd:hdl($l)"/>][<xsl:value-of select="string-join($refs,', ')"/>] can't be determined!</xsl:message>
+				<xsl:message><xsl:value-of select="$lvl"/>: the handle for resource[<xsl:value-of select="string-join(distinct-values(for $l in $locs return cmd:hdl($l)),', ')"/>][<xsl:value-of select="string-join($refs,', ')"/>] can't be determined!</xsl:message>
 				<xsl:sequence select="()"/>
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:if test="count($hdl) gt 1">
-					<xsl:message>ERR: there are multiple handles[<xsl:value-of select="string-join($hdl,', ')"/>] for resource[<xsl:value-of select="for $l in $locs return cmd:hdl($l)"/>][<xsl:value-of select="string-join($refs,', ')"/>]! Using the first one ...</xsl:message>
+					<xsl:message>ERR: there are multiple handles[<xsl:value-of select="string-join($hdl,', ')"/>] for resource[<xsl:value-of select="string-join(distinct-values(for $l in $locs return cmd:hdl($l)),', ')"/>][<xsl:value-of select="string-join($refs,', ')"/>]! Using the first one ...</xsl:message>
 				</xsl:if>
 				<xsl:sequence select="cmd:hdl(($hdl)[1])"/>
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:function>
+        
+        <xsl:function name="cmd:pid">
+            <xsl:param name="locs"/>
+            <xsl:sequence select="cmd:pid($locs,'ERR')"/>
+        </xsl:function>
 
 	<xsl:template match="/">
 		<xsl:variable name="base" select="base-uri()"/>
@@ -472,7 +478,17 @@
 				</xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
-		<xsl:variable name="hdl" select="cmd:pid(($pid,$lcl))"/>
+                <xsl:variable name="lvl">
+                    <xsl:choose>
+                        <xsl:when test="../cmd:ResourceType=('Metadata','Resource')">
+                            <xsl:sequence select="'ERR'"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:sequence select="'WRN'"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:variable>
+		<xsl:variable name="hdl" select="cmd:pid(($pid,$lcl),$lvl)"/>
 		<xsl:choose>
 			<xsl:when test="starts-with($pid,'file:') or starts-with($lcl,'file:')">
 				<xsl:choose>
