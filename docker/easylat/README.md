@@ -12,13 +12,13 @@ Quick installation link: https://docs.docker.com/installation/#installation
 
 1. Start your docker environment
 2. Run: 
-    "docker build -t islandora/v3 ."
+    "docker build -t easylat ."
 
 ## Running your docker container ##
 
 1. Start your docker environment
 2. Run: 
-    "docker run --rm -p 80:80 -p 8443:8443 -h fedora.test.lan -t -i islandora/v3 /sbin/my_init -- bash -l"
+    "docker run --rm -p 80:80 -p 8443:8443 -h fedora.test.lan -t -i easylat /sbin/my_init -- bash -l"
 
 This will start your docker container with the following properties:
 - Mapped each port specified with a "-p" parameter between your container and your host

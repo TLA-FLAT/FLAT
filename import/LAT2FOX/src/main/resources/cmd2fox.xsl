@@ -182,13 +182,16 @@
 																<fedora:isMemberOfCollection rdf:resource="info:fedora/islandora:compound_collection"/>
 															</xsl:otherwise>
 														</xsl:choose>
+														<!-- a CMD object uses the cmdi content model and is a member of the cmdi collection -->
+														<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_cmdiCModel"/>
+														<fedora:isMemberOfCollection rdf:resource="info:fedora/islandora:cmdi_collection"/>
 													</rdf:Description>
 												</rdf:RDF>
 											</foxml:xmlContent>
 										</foxml:datastreamVersion>
 									</foxml:datastream>
 									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="CMD" STATE="A" CONTROL_GROUP="X">
-										<foxml:datastreamVersion ID="CMD.0" FORMAT_URI="{/cmd:CMD/@xsii:schemaLocation}" LABEL="CMD Record for this object" MIMETYPE="text/xml">
+										<foxml:datastreamVersion ID="CMD.0" FORMAT_URI="{/cmd:CMD/@xsii:schemaLocation}" LABEL="CMD Record for this object" MIMETYPE="application/x-cmdi+xml">
 											<foxml:xmlContent>
 												<xsl:apply-templates mode="cmd">
 													<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
@@ -207,7 +210,7 @@
 				</xsl:when>
 				<xsl:otherwise>
 					<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="CMD" STATE="A" CONTROL_GROUP="X">
-						<foxml:datastreamVersion ID="CMD.0" FORMAT_URI="{/cmd:CMD/@xsii:schemaLocation}" LABEL="CMD Record for this object" MIMETYPE="text/xml">
+						<foxml:datastreamVersion ID="CMD.0" FORMAT_URI="{/cmd:CMD/@xsii:schemaLocation}" LABEL="CMD Record for this object" MIMETYPE="application/x-cmdi+xml">
 							<foxml:xmlContent>
 								<xsl:apply-templates mode="cmd">
 									<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
@@ -250,6 +253,11 @@
 								<!-- if the CMD is a separate object and/or the CMD has references to resources it's a compound -->
 								<xsl:if test="$create-cmd-object or exists(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Resource'])">
 									<fedora-model:hasModel rdf:resource="info:fedora/islandora:compoundCModel"/>
+								</xsl:if>
+								<!-- if the CMD is part of the compound FOXML it uses the cmdi content model and is member of the cmdi collection -->
+								<xsl:if test="not($create-cmd-object)">
+									<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_cmdiCModel"/>
+									<fedora:isMemberOfCollection rdf:resource="info:fedora/islandora:cmdi_collection"/>
 								</xsl:if>
 							</rdf:Description>
 						</rdf:RDF>
