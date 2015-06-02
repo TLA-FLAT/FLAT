@@ -1,0 +1,7 @@
+name = "CMDI"
+dependencies[] = islandora
+description = "CMDI display for metadata"
+package = Islandora Solution Packs
+core = 7.x
+version = 7.x-dev
+configure = admin/islandora/solution_pack_config/cmdi
