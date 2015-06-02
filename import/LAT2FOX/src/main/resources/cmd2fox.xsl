@@ -162,7 +162,11 @@
 									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="RELS-EXT" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
 										<foxml:datastreamVersion ID="RELS-EXT.0" LABEL="RDF Statements about this object" MIMETYPE="text/xml">
 											<foxml:xmlContent>
-												<rdf:RDF xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:fedora-model="info:fedora/fedora-system:def/model#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:islandora="http://islandora.ca/ontology/relsext#">
+												<rdf:RDF xmlns:oai="http://www.openarchives.org/OAI/2.0/" 
+													xmlns:fedora="info:fedora/fedora-system:def/relations-external#" 
+													xmlns:fedora-model="info:fedora/fedora-system:def/model#" 
+													xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
+													xmlns:islandora="http://islandora.ca/ontology/relsext#">
 													<rdf:Description rdf:about="info:fedora/{$cmdID}">
 														<!-- relationship to the compound -->
 														<fedora:isConstituentOf rdf:resource="info:fedora/{$fid}"/>
@@ -184,7 +188,6 @@
 														</xsl:choose>
 														<!-- a CMD object uses the cmdi content model and is a member of the cmdi collection -->
 														<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_cmdiCModel"/>
-														<fedora:isMemberOfCollection rdf:resource="info:fedora/islandora:cmdi_collection"/>
 													</rdf:Description>
 												</rdf:RDF>
 											</foxml:xmlContent>
@@ -257,7 +260,6 @@
 								<!-- if the CMD is part of the compound FOXML it uses the cmdi content model and is member of the cmdi collection -->
 								<xsl:if test="not($create-cmd-object)">
 									<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_cmdiCModel"/>
-									<fedora:isMemberOfCollection rdf:resource="info:fedora/islandora:cmdi_collection"/>
 								</xsl:if>
 							</rdf:Description>
 						</rdf:RDF>
