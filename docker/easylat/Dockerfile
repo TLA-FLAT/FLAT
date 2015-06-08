@@ -162,6 +162,11 @@ RUN cd /tmp/islandora &&\
 	wget "https://github.com/Islandora/islandora_solution_pack_compound/archive/7.x-1.5.zip" &&\
 	mv 7.x-1.5.zip islandora_solution_pack_compound-7.x-1.5.zip &&\
 	unzip islandora_solution_pack_compound-7.x-1.5.zip -d /var/www/html/drupal/sites/all/modules/contrib/
+RUN cd /tmp/islandora &&\
+	wget "https://github.com/TheLanguageArchive/EasyLAT/archive/master.zip" &&\
+	mv master.zip EasyLAT.zip &&\
+	unzip EasyLAT.zip 'EasyLAT-master/islandora/islandora_solution_pack_cmdi/*' &&\
+	mv EasyLAT-master/islandora/islandora_solution_pack_cmdi /var/www/html/drupal/sites/all/modules/contrib/
 
 RUN cd /var/www/html/drupal/ &&\
     export PGPASSWORD=fedora &&\
@@ -175,6 +180,8 @@ RUN cd /var/www/html/drupal/ &&\
     /var/www/composer/vendor/drush/drush/drush en islandora -y &&\
     /var/www/composer/vendor/drush/drush/drush en islandora_basic_collection -y &&\
     /var/www/composer/vendor/drush/drush/drush en islandora_compound_object -y &&\
+    /var/www/composer/vendor/drush/drush/drush en islandora_cmdi -y &&\
+    /var/www/composer/vendor/drush/drush/drush vset islandora_metadata_display cmdi &&\
     /var/www/fedora/tomcat/bin/shutdown.sh &&\
     sleep 10 &&\
     /etc/init.d/postgresql stop
