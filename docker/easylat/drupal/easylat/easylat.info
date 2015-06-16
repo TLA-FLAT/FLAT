@@ -1,0 +1,11 @@
+name = EasyLAT
+description = EasyLAT drupal setup
+core = 7.x
+package = Features
+version = 7.x-1.0-alpha
+project = easylat
+dependencies[] = fe_block
+features[fe_block_boxes][] = easylat
+features[fe_block_settings][] = block-easylat
+features[fe_block_settings][] = system-powered-by
+features[features_api][] = api:2

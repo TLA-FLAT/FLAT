@@ -136,11 +136,17 @@ ENV PGPASSWORD=fedora
 RUN /etc/init.d/postgresql start &&\
     cd /var/www/html/drupal &&\
     export PHP_OPTIONS="-d sendmail_path=`which true`" &&\
-    /var/www/composer/vendor/drush/drush/drush site-install standard --account-name=admin --account-pass=admin --db-su=fedora --db-su-pw=fedora --db-url=pgsql://fedora:fedora@localhost/drupal -y &&\
+    /var/www/composer/vendor/drush/drush/drush site-install standard --site-name=EasyLAT --account-name=admin --account-pass=admin --db-su=fedora --db-su-pw=fedora --db-url=pgsql://fedora:fedora@localhost/drupal -y &&\
     /etc/init.d/postgresql stop
 
+RUN mkdir -p /var/www/html/drupal/sites/all/modules/custom
 RUN chown www-data:www-data /var/www/html/drupal/sites/default/files &&\
-    chown www-data:www-data /var/www/html/drupal/sites/default/settings.php
+    chown www-data:www-data /var/www/html/drupal/sites/default/settings.php &&\
+    chown www-data:www-data /var/www/html/drupal/sites/all/modules/custom
+    
+ADD drupal/easylat-logo.png /var/www/html/drupal/sites/default/files/easylat-logo.png
+ADD drupal/easylat /var/www/html/drupal/sites/all/modules/custom/
+ADD drupal/easylat-logo.php /tmp/
 
 RUN mkdir /tmp/tuque &&\
     cd /tmp/tuque &&\
@@ -168,6 +174,14 @@ RUN cd /tmp/islandora &&\
 	unzip EasyLAT.zip 'EasyLAT-master/islandora/islandora_solution_pack_cmdi/*' &&\
 	mv EasyLAT-master/islandora/islandora_solution_pack_cmdi /var/www/html/drupal/sites/all/modules/contrib/
 
+RUN mkdir /tmp/feature
+RUN cd /tmp/feature &&\
+	wget "http://ftp.drupal.org/files/projects/features-7.x-2.5.zip" &&\
+	unzip features-7.x-2.5.zip -d /var/www/html/drupal/sites/all/modules/contrib/
+RUN cd /tmp/feature &&\
+	wget "http://ftp.drupal.org/files/projects/features_extra-7.x-1.0-beta1.zip" &&\
+	unzip features_extra-7.x-1.0-beta1.zip -d /var/www/html/drupal/sites/all/modules/contrib/
+
 RUN cd /var/www/html/drupal/ &&\
     export PGPASSWORD=fedora &&\
     /etc/init.d/postgresql start &&\
@@ -182,6 +196,10 @@ RUN cd /var/www/html/drupal/ &&\
     /var/www/composer/vendor/drush/drush/drush en islandora_compound_object -y &&\
     /var/www/composer/vendor/drush/drush/drush en islandora_cmdi -y &&\
     /var/www/composer/vendor/drush/drush/drush vset islandora_metadata_display cmdi &&\
+    /var/www/composer/vendor/drush/drush/drush en features -y &&\
+    /var/www/composer/vendor/drush/drush/drush en fe_block -y &&\
+    /var/www/composer/vendor/drush/drush/drush en easylat -y &&\
+    /var/www/composer/vendor/drush/drush/drush php-script easylat-logo --script-path=/tmp &&\
     /var/www/fedora/tomcat/bin/shutdown.sh &&\
     sleep 10 &&\
     /etc/init.d/postgresql stop
