@@ -13,6 +13,8 @@
 	<xsl:param name="fox-base" select="'./fox'"/>
 	<xsl:param name="lax-resource-check" select="false()"/>
 	
+	<xsl:param name="repository" select="'easylat.org'"/>
+	
 	<xsl:param name="create-cmd-object" select="true()"/>
 	
 	<xsl:function name="cmd:hdl">
@@ -168,6 +170,10 @@
 													xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
 													xmlns:islandora="http://islandora.ca/ontology/relsext#">
 													<rdf:Description rdf:about="info:fedora/{$cmdID}">
+														<!-- OAI -->
+														<oai:itemID xmlns="http://www.openarchives.org/OAI/2.0/">
+															<xsl:value-of select="concat('oai:',$repository,':',$cmdID)"/>
+														</oai:itemID>
 														<!-- relationship to the compound -->
 														<fedora:isConstituentOf rdf:resource="info:fedora/{$fid}"/>
 														<!-- make it the first object in the compound -->
@@ -230,10 +236,6 @@
 					<foxml:xmlContent>
 						<rdf:RDF xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:fedora-model="info:fedora/fedora-system:def/model#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 							<rdf:Description rdf:about="info:fedora/{$fid}">
-								<!-- OAI -->
-								<oai:itemID xmlns="http://www.openarchives.org/OAI/2.0/">
-									<xsl:value-of select="cmd:lat('oai:lat.mpi.nl:',/cmd:CMD/cmd:Header/cmd:MdSelfLink)"/>
-								</oai:itemID>
 								<!-- relationships to (parent) collections -->
 								<!--<xsl:message>DBG: look for parents (rels-to:dst|to) of [<xsl:value-of select="$pid"/>] or [<xsl:value-of select="$base"/>] </xsl:message>-->
 								<xsl:variable name="parents" select="distinct-values($rels-doc/key('rels-to',($pid,$base))[type='Metadata']/from)"/>
@@ -260,6 +262,10 @@
 								<!-- if the CMD is part of the compound FOXML it uses the cmdi content model and is member of the cmdi collection -->
 								<xsl:if test="not($create-cmd-object)">
 									<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_cmdiCModel"/>
+									<!-- OAI -->
+									<oai:itemID xmlns="http://www.openarchives.org/OAI/2.0/">
+										<xsl:value-of select="concat('oai:',$repository,':',$fid)"/>
+									</oai:itemID>
 								</xsl:if>
 							</rdf:Description>
 						</rdf:RDF>
@@ -403,12 +409,20 @@
 															<fedora:isMemberOfCollection rdf:resource="info:fedora/islandora:compound_collection"/>
 														</xsl:otherwise>
 													</xsl:choose>
+													<!-- add specific content models for specific MIME types -->
+													<!--
+													<xsl:choose>
+														<xsl:when test="starts-with($res/cmd:ResourceType/@mimetype,'audio/')">
+															<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp-audioCModel"/>
+														</xsl:when>
+													</xsl:choose>
+													-->
 												</rdf:Description>
 											</rdf:RDF>
 										</foxml:xmlContent>
 									</foxml:datastreamVersion>
 								</foxml:datastream>
-								<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="RESOURCE" STATE="A">
+								<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="OBJ" STATE="A">
 									<!--- CHECK: CONTROL_GROUP indicates the kind of datastream, either
                                                             Externally Referenced Content (E), 
                                                             Redirected Content (R), 
@@ -422,7 +436,7 @@
 											<xsl:attribute name="CONTROL_GROUP" select="'R'"/>
 										</xsl:otherwise>
 									</xsl:choose>
-									<foxml:datastreamVersion ID="RESOURCE.0" LABEL="{substring($resTitle,1,255)}" MIMETYPE="{$res/cmd:ResourceType/@mimetype}">
+									<foxml:datastreamVersion ID="OBJ.0" LABEL="{substring($resTitle,1,255)}" MIMETYPE="{$res/cmd:ResourceType/@mimetype}">
 										<foxml:contentLocation TYPE="URL">
 											<xsl:choose>
 												<xsl:when test="starts-with($resURI,'file:') and exists($import-base)">
