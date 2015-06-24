@@ -38,6 +38,32 @@ function easylat_default_fe_block_settings() {
     'visibility' => 0,
   );
 
+  $export['islandora_compound_object-compound_navigation'] = array(
+    'cache' => 1,
+    'custom' => 0,
+    'delta' => 'compound_navigation',
+    'module' => 'islandora_compound_object',
+    'node_types' => array(),
+    'pages' => 'islandora/object/*',
+    'roles' => array(),
+    'themes' => array(
+      'bartik' => array(
+        'region' => 'sidebar_second',
+        'status' => 1,
+        'theme' => 'bartik',
+        'weight' => 0,
+      ),
+      'seven' => array(
+        'region' => '',
+        'status' => 0,
+        'theme' => 'seven',
+        'weight' => 0,
+      ),
+    ),
+    'title' => '',
+    'visibility' => 1,
+  );
+
   $export['system-powered-by'] = array(
     'cache' => -1,
     'custom' => 0,
