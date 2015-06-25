@@ -96,18 +96,31 @@
 	
 	<xsl:function name="cmd:collections" as="xs:string*">
 		<!--<xsl:sequence select="for $xp in $collections-map//xpath return if (sx:evaluate($rec,$xp,$collections-map/descendant-or-self::map)) then ($xp/parent::collection/@pid) else ()" as="xs:string*"/>-->
-		<xsl:for-each select="$collections-map//xpath">
-			<xsl:variable name="xp" select="current()"/>
-			<xsl:choose>
-				<xsl:when test="sx:evaluate($rec,$xp,$collections-map/descendant-or-self::map)">
-					<xsl:message>XPath[<xsl:value-of select="$xp"/>][<xsl:value-of select="sx:evaluate($rec,$xp,$collections-map/descendant-or-self::map)"/>] matches!</xsl:message>
-					<xsl:sequence select="$xp/parent::collection/@pid"/>
-				</xsl:when>
-				<xsl:otherwise>
-					<xsl:message>XPath[<xsl:value-of select="$xp"/>][<xsl:value-of select="sx:evaluate($rec,$xp,$collections-map/descendant-or-self::map)"/>] doesn't match!</xsl:message>
-				</xsl:otherwise>
-			</xsl:choose>
-		</xsl:for-each>
+		<xsl:variable name="collections" as="xs:string*">
+			<xsl:for-each select="$collections-map//xpath">
+				<xsl:variable name="xp" select="current()"/>
+				<xsl:choose>
+					<xsl:when test="sx:evaluate($rec,$xp,$collections-map/descendant-or-self::map)">
+						<xsl:message>XPath[<xsl:value-of select="$xp"/>][<xsl:value-of select="sx:evaluate($rec,$xp,$collections-map/descendant-or-self::map)"/>] matches!</xsl:message>
+						<xsl:sequence select="$xp/parent::collection/@pid"/>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:message>XPath[<xsl:value-of select="$xp"/>][<xsl:value-of select="sx:evaluate($rec,$xp,$collections-map/descendant-or-self::map)"/>] doesn't match!</xsl:message>
+					</xsl:otherwise>
+				</xsl:choose>
+			</xsl:for-each>
+		</xsl:variable>
+		<xsl:choose>
+			<xsl:when test="(count($collections) gt 1) and ($collections-map/descendant-or-self::map/@mode='first')">
+				<xsl:sequence select="($collections)[1]"/>
+			</xsl:when>
+			<xsl:when test="(count($collections) eq 0) and exists($collections-map/descendant-or-self::map/@default)">
+				<xsl:sequence select="$collections-map/descendant-or-self::map/@default"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:sequence select="$collections"/>
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:function>
 
 	<xsl:template match="/">
