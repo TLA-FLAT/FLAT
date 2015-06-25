@@ -47,6 +47,7 @@ public final class SaxonExtensionFunctions {
         throws Exception {
         config.registerExtensionFunction(new FileExistsDefinition());
         config.registerExtensionFunction(new CheckURLDefinition());
+        config.registerExtensionFunction(new EvaluateDefinition());
     }
 
     // -----------------------------------------------------------------------
@@ -150,6 +151,71 @@ public final class SaxonExtensionFunctions {
                         //System.err.println("DBG: URL["+url+"] valid?["+valid+"]");
                         seq = (new XdmAtomicValue(valid)).getUnderlyingValue();
                     } catch(Exception e) {
+                        System.err.println("ERR: "+e.getMessage());
+                        e.printStackTrace(System.err);
+                    }
+                    return seq;
+                }
+            };
+        }
+    }
+    
+    // -----------------------------------------------------------------------
+    // sx:evaluate
+    // -----------------------------------------------------------------------
+
+    public static final class EvaluateDefinition
+                        extends ExtensionFunctionDefinition {
+        public StructuredQName getFunctionQName() {
+            return new StructuredQName("sx",
+                                       "java:nl.mpi.tla.saxon",
+                                       "evaluate");
+        }
+
+        public int getMinimumNumberOfArguments() {
+            return 2;
+        }
+
+        public int getMaximumNumberOfArguments() {
+            return 3;
+        }
+
+        public SequenceType[] getArgumentTypes() {
+            return new SequenceType[] { SequenceType.SINGLE_NODE, SequenceType.SINGLE_STRING, SequenceType.OPTIONAL_NODE };
+        }
+
+        public SequenceType getResultType(SequenceType[] suppliedArgTypes) {
+            return SequenceType.ANY_SEQUENCE;
+        }
+        
+        public boolean dependsOnFocus() {
+           return true;
+        }
+
+        public ExtensionFunctionCall makeCallExpression() {
+            return new ExtensionFunctionCall() {
+                @Override
+                public Sequence call(XPathContext context, Sequence[] arguments) throws XPathException {
+                    Sequence seq = null;
+                    try {                
+                        NodeInfo    node = (NodeInfo) arguments[0].head();
+                        StringValue path = (StringValue) arguments[1].head();
+                        NodeInfo    ns   = node;
+                        if (arguments.length==3)
+                            ns = (NodeInfo) arguments[2].head();
+                        Processor processor = new Processor(context.getConfiguration());
+                        XPathCompiler xpc   = processor.newXPathCompiler();
+                        AxisIterator iter = ns.iterateAxis(AxisInfo.NAMESPACE);
+                        NamespaceNode n = (NamespaceNode)iter.next();
+                        while (n!=null) {
+                            xpc.declareNamespace(n.getLocalPart(),n.getStringValue());
+                            n = (NamespaceNode)iter.next();
+                        }
+                        XPathExecutable xpe = xpc.compile(path.asString());
+                        XPathSelector xps   = xpe.load();
+                        xps.setContextItem(new XdmNode(node));
+                        seq = xps.evaluate().getUnderlyingValue();
+                    } catch(SaxonApiException e) {
                         System.err.println("ERR: "+e.getMessage());
                         e.printStackTrace(System.err);
                     }

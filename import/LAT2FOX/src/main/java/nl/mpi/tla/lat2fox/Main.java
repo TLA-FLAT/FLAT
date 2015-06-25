@@ -61,6 +61,7 @@ public class Main {
         System.err.println("INF: -x=<DIR>  directory to store the FOX files with problems (default: ./fox-error)");
         System.err.println("INF: -i=<DIR>  replace source <DIR> by this <DIR> in the FOX files (optional)");
         System.err.println("INF: -n=<NUM>  create subdirectories to contain <NUM> FOX files (default: 0, i.e., no subdirectories)");
+        System.err.println("INF: -c=<FILE> file containing the mapping to collections (optional)");
         System.err.println("INF: -v        validate the FOX files (optional)");
         System.err.println("INF: -l        lax check if a local resource exists (optional)");
     }
@@ -72,11 +73,13 @@ public class Main {
         String idir = null;
         String xdir = null;
         String cext = "cmdi";
+        String cfile = null;
+        XdmNode collsDoc = null;
         boolean validateFOX = false;
         boolean laxResourceCheck = false;
         int ndir = 0;
         // check command line
-        OptionParser parser = new OptionParser( "lve:r:f:i:x:n:?*" );
+        OptionParser parser = new OptionParser( "lve:r:f:i:x:n:c:?*" );
         OptionSet options = parser.parse(args);
         if (options.has("l"))
             laxResourceCheck = true;
@@ -92,6 +95,26 @@ public class Main {
             idir = (String)options.valueOf("i");
         if (options.has("x"))
             xdir = (String)options.valueOf("x");
+        if (options.has("c")) {
+            cfile = (String)options.valueOf("c");
+            File c = new File(cfile);
+            if (!c.isFile()) {
+                System.err.println("FTL: -c expects a <FILE> argument!");
+                showHelp();
+                System.exit(1);
+            }
+            if (!c.canRead()) {
+                System.err.println("FTL: -c <FILE> argument isn't readable!");
+                showHelp();
+                System.exit(1);
+            }
+            try {
+                collsDoc = SaxonUtils.buildDocument(new StreamSource(cfile));
+            } catch(Exception ex) {
+                System.err.println("FTL: can't read collection <FILE>["+cfile+"]: "+ex);
+                ex.printStackTrace(System.err);
+            }
+        }
         if (options.has("n")) {
             try {
                 ndir = Integer.parseInt((String)options.valueOf("n"));
@@ -174,6 +197,8 @@ public class Main {
                             fox.setParameter(new QName("import-base"), new XdmAtomicValue(idir));
                         fox.setParameter(new QName("fox-base"), new XdmAtomicValue(fdir));
                         fox.setParameter(new QName("lax-resource-check"),new XdmAtomicValue(laxResourceCheck));
+                        if (collsDoc != null)
+                            fox.setParameter(new QName("collections-map"), collsDoc);
                         fox.setSource(new StreamSource(input));
                         XdmDestination destination = new XdmDestination();
                         fox.setDestination(destination);
@@ -228,7 +253,7 @@ public class Main {
                 }
             }
         } catch(Exception ex) {
-            System.err.println("FATAL: "+ex);
+            System.err.println("FTL: "+ex);
             ex.printStackTrace(System.err);
         }
     }
