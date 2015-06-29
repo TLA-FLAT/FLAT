@@ -19,7 +19,7 @@
 	<xsl:param name="repository" select="'easylat.org'"/>
 
 	<xsl:param name="create-cmd-object" select="true()"/>
-	
+
 	<xsl:param name="collections-map">
 		<map/>
 	</xsl:param>
@@ -66,23 +66,35 @@
 		<xsl:variable name="hdl" select="$refs[starts-with(., 'hdl:')]"/>
 		<xsl:choose>
 			<xsl:when test="count($hdl) eq 0">
-				<xsl:message><xsl:value-of select="$lvl"/>: the handle for resource[<xsl:value-of
+				<xsl:message>
+					<xsl:value-of select="$lvl"/>
+					<xsl:text>: the handle for resource[</xsl:text>
+					<xsl:value-of
 						select="
 							string-join(distinct-values(for $l in $locs
 							return
-								cmd:hdl($l)), ', ')"
-						/>][<xsl:value-of select="string-join($refs, ', ')"/>] can't be determined!</xsl:message>
+								cmd:hdl($l)), ', ')"/>
+					<xsl:text>][</xsl:text>
+					<xsl:value-of select="string-join($refs, ', ')"/>
+					<xsl:text>] can't be determined!</xsl:text>
+				</xsl:message>
 				<xsl:sequence select="()"/>
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:if test="count($hdl) gt 1">
-					<xsl:message>ERR: there are multiple handles[<xsl:value-of
-							select="string-join($hdl, ', ')"/>] for resource[<xsl:value-of
+					<xsl:message>
+						<xsl:text>ERR: there are multiple handles[</xsl:text>
+						<xsl:value-of select="string-join($hdl, ', ')"/>
+						<xsl:text>] for resource[</xsl:text>
+						<xsl:value-of
 							select="
 								string-join(distinct-values(for $l in $locs
 								return
-									cmd:hdl($l)), ', ')"
-							/>][<xsl:value-of select="string-join($refs, ', ')"/>]! Using the first one ...</xsl:message>
+									cmd:hdl($l)), ', ')"/>
+						<xsl:text>][</xsl:text>
+						<xsl:value-of select="string-join($refs, ', ')"/>
+						<xsl:text>]! Using the first one ...</xsl:text>
+					</xsl:message>
 				</xsl:if>
 				<xsl:sequence select="cmd:hdl(($hdl)[1])"/>
 			</xsl:otherwise>
@@ -93,28 +105,45 @@
 		<xsl:param name="locs"/>
 		<xsl:sequence select="cmd:pid($locs, 'ERR')"/>
 	</xsl:function>
-	
+
 	<xsl:function name="cmd:collections" as="xs:string*">
 		<!--<xsl:sequence select="for $xp in $collections-map//xpath return if (sx:evaluate($rec,$xp,$collections-map/descendant-or-self::map)) then ($xp/parent::collection/@pid) else ()" as="xs:string*"/>-->
 		<xsl:variable name="collections" as="xs:string*">
 			<xsl:for-each select="$collections-map//xpath">
 				<xsl:variable name="xp" select="current()"/>
 				<xsl:choose>
-					<xsl:when test="sx:evaluate($rec,$xp,$collections-map/descendant-or-self::map)">
-						<xsl:message>XPath[<xsl:value-of select="$xp"/>][<xsl:value-of select="sx:evaluate($rec,$xp,$collections-map/descendant-or-self::map)"/>] matches!</xsl:message>
+					<xsl:when
+						test="sx:evaluate($rec, $xp, $collections-map/descendant-or-self::map)">
+						<xsl:message>
+							<xsl:text>XPath[</xsl:text>
+							<xsl:value-of select="$xp"/>
+							<xsl:text>][</xsl:text>
+							<xsl:value-of
+								select="sx:evaluate($rec, $xp, $collections-map/descendant-or-self::map)"/>
+							<xsl:text>] matches!</xsl:text>
+						</xsl:message>
 						<xsl:sequence select="$xp/parent::collection/@pid"/>
 					</xsl:when>
 					<xsl:otherwise>
-						<xsl:message>XPath[<xsl:value-of select="$xp"/>][<xsl:value-of select="sx:evaluate($rec,$xp,$collections-map/descendant-or-self::map)"/>] doesn't match!</xsl:message>
+						<xsl:message>
+							<xsl:text>XPath[</xsl:text>
+							<xsl:value-of select="$xp"/>
+							<xsl:text>][</xsl:text>
+							<xsl:value-of
+								select="sx:evaluate($rec, $xp, $collections-map/descendant-or-self::map)"/>
+							<xsl:text>] doesn't match!</xsl:text>
+						</xsl:message>
 					</xsl:otherwise>
 				</xsl:choose>
 			</xsl:for-each>
 		</xsl:variable>
 		<xsl:choose>
-			<xsl:when test="(count($collections) gt 1) and ($collections-map/descendant-or-self::map/@mode='first')">
+			<xsl:when
+				test="(count($collections) gt 1) and ($collections-map/descendant-or-self::map/@mode = 'first')">
 				<xsl:sequence select="($collections)[1]"/>
 			</xsl:when>
-			<xsl:when test="(count($collections) eq 0) and exists($collections-map/descendant-or-self::map/@default)">
+			<xsl:when
+				test="(count($collections) eq 0) and exists($collections-map/descendant-or-self::map/@default)">
 				<xsl:sequence select="$collections-map/descendant-or-self::map/@default"/>
 			</xsl:when>
 			<xsl:otherwise>
@@ -129,13 +158,21 @@
 		<xsl:variable name="pid">
 			<xsl:choose>
 				<xsl:when test="normalize-space($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink) = ''">
-					<xsl:message>ERR: CMD record[<xsl:value-of select="$base"/>] has no or empty
-						MdSelfLink!</xsl:message>
+					<xsl:message>
+						<xsl:text>ERR: CMD record[</xsl:text>
+						<xsl:value-of select="$base"/>
+						<xsl:text>] has no or empty MdSelfLink!</xsl:text>
+					</xsl:message>
 					<xsl:variable name="hdl" select="cmd:pid($base)"/>
 					<xsl:choose>
 						<xsl:when test="normalize-space($hdl) != ''">
-							<xsl:message>WRN: found handle[<xsl:value-of select="$hdl"/>] for CMD
-									record[<xsl:value-of select="$base"/>]</xsl:message>
+							<xsl:message>
+								<xsl:text>WRN: found handle[</xsl:text>
+								<xsl:value-of select="$hdl"/>
+								<xsl:text>] for CMD record[</xsl:text>
+								<xsl:value-of select="$base"/>
+								<xsl:text>]</xsl:text>
+							</xsl:message>
 							<xsl:sequence select="$hdl"/>
 						</xsl:when>
 						<xsl:otherwise>
@@ -154,15 +191,29 @@
 			</xsl:choose>
 		</xsl:variable>
 		<xsl:variable name="fid" select="cmd:lat('lat:', $pid)"/>
-		<xsl:message>DBG: CMDI2FOX[<xsl:value-of select="$pid"/>][<xsl:value-of select="$fid"
-			/>]</xsl:message>
+		<xsl:message>
+			<xsl:text>DBG: CMDI2FOX[</xsl:text>
+			<xsl:value-of select="$pid"/>
+			<xsl:text>][</xsl:text>
+			<xsl:value-of select="$fid"/>
+			<xsl:text>]</xsl:text>
+		</xsl:message>
 		<!--<xsl:message>DBG: [<xsl:value-of select="$rels-doc/key('rels-from',$pid)[1]/src"/>]!=[<xsl:value-of select="base-uri()"/>] => [<xsl:value-of select="$rels-doc/key('rels-from',$pid)[1]/src!=base-uri()"/>]</xsl:message>-->
 		<xsl:if test="$rels-doc/key('rels-from', $pid)[1]/src != $base">
-			<xsl:message>ERR: record[<xsl:value-of select="$base"/>] has an already used PID
-					URI[<xsl:value-of select="$pid"/>][<xsl:value-of
-					select="(key('rels-from', $pid))[1]/src"/>]!</xsl:message>
-			<xsl:message terminate="yes">WRN: resource FOX[<xsl:value-of select="$fid"/>] will not
-				be created!</xsl:message>
+			<xsl:message>
+				<xsl:text>ERR: record[</xsl:text>
+				<xsl:value-of select="$base"/>
+				<xsl:text>] has an already used PID URI[</xsl:text>
+				<xsl:value-of select="$pid"/>
+				<xsl:text>][</xsl:text>
+				<xsl:value-of select="(key('rels-from', $pid))[1]/src"/>
+				<xsl:text>]!</xsl:text>
+			</xsl:message>
+			<xsl:message terminate="yes">
+				<xsl:text>WRN: resource FOX[</xsl:text>
+				<xsl:value-of select="$fid"/>
+				<xsl:text>] will not be created!</xsl:text>
+			</xsl:message>
 		</xsl:if>
 		<xsl:variable name="dc">
 			<xsl:apply-templates mode="dc"/>
@@ -482,38 +533,66 @@
 						<xsl:choose>
 							<xsl:when
 								test="(key('rels-to', $resPID))[1]/resolve-uri(dst, src) != $resURI">
-								<xsl:message>ERR: resource[<xsl:value-of select="$resURI"/>] has an
-									already used PID URI[<xsl:value-of select="$resPID"
-										/>][<xsl:value-of
-										select="(key('rels-to', $resPID))[1]/resolve-uri(dst, src)"
-									/>]!</xsl:message>
-								<xsl:message>WRN: resource FOX[<xsl:value-of select="$resFOX"/>]
-									will not be created!</xsl:message>
+								<xsl:message>
+									<xsl:text>ERR: resource[</xsl:text>
+									<xsl:value-of select="$resURI"/>
+									<xsl:text>] has an already used PID URI[</xsl:text>
+									<xsl:value-of select="$resPID"/>
+									<xsl:text>][</xsl:text>
+									<xsl:value-of
+										select="(key('rels-to', $resPID))[1]/resolve-uri(dst, src)"/>
+									<xsl:text>]!</xsl:text>
+								</xsl:message>
+								<xsl:message>
+									<xsl:text>WRN: resource FOX[</xsl:text>
+									<xsl:value-of select="$resFOX"/>
+									<xsl:text>] will not be created!</xsl:text>
+								</xsl:message>
 								<xsl:sequence select="false()"/>
 							</xsl:when>
 							<xsl:when test="exists(key('rels-from', $resPID)[Type = 'Resource'])">
-								<xsl:message>ERR: resource[<xsl:value-of select="$resURI"/>] has a
-										PID[<xsl:value-of select="$resPID"/>] already used by one or
-									more CMDI records[<xsl:value-of
-										select="string-join(key('rels-from', $resPID)[Type = 'Resource']/src, ', ')"
-									/>]!</xsl:message>
-								<xsl:message>WRN: resource FOX[<xsl:value-of select="$resFOX"/>]
-									will not be created!</xsl:message>
+								<xsl:message>
+									<xsl:text>ERR: resource[</xsl:text>
+									<xsl:value-of select="$resURI"/>
+									<xsl:text>] has a PID[</xsl:text>
+									<xsl:value-of select="$resPID"/>
+									<xsl:text>] already used by one or more CMDI records[</xsl:text>
+									<xsl:value-of
+										select="string-join(key('rels-from', $resPID)[Type = 'Resource']/src, ', ')"/>
+									<xsl:text>]!</xsl:text>
+								</xsl:message>
+								<xsl:message>
+									<xsl:text>WRN: resource FOX[</xsl:text>
+									<xsl:value-of select="$resFOX"/>
+									<xsl:text>] will not be created!</xsl:text>
+								</xsl:message>
 								<xsl:sequence select="false()"/>
 							</xsl:when>
 							<xsl:when
 								test="not(sx:checkURL(replace($resPID, '^hdl:', 'http://hdl.handle.net/')))">
-								<xsl:message>ERR: resource[<xsl:value-of select="$resURI"/>] has an
-									invalid PID URI[<xsl:value-of select="$resPID"/>]!</xsl:message>
-								<xsl:message>WRN: resource FOX[<xsl:value-of select="$resFOX"/>]
-									will not be created!</xsl:message>
+								<xsl:message>
+									<xsl:text>ERR: resource[</xsl:text>
+									<xsl:value-of select="$resURI"/>
+									<xsl:text>] has an invalid PID URI[</xsl:text>
+									<xsl:value-of select="$resPID"/>
+									<xsl:text>]!</xsl:text>
+								</xsl:message>
+								<xsl:message>
+									<xsl:text>WRN: resource FOX[</xsl:text>
+									<xsl:value-of select="$resFOX"/>
+									<xsl:text>] will not be created!</xsl:text>
+								</xsl:message>
 								<xsl:sequence select="false()"/>
 							</xsl:when>
 							<xsl:when test="normalize-space($resURI) = ''">
-								<xsl:message>ERR: resource URI is empty, i.e.,
-									unknown!</xsl:message>
-								<xsl:message>WRN: resource FOX[<xsl:value-of select="$resFOX"/>]
-									will not be created!</xsl:message>
+								<xsl:message>
+									<xsl:text>ERR: resource URI is empty, i.e., unknown!</xsl:text>
+								</xsl:message>
+								<xsl:message>
+									<xsl:text>WRN: resource FOX[</xsl:text>
+									<xsl:value-of select="$resFOX"/>
+									<xsl:text>] will not be created!</xsl:text>
+								</xsl:message>
 								<xsl:sequence select="false()"/>
 							</xsl:when>
 							<xsl:when
@@ -536,21 +615,33 @@
 								</xsl:variable>
 								<xsl:choose>
 									<xsl:when test="$lax-resource-check">
-										<xsl:message>WRN: resource[<xsl:value-of select="$uri"/>]
-											linked from [<xsl:value-of select="base-uri()"/>]
-											doesn't exist!</xsl:message>
-										<xsl:message>WRN: resource FOX[<xsl:value-of
-												select="$resFOX"/>] will be created
-											anyway</xsl:message>
+										<xsl:message>
+											<xsl:text>WRN: resource[</xsl:text>
+											<xsl:value-of select="$uri"/>
+											<xsl:text>] linked from [</xsl:text>
+											<xsl:value-of select="base-uri()"/>
+											<xsl:text>] doesn't exist!</xsl:text>
+										</xsl:message>
+										<xsl:message>
+											<xsl:text>WRN: resource FOX[</xsl:text>
+											<xsl:value-of select="$resFOX"/>
+											<xsl:text>] will be created anyway</xsl:text>
+										</xsl:message>
 										<xsl:sequence select="true()"/>
 									</xsl:when>
 									<xsl:otherwise>
-										<xsl:message>ERR: resource[<xsl:value-of select="$uri"/>]
-											linked from [<xsl:value-of select="base-uri()"/>]
-											doesn't exist!</xsl:message>
-										<xsl:message>WRN: resource FOX[<xsl:value-of
-												select="$resFOX"/>] will not be
-											created!</xsl:message>
+										<xsl:message>
+											<xsl:text>ERR: resource[</xsl:text>
+											<xsl:value-of select="$uri"/>
+											<xsl:text>] linked from [</xsl:text>
+											<xsl:value-of select="base-uri()"/>
+											<xsl:text>] doesn't exist!</xsl:text>
+										</xsl:message>
+										<xsl:message>
+											<xsl:text>WRN: resource FOX[</xsl:text>
+											<xsl:value-of select="$resFOX"/>
+											<xsl:text>] will not be created!</xsl:text>
+										</xsl:message>
 										<xsl:sequence select="false()"/>
 									</xsl:otherwise>
 								</xsl:choose>
@@ -561,8 +652,11 @@
 						</xsl:choose>
 					</xsl:variable>
 					<xsl:if test="$createFOX and not(doc-available($resFOX))">
-						<xsl:message>DBG: creating resource FOX[<xsl:value-of select="$resFOX"
-							/>]</xsl:message>
+						<xsl:message>
+							<xsl:text>DBG: creating resource FOX[</xsl:text>
+							<xsl:value-of select="$resFOX"/>
+							<xsl:text>]</xsl:text>
+						</xsl:message>
 						<xsl:result-document href="{$resFOX}">
 							<foxml:digitalObject VERSION="1.1" PID="{$resID}"
 								xmlns:xsii="http://www.w3.org/2001/XMLSchema-instance"
@@ -874,307 +968,307 @@
 				<xsl:variable name="descr"
 					select="
 						string-join(distinct-values(/cmd:CMD[exists(cmd:Header/cmd:MdProfile[contains(., 'clarin.eu:cr1:p_1328259700928')])]/cmd:Components/(cmd:Soundbites-recording/cmd:SESSION/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:Description/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:Actors/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:Actors/cmd:Description/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:Actors/cmd:Actor/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:Actors/cmd:Actor/cmd:Description/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:Actors/cmd:Actor/cmd:ActorLanguages/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:Actors/cmd:Actor/cmd:ActorLanguages/cmd:Description/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:Actors/cmd:Actor/cmd:ActorLanguages/cmd:ActorLanguage/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:Actors/cmd:Actor/cmd:ActorLanguages/cmd:ActorLanguage/cmd:Description/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:SubjectLanguages/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:SubjectLanguages/cmd:Description/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:SubjectLanguages/cmd:SubjectLanguage/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:SubjectLanguages/cmd:SubjectLanguage/cmd:Description/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:Content/cmd:Modality/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:Content/cmd:Modality/cmd:Description/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:Content/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:Content/cmd:Description/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:SessionResources/cmd:MediaFile/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:SessionResources/cmd:MediaFile/cmd:Description/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:SessionResources/cmd:WrittenResources/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:SessionResources/cmd:WrittenResources/cmd:Description/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:SessionResources/cmd:WrittenResources/cmd:WrittenResource/cmd:AnnotationType/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:SessionResources/cmd:WrittenResources/cmd:WrittenResource/cmd:AnnotationType/cmd:Description/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:SessionResources/cmd:WrittenResources/cmd:WrittenResource/cmd:Description/text(),
-						Soundbites-recording/cmd:SESSION/cmd:SessionResources/cmd:WrittenResources/cmd:WrittenResource/cmd:Description/cmd:Description/text())), ';'),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:Description/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:Actors/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:Actors/cmd:Description/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:Actors/cmd:Actor/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:Actors/cmd:Actor/cmd:Description/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:Actors/cmd:Actor/cmd:ActorLanguages/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:Actors/cmd:Actor/cmd:ActorLanguages/cmd:Description/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:Actors/cmd:Actor/cmd:ActorLanguages/cmd:ActorLanguage/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:Actors/cmd:Actor/cmd:ActorLanguages/cmd:ActorLanguage/cmd:Description/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:SubjectLanguages/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:SubjectLanguages/cmd:Description/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:SubjectLanguages/cmd:SubjectLanguage/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:SubjectLanguages/cmd:SubjectLanguage/cmd:Description/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:Content/cmd:Modality/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:Content/cmd:Modality/cmd:Description/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:Content/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:Content/cmd:Description/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:SessionResources/cmd:MediaFile/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:SessionResources/cmd:MediaFile/cmd:Description/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:SessionResources/cmd:WrittenResources/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:SessionResources/cmd:WrittenResources/cmd:Description/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:SessionResources/cmd:WrittenResources/cmd:WrittenResource/cmd:AnnotationType/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:SessionResources/cmd:WrittenResources/cmd:WrittenResource/cmd:AnnotationType/cmd:Description/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:SessionResources/cmd:WrittenResources/cmd:WrittenResource/cmd:Description/text(),
+						cmd:Soundbites-recording/cmd:SESSION/cmd:SessionResources/cmd:WrittenResources/cmd:WrittenResource/cmd:Description/cmd:Description/text())), ';'),
 						string-join(distinct-values(/cmd:CMD[exists(cmd:Header/cmd:MdProfile[contains(., 'clarin.eu:cr1:p_1328259700937')])]/cmd:Components/(cmd:Soundbites/cmd:Description/cmd:Description/text(),
-						Soundbites/cmd:Collection/cmd:GeneralInfo/cmd:Description/text(),
-						Soundbites/cmd:Collection/cmd:GeneralInfo/cmd:Description/cmd:Description/text(),
-						Soundbites/cmd:Collection/cmd:Project/cmd:Description/text(),
-						Soundbites/cmd:Collection/cmd:Project/cmd:Description/cmd:Description/text(),
-						Soundbites/cmd:Collection/cmd:Creators/cmd:Description/text(),
-						Soundbites/cmd:Collection/cmd:Creators/cmd:Description/cmd:Description/text(),
-						Soundbites/cmd:Collection/cmd:DocumentationLanguages/cmd:Description/text(),
-						Soundbites/cmd:Collection/cmd:DocumentationLanguages/cmd:Description/cmd:Description/text())), ';'),
+						cmd:Soundbites/cmd:Collection/cmd:GeneralInfo/cmd:Description/text(),
+						cmd:Soundbites/cmd:Collection/cmd:GeneralInfo/cmd:Description/cmd:Description/text(),
+						cmd:Soundbites/cmd:Collection/cmd:Project/cmd:Description/text(),
+						cmd:Soundbites/cmd:Collection/cmd:Project/cmd:Description/cmd:Description/text(),
+						cmd:Soundbites/cmd:Collection/cmd:Creators/cmd:Description/text(),
+						cmd:Soundbites/cmd:Collection/cmd:Creators/cmd:Description/cmd:Description/text(),
+						cmd:Soundbites/cmd:Collection/cmd:DocumentationLanguages/cmd:Description/text(),
+						cmd:Soundbites/cmd:Collection/cmd:DocumentationLanguages/cmd:Description/cmd:Description/text())), ';'),
 						string-join(distinct-values(/cmd:CMD[exists(cmd:Header/cmd:MdProfile[contains(., 'clarin.eu:cr1:p_1331113992512')])]/cmd:Components/(cmd:SL-IPROSLA/cmd:SL-Session/cmd:Description/text(),
-						SL-IPROSLA/cmd:SL-Session/cmd:Description/cmd:Description/text(),
-						SL-IPROSLA/cmd:Project/cmd:Description/text(),
-						SL-IPROSLA/cmd:Project/cmd:Description/cmd:Description/text(),
-						SL-IPROSLA/cmd:SL-Content/cmd:Description/text(),
-						SL-IPROSLA/cmd:SL-Content/cmd:Description/cmd:Description/text(),
-						SL-IPROSLA/cmd:SL-ActorSigner-ChildLanguage/cmd:ActorLanguages/cmd:Description/text(),
-						SL-IPROSLA/cmd:SL-ActorSigner-ChildLanguage/cmd:ActorLanguages/cmd:Description/cmd:Description/text(),
-						SL-IPROSLA/cmd:SL-ActorSigner-ChildLanguage/cmd:ActorLanguages/cmd:ActorLanguage/cmd:Description/text(),
-						SL-IPROSLA/cmd:SL-ActorSigner-ChildLanguage/cmd:ActorLanguages/cmd:ActorLanguage/cmd:Description/cmd:Description/text(),
-						SL-IPROSLA/cmd:SL-ActorResearcher/cmd:Description/text(),
-						SL-IPROSLA/cmd:SL-ActorResearcher/cmd:Description/cmd:Description/text(),
-						SL-IPROSLA/cmd:SL-ActorResearcher/cmd:ActorLanguages/cmd:Description/text(),
-						SL-IPROSLA/cmd:SL-ActorResearcher/cmd:ActorLanguages/cmd:Description/cmd:Description/text(),
-						SL-IPROSLA/cmd:SL-ActorResearcher/cmd:ActorLanguages/cmd:ActorLanguage/cmd:Description/text(),
-						SL-IPROSLA/cmd:SL-ActorResearcher/cmd:ActorLanguages/cmd:ActorLanguage/cmd:Description/cmd:Description/text(),
-						SL-IPROSLA/cmd:SL-Resources/cmd:SL-MediaFile/cmd:Description/text(),
-						SL-IPROSLA/cmd:SL-Resources/cmd:SL-MediaFile/cmd:Description/cmd:Description/text(),
-						SL-IPROSLA/cmd:SL-Resources/cmd:SL-AnnotationDocument/cmd:Description/text(),
-						SL-IPROSLA/cmd:SL-Resources/cmd:SL-AnnotationDocument/cmd:Description/cmd:Description/text(),
-						SL-IPROSLA/cmd:SL-Resources/cmd:SL-SourceVideo/cmd:Description/text(),
-						SL-IPROSLA/cmd:SL-Resources/cmd:SL-SourceVideo/cmd:Description/cmd:Description/text())), ';'),
+						cmd:SL-IPROSLA/cmd:SL-Session/cmd:Description/cmd:Description/text(),
+						cmd:SL-IPROSLA/cmd:Project/cmd:Description/text(),
+						cmd:SL-IPROSLA/cmd:Project/cmd:Description/cmd:Description/text(),
+						cmd:SL-IPROSLA/cmd:SL-Content/cmd:Description/text(),
+						cmd:SL-IPROSLA/cmd:SL-Content/cmd:Description/cmd:Description/text(),
+						cmd:SL-IPROSLA/cmd:SL-ActorSigner-ChildLanguage/cmd:ActorLanguages/cmd:Description/text(),
+						cmd:SL-IPROSLA/cmd:SL-ActorSigner-ChildLanguage/cmd:ActorLanguages/cmd:Description/cmd:Description/text(),
+						cmd:SL-IPROSLA/cmd:SL-ActorSigner-ChildLanguage/cmd:ActorLanguages/cmd:ActorLanguage/cmd:Description/text(),
+						cmd:SL-IPROSLA/cmd:SL-ActorSigner-ChildLanguage/cmd:ActorLanguages/cmd:ActorLanguage/cmd:Description/cmd:Description/text(),
+						cmd:SL-IPROSLA/cmd:SL-ActorResearcher/cmd:Description/text(),
+						cmd:SL-IPROSLA/cmd:SL-ActorResearcher/cmd:Description/cmd:Description/text(),
+						cmd:SL-IPROSLA/cmd:SL-ActorResearcher/cmd:ActorLanguages/cmd:Description/text(),
+						cmd:SL-IPROSLA/cmd:SL-ActorResearcher/cmd:ActorLanguages/cmd:Description/cmd:Description/text(),
+						cmd:SL-IPROSLA/cmd:SL-ActorResearcher/cmd:ActorLanguages/cmd:ActorLanguage/cmd:Description/text(),
+						cmd:SL-IPROSLA/cmd:SL-ActorResearcher/cmd:ActorLanguages/cmd:ActorLanguage/cmd:Description/cmd:Description/text(),
+						cmd:SL-IPROSLA/cmd:SL-Resources/cmd:SL-MediaFile/cmd:Description/text(),
+						cmd:SL-IPROSLA/cmd:SL-Resources/cmd:SL-MediaFile/cmd:Description/cmd:Description/text(),
+						cmd:SL-IPROSLA/cmd:SL-Resources/cmd:SL-AnnotationDocument/cmd:Description/text(),
+						cmd:SL-IPROSLA/cmd:SL-Resources/cmd:SL-AnnotationDocument/cmd:Description/cmd:Description/text(),
+						cmd:SL-IPROSLA/cmd:SL-Resources/cmd:SL-SourceVideo/cmd:Description/text(),
+						cmd:SL-IPROSLA/cmd:SL-Resources/cmd:SL-SourceVideo/cmd:Description/cmd:Description/text())), ';'),
 						string-join(distinct-values(/cmd:CMD[exists(cmd:Header/cmd:MdProfile[contains(., 'clarin.eu:cr1:p_1337778924955')])]/cmd:Components/(cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:languages/cmd:language/cmd:language-usage/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:languages/cmd:language/cmd:language-usage/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:languages/cmd:language/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:languages/cmd:language/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:languages/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:languages/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:lucea-affiliation/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:lucea-affiliation/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:lucea-questionnaire/cmd:lucea-questionnaire-english/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:lucea-questionnaire/cmd:lucea-questionnaire-english/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:lucea-questionnaire/cmd:lucea-questionnaire-musicality/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:lucea-questionnaire/cmd:lucea-questionnaire-musicality/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:lucea-questionnaire/cmd:lucea-questionnaire-languages/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:lucea-questionnaire/cmd:lucea-questionnaire-languages/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:lucea-questionnaire/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:lucea-questionnaire/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:physiology/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:physiology/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:audiometry/cmd:audiometryMeasurement/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:audiometry/cmd:audiometryMeasurement/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:audiometry/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:facilitator/cmd:audiometry/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:languages/cmd:language/cmd:language-usage/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:languages/cmd:language/cmd:language-usage/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:languages/cmd:language/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:languages/cmd:language/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:languages/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:languages/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:physiology/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:physiology/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:audiometry/cmd:audiometryMeasurement/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:audiometry/cmd:audiometryMeasurement/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:audiometry/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:audiometry/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-curriculum/cmd:exchange/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-curriculum/cmd:exchange/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-curriculum/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-curriculum/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-questionnaire/cmd:lucea-questionnaire-english/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-questionnaire/cmd:lucea-questionnaire-english/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-questionnaire/cmd:lucea-questionnaire-musicality/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-questionnaire/cmd:lucea-questionnaire-musicality/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-questionnaire/cmd:lucea-questionnaire-languages/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-questionnaire/cmd:lucea-questionnaire-languages/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-questionnaire/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-questionnaire/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:speaker/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:Description/text(),
-						lucea/cmd:lucea-actors/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-recording/cmd:MediaFile/cmd:Description/text(),
-						lucea/cmd:lucea-recording/cmd:MediaFile/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-recording/cmd:Description/text(),
-						lucea/cmd:lucea-recording/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-recording/cmd:lucea-tasks/cmd:lucea-task/cmd:Content/cmd:Modality/cmd:Description/text(),
-						lucea/cmd:lucea-recording/cmd:lucea-tasks/cmd:lucea-task/cmd:Content/cmd:Modality/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-recording/cmd:lucea-tasks/cmd:lucea-task/cmd:Content/cmd:Description/text(),
-						lucea/cmd:lucea-recording/cmd:lucea-tasks/cmd:lucea-task/cmd:Content/cmd:Description/cmd:Description/text(),
-						lucea/cmd:lucea-recording/cmd:lucea-tasks/cmd:lucea-task/cmd:Description/text(),
-						lucea/cmd:lucea-recording/cmd:lucea-tasks/cmd:lucea-task/cmd:Description/cmd:Description/text(),
-						lucea/cmd:Description/text(),
-						lucea/cmd:Description/cmd:Description/text())), ';'),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:languages/cmd:language/cmd:language-usage/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:languages/cmd:language/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:languages/cmd:language/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:languages/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:languages/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:lucea-affiliation/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:lucea-affiliation/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:lucea-questionnaire/cmd:lucea-questionnaire-english/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:lucea-questionnaire/cmd:lucea-questionnaire-english/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:lucea-questionnaire/cmd:lucea-questionnaire-musicality/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:lucea-questionnaire/cmd:lucea-questionnaire-musicality/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:lucea-questionnaire/cmd:lucea-questionnaire-languages/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:lucea-questionnaire/cmd:lucea-questionnaire-languages/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:lucea-questionnaire/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:lucea-questionnaire/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:physiology/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:physiology/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:audiometry/cmd:audiometryMeasurement/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:audiometry/cmd:audiometryMeasurement/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:audiometry/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:facilitator/cmd:audiometry/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:languages/cmd:language/cmd:language-usage/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:languages/cmd:language/cmd:language-usage/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:languages/cmd:language/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:languages/cmd:language/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:languages/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:languages/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:physiology/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:physiology/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:audiometry/cmd:audiometryMeasurement/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:audiometry/cmd:audiometryMeasurement/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:audiometry/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:audiometry/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-curriculum/cmd:exchange/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-curriculum/cmd:exchange/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-curriculum/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-curriculum/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-questionnaire/cmd:lucea-questionnaire-english/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-questionnaire/cmd:lucea-questionnaire-english/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-questionnaire/cmd:lucea-questionnaire-musicality/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-questionnaire/cmd:lucea-questionnaire-musicality/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-questionnaire/cmd:lucea-questionnaire-languages/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-questionnaire/cmd:lucea-questionnaire-languages/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-questionnaire/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:lucea-questionnaire/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:speaker/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-actors/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-recording/cmd:MediaFile/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-recording/cmd:MediaFile/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-recording/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-recording/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-recording/cmd:lucea-tasks/cmd:lucea-task/cmd:Content/cmd:Modality/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-recording/cmd:lucea-tasks/cmd:lucea-task/cmd:Content/cmd:Modality/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-recording/cmd:lucea-tasks/cmd:lucea-task/cmd:Content/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-recording/cmd:lucea-tasks/cmd:lucea-task/cmd:Content/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-recording/cmd:lucea-tasks/cmd:lucea-task/cmd:Description/text(),
+						cmd:lucea/cmd:lucea-recording/cmd:lucea-tasks/cmd:lucea-task/cmd:Description/cmd:Description/text(),
+						cmd:lucea/cmd:Description/text(),
+						cmd:lucea/cmd:Description/cmd:Description/text())), ';'),
 						string-join(distinct-values(/cmd:CMD[exists(cmd:Header/cmd:MdProfile[contains(., 'clarin.eu:cr1:p_1345561703620')])]/cmd:Components/(cmd:collection/cmd:CollectionInfo/cmd:Modality/cmd:Description/text(),
-						collection/cmd:CollectionInfo/cmd:Modality/cmd:Description/cmd:Description/text(),
-						collection/cmd:CollectionInfo/cmd:Description/text(),
-						collection/cmd:CollectionInfo/cmd:Description/cmd:Description/text(),
-						collection/cmd:WebReference/cmd:Description/text())), ';'),
+						cmd:collection/cmd:CollectionInfo/cmd:Modality/cmd:Description/cmd:Description/text(),
+						cmd:collection/cmd:CollectionInfo/cmd:Description/text(),
+						cmd:collection/cmd:CollectionInfo/cmd:Description/cmd:Description/text(),
+						cmd:collection/cmd:WebReference/cmd:Description/text())), ';'),
 						string-join(distinct-values(/cmd:CMD[exists(cmd:Header/cmd:MdProfile[contains(., 'clarin.eu:cr1:p_1361876010525')])]/cmd:Components/(cmd:DiscAn_Project/cmd:Project/cmd:Institution/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Project/cmd:Project/cmd:Institution/cmd:Contact/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Project/cmd:Project/cmd:Cooperations/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Project/cmd:Project/cmd:Cooperations/cmd:Cooperation/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Project/cmd:Project/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Project/cmd:Project/cmd:Contact/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Project/cmd:Access/cmd:DeploymentToolInfo/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Project/cmd:Access/cmd:Contact/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Project/cmd:Access/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Project/cmd:Annotation/cmd:SegmentationUnits/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Project/cmd:Annotation/cmd:AnnotationTypes/cmd:AnnotationType/cmd:TagsetInfo/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Project/cmd:Annotation/cmd:AnnotationTypes/cmd:AnnotationType/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Project/cmd:Annotation/cmd:AnnotationTypes/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Project/cmd:Annotation/cmd:AnnotationToolInfo/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Project/cmd:Annotation/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Project/cmd:Documentations/cmd:Documentation/cmd:DocumentationLanguages/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Project/cmd:Documentations/cmd:Documentation/cmd:DocumentationLanguages/cmd:DocumentationLanguage/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Project/cmd:Documentations/cmd:Documentation/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Project/cmd:Documentations/cmd:Descriptions/cmd:Description/text())), ';'),
+						cmd:DiscAn_Project/cmd:Project/cmd:Institution/cmd:Contact/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Project/cmd:Project/cmd:Cooperations/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Project/cmd:Project/cmd:Cooperations/cmd:Cooperation/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Project/cmd:Project/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Project/cmd:Project/cmd:Contact/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Project/cmd:Access/cmd:DeploymentToolInfo/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Project/cmd:Access/cmd:Contact/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Project/cmd:Access/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Project/cmd:Annotation/cmd:SegmentationUnits/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Project/cmd:Annotation/cmd:AnnotationTypes/cmd:AnnotationType/cmd:TagsetInfo/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Project/cmd:Annotation/cmd:AnnotationTypes/cmd:AnnotationType/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Project/cmd:Annotation/cmd:AnnotationTypes/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Project/cmd:Annotation/cmd:AnnotationToolInfo/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Project/cmd:Annotation/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Project/cmd:Documentations/cmd:Documentation/cmd:DocumentationLanguages/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Project/cmd:Documentations/cmd:Documentation/cmd:DocumentationLanguages/cmd:DocumentationLanguage/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Project/cmd:Documentations/cmd:Documentation/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Project/cmd:Documentations/cmd:Descriptions/cmd:Description/text())), ';'),
 						string-join(distinct-values(/cmd:CMD[exists(cmd:Header/cmd:MdProfile[contains(., 'clarin.eu:cr1:p_1361876010653')])]/cmd:Components/(cmd:DiscAn_TextCorpus/cmd:GeneralInfo/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Project/cmd:Institution/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Project/cmd:Institution/cmd:Contact/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Project/cmd:Cooperations/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Project/cmd:Cooperations/cmd:Cooperation/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Project/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Project/cmd:Contact/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Publications/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Publications/cmd:Publication/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Documentations/cmd:Documentation/cmd:DocumentationLanguages/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Documentations/cmd:Documentation/cmd:DocumentationLanguages/cmd:DocumentationLanguage/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Documentations/cmd:Documentation/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Documentations/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:CorpusContext/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Creation/cmd:Creators/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Creation/cmd:Creators/cmd:Creator/cmd:Contact/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Creation/cmd:CreationToolInfo/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Creation/cmd:Annotation/cmd:SegmentationUnits/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Creation/cmd:Annotation/cmd:AnnotationTypes/cmd:AnnotationType/cmd:TagsetInfo/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Creation/cmd:Annotation/cmd:AnnotationTypes/cmd:AnnotationType/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Creation/cmd:Annotation/cmd:AnnotationTypes/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Creation/cmd:Annotation/cmd:AnnotationToolInfo/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Creation/cmd:Annotation/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Creation/cmd:Source/cmd:MediaFiles/cmd:MediaFile/cmd:Access/cmd:DeploymentToolInfo/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Creation/cmd:Source/cmd:MediaFiles/cmd:MediaFile/cmd:Access/cmd:Contact/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Creation/cmd:Source/cmd:MediaFiles/cmd:MediaFile/cmd:Access/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Creation/cmd:Source/cmd:MediaFiles/cmd:MediaFile/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Creation/cmd:Source/cmd:MediaFiles/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Creation/cmd:Source/cmd:Derivation/cmd:DerivationToolInfo/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Creation/cmd:Source/cmd:Derivation/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Creation/cmd:Source/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Creation/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Access/cmd:DeploymentToolInfo/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Access/cmd:Contact/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:Access/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:SubjectLanguages/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:SubjectLanguages/cmd:SubjectLanguage/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:DocumentationLanguages/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:DocumentationLanguages/cmd:DocumentationLanguage/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:SizeInfo/cmd:TotalSize/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:SizeInfo/cmd:SizePerLanguage/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:ModalityInfo/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:ValidationGrp/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:TextTechnical/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_TextCorpus/cmd:TextTechnical/cmd:LanguageScripts/cmd:Descriptions/cmd:Description/text())), ';'),
+						cmd:DiscAn_TextCorpus/cmd:Project/cmd:Institution/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Project/cmd:Institution/cmd:Contact/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Project/cmd:Cooperations/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Project/cmd:Cooperations/cmd:Cooperation/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Project/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Project/cmd:Contact/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Publications/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Publications/cmd:Publication/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Documentations/cmd:Documentation/cmd:DocumentationLanguages/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Documentations/cmd:Documentation/cmd:DocumentationLanguages/cmd:DocumentationLanguage/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Documentations/cmd:Documentation/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Documentations/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:CorpusContext/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Creation/cmd:Creators/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Creation/cmd:Creators/cmd:Creator/cmd:Contact/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Creation/cmd:CreationToolInfo/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Creation/cmd:Annotation/cmd:SegmentationUnits/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Creation/cmd:Annotation/cmd:AnnotationTypes/cmd:AnnotationType/cmd:TagsetInfo/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Creation/cmd:Annotation/cmd:AnnotationTypes/cmd:AnnotationType/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Creation/cmd:Annotation/cmd:AnnotationTypes/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Creation/cmd:Annotation/cmd:AnnotationToolInfo/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Creation/cmd:Annotation/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Creation/cmd:Source/cmd:MediaFiles/cmd:MediaFile/cmd:Access/cmd:DeploymentToolInfo/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Creation/cmd:Source/cmd:MediaFiles/cmd:MediaFile/cmd:Access/cmd:Contact/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Creation/cmd:Source/cmd:MediaFiles/cmd:MediaFile/cmd:Access/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Creation/cmd:Source/cmd:MediaFiles/cmd:MediaFile/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Creation/cmd:Source/cmd:MediaFiles/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Creation/cmd:Source/cmd:Derivation/cmd:DerivationToolInfo/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Creation/cmd:Source/cmd:Derivation/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Creation/cmd:Source/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Creation/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Access/cmd:DeploymentToolInfo/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Access/cmd:Contact/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:Access/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:SubjectLanguages/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:SubjectLanguages/cmd:SubjectLanguage/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:DocumentationLanguages/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:DocumentationLanguages/cmd:DocumentationLanguage/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:SizeInfo/cmd:TotalSize/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:SizeInfo/cmd:SizePerLanguage/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:ModalityInfo/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:ValidationGrp/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:TextTechnical/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_TextCorpus/cmd:TextTechnical/cmd:LanguageScripts/cmd:Descriptions/cmd:Description/text())), ';'),
 						string-join(distinct-values(/cmd:CMD[exists(cmd:Header/cmd:MdProfile[contains(., 'clarin.eu:cr1:p_1366895758243')])]/cmd:Components/(cmd:DiscAn_Case/cmd:Annotationtypes-DiscAn/cmd:Annotation/cmd:SegmentationUnits/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Case/cmd:Annotationtypes-DiscAn/cmd:Annotation/cmd:AnnotationTypes/cmd:AnnotationType/cmd:TagsetInfo/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Case/cmd:Annotationtypes-DiscAn/cmd:Annotation/cmd:AnnotationTypes/cmd:AnnotationType/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Case/cmd:Annotationtypes-DiscAn/cmd:Annotation/cmd:AnnotationTypes/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Case/cmd:Annotationtypes-DiscAn/cmd:Annotation/cmd:AnnotationToolInfo/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Case/cmd:Annotationtypes-DiscAn/cmd:Annotation/cmd:Descriptions/cmd:Description/text(),
-						DiscAn_Case/cmd:ModalityInfo/cmd:Descriptions/cmd:Description/text())), ';'),
+						cmd:DiscAn_Case/cmd:Annotationtypes-DiscAn/cmd:Annotation/cmd:AnnotationTypes/cmd:AnnotationType/cmd:TagsetInfo/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Case/cmd:Annotationtypes-DiscAn/cmd:Annotation/cmd:AnnotationTypes/cmd:AnnotationType/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Case/cmd:Annotationtypes-DiscAn/cmd:Annotation/cmd:AnnotationTypes/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Case/cmd:Annotationtypes-DiscAn/cmd:Annotation/cmd:AnnotationToolInfo/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Case/cmd:Annotationtypes-DiscAn/cmd:Annotation/cmd:Descriptions/cmd:Description/text(),
+						cmd:DiscAn_Case/cmd:ModalityInfo/cmd:Descriptions/cmd:Description/text())), ';'),
 						string-join(distinct-values(/cmd:CMD[exists(cmd:Header/cmd:MdProfile[contains(., 'clarin.eu:cr1:p_1375880372947')])]/cmd:Components/(cmd:LESLLA/cmd:Description/text(),
-						LESLLA/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Project/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Project/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Content/cmd:Languages/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Content/cmd:Languages/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Content/cmd:Languages/cmd:Language/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Content/cmd:Languages/cmd:Language/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Content/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Content/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:MotherTongue/cmd:Language/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:MotherTongue/cmd:Language/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:MotherTongue/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:MotherTongue/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:PrimaryLanguage/cmd:Language/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:PrimaryLanguage/cmd:Language/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:PrimaryLanguage/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:PrimaryLanguage/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:SecondaryLanguage/cmd:Language/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:SecondaryLanguage/cmd:Language/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:SecondaryLanguage/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:SecondaryLanguage/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage/cmd:Language/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage/cmd:Language/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage2/cmd:Language/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage2/cmd:Language/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage2/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage2/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Utterances/cmd:Utterance/cmd:Resources/cmd:MediaFile/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Utterances/cmd:Utterance/cmd:Resources/cmd:MediaFile/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Utterances/cmd:Utterance/cmd:Resources/cmd:MediaFile/cmd:Access/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Utterances/cmd:Utterance/cmd:Resources/cmd:MediaFile/cmd:Access/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Utterances/cmd:Utterance/cmd:Resources/cmd:WrittenResource/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Utterances/cmd:Utterance/cmd:Resources/cmd:WrittenResource/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Utterances/cmd:Utterance/cmd:Resources/cmd:WrittenResource/cmd:Validation/cmd:descriptions/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Utterances/cmd:Utterance/cmd:Resources/cmd:WrittenResource/cmd:Access/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Utterances/cmd:Utterance/cmd:Resources/cmd:WrittenResource/cmd:Access/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Anonyms/cmd:Access/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:Anonyms/cmd:Access/cmd:Description/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:References/cmd:Description/text(),
-						LESLLA/cmd:Session/cmd:References/cmd:Description/cmd:Description/text())), ';'),
+						cmd:LESLLA/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Project/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Project/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Content/cmd:Languages/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Content/cmd:Languages/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Content/cmd:Languages/cmd:Language/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Content/cmd:Languages/cmd:Language/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Content/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Content/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:MotherTongue/cmd:Language/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:MotherTongue/cmd:Language/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:MotherTongue/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:MotherTongue/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:PrimaryLanguage/cmd:Language/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:PrimaryLanguage/cmd:Language/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:PrimaryLanguage/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:PrimaryLanguage/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:SecondaryLanguage/cmd:Language/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:SecondaryLanguage/cmd:Language/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:SecondaryLanguage/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:SecondaryLanguage/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage/cmd:Language/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage/cmd:Language/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage2/cmd:Language/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage2/cmd:Language/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage2/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage2/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Utterances/cmd:Utterance/cmd:Resources/cmd:MediaFile/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Utterances/cmd:Utterance/cmd:Resources/cmd:MediaFile/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Utterances/cmd:Utterance/cmd:Resources/cmd:MediaFile/cmd:Access/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Utterances/cmd:Utterance/cmd:Resources/cmd:MediaFile/cmd:Access/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Utterances/cmd:Utterance/cmd:Resources/cmd:WrittenResource/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Utterances/cmd:Utterance/cmd:Resources/cmd:WrittenResource/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Utterances/cmd:Utterance/cmd:Resources/cmd:WrittenResource/cmd:Validation/cmd:descriptions/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Utterances/cmd:Utterance/cmd:Resources/cmd:WrittenResource/cmd:Access/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Utterances/cmd:Utterance/cmd:Resources/cmd:WrittenResource/cmd:Access/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Anonyms/cmd:Access/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:Anonyms/cmd:Access/cmd:Description/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:References/cmd:Description/text(),
+						cmd:LESLLA/cmd:Session/cmd:References/cmd:Description/cmd:Description/text())), ';'),
 						string-join(distinct-values(/cmd:CMD[exists(cmd:Header/cmd:MdProfile[contains(., 'clarin.eu:cr1:p_1396012485083')])]/cmd:Components/(cmd:VALID/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Description/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Project/cmd:Descriptions/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Content/cmd:Languages/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Content/cmd:Languages/cmd:Description/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Content/cmd:Languages/cmd:Language/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Content/cmd:Languages/cmd:Language/cmd:Description/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Content/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Content/cmd:Description/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Description/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:OtherDetails/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:ActorCharacteristics/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:MotherTongue/cmd:Language/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:MotherTongue/cmd:Language/cmd:Description/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:MotherTongue/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:MotherTongue/cmd:Description/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:PrimaryLanguage/cmd:Language/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:PrimaryLanguage/cmd:Language/cmd:Description/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:PrimaryLanguage/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:PrimaryLanguage/cmd:Description/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:SecondaryLanguage/cmd:Language/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:SecondaryLanguage/cmd:Language/cmd:Description/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:SecondaryLanguage/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:SecondaryLanguage/cmd:Description/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage/cmd:Language/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage/cmd:Language/cmd:Description/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage/cmd:Description/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage2/cmd:Language/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage2/cmd:Language/cmd:Description/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage2/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage2/cmd:Description/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:Description/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Description/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Resources/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Resources/cmd:MediaFile/cmd:Descriptions/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Resources/cmd:MediaFile/cmd:Access/cmd:Descriptions/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Resources/cmd:WrittenResource/cmd:Validation/cmd:descriptions/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Resources/cmd:WrittenResource/cmd:Access/cmd:Descriptions/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Resources/cmd:WrittenResource/cmd:Descriptions/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Resources/cmd:TestScores/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Resources/cmd:TestScores/cmd:Access/cmd:Descriptions/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Anonyms/cmd:Access/cmd:Description/text(),
-						VALID/cmd:Session/cmd:Anonyms/cmd:Access/cmd:Description/cmd:Description/text(),
-						VALID/cmd:Session/cmd:References/cmd:Description/text(),
-						VALID/cmd:Session/cmd:References/cmd:Description/cmd:Description/text(),
-						VALID/cmd:Documentation/cmd:DocumentationLanguages/cmd:Descriptions/cmd:Description/text(),
-						VALID/cmd:Documentation/cmd:DocumentationLanguages/cmd:DocumentationLanguage/cmd:Descriptions/cmd:Description/text(),
-						VALID/cmd:Documentation/cmd:Descriptions/cmd:Description/text(),
-						VALID/cmd:References/cmd:Descriptions/cmd:Description/text())), ';')"/>
+						cmd:VALID/cmd:Session/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Description/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Project/cmd:Descriptions/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Content/cmd:Languages/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Content/cmd:Languages/cmd:Description/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Content/cmd:Languages/cmd:Language/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Content/cmd:Languages/cmd:Language/cmd:Description/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Content/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Content/cmd:Description/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Description/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:OtherDetails/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:ActorCharacteristics/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:MotherTongue/cmd:Language/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:MotherTongue/cmd:Language/cmd:Description/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:MotherTongue/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:MotherTongue/cmd:Description/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:PrimaryLanguage/cmd:Language/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:PrimaryLanguage/cmd:Language/cmd:Description/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:PrimaryLanguage/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:PrimaryLanguage/cmd:Description/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:SecondaryLanguage/cmd:Language/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:SecondaryLanguage/cmd:Language/cmd:Description/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:SecondaryLanguage/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:SecondaryLanguage/cmd:Description/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage/cmd:Language/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage/cmd:Language/cmd:Description/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage/cmd:Description/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage2/cmd:Language/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage2/cmd:Language/cmd:Description/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage2/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:HomeLanguage2/cmd:Description/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Languages/cmd:Description/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Actors/cmd:Actor/cmd:Description/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Resources/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Resources/cmd:MediaFile/cmd:Descriptions/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Resources/cmd:MediaFile/cmd:Access/cmd:Descriptions/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Resources/cmd:WrittenResource/cmd:Validation/cmd:descriptions/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Resources/cmd:WrittenResource/cmd:Access/cmd:Descriptions/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Resources/cmd:WrittenResource/cmd:Descriptions/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Resources/cmd:TestScores/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Resources/cmd:TestScores/cmd:Access/cmd:Descriptions/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Anonyms/cmd:Access/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:Anonyms/cmd:Access/cmd:Description/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:References/cmd:Description/text(),
+						cmd:VALID/cmd:Session/cmd:References/cmd:Description/cmd:Description/text(),
+						cmd:VALID/cmd:Documentation/cmd:DocumentationLanguages/cmd:Descriptions/cmd:Description/text(),
+						cmd:VALID/cmd:Documentation/cmd:DocumentationLanguages/cmd:DocumentationLanguage/cmd:Descriptions/cmd:Description/text(),
+						cmd:VALID/cmd:Documentation/cmd:Descriptions/cmd:Description/text(),
+						cmd:VALID/cmd:References/cmd:Descriptions/cmd:Description/text())), ';')"/>
 				<xsl:if test="exists($descr[normalize-space() != ''][1])">
 					<dc:description>
 						<xsl:value-of select="$descr[normalize-space() != ''][1]"/>
