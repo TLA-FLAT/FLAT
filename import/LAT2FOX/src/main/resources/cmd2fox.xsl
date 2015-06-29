@@ -114,25 +114,25 @@
 				<xsl:choose>
 					<xsl:when
 						test="sx:evaluate($rec, $xp, $collections-map/descendant-or-self::map)">
-						<xsl:message>
+						<!--<xsl:message>
 							<xsl:text>XPath[</xsl:text>
 							<xsl:value-of select="$xp"/>
 							<xsl:text>][</xsl:text>
 							<xsl:value-of
 								select="sx:evaluate($rec, $xp, $collections-map/descendant-or-self::map)"/>
 							<xsl:text>] matches!</xsl:text>
-						</xsl:message>
+						</xsl:message>-->
 						<xsl:sequence select="$xp/parent::collection/@pid"/>
 					</xsl:when>
 					<xsl:otherwise>
-						<xsl:message>
+						<!--<xsl:message>
 							<xsl:text>XPath[</xsl:text>
 							<xsl:value-of select="$xp"/>
 							<xsl:text>][</xsl:text>
 							<xsl:value-of
 								select="sx:evaluate($rec, $xp, $collections-map/descendant-or-self::map)"/>
 							<xsl:text>] doesn't match!</xsl:text>
-						</xsl:message>
+						</xsl:message>-->
 					</xsl:otherwise>
 				</xsl:choose>
 			</xsl:for-each>
