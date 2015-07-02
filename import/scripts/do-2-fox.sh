@@ -2,7 +2,7 @@
 
 date
 
-/import/lat2fox -n=1000 -r=./relations.xml -f=./fox -x=./fox-error -i=/lat /import/cmd
+/import/lat2fox -n=1000 -r=./relations.xml -d=./imdi2dc.xsl -f=./fox -x=./fox-error -i=/lat /import/cmd
 ERR=$?
 
 date

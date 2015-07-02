@@ -16,25 +16,14 @@
  */
 package nl.mpi.tla.lat2fox;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Collection;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.TreeSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmAtomicValue;
 import net.sf.saxon.s9api.XdmDestination;
@@ -55,13 +44,14 @@ public class Main {
         System.err.println("INF: lat2fox <options> -- <DIR>?");
         System.err.println("INF: <DIR>     source directory to recurse for CMD files (default: .)");
         System.err.println("INF: lat2fox options:");
-        System.err.println("INF: -e=<EXT>  the extension of CMDI files (default: cmdi)");
+        System.err.println("INF: -e=<EXT>  the extension of CMD records (default: cmdi)");
         System.err.println("INF: -r=<FILE> load/store the relations map from/in this <FILE> (optional)");
         System.err.println("INF: -f=<DIR>  directory to store the FOX files (default: ./fox)");
         System.err.println("INF: -x=<DIR>  directory to store the FOX files with problems (default: ./fox-error)");
         System.err.println("INF: -i=<DIR>  replace source <DIR> by this <DIR> in the FOX files (optional)");
         System.err.println("INF: -n=<NUM>  create subdirectories to contain <NUM> FOX files (default: 0, i.e., no subdirectories)");
         System.err.println("INF: -c=<FILE> file containing the mapping to collections (optional)");
+        System.err.println("INF: -d=<FILE> stylesheet containing the mapping from CMDI to Dublin Core (recommended)");
         System.err.println("INF: -v        validate the FOX files (optional)");
         System.err.println("INF: -l        lax check if a local resource exists (optional)");
     }
@@ -74,12 +64,13 @@ public class Main {
         String xdir = null;
         String cext = "cmdi";
         String cfile = null;
+        String dfile = null;
         XdmNode collsDoc = null;
         boolean validateFOX = false;
         boolean laxResourceCheck = false;
         int ndir = 0;
         // check command line
-        OptionParser parser = new OptionParser( "lve:r:f:i:x:n:c:?*" );
+        OptionParser parser = new OptionParser( "lve:r:f:i:x:n:c:d:?*" );
         OptionSet options = parser.parse(args);
         if (options.has("l"))
             laxResourceCheck = true;
@@ -113,6 +104,20 @@ public class Main {
             } catch(Exception ex) {
                 System.err.println("FTL: can't read collection <FILE>["+cfile+"]: "+ex);
                 ex.printStackTrace(System.err);
+            }
+        }
+        if (options.has("d")) {
+            dfile = (String)options.valueOf("d");
+            File d = new File(dfile);
+            if (!d.isFile()) {
+                System.err.println("FTL: -c expects a <FILE> argument!");
+                showHelp();
+                System.exit(1);
+            }
+            if (!d.canRead()) {
+                System.err.println("FTL: -c <FILE> argument isn't readable!");
+                showHelp();
+                System.exit(1);
             }
         }
         if (options.has("n")) {
@@ -181,7 +186,18 @@ public class Main {
             FileUtils.forceMkdir(new File(fdir));
             FileUtils.forceMkdir(new File(xdir));
             Collection<File> inputs = FileUtils.listFiles(new File(dir),new String[] {cext},true);
-            XsltExecutable cmd2fox = SaxonUtils.buildTransformer(Main.class.getResource("/cmd2fox.xsl"));
+            // if there is a CMD 2 DC XSLT include it
+            XsltExecutable cmd2fox = null;
+            if (dfile != null) {
+                XsltTransformer inclCMD2DC = SaxonUtils.buildTransformer(Main.class.getResource("/inclCMD2DC.xsl")).load();
+                inclCMD2DC.setSource(new StreamSource(Main.class.getResource("/cmd2fox.xsl").toString()));
+                inclCMD2DC.setParameter(new QName("cmd2dc"),new XdmAtomicValue("file://"+(new File(dfile)).getAbsolutePath()));
+                XdmDestination destination = new XdmDestination();
+                inclCMD2DC.setDestination(destination);
+                inclCMD2DC.transform();
+                cmd2fox = SaxonUtils.buildTransformer(destination.getXdmNode());                
+            } else
+                cmd2fox = SaxonUtils.buildTransformer(Main.class.getResource("/cmd2fox.xsl"));
             int err = 0;
             int i = 0;
             int s = inputs.size();
