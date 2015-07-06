@@ -8,8 +8,8 @@ if [ -d /import/cmd ]; then
 	rm -rf /import/cmd
 fi
 
-mkdir /import/cmd/media-archive
+mkdir /import/cmd
 
-rsync -avzr /import/src/ /import/cmd/media-archibe --include '*.cmdi' --exclude '*.imdi' --exclude 'corpman' --exclude 'sessions' --exclude 'mirrored_corpora' --exclude 'media-archive'
+rsync -avzr /import/src/ /import/cmd/ --include '*.cmdi' --exclude '*.imdi' --exclude 'corpman' --exclude 'sessions' --exclude 'mirrored_corpora' --exclude 'media-archive'
 
 date
