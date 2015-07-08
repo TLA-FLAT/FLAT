@@ -101,7 +101,7 @@ if [ $verbose -ne 0 ]; then
 	echo "Input directory: $input_dir"
 fi
 
-profiles="`findProfiles.sh -e "$rec_ext" $input_dir`"
+profiles="`./findProfiles.sh -e "$rec_ext" $input_dir`"
 
 if [ $verbose -ne 0 ]; then
 	echo "Number of profiles: `echo $profiles | wc -w`"
@@ -131,9 +131,22 @@ fi
 for profile in $profiles; do
 	if [ ! -f $profile_cache/$profile.xml ]; then
 		curl -s -o "$profile_cache/$profile.xml" "$registry/$profile/xml"
-		if [ $verbose -ne 0 ]; then
-			echo "Fechted profile: $profile from $registry/$profile/xml to $profile_cache/$profile.xml"
-		fi
+                if [ $? -ne 0 ]; then
+                        if [ -f $profile_cache/$profile.xml ]; then
+                                rm $profile_cache/$profile.xml
+                        fi
+                        echo "Failed to fetch profile: $profile from $registry/$profile/xml to $profile_cache/$profile.xml"
+                else
+                        grep 'Profile not found:' $profile_cache/$profile.xml > /dev/null
+                        if [ $? -eq 0 ]; then
+                                rm $profile_cache/$profile.xml
+                                echo "Profile doesn't exist: $profile from $registry/$profile/xml to $profile_cache/$profile.xml"
+                        else
+                                if [ $verbose -ne 0 ]; then
+                                        echo "Fetched profile: $profile from $registry/$profile/xml to $profile_cache/$profile.xml"
+                                fi
+                        fi
+                fi
 	fi
 done
 
@@ -146,7 +159,7 @@ fi
 my_dir="${0%%/*}"
 #my_dir="$(dirname "$(readlink -f "$0")")"
 # relative to this directory, invoke the xsl transformation
-xsl2 -xsl:${my_dir}/createMapping.xsl -s:$gsearch_fc clarin_fc=$clarin_fc profile_cache=$profile_cache > ${output_prefix}-mapping.xml
+./xsl2 -xsl:${my_dir}/createMapping.xsl -s:$gsearch_fc clarin_fc=$clarin_fc profile_cache=$profile_cache > ${output_prefix}-mapping.xml
 
 if [ $verbose -ne 0 ]; then
 	echo "Output mapping file: ${output_prefix}-mapping.xml"
@@ -158,7 +171,7 @@ if [ $verbose -ne 0 ]; then
 	echo "GSearch transformer: $gsearch_xsl"
 fi
 
-xsl2 -xsl:${my_dir}/createTransformer.xsl -s:$gsearch_xsl mapping-location=${output_prefix}-mapping.xml > ${output_prefix}-transformer.xsl
+./xsl2 -xsl:${my_dir}/createTransformer.xsl -s:$gsearch_xsl mapping-location=${output_prefix}-mapping.xml > ${output_prefix}-transformer.xsl
 
 if [ $verbose -ne 0 ]; then
 	echo "Output transformer file: ${output_prefix}-transformer.xsl"

@@ -1,5 +1,5 @@
 #!/bin/sh
 
-java -jar ../FindProfiles/target/findProfiles.jar $*
+java -jar lib/findProfiles.jar $*
 
 exit $?
