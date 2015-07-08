@@ -22,7 +22,10 @@ MAINTAINER	Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 ENV FEDORA_HOME /var/www/fedora/
 ENV CATALINA_HOME /var/www/fedora/tomcat/
 
+RUN apt-get clean &&\
+    rm -rf /var/lib/apt/lists/*
 RUN apt-get update &&\
+    apt-get -y dist-upgrade &&\
     apt-get -y install ant
 
 #

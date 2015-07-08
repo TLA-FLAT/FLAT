@@ -221,8 +221,6 @@ RUN cd /opt &&\
     /var/www/fedora/tomcat/bin/startup.sh &&\
     sleep 60 &&\
     /tmp/InstallCert.sh &&\
-    ls -all /opt/ &&\
-    ls -all /tmp/ &&\
     /var/www/fedora/tomcat/bin/shutdown.sh &&\
     sleep 10 &&\
     /etc/init.d/postgresql stop
@@ -243,7 +241,7 @@ ADD proai/identify.xml /var/www/html/identify.xml
 # Add start script to automatically start required services
 #
 
-ENV JAVA_OPTS "-Djavax.net.ssl.trustStore=/opt/jssecacerts -Djavax.net.ssl.trustStorePassword=changeit""
+ENV JAVA_OPTS "-Djavax.net.ssl.trustStore=/opt/jssecacerts -Djavax.net.ssl.trustStorePassword=changeit"
 
 ADD fedora/tomcat-fedora.sh /var/www/fedora/tomcat/bin/tomcat-fedora.sh
 RUN chmod u+x /var/www/fedora/tomcat/bin/tomcat-fedora.sh
@@ -252,7 +250,7 @@ ADD my_init.d/start.sh /etc/my_init.d/start.sh
 RUN chmod u+x /etc/my_init.d/start.sh
 
 #Clean up APT when done.
-#RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 EXPOSE 80
 EXPOSE 443
