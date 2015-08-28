@@ -4,7 +4,7 @@
 #       https://wiki.duraspace.org/display/ISLANDORA713/Installing+Solr+and+GSearch
 
 # Versions:
-#   GSearch 2.7.1     http://192.168.59.103:8080/fedoragsearch/rest
+#   GSearch 2.7.1   http://192.168.59.103:8080/fedoragsearch/rest
 #   Solr 4.6.1      http://192.168.59.103:8080/solr/
 #       version 4.10.2 was giving issues about index version being too new
 #   Islandora_solr_search 7.x-1.5
@@ -16,7 +16,7 @@
 #   docker run -i -p 80:80 -p 8443:8443 -p 8080:8080 -h fedora.test.lan -t easylat-with-gsearch /sbin/my_init -- bash -l
 #
 #
-FROM            easylat
+FROM        easylat
 MAINTAINER	Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 
 ENV FEDORA_HOME /var/www/fedora/

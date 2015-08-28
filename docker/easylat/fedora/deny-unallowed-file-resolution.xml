@@ -34,11 +34,13 @@
           <ResourceAttributeDesignator AttributeId="urn:fedora:names:fedora:2.1:resource:datastream:fileUri" 
             DataType="http://www.w3.org/2001/XMLSchema#string"/>
         </Apply>
-      </Apply> 
+      </Apply>
+<!--
       <Apply FunctionId="urn:oasis:names:tc:xacml:1.0:function:string-is-in">
         <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">administrator</AttributeValue>         
         <SubjectAttributeDesignator AttributeId="fedoraRole" DataType="http://www.w3.org/2001/XMLSchema#string"/>
-      </Apply>    
+      </Apply>
+-->
     </Condition>
   </Rule>
 <!--  -->

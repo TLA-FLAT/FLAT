@@ -175,11 +175,11 @@ RUN cd /tmp/islandora &&\
 	mv 7.x-1.5.zip islandora_solution_pack_compound-7.x-1.5.zip &&\
 	unzip islandora_solution_pack_compound-7.x-1.5.zip -d /var/www/html/drupal/sites/all/modules/contrib/
 RUN cd /tmp/islandora &&\
-	wget "https://github.com/TheLanguageArchive/EasyLAT/archive/master.zip" &&\
-	mv master.zip EasyLAT.zip &&\
-	unzip EasyLAT.zip 'EasyLAT-master/islandora/islandora_solution_pack_cmdi/*' &&\
-	mv EasyLAT-master/islandora/islandora_solution_pack_cmdi /var/www/html/drupal/sites/all/modules/contrib/
-
+    wget "https://github.com/TheLanguageArchive/EasyLAT/archive/master.zip" &&\
+    mv master.zip EasyLAT.zip &&\
+    unzip EasyLAT.zip 'EasyLAT-master/islandora/islandora_solution_pack_cmdi/*' &&\
+    mv EasyLAT-master/islandora/islandora_solution_pack_cmdi /var/www/html/drupal/sites/all/modules/contrib/
+    
 RUN mkdir /tmp/feature
 RUN cd /tmp/feature &&\
 	wget "http://ftp.drupal.org/files/projects/features-7.x-2.5.zip" &&\
@@ -195,7 +195,7 @@ RUN cd /var/www/html/drupal/ &&\
     export CATALINA_HOME=/var/www/fedora/tomcat/ &&\
     /var/www/fedora/tomcat/bin/startup.sh &&\
     sleep 60 &&\
-    cat /var/www/fedora/server/logs/fedora.log &&\
+#    cat /var/www/fedora/server/logs/fedora.log &&\
     /var/www/composer/vendor/drush/drush/drush vset islandora_base_url https://localhost:8443/fedora &&\
     /var/www/composer/vendor/drush/drush/drush en islandora -y &&\
     /var/www/composer/vendor/drush/drush/drush en islandora_basic_collection -y &&\
