@@ -161,8 +161,13 @@ RUN mkdir /tmp/tuque &&\
     mv /tmp/tuque/tuque-1.4 /var/www/html/drupal/sites/all/libraries/tuque
 RUN sed -i 's|public $verifyPeer = TRUE;|public $verifyPeer = FALSE;|g' /var/www/html/drupal/sites/all/libraries/tuque/HttpConnection.php
 
-RUN mkdir /tmp/islandora
-RUN mkdir /var/www/html/drupal/sites/all/modules/contrib
+RUN mkdir -p /tmp/islandora
+RUN mkdir -p /var/www/html/drupal/sites/all/modules/contrib
+RUN mkdir -p /var/www/html/drupal/sites/all/themes
+RUN cd /tmp/islandora &&\
+    wget "http://ftp.drupal.org/files/projects/bootstrap-7.x-3.x-dev.zip" &&\
+    unzip bootstrap-7.x-3.x-dev.zip &&\
+    mv /tmp/islandora/bootstrap /var/www/html/drupal/sites/all/themes/bootstrap
 RUN cd /tmp/islandora &&\
     wget "https://github.com/Islandora/islandora/archive/7.x-1.5.tar.gz" &&\
     tar -xf 7.x-1.5.tar.gz -C /var/www/html/drupal/sites/all/modules/contrib/
@@ -187,6 +192,11 @@ RUN cd /tmp/feature &&\
 RUN cd /tmp/feature &&\
 	wget "http://ftp.drupal.org/files/projects/features_extra-7.x-1.0-beta1.zip" &&\
 	unzip features_extra-7.x-1.0-beta1.zip -d /var/www/html/drupal/sites/all/modules/contrib/
+	
+RUN cp -r /var/www/html/drupal/sites/all/themes/bootstrap/starterkits/cdn  /var/www/html/drupal/sites/all/themes/easylat_bootstrap_theme &&\
+    cd /var/www/html/drupal/sites/all/themes/easylat_bootstrap_theme/ &&\
+    mv cdn.starterkit easylat_bootstrap_theme.info &&\
+    echo "settings[bootstrap_cdn_jsdelivr_theme] = 'flatly'" >> easylat_bootstrap_theme.info
 
 RUN cd /var/www/html/drupal/ &&\
     export PGPASSWORD=fedora &&\
@@ -206,6 +216,11 @@ RUN cd /var/www/html/drupal/ &&\
     /var/www/composer/vendor/drush/drush/drush en fe_block -y &&\
     /var/www/composer/vendor/drush/drush/drush en easylat -y &&\
     /var/www/composer/vendor/drush/drush/drush php-script easylat-logo --script-path=/tmp &&\
+    /var/www/composer/vendor/drush/drush/drush en jquery_update -y &&\
+    /var/www/composer/vendor/drush/drush/drush en bootstrap -y &&\
+    /var/www/composer/vendor/drush/drush/drush en easylat_bootstrap_theme -y &&\
+    /var/www/composer/vendor/drush/drush/drush vset theme_default easylat_bootstrap_theme &&\
+#    sed -i "s|settings\[bootstrap_cdn_jsdelivr_theme\] = 'bootstrap'|settings[bootstrap_cdn_jsdelivr_theme] = 'flatly'|" /var/www/html/drupal/sites/all/themes/bootstrap/bootstrap.info &&\
     /var/www/fedora/tomcat/bin/shutdown.sh &&\
     sleep 10 &&\
     /etc/init.d/postgresql stop
