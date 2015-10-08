@@ -29,6 +29,7 @@ public class FindProfiles {
     
     static final String CMD_NS = "http://www.clarin.eu/cmd/";
     static final String CR_URI = "http://catalog.clarin.eu/ds/ComponentRegistry/";
+    static final String XSI_NS = "http://www.w3.org/2001/XMLSchema-instance";
     
     static final int ERROR = -1;
     static final int START = 0;
@@ -78,8 +79,8 @@ public class FindProfiles {
         
         Set<String> profiles = new HashSet<String>();
         
-        Pattern cr_rest = Pattern.compile("^"+CR_URI+"rest/registry/profiles/");
-        Pattern cr_ext  = Pattern.compile("/xsd$");
+        Pattern cr_rest = Pattern.compile("^.*"+CR_URI+"rest/registry/profiles/",Pattern.DOTALL);
+        Pattern cr_ext  = Pattern.compile("/xsd.*$",Pattern.DOTALL);
 
         XMLInputFactory2 xmlif = (XMLInputFactory2) XMLInputFactory2.newInstance();
         xmlif.configureForConvenience();
@@ -97,6 +98,7 @@ public class FindProfiles {
             int depth = 0;
             XMLStreamReader2 xmlr = null;
             FileInputStream in = null;
+            String profile = null;
             try {
                 in = new FileInputStream(input);
                 xmlr = (XMLStreamReader2) xmlif.createXMLStreamReader(in);
@@ -119,6 +121,17 @@ public class FindProfiles {
                                     if (qn.getNamespaceURI().equals(CMD_NS) && qn.getLocalPart().equals("CMD")) {
                                         state = OPEN_CMD;
                                         sdepth = depth;
+                                        String prof = xmlr.getAttributeValue(XSI_NS,"schemaLocation");
+                                        if (prof!=null) {
+                                            if (prof.contains(CR_URI)) {
+                                                prof = cr_rest.matcher(prof).replaceFirst("");
+                                                prof = cr_ext.matcher(prof).replaceFirst("");
+                                                profile = prof;
+                                                if (verbose || debug)
+                                                    System.out.println("?"+(debug?"DBG":"INF")+": "+input+": xsi:schemaLocation["+prof+"]");
+                                            } else
+                                                System.err.println("!WRN: "+input+": xsi:schemaLocation["+prof+"] doesn't contain a reference to a CMD profile in CR!");
+                                        }
                                     } else {
                                         System.err.println("!ERR: "+input+": no cmd:CMD root found!");
                                         state = ERROR;
@@ -158,7 +171,7 @@ public class FindProfiles {
                                     break;
                                 case XMLEvent2.END_ELEMENT:
                                     if (qn.getNamespaceURI().equals(CMD_NS) && qn.getLocalPart().equals("Header") && sdepth == depth) {
-                                        System.err.println("!ERR: "+input+": no cmd:CMD/cmd:Header/cmd:MdProfile found!");
+                                        System.err.println("!"+(profile==null?"ERR":"WRN")+": "+input+": no cmd:CMD/cmd:Header/cmd:MdProfile found!");
                                         state = ERROR;
                                     }
                                     break;
@@ -167,12 +180,15 @@ public class FindProfiles {
                         case OPEN_MDPROFILE:
                             switch (eventType) {
                                 case XMLEvent2.CHARACTERS:
-                                    String profile = xmlr.getText();
-                                    profile = cr_rest.matcher(profile).replaceFirst("");
-                                    profile = cr_ext.matcher(profile).replaceFirst("");
+                                    String prof = xmlr.getText();
+                                    prof = cr_rest.matcher(prof).replaceFirst("");
+                                    prof = cr_ext.matcher(prof).replaceFirst("");
                                     if (verbose || debug)
-                                        System.out.println("?"+(debug?"DBG":"INF")+": "+input+": MdProfile["+profile+"]");
-                                    profiles.add(profile);
+                                        System.out.println("?"+(debug?"DBG":"INF")+": "+input+": MdProfile["+prof+"]");
+                                    if (profile == null)
+                                        profile = prof;
+                                    else if (!prof.equals(profile))
+                                        System.out.println("!WRN: "+input+": MdProfile["+prof+"] and xsi:schemaLocation["+profile+"] contradict!");
                                     state = STOP;
                                     break;
                                 default:
@@ -202,6 +218,8 @@ public class FindProfiles {
                     state = ERROR;
                 }
             }
+            if (profile != null)
+                profiles.add(profile);
             if (state == ERROR)
                 e++;
         }
