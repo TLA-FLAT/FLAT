@@ -41,6 +41,12 @@ abstract public class AbstractAction implements ActionInterface {
     public void setParameters(Map<String, XdmValue> params) {
         this.params = params;
     }
+    
+    public String getParameter(String name,String def) {
+        if (params.containsKey(name))
+            return params.get(name).toString();
+        return def;
+    }
 
     @Override
     abstract public boolean perform(Context context);

@@ -16,20 +16,53 @@
  */
 package nl.mpi.tla.flat.deposit.action;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import net.sf.saxon.s9api.XdmValue;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.net.URI;
+import java.nio.file.Path;
+import java.util.UUID;
 import nl.mpi.tla.flat.deposit.Context;
-import nl.mpi.tla.flat.deposit.SIP;
+import nl.mpi.tla.flat.deposit.DepositException;
+import nl.mpi.tla.flat.deposit.Resource;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.http.client.fluent.Request;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author menzowi
  */
 public class PackageAssembly extends AbstractAction {
+
+    private static final Logger logger = LoggerFactory.getLogger(PackageAssembly.class.getName());
     
     @Override
     public boolean perform(Context context) {
+        try {
+            File dir = new File(getParameter("dir","./resources"));
+            if (!dir.exists())
+                 FileUtils.forceMkdir(dir);
+            for (Resource res:context.getSIP().getResources()) {
+                URI uri = res.getURI();
+                if (uri.toString().startsWith(dir.toString())) {
+                    // the file is already in the workdir resources directory
+                    res.setFile(new File(uri.toString()));
+                } else if (uri.toString().startsWith("hdl:"+getParameter("prefix","foo")+"/") || uri.toString().startsWith("http://hdl.handle.net/"+getParameter("prefix","foo")+"/")) {
+                    // it has already a handle
+                    // TODO: what to do? still fetch it to check?
+                } else {
+                    // download the content into a local file 
+                    String ext = FilenameUtils.getExtension(uri.getPath());
+                    File file = dir.toPath().resolve("./"+UUID.randomUUID().toString()+(!ext.equals("")?"."+ext:"")).toFile();
+                    Request.Get(uri).execute().saveContent(file);
+                }
+            }            
+        } catch (Exception ex) {
+            this.logger.error("Couldn't assemble the package!",ex);
+            return false;
+        }
         return true;
     }
     

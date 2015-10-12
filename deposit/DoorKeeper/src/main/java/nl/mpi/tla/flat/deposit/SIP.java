@@ -44,7 +44,7 @@ public class SIP {
 
     protected XdmNode rec = null;
     
-    protected Set<URI> resources = new LinkedHashSet();
+    protected Set<Resource> resources = new LinkedHashSet();
     
     protected Map<String,String> namespaces = new LinkedHashMap<>();
     
@@ -66,17 +66,27 @@ public class SIP {
         }
     }
     
+    // resources
+    
     private void loadResourceList() throws SaxonApiException {
-        for (XdmItem resource:Saxon.xpath(this.rec,"/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Resource']/cmd:ResourceRef",null,getNamespaces())) {
-            URI res = base.resolve(resource.getStringValue());
+        for (XdmItem resource:Saxon.xpath(this.rec,"/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Resource']",null,getNamespaces())) {
+            Resource res = new Resource(base.resolve(Saxon.xpath2string(resource,"cmd:ResourceRef",null,getNamespaces())));
+            if (Saxon.xpath2boolean(resource,"normalize-space(cmd:ResourceType/@mimetype)!=''",null,getNamespaces()))
+                res.setMime(Saxon.xpath2string(resource,"cmd:ResourceType/@mimetype"));
             if (resources.contains(res)) {
-                logger.warn("double ResourceProxy["+resource.getStringValue()+"]["+res+"]!");
+                logger.warn("double ResourceProxy["+Saxon.xpath2string(resource,"cmd:ResourceRef",null,getNamespaces())+"]["+res.getURI()+"]!");
             } else {
                 resources.add(res);
-                logger.debug("ResourceProxy["+resource.getStringValue()+"]["+res+"]");
+                logger.debug("ResourceProxy["+Saxon.xpath2string(resource,"cmd:ResourceRef",null,getNamespaces())+"]["+res.getURI()+"]");
             }
         }
     }
+    
+    public Set<Resource> getResources() {
+        return this.resources;
+    }
+    
+    // utils
         
     public Map<String,String> getNamespaces() {
         if (this.namespaces.size()==0)

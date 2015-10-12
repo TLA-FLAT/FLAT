@@ -8,7 +8,7 @@
         <property name="epicPrefix" value="12345"/>
         <property name="epicUser" value="test"/>
         <property name="epicPassword" value="test"/>
-        <property name="epicServer" value="http://www.pidconsortium.eu//"/>
+        <property name="epicServer" value="http://www.pidconsortium.eu/"/>
         <property name="fedoraUser" value="fedoraAdmin"/>
         <property name="fedoraPassword" value="fedora"/>
         <property name="fedoraServer" value="https://localhost:8443/fedora"/>
@@ -18,7 +18,10 @@
     </init>
     <main>
         <action name="check workspace" class="nl.mpi.tla.flat.deposit.action.SIPLoad"/>
-        <action name="assemble package" class="nl.mpi.tla.flat.deposit.action.PackageAssembly"/>
+        <action name="assemble package" class="nl.mpi.tla.flat.deposit.action.PackageAssembly">
+            <parameter name="dir" value="{$work}/resources"/>
+            <parameter name="prefix" value="{$epicPrefix}"/>
+        </action>
         <action name="validate metadata" class="nl.mpi.tla.flat.deposit.action.Validate">
             <parameter name="rules" value="{$param-base}/policies/rules.sch"/>
         </action>

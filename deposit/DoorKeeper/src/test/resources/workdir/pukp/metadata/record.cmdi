@@ -2,7 +2,7 @@
 <CMD xmlns="http://www.clarin.eu/cmd/"
      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
      CMDVersion="1.1"
-     xsi:schemaLocation="http://www.clarin.eu/cmd/ http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1345561703683/xsd ">
+     xsi:schemaLocation="http://www.clarin.eu/cmd/ http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1345561703683/xsd">
    <Header>
       <MdCreator>twagoo</MdCreator>
       <MdCreationDate>2012-09-11+02:00</MdCreationDate>
