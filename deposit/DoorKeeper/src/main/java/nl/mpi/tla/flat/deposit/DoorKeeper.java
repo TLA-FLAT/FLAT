@@ -72,7 +72,6 @@ public class DoorKeeper {
         
         try {
             Flow flw = new Flow(wf);
-            flw.setLogger(logger);
             flw.run();
         } catch (DepositException ex) {
             logger.error("FATAL",ex);

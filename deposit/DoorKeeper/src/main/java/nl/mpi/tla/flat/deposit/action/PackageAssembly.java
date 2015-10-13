@@ -16,10 +16,8 @@
  */
 package nl.mpi.tla.flat.deposit.action;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.net.URI;
-import java.nio.file.Path;
 import java.util.UUID;
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
@@ -39,7 +37,7 @@ public class PackageAssembly extends AbstractAction {
     private static final Logger logger = LoggerFactory.getLogger(PackageAssembly.class.getName());
     
     @Override
-    public boolean perform(Context context) {
+    public boolean perform(Context context) throws DepositException {
         try {
             File dir = new File(getParameter("dir","./resources"));
             if (!dir.exists())
@@ -60,8 +58,7 @@ public class PackageAssembly extends AbstractAction {
                 }
             }            
         } catch (Exception ex) {
-            this.logger.error("Couldn't assemble the package!",ex);
-            return false;
+            throw new DepositException("Couldn't assemble the package!",ex);
         }
         return true;
     }

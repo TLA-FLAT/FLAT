@@ -36,52 +36,43 @@ public class SIPLoad extends AbstractAction {
     private static final Logger logger = LoggerFactory.getLogger(SIPLoad.class.getName());
     
     @Override
-    public boolean perform(Context context) {
-        
-        try {
-            Logger logger = context.getLogger();
-            Marker marker = MarkerFactory.getMarker(this.name);
-            
-            XdmValue work = context.getProperty("work");
-            if (work == null) {
-                logger.error(marker,"no work directory specified!");
-                return false;
-            }
-            
-            File wd = new File(work.toString());
-            if (!wd.isDirectory()) {
-                logger.error(marker,"work["+wd+"] is not a directory!");
-                return false;
-            }
-            if (!wd.canRead()) {
-                logger.error(marker,"work["+wd+"] directory cannot be read!");
-                return false;
-            }
-            if (!wd.canWrite()) {
-                logger.error(marker,"work["+wd+"] directory cannot be written!");
-                return false;
-            }
-            
-            File mr = wd.toPath().resolve("./metadata/record.cmdi").toFile();
-            if (!mr.isFile()) {
-                logger.error(marker,"record["+mr+"] is not a file!");
-                return false;
-            }
-            if (!mr.canRead()) {
-                logger.error(marker,"record["+mr+"] file cannot be read!");
-                return false;
-            }
-            if (!mr.canWrite()) {
-                logger.error(marker,"work["+mr+"] file cannot be written!");
-                return false;
-            }
-            
-            context.setSIP(new SIP(mr));
-            
-        } catch (DepositException ex) {
-            this.logger.error("SIP setter is out-of-sync!",ex);
+    public boolean perform(Context context) throws DepositException {
+        XdmValue work = context.getProperty("work",".");
+        if (work == null) {
+            logger.error("no work directory specified!");
             return false;
         }
+
+        File wd = new File(work.toString());
+        if (!wd.isDirectory()) {
+            logger.error("work["+wd+"] is not a directory!");
+            return false;
+        }
+        if (!wd.canRead()) {
+            logger.error("work["+wd+"] directory cannot be read!");
+            return false;
+        }
+        if (!wd.canWrite()) {
+            logger.error("work["+wd+"] directory cannot be written!");
+            return false;
+        }
+
+        File mr = wd.toPath().resolve("./metadata/record.cmdi").toFile();
+        if (!mr.isFile()) {
+            logger.error("record["+mr+"] is not a file!");
+            return false;
+        }
+        if (!mr.canRead()) {
+            logger.error("record["+mr+"] file cannot be read!");
+            return false;
+        }
+        if (!mr.canWrite()) {
+            logger.error("work["+mr+"] file cannot be written!");
+            return false;
+        }
+
+        context.setSIP(new SIP(mr));
+
         return true;
     }
     

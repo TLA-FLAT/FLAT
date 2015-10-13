@@ -14,7 +14,9 @@
         <property name="fedoraServer" value="https://localhost:8443/fedora"/>
     </config>
     <init>
-        <!-- optionally do some initialization -->
+        <action id="logSetup" name="log" class="nl.mpi.tla.flat.deposit.action.WorkspaceLogSetup">
+            <parameter name="dir" value="{$work}/logs"/>
+        </action>        
     </init>
     <main>
         <action name="check workspace" class="nl.mpi.tla.flat.deposit.action.SIPLoad"/>
@@ -52,9 +54,9 @@
         <action class="nl.mpi.tla.flat.deposit.action.WorkspaceCleanup"/>        
     </main>
     <exception>
-        <action id="logException" name="log" class="nl.mpi.tla.flat.deposit.action.Log"/>
+        <action name="log" class="nl.mpi.tla.flat.deposit.action.Log"/>
     </exception>
     <final>
-        <!-- optionally do some cleanup -->
+        <action id="logSetup" name="log" class="nl.mpi.tla.flat.deposit.action.WorkspaceLogCleanup"/>        
     </final>
 </flow>

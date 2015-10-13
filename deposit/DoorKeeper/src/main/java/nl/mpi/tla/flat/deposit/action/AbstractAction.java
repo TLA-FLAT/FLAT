@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import net.sf.saxon.s9api.XdmValue;
 import nl.mpi.tla.flat.deposit.Context;
+import nl.mpi.tla.flat.deposit.DepositException;
 import nl.mpi.tla.flat.deposit.SIP;
 
 /**
@@ -49,6 +50,6 @@ abstract public class AbstractAction implements ActionInterface {
     }
 
     @Override
-    abstract public boolean perform(Context context);
+    abstract public boolean perform(Context context) throws DepositException;
     
 }

@@ -17,8 +17,6 @@
 package nl.mpi.tla.flat.deposit;
 
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmAtomicValue;
@@ -46,16 +44,6 @@ public class Context {
         
     public Context(XdmNode spec)  throws DepositException {
         loadProperties(spec);
-    }
-    
-    // Logger
-    
-    public void setLogger(Logger logger) {
-        this.actionLogger = logger;
-    }
-    
-    public Logger getLogger() {
-        return this.actionLogger;
     }
     
     // Properties
@@ -92,8 +80,10 @@ public class Context {
         return props.containsKey(name);
     }
     
-    public XdmValue getProperty(String name) {
-        return props.get(name);
+    public XdmValue getProperty(String name,String def) {
+        if (hasProperty(name))
+            return props.get(name);
+        return (new XdmAtomicValue(def));
     }
     
     // SIP

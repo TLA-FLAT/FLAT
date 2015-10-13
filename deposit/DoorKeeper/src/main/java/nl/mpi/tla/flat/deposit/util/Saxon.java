@@ -31,6 +31,8 @@ import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XPathCompiler;
 import net.sf.saxon.s9api.XPathSelector;
+import net.sf.saxon.s9api.XQueryCompiler;
+import net.sf.saxon.s9api.XQueryExecutable;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmValue;
@@ -65,6 +67,10 @@ public class Saxon {
      */
     static private XPathCompiler sxXPathCompiler = null;
     /**
+     * The Saxon XQuery compiler.
+     */
+    static private XQueryCompiler sxXQueryCompiler = null;
+    /**
      * The Saxon Document Builder
      */
     static private DocumentBuilder sxDocumentBuilder = null;
@@ -86,6 +92,13 @@ public class Saxon {
             sxXsltCompiler = getProcessor().newXsltCompiler();
         }
         return sxXsltCompiler;
+    }
+
+    private static synchronized XQueryCompiler getXQueryCompiler() {
+        if (sxXQueryCompiler == null) {
+            sxXQueryCompiler = getProcessor().newXQueryCompiler();
+        }
+        return sxXQueryCompiler;
     }
 
     private static synchronized DocumentBuilder getDocumentBuilder() {
@@ -304,5 +317,5 @@ public class Saxon {
             logger.debug("AVT result["+res+"]");
         return res;
     }
-
+    
 }

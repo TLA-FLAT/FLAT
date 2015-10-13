@@ -16,21 +16,29 @@
  */
 package nl.mpi.tla.flat.deposit.action;
 
-import java.util.Map;
-import net.sf.saxon.s9api.XdmValue;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
+import ch.qos.logback.core.joran.spi.JoranException;
+import ch.qos.logback.core.util.StatusPrinter;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import nl.mpi.tla.flat.deposit.Context;
-import nl.mpi.tla.flat.deposit.DepositException;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author menzowi
  */
-public interface ActionInterface {
+public class WorkspaceLogCleanup extends AbstractAction {
     
-    public void setName(String name);
+    private static final Logger logger = LoggerFactory.getLogger(WorkspaceLogCleanup.class.getName());
     
-    public void setParameters(Map<String,XdmValue> params);
+    @Override
+    public boolean perform(Context context) {
+        return true;
+    }
     
-    public boolean perform(Context context) throws DepositException;
-
 }

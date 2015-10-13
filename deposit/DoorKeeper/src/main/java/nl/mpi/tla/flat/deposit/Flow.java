@@ -124,10 +124,6 @@ public class Flow {
         return next;
     }
     
-    public void setLogger(Logger logger) {
-        context.setLogger(logger);
-    }
-        
     private boolean initFlow() throws DepositException {
         boolean next = true;
         for (ActionInterface action:initActions) {
