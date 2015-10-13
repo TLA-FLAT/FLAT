@@ -55,6 +55,7 @@ public class PackageAssembly extends AbstractAction {
                     String ext = FilenameUtils.getExtension(uri.getPath());
                     File file = dir.toPath().resolve("./"+UUID.randomUUID().toString()+(!ext.equals("")?"."+ext:"")).toFile();
                     Request.Get(uri).execute().saveContent(file);
+                    logger.info("downloaded Resource["+uri+"] to ["+file+"]");
                 }
             }            
         } catch (Exception ex) {
