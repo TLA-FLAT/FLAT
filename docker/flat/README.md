@@ -12,13 +12,13 @@ Quick installation link: https://docs.docker.com/installation/#installation
 
 1. Start your docker environment
 2. Run: 
-    "docker build -t easylat ."
+    "docker build -t flat ."
 
 ## Running your docker container ##
 
 1. Start your docker environment
 2. Run: 
-    "docker run -p 80:80 -p 8443:8443 -h fedora.test.lan -t -i easylat /sbin/my_init -- bash -l"
+    "docker run -p 80:80 -p 8443:8443 -t -i flat /sbin/my_init -- bash -l"
 
 This will start your docker container with the following properties:
 - Mapped each port specified with a "-p" parameter between your container and your host
@@ -27,7 +27,7 @@ This will start your docker container with the following properties:
 
 ## Finalizing your setup ##
 
-On mac osx you can find our your docker ip via the "boot2docker ip" command run
+On mac osx you can find our your docker ip via the "docker-machine ip default" command run
 inside the docker shell.
 
 Goto http://\<docker ip\>/drupal 
