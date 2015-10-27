@@ -1,19 +1,16 @@
 #
-# Based on the EasyLat islandora base image
-# See:  https://github.com/TheLanguageArchive/EasyLAT/tree/master/docker/easylat
+# Based on the FLAT islandora base image
+# See:  https://github.com/TheLanguageArchive/FLAT/tree/master/docker/flat
 
 # Building the image:
-#   docker build -t easylat-with-solution-packs .
+#   docker build -t flat-with-solution-packs .
 #
 # Running the image:
-#   docker run -i -p 80:80 -p 8443:8443 -p 8080:8080 -h fedora.test.lan -t easylat-with-solution-packs /sbin/my_init -- bash -l
+#   docker run -i -p 80:80 -p 8443:8443 -p 8080:8080 -t flat-with-solution-packs /sbin/my_init -- bash -l
 #
 #
-FROM        easylat
+FROM		flat
 MAINTAINER	Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
-
-ENV FEDORA_HOME /var/www/fedora/
-ENV CATALINA_HOME /var/www/fedora/tomcat/
 
 RUN apt-get clean &&\
     rm -rf /var/lib/apt/lists/*
@@ -37,11 +34,8 @@ RUN cd /tmp/islandora &&\
 RUN cd /var/www/html/drupal/ &&\
     export PGPASSWORD=fedora &&\
     /etc/init.d/postgresql start &&\
-    export FEDORA_HOME=/var/www/fedora/ &&\
-    export CATALINA_HOME=/var/www/fedora/tomcat/ &&\
     /var/www/fedora/tomcat/bin/startup.sh &&\
     sleep 60 &&\
-#    cat /var/www/fedora/server/logs/fedora.log &&\
     /var/www/composer/vendor/drush/drush/drush en islandora_audio -y &&\
     /var/www/fedora/tomcat/bin/shutdown.sh &&\
     sleep 10 &&\
@@ -78,11 +72,8 @@ RUN cd /tmp/islandora &&\
 RUN cd /var/www/html/drupal/ &&\
     export PGPASSWORD=fedora &&\
     /etc/init.d/postgresql start &&\
-    export FEDORA_HOME=/var/www/fedora/ &&\
-    export CATALINA_HOME=/var/www/fedora/tomcat/ &&\
     /var/www/fedora/tomcat/bin/startup.sh &&\
     sleep 60 &&\
-#    cat /var/www/fedora/server/logs/fedora.log &&\
     /var/www/composer/vendor/drush/drush/drush en php_lib -y &&\
     /var/www/composer/vendor/drush/drush/drush en objective_forms -y &&\
     /var/www/composer/vendor/drush/drush/drush en xml_form_builder -y &&\
