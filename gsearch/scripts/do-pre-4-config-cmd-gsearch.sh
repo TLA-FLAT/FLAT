@@ -129,21 +129,22 @@ if [ $verbose -ne 0 ]; then
 fi
 
 for profile in $profiles; do
-	if [ ! -f $profile_cache/$profile.xml ]; then
-		curl -s -o "$profile_cache/$profile.xml" "$registry/$profile/xml"
+	PROF="`echo $profile | sed -e 's|[^a-zA-Z0-9]|_|g'`"
+	if [ ! -f $profile_cache/$PROF.xml ]; then
+		curl -s -o "$profile_cache/$PROF.xml" "$registry/$profile/xml"
                 if [ $? -ne 0 ]; then
-                        if [ -f $profile_cache/$profile.xml ]; then
-                                rm $profile_cache/$profile.xml
+                        if [ -f $profile_cache/$PROF.xml ]; then
+                                rm $profile_cache/$PROF.xml
                         fi
-                        echo "Failed to fetch profile: $profile from $registry/$profile/xml to $profile_cache/$profile.xml"
+                        echo "Failed to fetch profile: $profile from $registry/$profile/xml to $profile_cache/$PROF.xml"
                 else
-                        grep 'Profile not found:' $profile_cache/$profile.xml > /dev/null
+                        grep 'Profile not found:' $profile_cache/$PROF.xml > /dev/null
                         if [ $? -eq 0 ]; then
-                                rm $profile_cache/$profile.xml
-                                echo "Profile doesn't exist: $profile from $registry/$profile/xml to $profile_cache/$profile.xml"
+                                rm $profile_cache/$PROF.xml
+                                echo "Profile doesn't exist: $profile from $registry/$profile/xml to $profile_cache/$PROF.xml"
                         else
                                 if [ $verbose -ne 0 ]; then
-                                        echo "Fetched profile: $profile from $registry/$profile/xml to $profile_cache/$profile.xml"
+                                        echo "Fetched profile: $profile from $registry/$profile/xml to $profile_cache/$PROF.xml"
                                 fi
                         fi
                 fi

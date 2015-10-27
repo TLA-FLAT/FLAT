@@ -92,6 +92,9 @@ RUN /etc/init.d/postgresql start &&\
 #   - islandora
 #
 
+ENV FEDORA_HOME /var/www/fedora
+ENV CATALINA_HOME /var/www/fedora/tomcat
+
 RUN mkdir /tmp/fedora
 RUN cd /tmp/fedora &&\ 
 	wget "http://downloads.sourceforge.net/project/fedora-commons/fedora/3.8.0/fcrepo-installer-3.8.0.jar"
@@ -105,11 +108,10 @@ RUN /etc/init.d/postgresql start &&\
 #
 # starting fedora will initialize required directories
 #
+
 ADD fedora/wait.sh /tmp/wait.sh
 RUN chmod 0755 /tmp/wait.sh
 RUN /etc/init.d/postgresql start &&\
-	export FEDORA_HOME=/var/www/fedora/ &&\
-	export CATALINA_HOME=/var/www/fedora/tomcat/ &&\
 	/var/www/fedora/tomcat/bin/startup.sh &&\
 	/tmp/wait.sh &&\
 	/var/www/fedora/tomcat/bin/shutdown.sh &&\
@@ -165,10 +167,6 @@ RUN mkdir -p /tmp/islandora
 RUN mkdir -p /var/www/html/drupal/sites/all/modules/contrib
 RUN mkdir -p /var/www/html/drupal/sites/all/themes
 RUN cd /tmp/islandora &&\
-	wget "http://ftp.drupal.org/files/projects/bootstrap-7.x-3.x-dev.zip" &&\
-	unzip bootstrap-7.x-3.x-dev.zip &&\
-	mv /tmp/islandora/bootstrap /var/www/html/drupal/sites/all/themes/bootstrap
-RUN cd /tmp/islandora &&\
 	wget "https://github.com/Islandora/islandora/archive/7.x-1.5.tar.gz" &&\
 	tar -xf 7.x-1.5.tar.gz -C /var/www/html/drupal/sites/all/modules/contrib/
 RUN cd /tmp/islandora &&\
@@ -185,14 +183,12 @@ RUN cd /tmp/islandora &&\
 	unzip FLAT.zip 'FLAT-master/islandora/islandora_solution_pack_cmdi/*' &&\
 	mv FLAT-master/islandora/islandora_solution_pack_cmdi /var/www/html/drupal/sites/all/modules/contrib/
     
-RUN mkdir /tmp/feature
-RUN cd /tmp/feature &&\
-	wget "http://ftp.drupal.org/files/projects/features-7.x-2.5.zip" &&\
-	unzip features-7.x-2.5.zip -d /var/www/html/drupal/sites/all/modules/contrib/
-RUN cd /tmp/feature &&\
-	wget "http://ftp.drupal.org/files/projects/features_extra-7.x-1.0-beta1.zip" &&\
-	unzip features_extra-7.x-1.0-beta1.zip -d /var/www/html/drupal/sites/all/modules/contrib/
-	
+RUN mkdir -p /tmp/bootstrap
+RUN cd /tmp/bootstrap &&\
+	wget "http://ftp.drupal.org/files/projects/bootstrap-7.x-3.x-dev.zip" &&\
+	unzip bootstrap-7.x-3.x-dev.zip &&\
+	mv /tmp/bootstrap/bootstrap /var/www/html/drupal/sites/all/themes/bootstrap
+
 RUN cp -r /var/www/html/drupal/sites/all/themes/bootstrap/starterkits/cdn  /var/www/html/drupal/sites/all/themes/flat_bootstrap_theme &&\
 	cd /var/www/html/drupal/sites/all/themes/flat_bootstrap_theme/ &&\
 	mv cdn.starterkit flat_bootstrap_theme.info &&\
@@ -201,8 +197,6 @@ RUN cp -r /var/www/html/drupal/sites/all/themes/bootstrap/starterkits/cdn  /var/
 RUN cd /var/www/html/drupal/ &&\
 	export PGPASSWORD=fedora &&\
 	/etc/init.d/postgresql start &&\
-	export FEDORA_HOME=/var/www/fedora/ &&\
-	export CATALINA_HOME=/var/www/fedora/tomcat/ &&\
 	/var/www/fedora/tomcat/bin/startup.sh &&\
 	sleep 60 &&\
 	/var/www/composer/vendor/drush/drush/drush vset islandora_base_url https://localhost:8443/fedora &&\
@@ -211,8 +205,7 @@ RUN cd /var/www/html/drupal/ &&\
 	/var/www/composer/vendor/drush/drush/drush en islandora_compound_object -y &&\
 	/var/www/composer/vendor/drush/drush/drush en islandora_cmdi -y &&\
 	/var/www/composer/vendor/drush/drush/drush vset islandora_metadata_display cmdi &&\
-	/var/www/composer/vendor/drush/drush/drush en features -y &&\
-	/var/www/composer/vendor/drush/drush/drush en fe_block -y &&\
+	/var/www/composer/vendor/drush/drush/drush dl features_extra -y &&\
 	/var/www/composer/vendor/drush/drush/drush en flat -y &&\
 	/var/www/composer/vendor/drush/drush/drush php-script flat-logo --script-path=/tmp &&\
 	/var/www/composer/vendor/drush/drush/drush en jquery_update -y &&\
@@ -229,8 +222,6 @@ ADD cert/InstallCert.sh /tmp/InstallCert.sh
 RUN chmod +x /tmp/InstallCert.sh
 RUN cd /opt &&\
 	/etc/init.d/postgresql start &&\
-	export FEDORA_HOME=/var/www/fedora/ &&\
-	export CATALINA_HOME=/var/www/fedora/tomcat/ &&\
 	/var/www/fedora/tomcat/bin/startup.sh &&\
 	sleep 60 &&\
 	/tmp/InstallCert.sh &&\
