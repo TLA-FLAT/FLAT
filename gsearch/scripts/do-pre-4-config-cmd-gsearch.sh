@@ -3,8 +3,8 @@
 # Welcome info
 show_welcome() {
 	cat << EOF
-EasyLAT GSearch Component Metadata facet mapping!
-><><><><><><><><><><><><><><><><><><><><><><><><>
+FLAT GSearch Component Metadata facet mapping!
+<><><><><><><><><><><><><><><><><><><><><><><>
 EOF
 }
 

@@ -13,7 +13,7 @@
 	<xsl:param name="fox-base" select="'./fox'"/>
 	<xsl:param name="lax-resource-check" select="false()"/>
 
-	<xsl:param name="repository" select="'easylat.org'"/>
+	<xsl:param name="repository" select="'flat.example.com'"/>
 
 	<xsl:param name="create-cmd-object" select="true()"/>
 

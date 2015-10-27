@@ -2,16 +2,16 @@
 
 /**
  * @file
- * Implements a simple class for working with Cmdi data.
+ * Implements a simple class for working with CMDI data.
  *
  * Inspiration and design shamelessly stolen from the pyfedora
  * project at http://pypi.python.org/pypi/pyfedora/0.1.0
  */
 
 /**
- * Cmdi Class
+ * CMDI Class
  */
-class Cmdi {
+class CMDI {
 
   public $cmdi = array(
     'cmdi:header' => array(),
@@ -24,7 +24,7 @@ class Cmdi {
    * Constructor.
    *
    * @param string $cmdi_xml
-   *   The Cmdi XML.
+   *   The CMDI XML.
    */
   public function __construct($cmdi_xml = NULL) {
     if (!empty($cmdi_xml)) {
@@ -47,7 +47,7 @@ class Cmdi {
   }
 
   /**
-   * Replace the given Cmdi element with the given values.
+   * Replace the given CMDI element with the given values.
    *
    * @param string $element_name
    *   The name of the elements to set.
@@ -137,16 +137,16 @@ class Cmdi {
    * Creates a new instance of the class by parsing cmdi_xml.
    *
    * @param string $cmdi_xml
-   *   Cmdi XML.
+   *   CMDI XML.
    *
-   * @return Cmdi
+   * @return CMDI
    *   The instantiated object.
    */
   public static function importFromXMLString($cmdi_xml) {
     $cmdi_doc = new DomDocument();
     if (!empty($cmdi_xml) && $cmdi_doc->loadXML($cmdi_xml)) {
    //   $oai_cmdi = $cmdi_doc->getElementsByTagNameNS('http://purl.org/cmdi/elements/1.1/', '*');
-      $new_cmdi = new Cmdi();
+      $new_cmdi = new CMDI();
       foreach ($oai_cmdi as $child) {
         if (isset($new_cmdi->cmdi[$child->nodeName])) {
           array_push($new_cmdi->cmdi[$child->nodeName], $child->nodeValue);

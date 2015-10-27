@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Cmdi solution pack for Islandora to add viewer for displaying metadata.
+ * CMDI solution pack for Islandora to add viewer for displaying metadata.
  */
 
 /**
@@ -33,12 +33,12 @@ function islandora_cmdi_theme($existing, $type, $theme, $path) {
  */
 function islandora_cmdi_islandora_required_objects(IslandoraTuque $connection) {
   $module_path = drupal_get_path('module', 'islandora_cmdi');
-  // Cmdi Content Model.
+  // CMDI Content Model.
   $cmdi_content_model = $connection->repository->constructObject('islandora:sp_cmdiCModel');
   $cmdi_content_model->owner = 'fedoraAdmin';
-  $cmdi_content_model->label = 'Islandora Cmdi Content Model';
+  $cmdi_content_model->label = 'Islandora CMDI Content Model';
   $cmdi_content_model->models = 'fedora-system:ContentModel-3.0';
-  // Cmdi Datastream.
+  // CMDI Datastream.
   $datastream = $cmdi_content_model->constructDatastream('DS-COMPOSITE-MODEL', 'X');
   $datastream->label = 'DS-COMPOSITE-MODEL';
   $datastream->mimetype = 'application/xml';
@@ -46,7 +46,7 @@ function islandora_cmdi_islandora_required_objects(IslandoraTuque $connection) {
   $cmdi_content_model->ingestDatastream($datastream);
   return array(
     'islandora_cmdi' => array(
-      'title' => 'Islandora Cmdi',
+      'title' => 'Islandora CMDI',
       'objects' => array(
         $cmdi_content_model
       ),
@@ -60,8 +60,8 @@ function islandora_cmdi_islandora_required_objects(IslandoraTuque $connection) {
 function islandora_cmdi_islandora_metadata_display_info() {
   return array(
     'cmdi' => array(
-      'label' => t('Cmdi metadata'),
-      'description' => t('Cmdi for metadata'),
+      'label' => t('CMDI metadata'),
+      'description' => t('Renderer for Component Metadata'),
       'metadata callback' => 'cmdi_metadata_display_callback',
       'description callback' => 'cmdi_metadata_description_callback',
     ),

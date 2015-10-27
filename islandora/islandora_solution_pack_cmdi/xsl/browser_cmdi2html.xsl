@@ -8,10 +8,6 @@
         Author: Twan Goosen (twan.goosen@mpi.nl)
         Date: February 2015
 	Version: 1.0
-
-	Versioning information:
-	$HeadURL: https://svn.mpi.nl/LAT/CmdiXslt/tags/cmdi-xslt-1.0/browser_cmdi2html.xsl $
-	$Id: browser_cmdi2html.xsl 43174 2015-02-02 13:10:50Z twagoo $
     -->
 
     <xsl:output encoding="UTF-8" indent="yes" method="xml" omit-xml-declaration="yes" doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN" doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"/>
