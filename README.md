@@ -1,5 +1,5 @@
-FLAT
-====
+![FLAT logo](docker/flat/drupal/flat-logo.png) FLAT
+===================================================
 The FLAT project is currently an investigation into an easy and
 maintainable archive setup for language resources with
 [CMDI](http://www.clarin.eu/cmdi/) metadata. Its based on [Fedora Commons](http://fedora-commons.org/)
