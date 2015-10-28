@@ -1,13 +1,13 @@
 FLAT base image
 ===============
 
-# Requirements #
+## Requirements ##
 Make sure you have docker installed. Check out for http://docker.io for more 
 information.
 
 Quick installation link: https://docs.docker.com/installation/#installation
 
-# Provides #
+## Provides ##
 
 On OSX you can find our your docker IP via the "docker-machine ip default" command. On unix machines you can use localhost.
 
@@ -21,14 +21,14 @@ The following accounts are created:
  * Fedora Commons account: fedoraAdmin:fedora
  * PostgreSQL account: fedora:fedora
 
-# Building the image #
+## Building the image ##
 1. Start your docker environment
 2. Run: 
 ```sh
 docker build -t flat .
 ```
 
-# Running the image #
+## Running the image ##
 1. Start your docker environment
 2. Run
 ```sh 
@@ -40,9 +40,9 @@ This will start your docker container with the following properties:
 - Mount your resources directory at the /lat directory in your container
 - Open a bash shell in your container
 
-# Additional configuration #
+## Additional configuration ##
 
-## Importing metadata and resources ##
+### Importing metadata and resources ###
 
 Inside the container the /app/flat directory contains various scripts to convert and import metadata into the FLAT repository:
 
@@ -52,8 +52,8 @@ Inside the container the /app/flat directory contains various scripts to convert
 
 - do-3-import.sh: imports the FOX files into Fedora Commons.
 
-# Notes #
+## Notes ##
 
 TODO: the Object XML can't be viewed from the Fedora admin console
 
-# References #
+## References ##

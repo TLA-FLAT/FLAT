@@ -12,4 +12,5 @@ Currently the setup of this project consists of two parts:
 * the tools/scripts to enable an import of existing metadata records and
   language resources
 
-*Note*: FLAT used to be known as EasyLAT, so occassionally documentation and code might still use that name.
+###Notes###
+FLAT used to be known as EasyLAT, so occassionally documentation and code might still use that name.
