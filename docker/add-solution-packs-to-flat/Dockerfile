@@ -82,6 +82,14 @@ RUN cd /var/www/html/drupal/ &&\
     sleep 10 &&\
     /etc/init.d/postgresql stop
 
+#
+# Add FLAT's own scripts and tools 
+#
+
+RUN mkdir -p /app/flat
+ADD flat/scripts/* /app/flat/
+RUN chmod +x /app/flat/*.sh
+
 #Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
