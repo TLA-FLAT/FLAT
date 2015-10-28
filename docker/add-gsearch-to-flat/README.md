@@ -14,9 +14,9 @@ docker build -t flat-with-gsearch .
 # Running the image #
 docker run -i -p 80:80 -p 8443:8443 -p 8080:8080 -t flat-with-gsearch /sbin/my_init -- bash -l
 
-## Manual configuration ##
+# Additional configuration #
 
-You may be interested in adapting the indexing of records and resources. For more information, see the [instructons on customising GSearch and Solr](https://wiki.duraspace.org/display/ISLANDORA714/Customizing+GSearch+and+Solr) from the Islandora documentation.
+FLAT uses the Component Metadata (CMD) Infrastructure and allows arbitary CMD profiles. For the Solr facets a mapping from these profiles to the facets need to be created.
 
 # References #
 

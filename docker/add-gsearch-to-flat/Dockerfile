@@ -1,21 +1,3 @@
-#
-# Based on the FLAT islandora base image
-# See:  https://github.com/TheLanguageArchive/FLAT/tree/master/docker/flat
-#       https://wiki.duraspace.org/display/ISLANDORA713/Installing+Solr+and+GSearch
-
-# Versions:
-#   GSearch 2.7.1   http://192.168.99.100:8080/fedoragsearch/rest
-#   Solr 4.6.1      http://192.168.99.100:8080/solr/
-#       version 4.10.2 was giving issues about index version being too new
-#   Islandora_solr_search 7.x-1.5
-#
-# Building the image:
-#   docker build -t flat-with-gsearch .
-#
-# Running the image:
-#   docker run -i -p 80:80 -p 8443:8443 -p 8080:8080 -t flat-with-gsearch /sbin/my_init -- bash -l
-#
-#
 FROM		flat
 MAINTAINER	Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 
@@ -88,13 +70,28 @@ RUN cd /var/www/html/drupal/ &&\
 	export PGPASSWORD=fedora &&\
 	/etc/init.d/postgresql start &&\
 	/var/www/fedora/tomcat/bin/startup.sh &&\
-	sleep 30 &&\
+	bash -c "timeout 60 grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 	/var/www/composer/vendor/drush/drush/drush en islandora_solr -y &&\
 	/var/www/composer/vendor/drush/drush/drush en islandora_solr_config -y &&\
 	/var/www/fedora/tomcat/bin/shutdown.sh &&\
-	sleep 10 &&\
+	bash -c "timeout 60 grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 	/etc/init.d/postgresql stop
 
+#
+# Add FLAT's own scripts and tools 
+#
+
+RUN mkdir -p /app/flat
+ADD flat/scripts/* /app/flat/
+RUN chmod +x /app/flat/*.sh
+
+RUN mkdir -p /tmp/FindProfiles
+ADD flat/FindProfiles /tmp/FindProfiles
+RUN cd /tmp/FindProfiles &&\
+    mvn package &&\
+    mkdir -p /app/flat/lib &&\
+    mv target/findProfiles.jar /app/flat/lib/findProfiles.jar
+    
 #Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

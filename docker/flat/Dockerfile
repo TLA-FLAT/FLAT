@@ -228,6 +228,7 @@ RUN chmod u+x /etc/my_init.d/start.sh
 
 RUN mkdir -p /app/flat
 ADD flat/scripts/* /app/flat/
+RUN chmod +x /app/flat/*.sh
 
 RUN cd /tmp &&\
     git clone https://github.com/TheLanguageArchive/SchemAnon.git SchemAnon &&\
