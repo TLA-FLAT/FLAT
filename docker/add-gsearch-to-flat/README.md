@@ -5,9 +5,9 @@ Add GSearch to the FLAT base image
 This docker file is based on the FLAT base image.
 
 ## Provides ##
- * GSearch 2.7.1, accessible via: http://IP:8080/fedoragsearch/rest
- * Solr 4.6.1, accessible via: http://IP:8080/solr/
- * Islandora_solr_search 7.x-1.3, exposed via the Islandora drupal interface
+ * GSearch, accessible via: http://IP:8080/fedoragsearch/rest
+ * Solr, accessible via: http://IP:8080/solr/
+ * Islandora_solr_search, exposed via the Islandora drupal interface
 
 The following accounts are created: 
 
@@ -43,9 +43,9 @@ This shows that the mapping can be based on:
  
 This mapping is expanded and applied to the records using these scripts in the /app/flat directory inside the container:
  
-- do-4-config-cmd-gsearch.sh: expands the mapping based on the profiles used by the CMD records in /app/flat/cmd
+- [do-4-config-cmd-gsearch.sh](flat/scripts/do-4-config-cmd-gsearch.sh): expands the mapping based on the profiles used by the CMD records in /app/flat/cmd
 
-- do-5-search.sh: trigger the indexing of the CMD records
+- [do-5-search.sh](flat/scripts/do-5-search.sh): trigger the indexing of the CMD records
 
 ## Notes ##
 

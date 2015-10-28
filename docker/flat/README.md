@@ -46,11 +46,11 @@ This will start your docker container with the following properties:
 
 Inside the container the /app/flat directory contains various scripts to convert and import metadata into the FLAT repository:
 
-- do-1-convert.sh: converts all IMDI metdata files found in /app/flat/src into CMD records, which will be stored in /app/flat/cmd.
+- [do-1-convert.sh](flat/scripts/do-1-convert.sh): converts all IMDI metdata files found in /app/flat/src into CMD records, which will be stored in /app/flat/cmd.
 
-- do-2-fox.sh: converts the CMD records found into /app/flat/cmd into FOX files, which will be stored in /app/flat/fox.
+- [do-2-fox.sh](flat/scripts/do-2-fox.sh): converts the CMD records found into /app/flat/cmd into FOX files, which will be stored in /app/flat/fox.
 
-- do-3-import.sh: imports the FOX files into Fedora Commons.
+- [do-3-import.sh](flat/scripts/do-3-import.sh): imports the FOX files into Fedora Commons.
 
 ## Notes ##
 
