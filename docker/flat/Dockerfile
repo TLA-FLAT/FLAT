@@ -150,7 +150,7 @@ RUN cd /tmp/islandora &&\
 	unzip islandora_solution_pack_compound-7.x-1.5.zip -d /var/www/html/drupal/sites/all/modules/contrib/
 
 RUN mkdir -p /var/www/html/drupal/sites/all/modules/contrib/islandora_solution_pack_cmdi
-ADD islandora/islandora_solution_pack_cmdi /var/www/html/drupal/sites/all/modules/contrib/islandora_solution_pack_cmdi
+ADD flat/islandora_solution_pack_cmdi /var/www/html/drupal/sites/all/modules/contrib/islandora_solution_pack_cmdi
     
 RUN mkdir -p /tmp/bootstrap
 RUN cd /tmp/bootstrap &&\
