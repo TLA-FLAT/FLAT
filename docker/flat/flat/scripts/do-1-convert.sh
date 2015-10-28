@@ -14,6 +14,6 @@ fi
 
 mkdir -p /app/flat/cmd
 
-rsync -avzr /app/flat/src/ /app/flat/cmd/ --include '*.cmdi' --exclude '*.imdi' --exclude 'corpman' --exclude 'sessions' --exclude 'mirrored_corpora' --exclude 'media-archive'
+rsync -Lavzr /app/flat/src/ /app/flat/cmd/ --include='*/' --include='*.cmdi' --exclude='*' --exclude='corpman' --exclude='sessions' --exclude='mirrored_corpora' --exclude='media-archive'
 
 date

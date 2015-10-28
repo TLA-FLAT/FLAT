@@ -18,23 +18,30 @@ Quick installation link: https://docs.docker.com/installation/#installation
 
 1. Start your docker environment
 2. Run: 
-    "docker run -p 80:80 -p 8443:8443 -t -i -name=flat flat /sbin/my_init -- bash -l"
+    "docker run -p 80:80 -p 8443:8443 -v ~/my-resources:/lat -t -i flat /sbin/my_init -- bash -l"
 
 This will start your docker container with the following properties:
 - Mapped each port specified with a "-p" parameter between your container and your host
-- Using the hostname specified with the "-h" parameter
+- Mount your resources directory at the /lat directory in your container
 - Open a bash shell in your container
 
-## Finalizing your setup ##
-
-On mac osx you can find our your docker ip via the "docker-machine ip default" command run
-inside the docker shell.
-
-Goto http://\<docker ip\>/drupal 
-
-Goto http://\<docker io\>:8443/fedora/admin
-
 ## Importing metadata and resources ##
+
+Inside the container the /app/flat directory contains various scripts to convert and import metadata into the FLAT repository:
+
+- do-1-convert.sh: converts all IMDI metdata files found in /app/flat/src into CMD records, which will be stored in /app/flat/cmd.
+
+- do-2-fox.sh: converts the CMD records found into /app/flat/cmd into FOX files, which will be stored in /app/flat/fox.
+
+- do-3-import.sh: imports the FOX files into Fedora Commons.
+
+## Accessing the FLAT repository ##
+
+On mac osx you can find our your docker ip via the "docker-machine ip default" command. On unix machines you can use localhost.
+
+Goto http://\<docker ip\>/drupal to see the Islandora UI of your FLAT repository.
+
+Goto http://\<docker ip\>:8443/fedora/admin to see the Fedora Commons management interface for your FLAT repository.
 
 ## Information about the VM ##
 
