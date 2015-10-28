@@ -1,35 +1,3 @@
-# Fedora + Islandora, postgresql based 
-#
-# See:
-#   https://github.com/phusion/baseimage-docker
-# VERSION               0.0.1
-#
-# docker build -t flat .
-#
-# docker run --rm -p 80:80 -p 8443:8443 -t -i -name=flat flat /sbin/my_init -- bash -l
-#
-# On mac run "docker-machine ip default" to figure out where to reach your running containers.
-# 192.168.99.100 seems to be the default.
-#
-# http://192.168.99.100/drupal/
-#
-# https://192.168.99.100:8443/fedora/admin/
-#
-# TODO: the Object XML can't be viewed
-#
-# Database user for "drupal" and "fedora" database:
-#   fedora:fedora
-#
-# Drupal admin account:
-#    admin:admin
-#
-# Fedora admin account:
-#    fedoraAdmin:fedora
-#
-# /var/www/fedora
-# /var/www/html/drupal
-#
-
 FROM        phusion/baseimage
 MAINTAINER  Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 
@@ -49,7 +17,7 @@ CMD ["/sbin/my_init"]
 #
 RUN apt-get update &&\
 	apt-get -y dist-upgrade &&\
-	apt-get -y install curl wget openssl apache2 postgresql php5 php5-gd php5-pgsql php5-xsl php5-curl unzip default-jdk libapache2-mod-jk expect ssh rsync
+	apt-get -y install curl wget openssl apache2 postgresql php5 php5-gd php5-pgsql php5-xsl php5-curl unzip default-jdk libapache2-mod-jk expect ssh rsync git maven
 
 #
 # Configure apache
@@ -114,8 +82,11 @@ RUN chmod 0755 /tmp/wait.sh
 RUN /etc/init.d/postgresql start &&\
 	/var/www/fedora/tomcat/bin/startup.sh &&\
 	/tmp/wait.sh &&\
+	bash -c "timeout 60 grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
+    # apparantly the shutdown port is not directly available after startup
+ 	sleep 10 &&\
 	/var/www/fedora/tomcat/bin/shutdown.sh &&\
-	sleep 10 &&\
+	bash -c "timeout 60 grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 	/etc/init.d/postgresql stop
 RUN rm -v /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/deny-purge-*
 ADD fedora/permit-anything-to-localhost.xml /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/permit-anything-to-localhost.xml
@@ -177,11 +148,9 @@ RUN cd /tmp/islandora &&\
 	wget "https://github.com/Islandora/islandora_solution_pack_compound/archive/7.x-1.5.zip" &&\
 	mv 7.x-1.5.zip islandora_solution_pack_compound-7.x-1.5.zip &&\
 	unzip islandora_solution_pack_compound-7.x-1.5.zip -d /var/www/html/drupal/sites/all/modules/contrib/
-RUN cd /tmp/islandora &&\
-	wget "https://github.com/TheLanguageArchive/FLAT/archive/master.zip" &&\
-	mv master.zip FLAT.zip &&\
-	unzip FLAT.zip 'FLAT-master/islandora/islandora_solution_pack_cmdi/*' &&\
-	mv FLAT-master/islandora/islandora_solution_pack_cmdi /var/www/html/drupal/sites/all/modules/contrib/
+
+RUN mkdir -p /var/www/html/drupal/sites/all/modules/contrib/islandora_solution_pack_cmdi
+ADD islandora/islandora_solution_pack_cmdi /var/www/html/drupal/sites/all/modules/contrib/islandora_solution_pack_cmdi
     
 RUN mkdir -p /tmp/bootstrap
 RUN cd /tmp/bootstrap &&\
@@ -198,7 +167,7 @@ RUN cd /var/www/html/drupal/ &&\
 	export PGPASSWORD=fedora &&\
 	/etc/init.d/postgresql start &&\
 	/var/www/fedora/tomcat/bin/startup.sh &&\
-	sleep 60 &&\
+	bash -c "timeout 60 grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 	/var/www/composer/vendor/drush/drush/drush vset islandora_base_url https://localhost:8443/fedora &&\
 	/var/www/composer/vendor/drush/drush/drush en islandora -y &&\
 	/var/www/composer/vendor/drush/drush/drush en islandora_basic_collection -y &&\
@@ -213,7 +182,7 @@ RUN cd /var/www/html/drupal/ &&\
 	/var/www/composer/vendor/drush/drush/drush en flat_bootstrap_theme -y &&\
 	/var/www/composer/vendor/drush/drush/drush vset theme_default flat_bootstrap_theme &&\
 	/var/www/fedora/tomcat/bin/shutdown.sh &&\
-	sleep 10 &&\
+	bash -c "timeout 60 grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 	/etc/init.d/postgresql stop
     
 # add the generated certificate for localhost
@@ -223,10 +192,10 @@ RUN chmod +x /tmp/InstallCert.sh
 RUN cd /opt &&\
 	/etc/init.d/postgresql start &&\
 	/var/www/fedora/tomcat/bin/startup.sh &&\
-	sleep 60 &&\
+	bash -c "timeout 60 grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 	/tmp/InstallCert.sh &&\
 	/var/www/fedora/tomcat/bin/shutdown.sh &&\
-	sleep 10 &&\
+	bash -c "timeout 60 grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 	/etc/init.d/postgresql stop
 
 ##Download proai
@@ -253,7 +222,46 @@ RUN chmod u+x /var/www/fedora/tomcat/bin/tomcat-fedora.sh
 ADD my_init.d/start.sh /etc/my_init.d/start.sh
 RUN chmod u+x /etc/my_init.d/start.sh
 
-#Clean up APT when done.
+#
+# Add FLAT's own scripts and tools 
+#
+
+RUN mkdir -p /app/flat
+ADD flat/scripts/* /app/flat/
+
+RUN cd /tmp &&\
+    git clone https://github.com/TheLanguageArchive/SchemAnon.git SchemAnon &&\
+    cd /tmp/SchemAnon &&\
+    mvn install:install-file -Dfile=lib/org/eclipse/wst/org.eclipse.wst.xml.xpath2.processor/1.1.0/org.eclipse.wst.xml.xpath2.processor-1.1.0.jar -DgroupId=org.eclipse.wst -DartifactId=org.eclipse.wst.xml.xpath2.processor -Dversion=1.1.0 -Dpackaging=jar &&\
+    mvn install:install-file -Dfile=lib/xerces/xercesImpl/2.11.0-xml-schema-1.1-beta/xercesImpl-2.11.0-xml-schema-1.1-beta.jar -DpomFile=lib/xerces/xercesImpl/2.11.0-xml-schema-1.1-beta/xercesImpl-2.11.0-xml-schema-1.1-beta.pom -DgroupId=xerces -DartifactId=xercesImpl -Dversion=2.11.0-xml-schema-1.1-beta -Dpackaging=jar &&\
+    mvn clean install
+
+RUN cd /tmp &&\
+    git clone -b development https://github.com/TheLanguageArchive/MetadataTranslator.git MetadataTranslator &&\
+    cd /tmp/MetadataTranslator
+    
+RUN cd /tmp/MetadataTranslator &&\
+    mvn clean install
+    
+RUN cd /tmp &&\
+    wget https://nexus.clarin.eu/content/repositories/clarin-snapshot/eu/clarin/cmdi/cmdi-validator-core/0.0.6-SNAPSHOT/cmdi-validator-core-0.0.6-20150702.082849-1.jar &&\
+    mvn install:install-file -Dfile=cmdi-validator-core-0.0.6-20150702.082849-1.jar -DgroupId=eu.clarin.cmdi -DartifactId=cmdi-validator-core -Dversion=0.0.6-SNAPSHOT -Dpackaging=jar
+ 
+RUN cd /tmp &&\
+    git clone https://github.com/TheLanguageArchive/ISLE2CLARIN.git ISLE2CLARIN &&\
+    cd /tmp/ISLE2CLARIN &&\
+    mvn clean package &&\
+    mkdir -p /app/flat/lib &&\
+    mv target/isle2clarin.jar /app/flat/lib/isle2clarin.jar
+
+RUN mkdir -p /tmp/LAT2FOX
+ADD flat/LAT2FOX /tmp/LAT2FOX
+RUN cd /tmp/LAT2FOX &&\
+    mvn clean package &&\
+    mkdir -p /app/flat/lib &&\
+    mv target/lat2fox.jar /app/flat/lib/lat2fox.jar
+    
+#Clean up APT and /tmp when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 EXPOSE 80

@@ -1,5 +1,0 @@
-#!/bin/sh
-
-java -jar /import/lib/isle2clarin.jar $*
-
-exit $?

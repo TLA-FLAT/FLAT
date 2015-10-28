@@ -18,7 +18,7 @@ Quick installation link: https://docs.docker.com/installation/#installation
 
 1. Start your docker environment
 2. Run: 
-    "docker run -p 80:80 -p 8443:8443 -t -i flat /sbin/my_init -- bash -l"
+    "docker run -p 80:80 -p 8443:8443 -t -i -name=flat flat /sbin/my_init -- bash -l"
 
 This will start your docker container with the following properties:
 - Mapped each port specified with a "-p" parameter between your container and your host
@@ -32,6 +32,10 @@ inside the docker shell.
 
 Goto http://\<docker ip\>/drupal 
 
+Goto http://\<docker io\>:8443/fedora/admin
+
+## Importing metadata and resources ##
+
 ## Information about the VM ##
 
 ### Installed software ###
@@ -42,6 +46,7 @@ Goto http://\<docker ip\>/drupal
 - Islandora
 - Tuque
 - Various islandora modules and tools
+- Various FLAT scripts and conversion tools
 
 ### Accounts ###
 
@@ -53,3 +58,7 @@ fedoraAdmin:fedora
 
 database account for "fedora" and "drupal" database:
 fedora:fedora
+
+### Notes ###
+
+TODO: the Object XML can't be viewed from the Fedora admin console
