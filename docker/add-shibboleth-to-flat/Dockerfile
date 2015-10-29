@@ -1,15 +1,3 @@
-#
-# Based on the FLAT islandora base image
-# See:  https://github.com/TheLanguageArchive/FLAT/tree/master/docker/flat
-
-# Building the image:
-#   docker build -t flat-with-shibboleth .
-#
-# Running the image:
-#   docker run -i -p 80:80 -p 8443:8443 -p 8080:8080 -t flat-with-shibboleth /sbin/my_init -- bash -l
-#
-# NOTE: further configuration in /etc/shibboleth will be needed to create an SP and connect it to one or more IdPs
-#
 FROM		flat 
 MAINTAINER	Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 
