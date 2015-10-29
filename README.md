@@ -10,24 +10,24 @@ the [Meertens Institute](http://www.meertens.knaw.nl/), that cooperate in [The L
 
 Currently the setup of this project consists of a series of docker setups:
 
- 1. a [FLAT base image](docker/flat/) that
-   a. installs Fedora Commons and Islandora
-   b. provides tools and scripts to covert from IMDI to CMDI
-   c. provides tools and scripts to import CMD records into Fedora
-   d. adds support for rendering of CMD records in Islandora
+ 1. A [FLAT base image](docker/flat/) that
+   1. installs Fedora Commons and Islandora
+   2. provides tools and scripts to covert from IMDI to CMDI
+   3. provides tools and scripts to import CMD records into Fedora
+   4. adds support for rendering of CMD records in Islandora
    
- 2. a [FLAT search image](docker/add-gsearch-to-flat) builds on the base image and
-   a. installs generic search for Fedora Commons
-   b. installs Islandora's SOLR modules
-   c. provides tools and scripts to configure the index proces for a specific set of CMD records and profiles
+ 2. A [FLAT search image](docker/add-gsearch-to-flat) builds on the base image and
+   1. installs generic search for Fedora Commons
+   2. installs Islandora's SOLR modules
+   3. provides tools and scripts to configure the index proces for a specific set of CMD records and profiles
    
- 3. a [FLAT Shibbolet image](docker/add-shibboleth-to-flat) builds on the base image and
-   a. installs Shibboleth
-   b. installs Drupal's Shibboleth modules
+ 3. A [FLAT Shibbolet image](docker/add-shibboleth-to-flat) builds on the base image and
+   1. installs Shibboleth
+   2. installs Drupal's Shibboleth modules
    
- 4. a [FLAT solution packs image](docker/add-solution-packs-to-flat) builds on the base image and
-   a. installs Islandora solution packs
-   b. provides scripts to trigger the addition of derived datastreams like thumbnails
+ 4. A [FLAT solution packs image](docker/add-solution-packs-to-flat) builds on the base image and
+   1. installs Islandora solution packs
+   2. provides scripts to trigger the addition of derived datastreams like thumbnails
 
 The FLAT base image is required, but the other ones can be added to it as needed.
 
