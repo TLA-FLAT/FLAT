@@ -21,10 +21,14 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Source;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
@@ -38,6 +42,8 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.s9api.XsltCompiler;
 import net.sf.saxon.s9api.XsltExecutable;
+import net.sf.saxon.s9api.XsltTransformer;
+import net.sf.saxon.tree.wrapper.VirtualNode;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.slf4j.Logger;
@@ -182,6 +188,12 @@ public class Saxon {
         return getDocumentBuilder().wrap(node);
     }
     
+    /**
+     * Unwrap a DOM Node from a Saxon XDM node.
+     */
+    static public Node unwrapNode(XdmNode node) {
+        return (Node)((VirtualNode)node.getUnderlyingNode()).getUnderlyingNode();
+    }
     /* XPath2 utilities */
 
     static public XPathSelector xpathCompile(XdmItem ctxt,String xp,Map<String,XdmValue> vars,Map<String,String> nss) throws SaxonApiException {
@@ -316,6 +328,20 @@ public class Saxon {
         if (start > 0)
             logger.debug("AVT result["+res+"]");
         return res;
+    }
+    
+    // save an XML 
+    
+    static public void save(Source source,File result) throws SaxonApiException {
+        try {
+            XsltTransformer transformer = buildTransformer(Saxon.class.getResource("/identity.xsl")).load();
+            transformer.setSource(source);
+            transformer.setDestination(getProcessor().newSerializer(result));
+            transformer.transform();
+            transformer.close();
+        } catch (Exception ex) {
+            throw new SaxonApiException(ex);
+        }
     }
     
 }

@@ -42,22 +42,34 @@ public class PackageAssembly extends AbstractAction {
             File dir = new File(getParameter("dir","./resources"));
             if (!dir.exists())
                  FileUtils.forceMkdir(dir);
+            int downloads = 0;
             for (Resource res:context.getSIP().getResources()) {
+                if (res.hasFile()) {
+                    if (res.getFile().canRead()) {
+                        logger.info("Previously download["+res.getFile()+"] of Resource["+res.getURI()+"] is still available.");
+                        continue;
+                    } else
+                        logger.info("Previously download["+res.getFile()+"] of Resource["+res.getURI()+"] isn't available anymore!");
+                }
                 URI uri = res.getURI();
                 if (uri.toString().startsWith(dir.toString())) {
                     // the file is already in the workdir resources directory
                     res.setFile(new File(uri.toString()));
                 } else if (uri.toString().startsWith("hdl:"+getParameter("prefix","foo")+"/") || uri.toString().startsWith("http://hdl.handle.net/"+getParameter("prefix","foo")+"/")) {
-                    // it has already a handle
-                    // TODO: what to do? still fetch it to check?
+                    // it has already a local handle
+                    // TODO: what to do? resolve to its local location, and check?
                 } else {
                     // download the content into a local file 
                     String ext = FilenameUtils.getExtension(uri.getPath());
                     File file = dir.toPath().resolve("./"+UUID.randomUUID().toString()+(!ext.equals("")?"."+ext:"")).toFile();
                     Request.Get(uri).execute().saveContent(file);
-                    logger.info("downloaded Resource["+uri+"] to ["+file+"]");
+                    res.setFile(file);
+                    logger.info("Downloaded Resource["+(++downloads)+"]["+uri+"] to ["+file+"]");
                 }
-            }            
+            }
+            if (downloads>0) {
+                context.getSIP().save();
+            }
         } catch (Exception ex) {
             throw new DepositException("Couldn't assemble the package!",ex);
         }

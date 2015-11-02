@@ -18,6 +18,7 @@ package nl.mpi.tla.flat.deposit;
 
 import java.io.File;
 import java.net.URI;
+import org.w3c.dom.Node;
 
 /**
  *
@@ -25,16 +26,22 @@ import java.net.URI;
  */
 public class Resource {
     
+    protected Node node = null;
     protected URI uri = null;
     protected File file = null;
     protected String mime = null;
     
-    public Resource(URI uri) {
+    public Resource(URI uri,Node node) {
         this.uri = uri;
+        this.node = node;
     }
     
     public URI getURI() {
         return this.uri;
+    }
+    
+    public Node getNode() {
+        return this.node;
     }
     
     public void setFile(File file) {

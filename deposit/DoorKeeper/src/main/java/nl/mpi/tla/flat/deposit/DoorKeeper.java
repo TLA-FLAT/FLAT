@@ -18,8 +18,6 @@ package nl.mpi.tla.flat.deposit;
 
 import java.io.File;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import nl.mpi.tla.flat.deposit.context.CLIParameters;
