@@ -16,21 +16,56 @@
  */
 package nl.mpi.tla.flat.deposit.action;
 
+import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.sf.saxon.s9api.XdmValue;
 import nl.mpi.tla.flat.deposit.Context;
+import nl.mpi.tla.flat.deposit.DepositException;
+import nl.mpi.tla.flat.deposit.Resource;
 import nl.mpi.tla.flat.deposit.SIP;
+import nl.mpi.tla.flat.deposit.action.util.TypeCheckHandler;
 
 /**
  *
  * @author menzowi
  */
 public class FITS extends AbstractAction {
+	
+	private static final Logger logger = LoggerFactory.getLogger(FITS.class);
     
+	
+	//TODO to be initialized - using Spring?
+	private TypeCheckHandler typecheck;
+	
     @Override
-    public boolean perform(Context context) {
-        return true;
+    public boolean perform(Context context) throws DepositException {
+    	
+    	boolean allAcceptable = true;
+    	
+    	SIP sip = context.getSIP();
+    	Set<Resource> resources = sip.getResources();
+    	for(Resource currentResource : resources) {
+    		if(currentResource.hasFile()) {
+    			File currentFile = currentResource.getFile();
+    			if(!typecheck.isFileAcceptable(currentFile)) {
+    				allAcceptable = false;
+    				logger.warn("File '{}' not acceptable", currentFile);
+    			}
+    		}
+    	}
+    	
+    	return allAcceptable;
     }
     
+    
+    //TODO use Spring to inject the field instead
+    public void setTypeCheckHandler(TypeCheckHandler typecheck) {
+    	this.typecheck = typecheck;
+    }
 }
