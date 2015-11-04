@@ -1,4 +1,4 @@
-package nl.mpi.tla.flat.deposit.action.util.implementation;
+package nl.mpi.tla.flat.deposit.action.util;
 
 import static org.junit.Assert.*;
 

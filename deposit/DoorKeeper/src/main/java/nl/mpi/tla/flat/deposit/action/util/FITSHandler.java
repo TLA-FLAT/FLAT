@@ -1,4 +1,4 @@
-package nl.mpi.tla.flat.deposit.action.util.implementation;
+package nl.mpi.tla.flat.deposit.action.util;
 
 import java.io.File;
 import java.util.List;
@@ -10,29 +10,40 @@ import edu.harvard.hul.ois.fits.Fits;
 import edu.harvard.hul.ois.fits.FitsOutput;
 import edu.harvard.hul.ois.fits.exceptions.FitsException;
 import edu.harvard.hul.ois.fits.identity.FitsIdentity;
-import nl.mpi.tla.flat.deposit.action.util.TypeCheckHandler;
 
 /**
- * Implementation of TypeCheckHandler, specific for FITS.
- * @see TypeCheckHandler
+ * Helper class that interacts with FITS.
  * @author guisil
  */
-public class FITSHandler implements TypeCheckHandler {
+public class FITSHandler {
 
 	private static final Logger logger = LoggerFactory.getLogger(FITSHandler.class);
 	
 	private Fits fits;
 	private FileTypeChecker fileTypeChecker;
 	
-	public FITSHandler(Fits fits, FileTypeChecker fileTypeChecker) {
+	public FITSHandler() {
+		
+	}
+
+	//to be used only by the factory method
+	private FITSHandler(Fits fits, FileTypeChecker fileTypeChecker) {
 		this.fits = fits;
 		this.fileTypeChecker = fileTypeChecker;
 	}
 	
 	/**
-	 * @see TypeCheckHandler#isFileAcceptable(File)
+	 * Factory method
 	 */
-	@Override
+	public static FITSHandler getNewFITSHandler(String fitsHome) {
+		return new FITSHandler(FitsFactory.getNewFits(fitsHome), FileTypeChecker.getNewFileTypeChecker());
+	}
+	
+	/**
+	 * Checks if the given file is acceptable for deposit.
+	 * @param fileToCheck File to check
+	 * @return true if the file is acceptable in the archive
+	 */
 	public boolean isFileAcceptable(File fileToCheck) {
 
 		FitsOutput fitsOutput = null;

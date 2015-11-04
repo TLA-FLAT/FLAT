@@ -12,6 +12,7 @@
         <property name="fedoraUser" value="fedoraAdmin"/>
         <property name="fedoraPassword" value="fedora"/>
         <property name="fedoraServer" value="https://localhost:8443/fedora"/>
+        <property name="fitsFolder" value="lib/fits-0.8.10"/>
     </config>
     <init>
         <action id="logSetup" name="log" class="nl.mpi.tla.flat.deposit.action.WorkspaceLogSetup">
@@ -27,7 +28,10 @@
         <action name="validate metadata" class="nl.mpi.tla.flat.deposit.action.Validate">
             <parameter name="rules" value="{$param-base}/policies/rules.sch"/>
         </action>
-        <action name="validate resources" class="nl.mpi.tla.flat.deposit.action.FITS"/>
+        <action name="validate resources" class="nl.mpi.tla.flat.deposit.action.FITS">
+        	<parameter name="fits_home" value="{$fitsFolder}"/>
+        	<parameter name="mimetypes" value="{$param-base}/policies/fits-mimetypes.xml"/>
+        </action>
         <action name="quality assessment" class="nl.mpi.tla.flat.deposit.action.QualityAssessment"/>
         <action name="manual evaluation" class="nl.mpi.tla.flat.deposit.action.Evaluate"/>
         <action name="persist resources" class="nl.mpi.tla.flat.deposit.action.Persist">

@@ -12,5 +12,7 @@ Then, for the build, the fits and ots jars should be installed in the local mave
 ```sh
 mvn install:install-file -Dfile=lib/fits-0.8.10/lib/fits.jar -DgroupId=edu.harvard.hul.ois -DartifactId=fits -Dversion=0.8.10 -Dpackaging=jar
 mvn install:install-file -Dfile=lib/fits-0.8.10/lib/ots_1.0.17.jar -DgroupId=edu.harvard.hul.ois -DartifactId=ots -Dversion=1.0.17 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/fits-0.8.10/lib/jhove/jhove.jar -DgroupId=edu.harvard.hul.ois -DartifactId=jhove -Dversion=1.0 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/fits-0.8.10/lib/nzmetool/metadata.jar -DgroupId=nz.govt.natlib -DartifactId=metadata -Dversion=1.0 -Dpackaging=jar
 mvn clean install
 ```

@@ -1,4 +1,4 @@
-package nl.mpi.tla.flat.deposit.action.util.implementation;
+package nl.mpi.tla.flat.deposit.action.util;
 
 import static org.junit.Assert.*;
 
@@ -8,8 +8,13 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import static org.powermock.api.support.membermodification.MemberMatcher.method;
+import static org.powermock.api.support.membermodification.MemberModifier.stub;
 
 import static org.mockito.Mockito.*;
 
@@ -17,7 +22,11 @@ import edu.harvard.hul.ois.fits.Fits;
 import edu.harvard.hul.ois.fits.FitsOutput;
 import edu.harvard.hul.ois.fits.exceptions.FitsException;
 import edu.harvard.hul.ois.fits.identity.FitsIdentity;
+import nl.mpi.tla.flat.deposit.action.util.FITSHandler;
+import nl.mpi.tla.flat.deposit.action.util.FileTypeChecker;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({FitsFactory.class, FileTypeChecker.class})
 public class FITSHandlerTest {
 
 	private FITSHandler fitsHandler;
@@ -35,7 +44,12 @@ public class FITSHandlerTest {
 		
 		MockitoAnnotations.initMocks(this);
 		
-		fitsHandler = new FITSHandler(mockFits, mockFileTypeChecker);
+		stub(method(FitsFactory.class, "getNewFits", String.class)).toReturn(mockFits);
+		stub(method(FileTypeChecker.class, "getNewFileTypeChecker")).toReturn(mockFileTypeChecker);
+		
+		String fits_home = "tools/fits";
+		
+		fitsHandler = FITSHandler.getNewFITSHandler(fits_home);
 	}
 
 	@Test

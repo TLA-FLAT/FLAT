@@ -1,6 +1,7 @@
 /bin/
 /target/
 /lib/
+/src/test/resources/workdir/
 .classpath
 .project
 .settings
