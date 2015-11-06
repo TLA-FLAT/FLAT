@@ -18,6 +18,7 @@ package nl.mpi.tla.flat.deposit;
 
 import java.io.File;
 import java.net.URI;
+import java.net.URISyntaxException;
 import org.w3c.dom.Node;
 
 /**
@@ -28,6 +29,7 @@ public class Resource {
     
     protected Node node = null;
     protected URI uri = null;
+    protected URI pid = null;
     protected File file = null;
     protected String mime = null;
     
@@ -66,6 +68,33 @@ public class Resource {
     
     public String getMime() {
         return this.mime;
+    }
+    
+    // PID
+    public boolean hasPID() {
+        return (this.pid != null);
+    }
+    
+    public void setPID(URI pid) throws DepositException {
+        if (this.pid!=null)
+            throw new DepositException("Resource["+this.uri+"] has already a PID!");
+        if (pid.toString().startsWith("hdl:")) {
+            this.pid = pid;
+        } else if (pid.toString().startsWith("http://hdl.handle.net/")) {
+            try {
+                this.pid = new URI(pid.toString().replace("http://hdl.handle.net/", "hdl:"));
+            } catch (URISyntaxException ex) {
+                throw new DepositException(ex);
+            }
+        } else {
+            throw new DepositException("The URI["+pid+"] isn't a valid PID!");
+        }
+    }
+    
+    public URI getPID() throws DepositException {
+        if (this.pid==null)
+            throw new DepositException("Resource["+this.uri+"] has no PID yet!");
+        return this.pid;
     }
     
     @Override

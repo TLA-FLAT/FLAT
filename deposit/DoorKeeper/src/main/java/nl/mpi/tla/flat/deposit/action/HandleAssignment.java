@@ -16,11 +16,14 @@
  */
 package nl.mpi.tla.flat.deposit.action;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import net.sf.saxon.s9api.XdmValue;
+import java.net.URI;
+import java.util.UUID;
 import nl.mpi.tla.flat.deposit.Context;
+import nl.mpi.tla.flat.deposit.DepositException;
+import nl.mpi.tla.flat.deposit.Resource;
 import nl.mpi.tla.flat.deposit.SIP;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -28,8 +31,34 @@ import nl.mpi.tla.flat.deposit.SIP;
  */
 public class HandleAssignment extends AbstractAction {
     
+    private static final Logger logger = LoggerFactory.getLogger(HandleAssignment.class.getName());
+
     @Override
-    public boolean perform(Context context) {
+    public boolean perform(Context context) throws DepositException {
+        try {
+            SIP sip = context.getSIP();
+            if (!sip.hasPID()) {
+                    sip.setPID(new URI("hdl:"+getParameter("prefix","foo")+"/"+UUID.randomUUID()));
+                    logger.info("Assigned new PID["+sip.getPID()+"] to the SIP");
+            } else {
+                logger.info("Retained existing PID["+sip.getPID()+"] for the SIP");
+            }
+            for (Resource res:sip.getResources()) {
+                URI uri = res.getURI();
+                if (uri.toString().startsWith("hdl:"+getParameter("prefix","foo")+"/") || uri.toString().startsWith("http://hdl.handle.net/"+getParameter("prefix","foo")+"/")) {
+                    // keep the PID
+                    res.setPID(res.getURI());
+                    logger.info("Retained existing PID["+res.getPID()+"] for Resource["+res.getURI()+"]");
+
+                } else {
+                    res.setPID(new URI("hdl:"+getParameter("prefix","foo")+"/"+UUID.randomUUID()));
+                    logger.info("Assigned new PID["+res.getPID()+"] to Resource["+res.getURI()+"]");
+                }
+            }
+            context.getSIP().save();
+        } catch (Exception ex) {
+            throw new DepositException("Couldn't assign PIDs!",ex);
+        }
         return true;
     }
     

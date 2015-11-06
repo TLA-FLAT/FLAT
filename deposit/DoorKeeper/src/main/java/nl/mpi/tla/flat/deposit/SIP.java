@@ -18,21 +18,18 @@ package nl.mpi.tla.flat.deposit;
 
 import java.io.File;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.nio.file.attribute.FileTime;
+import java.text.SimpleDateFormat;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.tree.wrapper.VirtualNode;
 import nl.mpi.tla.flat.deposit.util.Saxon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +49,7 @@ public class SIP {
     public static String LAT_NS = "http://lat.mpi.nl/";
     
     protected File base = null;
+    protected URI pid = null;
 
     protected Document rec = null;
     
@@ -65,6 +63,33 @@ public class SIP {
         loadResourceList();
     }
     
+    // PID
+    public boolean hasPID() {
+        return (this.pid != null);
+    }
+    
+    public void setPID(URI pid) throws DepositException {
+        if (this.pid!=null)
+            throw new DepositException("SIP["+this.base+"] has already a PID!");
+        if (pid.toString().startsWith("hdl:")) {
+            this.pid = pid;
+        } else if (pid.toString().startsWith("http://hdl.handle.net/")) {
+            try {
+                this.pid = new URI(pid.toString().replace("http://hdl.handle.net/", "hdl:"));
+            } catch (URISyntaxException ex) {
+                throw new DepositException(ex);
+            }
+        } else {
+            throw new DepositException("The URI["+pid+"] isn't a valid PID!");
+        }
+    }
+    
+    public URI getPID() throws DepositException {
+        if (this.pid==null)
+            throw new DepositException("SIP["+this.base+"] has no PID yet!");
+        return this.pid;
+    }
+       
     // resources
     
     private void loadResourceList() throws DepositException {
@@ -113,6 +138,10 @@ public class SIP {
                     Element rr = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(node), "cmd:ResourceRef", null, getNamespaces()));
                     rr.setAttributeNS(LAT_NS,"lat:localURI",base.getParentFile().toPath().normalize().relativize(res.getFile().toPath().normalize()).toString());
                 }
+                if (res.hasPID()) {
+                    Element rr = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(node), "cmd:ResourceRef", null, getNamespaces()));
+                    rr.setTextContent(res.getPID().toString());
+                }
             }                    
         } catch(Exception e) {
             throw new DepositException(e);
@@ -124,6 +153,14 @@ public class SIP {
     public void load(File spec) throws DepositException {
         try {
             this.rec = Saxon.buildDOM(spec);
+            String self = Saxon.xpath2string(Saxon.wrapNode(this.rec), "/cmd:CMD/cmd:Header/cmd:MdSelfLink", null, this.getNamespaces());
+            if (!self.trim().equals("")) {
+                try {
+                    this.setPID(new URI(self));
+                } catch(DepositException e) {
+                    logger.warn("current selfLink["+self+"] isn't a valid PID, ignored for now!");
+                }
+            }
         } catch(Exception e) {
             throw new DepositException(e);
         }
@@ -131,9 +168,35 @@ public class SIP {
     
     public void save() throws DepositException {
         try {
-            File org = new File(base.toString()+".org");
-            if (!org.exists())
-                Files.copy(base.toPath(),org.toPath());
+            if (base.exists()) {
+                // always keep the org around
+                File org = new File(base.toString()+".org");
+                if (!org.exists())
+                    Files.copy(base.toPath(),org.toPath());
+                // and keep timestamped backups
+                FileTime stamp = Files.getLastModifiedTime(base.toPath());
+                SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd-HHmmss");
+                String ext = df.format(stamp.toMillis());
+                int i = 0;
+                File bak = new File(base.toString()+"."+ext);
+                while (bak.exists())
+                    bak = new File(base.toString()+"."+ext+"."+(++i));
+                Files.move(base.toPath(),bak.toPath());
+            }
+            // put PID into place
+            if (this.hasPID()) {
+                if (Saxon.xpath2boolean(Saxon.wrapNode(this.rec), "exists(/cmd:CMD/cmd:Header/cmd:MdSelfLink)", null, this.getNamespaces())) {
+                    Element self = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(this.rec), "/cmd:CMD/cmd:Header/cmd:MdSelfLink", null, getNamespaces()));
+                    self.setTextContent(this.getPID().toString());
+                } else {
+                    Element profile = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(this.rec), "/cmd:CMD/cmd:Header/cmd:MdProfile", null, getNamespaces()));
+                    Element header = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(this.rec), "/cmd:CMD/cmd:Header", null, getNamespaces()));
+                    Element self = rec.createElementNS(CMD_NS, "MdSelfLink");
+                    self.setTextContent(this.getPID().toString());
+                    header.insertBefore(self, profile);
+                }
+            }   
+            // save changes to the resource list
             saveResourceList();
             DOMSource source = new DOMSource(rec);
             Saxon.save(source,base);
