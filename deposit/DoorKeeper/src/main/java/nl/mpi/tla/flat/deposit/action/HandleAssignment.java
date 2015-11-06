@@ -16,11 +16,13 @@
  */
 package nl.mpi.tla.flat.deposit.action;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import net.sf.saxon.s9api.XdmValue;
+import java.net.URI;
+import java.util.UUID;
 import nl.mpi.tla.flat.deposit.Context;
-import nl.mpi.tla.flat.deposit.SIP;
+import nl.mpi.tla.flat.deposit.DepositException;
+import nl.mpi.tla.flat.deposit.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -28,8 +30,27 @@ import nl.mpi.tla.flat.deposit.SIP;
  */
 public class HandleAssignment extends AbstractAction {
     
+    private static final Logger logger = LoggerFactory.getLogger(HandleAssignment.class.getName());
+
     @Override
-    public boolean perform(Context context) {
+    public boolean perform(Context context) throws DepositException {
+        try {
+            for (Resource res:context.getSIP().getResources()) {
+                URI uri = res.getURI();
+                if (uri.toString().startsWith("hdl:"+getParameter("prefix","foo")+"/") || uri.toString().startsWith("http://hdl.handle.net/"+getParameter("prefix","foo")+"/")) {
+                    // keep the PID
+                    res.setPID(res.getURI());
+                    logger.info("Retained PID["+res.getPID()+"]");
+
+                } else {
+                    res.setPID(new URI("hdl:"+getParameter("prefix","foo")+"/"+UUID.randomUUID()));
+                    logger.info("Assigned PID["+res.getPID()+"] to Resource["+res.getURI()+"]");
+                }
+            }
+            context.getSIP().save();
+        } catch (Exception ex) {
+            throw new DepositException("Couldn't assign PIDs!",ex);
+        }
         return true;
     }
     

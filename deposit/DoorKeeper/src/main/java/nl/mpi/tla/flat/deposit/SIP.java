@@ -19,20 +19,16 @@ package nl.mpi.tla.flat.deposit;
 import java.io.File;
 import java.net.URI;
 import java.nio.file.Files;
+import java.nio.file.attribute.FileTime;
+import java.text.SimpleDateFormat;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.tree.wrapper.VirtualNode;
 import nl.mpi.tla.flat.deposit.util.Saxon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,6 +109,10 @@ public class SIP {
                     Element rr = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(node), "cmd:ResourceRef", null, getNamespaces()));
                     rr.setAttributeNS(LAT_NS,"lat:localURI",base.getParentFile().toPath().normalize().relativize(res.getFile().toPath().normalize()).toString());
                 }
+                if (res.hasPID()) {
+                    Element rr = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(node), "cmd:ResourceRef", null, getNamespaces()));
+                    rr.setTextContent(res.getPID().toString());
+                }
             }                    
         } catch(Exception e) {
             throw new DepositException(e);
@@ -131,9 +131,21 @@ public class SIP {
     
     public void save() throws DepositException {
         try {
-            File org = new File(base.toString()+".org");
-            if (!org.exists())
-                Files.copy(base.toPath(),org.toPath());
+            if (base.exists()) {
+                // always keep the org around
+                File org = new File(base.toString()+".org");
+                if (!org.exists())
+                    Files.copy(base.toPath(),org.toPath());
+                // and keep timestamped backups
+                FileTime stamp = Files.getLastModifiedTime(base.toPath());
+                SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd-HHmmss");
+                String ext = df.format(stamp.toMillis());
+                int i = 0;
+                File bak = new File(base.toString()+"."+ext);
+                while (bak.exists())
+                    bak = new File(base.toString()+"."+ext+"."+(++i));
+                Files.move(base.toPath(),bak.toPath());
+            }
             saveResourceList();
             DOMSource source = new DOMSource(rec);
             Saxon.save(source,base);

@@ -39,7 +39,7 @@
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.Versions"/>
         <action class="nl.mpi.tla.flat.deposit.action.HandleAssignment">
-            <parameter name="epicPrefix" value="{$epicPrefix}"/>
+            <parameter name="prefix" value="{$epicPrefix}"/>
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.Relate"/>
         <action class="nl.mpi.tla.flat.deposit.action.Deposit">
