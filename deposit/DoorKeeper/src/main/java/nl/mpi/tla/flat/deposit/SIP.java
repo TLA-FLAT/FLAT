@@ -18,6 +18,7 @@ package nl.mpi.tla.flat.deposit;
 
 import java.io.File;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.attribute.FileTime;
 import java.text.SimpleDateFormat;
@@ -48,6 +49,7 @@ public class SIP {
     public static String LAT_NS = "http://lat.mpi.nl/";
     
     protected File base = null;
+    protected URI pid = null;
 
     protected Document rec = null;
     
@@ -61,6 +63,33 @@ public class SIP {
         loadResourceList();
     }
     
+    // PID
+    public boolean hasPID() {
+        return (this.pid != null);
+    }
+    
+    public void setPID(URI pid) throws DepositException {
+        if (this.pid!=null)
+            throw new DepositException("SIP["+this.base+"] has already a PID!");
+        if (pid.toString().startsWith("hdl:")) {
+            this.pid = pid;
+        } else if (pid.toString().startsWith("http://hdl.handle.net/")) {
+            try {
+                this.pid = new URI(pid.toString().replace("http://hdl.handle.net/", "hdl:"));
+            } catch (URISyntaxException ex) {
+                throw new DepositException(ex);
+            }
+        } else {
+            throw new DepositException("The URI["+pid+"] isn't a valid PID!");
+        }
+    }
+    
+    public URI getPID() throws DepositException {
+        if (this.pid==null)
+            throw new DepositException("SIP["+this.base+"] has no PID yet!");
+        return this.pid;
+    }
+       
     // resources
     
     private void loadResourceList() throws DepositException {
@@ -124,6 +153,14 @@ public class SIP {
     public void load(File spec) throws DepositException {
         try {
             this.rec = Saxon.buildDOM(spec);
+            String self = Saxon.xpath2string(Saxon.wrapNode(this.rec), "/cmd:CMD/cmd:Header/cmd:MdSelfLink", null, this.getNamespaces());
+            if (!self.trim().equals("")) {
+                try {
+                    this.setPID(new URI(self));
+                } catch(DepositException e) {
+                    logger.warn("current selfLink["+self+"] isn't a valid PID, ignored for now!");
+                }
+            }
         } catch(Exception e) {
             throw new DepositException(e);
         }
@@ -146,6 +183,20 @@ public class SIP {
                     bak = new File(base.toString()+"."+ext+"."+(++i));
                 Files.move(base.toPath(),bak.toPath());
             }
+            // put PID into place
+            if (this.hasPID()) {
+                if (Saxon.xpath2boolean(Saxon.wrapNode(this.rec), "exists(/cmd:CMD/cmd:Header/cmd:MdSelfLink)", null, this.getNamespaces())) {
+                    Element self = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(this.rec), "/cmd:CMD/cmd:Header/cmd:MdSelfLink", null, getNamespaces()));
+                    self.setTextContent(this.getPID().toString());
+                } else {
+                    Element profile = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(this.rec), "/cmd:CMD/cmd:Header/cmd:MdProfile", null, getNamespaces()));
+                    Element header = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(this.rec), "/cmd:CMD/cmd:Header", null, getNamespaces()));
+                    Element self = rec.createElementNS(CMD_NS, "MdSelfLink");
+                    self.setTextContent(this.getPID().toString());
+                    header.insertBefore(self, profile);
+                }
+            }   
+            // save changes to the resource list
             saveResourceList();
             DOMSource source = new DOMSource(rec);
             Saxon.save(source,base);

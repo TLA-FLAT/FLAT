@@ -58,7 +58,9 @@
         <action class="nl.mpi.tla.flat.deposit.action.WorkspaceCleanup"/>        
     </main>
     <exception>
+<!--
         <action name="log" class="nl.mpi.tla.flat.deposit.action.Log"/>
+-->
     </exception>
     <final>
         <action id="logSetup" name="log" class="nl.mpi.tla.flat.deposit.action.WorkspaceLogCleanup"/>        

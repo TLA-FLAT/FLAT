@@ -19,8 +19,6 @@ package nl.mpi.tla.flat.deposit;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.w3c.dom.Node;
 
 /**
@@ -72,7 +70,14 @@ public class Resource {
         return this.mime;
     }
     
+    // PID
+    public boolean hasPID() {
+        return (this.pid != null);
+    }
+    
     public void setPID(URI pid) throws DepositException {
+        if (this.pid!=null)
+            throw new DepositException("Resource["+this.uri+"] has already a PID!");
         if (pid.toString().startsWith("hdl:")) {
             this.pid = pid;
         } else if (pid.toString().startsWith("http://hdl.handle.net/")) {
@@ -86,11 +91,9 @@ public class Resource {
         }
     }
     
-    public boolean hasPID() {
-        return (this.pid!=null);
-    }
-    
-    public URI getPID() {
+    public URI getPID() throws DepositException {
+        if (this.pid==null)
+            throw new DepositException("Resource["+this.uri+"] has no PID yet!");
         return this.pid;
     }
     
