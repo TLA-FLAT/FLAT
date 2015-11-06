@@ -35,8 +35,8 @@ public class FITSHandler {
 	/**
 	 * Factory method
 	 */
-	public static FITSHandler getNewFITSHandler(String fitsHome) {
-		return new FITSHandler(FitsFactory.getNewFits(fitsHome), FileTypeChecker.getNewFileTypeChecker());
+	public static FITSHandler getNewFITSHandler(String fitsHome, String mimetypesFileLocation) {
+		return new FITSHandler(FitsFactory.getNewFits(fitsHome), FileTypeChecker.getNewFileTypeChecker(new File(mimetypesFileLocation)));
 	}
 	
 	/**
@@ -50,21 +50,23 @@ public class FITSHandler {
 		try {
 			fitsOutput = fits.examine(fileToCheck);
 		} catch (FitsException e) {
-			// TODO Auto-generated catch block
-			logger.error("ERROR", e);
+			// TODO throw error?
+			logger.error("Error during typechecking", e);
+			return false;
 		}
 		
 		List<FitsIdentity> fileIdentities = fitsOutput.getIdentities();
 		
 		if(fileIdentities.isEmpty()) {
-			//TODO no identity found - throw error in this case?
-			logger.debug("No identity found for file '{}'{}", fileToCheck);
+			//TODO no identity found - throw error?
+			logger.error("No identity found for file '{}'{}", fileToCheck);
 			return false;
 		}
 		
 		if(fileIdentities.size() > 1) {
-			//TODO the FITS tools didn't agree with each other - which one to use in this case?
-			logger.debug("More than one identity for file '{}'", fileToCheck);
+			//TODO the FITS tools didn't agree with each other - throw error?
+			logger.error("More than one identity for file '{}'", fileToCheck);
+			return false;
 		}
 		
 		FitsIdentity identity = fileIdentities.get(0);

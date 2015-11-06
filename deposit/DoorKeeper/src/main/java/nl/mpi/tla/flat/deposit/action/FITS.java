@@ -42,10 +42,11 @@ public class FITS extends AbstractAction {
     	
     	boolean allAcceptable = true;
     	
-    	//TODO What default?
+    	//TODO What default to use?
     	String fitsHome = getParameter("fits_home", null);
+    	String mimetypesFileLocation = getParameter("mimetypes", null);
     	
-    	FITSHandler fitsHandler = FITSHandler.getNewFITSHandler(fitsHome);
+    	FITSHandler fitsHandler = FITSHandler.getNewFITSHandler(fitsHome, mimetypesFileLocation);
     	
     	SIP sip = context.getSIP();
     	Set<Resource> resources = sip.getResources();
