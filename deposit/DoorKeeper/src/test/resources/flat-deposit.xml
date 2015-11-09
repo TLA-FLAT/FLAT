@@ -11,7 +11,7 @@
         <property name="epicServer" value="http://www.pidconsortium.eu/"/>
         <property name="fedoraUser" value="fedoraAdmin"/>
         <property name="fedoraPassword" value="fedora"/>
-        <property name="fedoraServer" value="https://localhost:8443/fedora"/>
+        <property name="fedoraServer" value="https://192.168.99.100:8443/fedora"/>
         <property name="fitsFolder" value="lib/fits-0.8.10"/>
     </config>
     <init>
@@ -32,22 +32,29 @@
         	<parameter name="fits_home" value="{$fitsFolder}"/>
         	<parameter name="mimetypes" value="{$param-base}/policies/fits-mimetypes.xml"/>
         </action>
-        <action name="quality assessment" class="nl.mpi.tla.flat.deposit.action.QualityAssessment"/>
+        <!--<action name="quality assessment" class="nl.mpi.tla.flat.deposit.action.QualityAssessment"/>
         <action name="manual evaluation" class="nl.mpi.tla.flat.deposit.action.Evaluate"/>
         <action name="persist resources" class="nl.mpi.tla.flat.deposit.action.Persist">
             <parameter name="data" value="{$param-base}/data"/>
         </action>
-        <action class="nl.mpi.tla.flat.deposit.action.Versions"/>
+        <action class="nl.mpi.tla.flat.deposit.action.Versions"/>-->
         <action class="nl.mpi.tla.flat.deposit.action.HandleAssignment">
             <parameter name="prefix" value="{$epicPrefix}"/>
         </action>
-        <action class="nl.mpi.tla.flat.deposit.action.Relate"/>
+        <!--<action class="nl.mpi.tla.flat.deposit.action.Relate"/>-->
+        <action class="nl.mpi.tla.flat.deposit.action.CreateFOX">
+            <parameter name="cmd2dc" value="{$param-base}/policies/cmd2dc.xsl"/>
+            <parameter name="cmd2fox" value="{$param-base}/../../../../../docker/flat/flat/LAT2FOX/src/main/resources/cmd2fox.xsl"/>
+            <parameter name="dir" value="{$work}/fox"/>
+            <parameter name="relations" value="{$param-base}/dummies/relations.xml"/>
+        </action>
         <action class="nl.mpi.tla.flat.deposit.action.Deposit">
             <parameter name="fedoraServer" value="{$fedoraServer}"/>
             <parameter name="fedoraUser" value="{$fedoraUser}"/>
             <parameter name="fedoraPassword" value="{$fedoraPassword}"/>
+            <parameter name="dir" value="{$work}/fox"/>
         </action>
-        <action class="nl.mpi.tla.flat.deposit.action.ACL"/>
+        <!--<action class="nl.mpi.tla.flat.deposit.action.ACL"/>
         <action class="nl.mpi.tla.flat.deposit.action.HandleCreation">
             <parameter name="epicServer" value="{$epicServer}"/>
             <parameter name="epicPrefix" value="{$epicPrefix}"/>
@@ -55,7 +62,7 @@
             <parameter name="epicPassword" value="{$epicPassword}"/>
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.Index"/>
-        <action class="nl.mpi.tla.flat.deposit.action.WorkspaceCleanup"/>        
+        <action class="nl.mpi.tla.flat.deposit.action.WorkspaceCleanup"/>-->        
     </main>
     <exception>
 <!--

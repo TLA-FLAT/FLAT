@@ -179,6 +179,8 @@
 			<xsl:value-of select="$pid"/>
 			<xsl:text>][</xsl:text>
 			<xsl:value-of select="$fid"/>
+			<xsl:text>][</xsl:text>
+			<xsl:value-of select="$base"/>
 			<xsl:text>]</xsl:text>
 		</xsl:message>
 		<!--<xsl:message>DBG: [<xsl:value-of select="$rels-doc/key('rels-from',$pid)[1]/src"/>]!=[<xsl:value-of select="base-uri()"/>] => [<xsl:value-of select="$rels-doc/key('rels-from',$pid)[1]/src!=base-uri()"/>]</xsl:message>-->

@@ -84,6 +84,11 @@ public class Saxon {
     public static synchronized Processor getProcessor() {
         if (sxProcessor == null) {
             sxProcessor = new Processor(false);
+            try {
+                SaxonExtensionFunctions.registerAll(sxProcessor.getUnderlyingConfiguration());
+            } catch (Exception e) {
+                logger.error("Couldn't register the Saxon extension functions!",e);
+            }
         }
         return sxProcessor;
     }
@@ -128,7 +133,9 @@ public class Saxon {
      * @throws Exception
      */
     static public Document buildDOM(File src) throws Exception {
-        return DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(src);
+        Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(src);
+        doc.setDocumentURI(src.toURI().toString());
+        return doc;
     }
 
     /**
