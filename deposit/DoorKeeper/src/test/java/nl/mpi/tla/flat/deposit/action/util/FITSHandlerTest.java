@@ -34,7 +34,8 @@ public class FITSHandlerTest {
 	@Mock Fits mockFits;
 	@Mock FitsOutput mockFitsOutput;
 	@Mock FitsIdentity mockFitsIdentity;
-
+	@Mock FitsIdentity mockOtherFitsIdentity;
+	
 	@Mock FileTypeChecker mockFileTypeChecker;
 	
 	@Mock File mockFileToCheck;
@@ -47,9 +48,10 @@ public class FITSHandlerTest {
 		stub(method(FitsFactory.class, "getNewFits", String.class)).toReturn(mockFits);
 		stub(method(FileTypeChecker.class, "getNewFileTypeChecker")).toReturn(mockFileTypeChecker);
 		
-		String fits_home = "tools/fits";
+		String fitsHome = "tools/fits";
+		String mimetypesFileLocation = "policies/fits-mimetypes.xml";
 		
-		fitsHandler = FITSHandler.getNewFITSHandler(fits_home);
+		fitsHandler = FITSHandler.getNewFITSHandler(fitsHome, mimetypesFileLocation);
 	}
 
 	@Test
@@ -89,12 +91,44 @@ public class FITSHandlerTest {
 	}
 
 	@Test
-	public void fileHasNoIdentities() {
-		fail("not tested yet");
+	public void fileHasNoIdentities() throws FitsException {
+		
+		List<FitsIdentity> emptyFitsIdentities = new ArrayList<>();
+		
+		when(mockFits.examine(mockFileToCheck)).thenReturn(mockFitsOutput);
+		when(mockFitsOutput.getIdentities()).thenReturn(emptyFitsIdentities);
+		
+		boolean result = fitsHandler.isFileAcceptable(mockFileToCheck);
+		
+		assertFalse("Result should be false", result);
 	}
 	
 	@Test
-	public void fileHasMultipleIdentities() {
-		fail("not tested yet");
+	public void fileHasMultipleIdentities() throws FitsException {
+		
+		final String goodMimetype = "text/plain";
+		
+		List<FitsIdentity> fitsIdentities = new ArrayList<>();
+		fitsIdentities.add(mockFitsIdentity);
+		fitsIdentities.add(mockOtherFitsIdentity);
+		
+		when(mockFits.examine(mockFileToCheck)).thenReturn(mockFitsOutput);
+		when(mockFitsOutput.getIdentities()).thenReturn(fitsIdentities);
+		
+		boolean result = fitsHandler.isFileAcceptable(mockFileToCheck);
+		
+		assertFalse("Result should be false", result);
+	}
+	
+	@Test
+	public void throwsFitsException() throws FitsException {
+		
+		final FitsException exception = new FitsException();
+		
+		when(mockFits.examine(mockFileToCheck)).thenThrow(exception);
+		
+		boolean result = fitsHandler.isFileAcceptable(mockFileToCheck);
+		
+		assertFalse("Result should be false", result);
 	}
 }

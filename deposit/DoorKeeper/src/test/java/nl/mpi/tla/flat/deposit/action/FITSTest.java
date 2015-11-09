@@ -67,7 +67,7 @@ public class FITSTest {
 		when(mockResource1.getFile()).thenReturn(mockFile1);
 		when(mockFITSHandler.isFileAcceptable(mockFile1)).thenReturn(Boolean.TRUE);
 		
-		stub(method(FITSHandler.class, "getNewFITSHandler", String.class)).toReturn(mockFITSHandler);
+		stub(method(FITSHandler.class, "getNewFITSHandler", String.class, String.class)).toReturn(mockFITSHandler);
 		
 		boolean result = fits.perform(mockContext);
 		
@@ -86,7 +86,7 @@ public class FITSTest {
 		when(mockResource1.getFile()).thenReturn(mockFile1);
 		when(mockFITSHandler.isFileAcceptable(mockFile1)).thenReturn(Boolean.FALSE);
 		
-		stub(method(FITSHandler.class, "getNewFITSHandler", String.class)).toReturn(mockFITSHandler);
+		stub(method(FITSHandler.class, "getNewFITSHandler", String.class, String.class)).toReturn(mockFITSHandler);
 		
 		boolean result = fits.perform(mockContext);
 		
