@@ -63,6 +63,14 @@ public class SIP {
         loadResourceList();
     }
     
+    public File getBase() {
+        return this.base;
+    }
+    
+    public Document getRecord() {
+        return this.rec;
+    }
+    
     // PID
     public boolean hasPID() {
         return (this.pid != null);

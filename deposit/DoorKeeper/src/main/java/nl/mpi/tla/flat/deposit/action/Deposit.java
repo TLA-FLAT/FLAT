@@ -16,20 +16,53 @@
  */
 package nl.mpi.tla.flat.deposit.action;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import net.sf.saxon.s9api.XdmValue;
+import com.yourmediashelf.fedora.client.FedoraClient;
+import static com.yourmediashelf.fedora.client.FedoraClient.*;
+import com.yourmediashelf.fedora.client.FedoraCredentials;
+import com.yourmediashelf.fedora.client.request.FedoraRequest;
+import com.yourmediashelf.fedora.client.response.IngestResponse;
+import java.io.File;
+import java.util.Collection;
 import nl.mpi.tla.flat.deposit.Context;
+import nl.mpi.tla.flat.deposit.DepositException;
 import nl.mpi.tla.flat.deposit.SIP;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author menzowi
  */
 public class Deposit extends AbstractAction {
-    
+
+    private static final Logger logger = LoggerFactory.getLogger(Deposit.class.getName());
+
     @Override
-    public boolean perform(Context context) {
+    public boolean perform(Context context) throws DepositException {
+        javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(
+            new javax.net.ssl.HostnameVerifier(){
+                public boolean verify(String hostname,javax.net.ssl.SSLSession sslSession) {
+                    return true;
+                }
+        });
+        try {
+            logger.info("Fedora Commons["+this.getParameter("fedoraServer",null)+"]["+this.getParameter("fedoraUser",null)+":"+this.getParameter("fedoraPassword",null)+"]");
+            FedoraCredentials credentials = new FedoraCredentials(this.getParameter("fedoraServer",null), this.getParameter("fedoraUser",null), this.getParameter("fedoraPassword",null));
+            FedoraClient fedora = new FedoraClient(credentials);
+            fedora.debug(true);
+            //FedoraRequest.setDefaultClient(fedora);
+            logger.info("Fedore Commons repository["+fedora.describeRepository().xml(true).execute(fedora)+"]");
+            
+            Collection<File> foxs = FileUtils.listFiles(new File(this.getParameter("dir", "./fox")),new String[] {"xml"},true);
+            logger.info("Loading ["+foxs.size()+"] FOX files from dir["+this.getParameter("dir", "./fox")+"]");
+            for (File fox:foxs) {
+                IngestResponse response = ingest().format("info:fedora/fedora-system:FOXML-1.1").content(fox).ignoreMime(true).execute(fedora);
+                logger.info("Created FedoraObject["+response.getPid()+"]");
+            }            
+        } catch(Exception e) {
+            throw new DepositException("The actual deposit in Fedora failed!",e);
+        }
         return true;
     }
     

@@ -43,12 +43,22 @@ abstract public class AbstractAction implements ActionInterface {
         this.params = params;
     }
     
+    public boolean hasParameter(String name) {
+        return params.containsKey(name);
+    }
+
     public String getParameter(String name,String def) {
-        if (params.containsKey(name))
+        if (hasParameter(name))
             return params.get(name).toString();
         return def;
     }
 
+    public String getParameter(String name) {
+        if (hasParameter(name))
+            return params.get(name).toString();
+        return null;
+    }
+    
     @Override
     abstract public boolean perform(Context context) throws DepositException;
     
