@@ -25,6 +25,8 @@ import net.sf.saxon.tree.iter.AxisIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.harvard.hul.ois.fits.tools.utils.XsltFunctions;
+
 public final class SaxonExtensionFunctions {
     
     private static final Logger logger = LoggerFactory.getLogger(SaxonExtensionFunctions.class.getName());
@@ -44,6 +46,7 @@ public final class SaxonExtensionFunctions {
         config.registerExtensionFunction(new FileExistsDefinition());
         config.registerExtensionFunction(new CheckURLDefinition());
         config.registerExtensionFunction(new EvaluateDefinition());
+        config.registerExtensionFunction(new GetMessageStringDefinition());
     }
 
     // -----------------------------------------------------------------------
@@ -208,6 +211,61 @@ public final class SaxonExtensionFunctions {
                         seq = xps.evaluate().getUnderlyingValue();
                     } catch(SaxonApiException e) {
                         logger.error("sx:evaluate failed!",e);
+                    }
+                    return seq;
+                }
+            };
+        }
+    }
+    
+    // -----------------------------------------------------------------------
+    // sx:getMessageString
+    // -----------------------------------------------------------------------
+
+    public static final class GetMessageStringDefinition 
+                        extends ExtensionFunctionDefinition {
+        public StructuredQName getFunctionQName() {
+            return new StructuredQName("sx", 
+                                       "java:nl.mpi.tla.saxon", 
+                                       "getMessageString");
+        }
+
+        public int getMinimumNumberOfArguments() {
+            return 4;
+        }
+
+        public int getMaximumNumberOfArguments() {
+            return 4;
+        }
+
+        public SequenceType[] getArgumentTypes() {
+            return new SequenceType[] { SequenceType.SINGLE_STRING, SequenceType.SINGLE_STRING, SequenceType.SINGLE_STRING, SequenceType.SINGLE_STRING };
+        }
+
+        public SequenceType getResultType(SequenceType[] suppliedArgTypes) {
+            return SequenceType.SINGLE_STRING;
+        }
+        
+        public boolean dependsOnFocus() {
+           return false;
+        }
+
+        public ExtensionFunctionCall makeCallExpression() {
+            return new ExtensionFunctionCall() {
+                @Override
+                public Sequence call(XPathContext context, Sequence[] arguments) throws XPathException {
+                    Sequence seq = null;
+                    try {
+                    	
+                    	String message = ((StringValue) arguments[0].head()).getStringValue();
+                    	String subMessage = ((StringValue) arguments[1].head()).getStringValue();
+                    	String severity = ((StringValue) arguments[2].head()).getStringValue();
+                    	String offset = ((StringValue) arguments[3].head()).getStringValue();
+                    	
+                    	seq = new XdmAtomicValue(XsltFunctions.getMessageString(message, subMessage, severity, offset)).getUnderlyingValue();
+                    	
+                    } catch(Exception e) {
+                        logger.error("sx:getMessageString failed!",e);
                     }
                     return seq;
                 }
