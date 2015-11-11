@@ -45,9 +45,13 @@ public class FileTypeChecker {
 	 */
 	public boolean isMimetypeInAcceptableList(String mimetype) {
 		
+		logger.debug("Checking if mimetype {} is acceptable", mimetype);
+		
 		if(acceptedMimetypes.contains(mimetype)) {
+			logger.debug("Mimetype {} included in the acceptable list", mimetype);
 			return true;
 		}
+		logger.debug("Mimetype {} not included in the acceptable list", mimetype);
 		return false;
 	}
 }

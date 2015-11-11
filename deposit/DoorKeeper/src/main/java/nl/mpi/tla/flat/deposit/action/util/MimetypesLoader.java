@@ -5,6 +5,9 @@ import java.util.List;
 
 import javax.xml.transform.Source;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
@@ -17,6 +20,8 @@ import nl.mpi.tla.flat.deposit.util.Saxon;
  */
 public class MimetypesLoader {
 
+	private static final Logger logger = LoggerFactory.getLogger(MimetypesLoader.class);
+	
 	//to be used only by the factory method
 	private MimetypesLoader() {
 	}
@@ -33,6 +38,8 @@ public class MimetypesLoader {
 	 * @throws SaxonApiException
 	 */
 	public List<String> loadMimetypes(Source mimetypesSource) throws SaxonApiException {
+		
+		logger.debug("Loading mimetypes from source {}", mimetypesSource.getSystemId());
 		
 		XdmNode mimetypeNode = Saxon.buildDocument(mimetypesSource);
 		XdmValue mimetypeValues = Saxon.xpath(mimetypeNode, "/mimetypes/mimetype");

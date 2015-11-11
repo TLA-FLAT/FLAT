@@ -33,12 +33,6 @@
             <version>4.5.1</version>
         </dependency>
         
-        <dependency>
-        	<groupId>org.slf4j</groupId>
-        	<artifactId>log4j-over-slf4j</artifactId>
-        	<version>1.7.7</version>
-        </dependency>
-        
         <!-- FITS and dependencies needed to build and test -->
         
         <dependency>
@@ -77,12 +71,6 @@
         	<version>2.4</version>
         	<scope>provided</scope>
         </dependency>
-<!--         <dependency> -->
-<!--         	<groupId>log4j</groupId> -->
-<!--         	<artifactId>log4j</artifactId> -->
-<!--         	<version>1.2.17</version> -->
-<!--         	<scope>provided</scope> -->
-<!--         </dependency> -->
         
         <dependency>
         	<groupId>net.java.dev.jna</groupId>

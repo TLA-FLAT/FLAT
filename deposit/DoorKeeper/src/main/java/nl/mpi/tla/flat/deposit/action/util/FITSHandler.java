@@ -46,6 +46,8 @@ public class FITSHandler {
 	 */
 	public boolean isFileAcceptable(File fileToCheck) {
 
+		logger.debug("Checking if file {} is acceptable", fileToCheck);
+		
 		FitsOutput fitsOutput = null;
 		try {
 			fitsOutput = fits.examine(fileToCheck);
@@ -56,6 +58,8 @@ public class FITSHandler {
 		}
 		
 		List<FitsIdentity> fileIdentities = fitsOutput.getIdentities();
+		
+		logger.debug("FITS has detected {} identities for file {}", fileIdentities.size(), fileToCheck);
 		
 		if(fileIdentities.isEmpty()) {
 			//TODO no identity found - throw error?
@@ -70,6 +74,8 @@ public class FITSHandler {
 		}
 		
 		FitsIdentity identity = fileIdentities.get(0);
+		
+		logger.debug("Checking data of identity. Format: {}; Mimetype: {}; Tool: {}", identity.getFormat(), identity.getMimetype(), identity.getToolName());
 		
 		return fileTypeChecker.isMimetypeInAcceptableList(identity.getMimetype());
 	}
