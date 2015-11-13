@@ -209,7 +209,20 @@
                             <finalName>doorkeeper</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
                         </configuration>
-                    </execution> 
+                    </execution>
+                    <execution>
+                    	<id>make-assembly doorkeeper_util</id>
+                    	<phase>package</phase>
+                    	<goals>
+                    		<goal>single</goal>
+                    	</goals>
+                    	<configuration>
+                    		<finalName>doorkeeper</finalName>
+                    		<descriptors>
+                    			<descriptor>src/main/assembly/doorkeeper_util.xml</descriptor>
+                    		</descriptors>
+                    	</configuration>
+                    </execution>
                 </executions>
             </plugin>
             
