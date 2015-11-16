@@ -20,6 +20,8 @@
 	<xsl:param name="collections-map">
 		<map/>
 	</xsl:param>
+	
+	<xsl:param name="icon-base" select="'file:/app/flat/icons'"/>
 
 	<xsl:function name="cmd:hdl">
 		<xsl:param name="pid"/>
@@ -329,6 +331,11 @@
 											</foxml:xmlContent>
 										</foxml:datastreamVersion>
 									</foxml:datastream>
+									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="TN" STATE="A" CONTROL_GROUP="E">
+										<foxml:datastreamVersion ID="TN.0" LABEL="icon.png" MIMETYPE="image/png">
+											<foxml:contentLocation TYPE="URL" REF="{$icon-base}/metadata.png"/>
+										</foxml:datastreamVersion>
+									</foxml:datastream>
 								</foxml:digitalObject>
 							</xsl:result-document>
 						</xsl:when>
@@ -398,6 +405,11 @@
 					</foxml:xmlContent>
 				</foxml:datastreamVersion>
 			</foxml:datastream>
+			<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="TN" STATE="A" CONTROL_GROUP="E">
+				<foxml:datastreamVersion ID="TN.0" LABEL="icon.png" MIMETYPE="image/png">
+					<foxml:contentLocation TYPE="URL" REF="{$icon-base}/folder.png"/>
+				</foxml:datastreamVersion>
+			</foxml:datastream>		
 			<!-- Resource Proxies -->
 			<!--<xsl:message>DBG: resourceProxies[<xsl:value-of select="count(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Resource'])"/>]</xsl:message>
 			<xsl:for-each select="/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Resource']">
@@ -437,6 +449,7 @@
 					<!-- take the filepart of the localURI as the resource title -->
 					<xsl:variable name="resTitle" select="replace($resURI, '.*/', '')"/>
 					<!--<xsl:message>DBG: creating FOX[<xsl:value-of select="$resFOX"/>]?[<xsl:value-of select="not(doc-available($resFOX))"/>]</xsl:message>-->
+					<xsl:variable name="resMIME" select="cmd:getMIME($res/cmd:ResourceType/@mimetype,$resURI)"/>
 					<xsl:variable name="createFOX" as="xs:boolean">
 						<xsl:choose>
 							<xsl:when test="(key('rels-to', $resPID))[1]/resolve-uri(dst, src) != $resURI">
@@ -615,7 +628,7 @@
 													</xsl:choose>
 													<!-- add specific content models for specific MIME types -->
 													<xsl:choose>
-														<xsl:when test="starts-with(cmd:getMIME($res/cmd:ResourceType/@mimetype,$resURI),'audio/')">
+														<xsl:when test="starts-with($resMIME,'audio/')">
 															<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp-audioCModel"/>
 														</xsl:when>
 													</xsl:choose>
@@ -649,6 +662,28 @@
 												</xsl:otherwise>
 											</xsl:choose>
 										</foxml:contentLocation>
+									</foxml:datastreamVersion>
+								</foxml:datastream>
+								<!-- add specific content models for specific MIME types -->
+								<foxml:datastream ID="TN" STATE="A" CONTROL_GROUP="E">
+									<foxml:datastreamVersion ID="TN.0" LABEL="icon.png" MIMETYPE="image/png">
+										<xsl:choose>
+											<xsl:when test="starts-with($resMIME,'audio/')">
+												<foxml:contentLocation TYPE="URL" REF="{$icon-base}/audio.png"/>
+											</xsl:when>
+											<xsl:when test="starts-with($resMIME,'image/')">
+												<foxml:contentLocation TYPE="URL" REF="{$icon-base}/image.png"/>
+											</xsl:when>
+											<xsl:when test="starts-with($resMIME,'text/')">
+												<foxml:contentLocation TYPE="URL" REF="{$icon-base}/text.png"/>
+											</xsl:when>
+											<xsl:when test="starts-with($resMIME,'video/')">
+												<foxml:contentLocation TYPE="URL" REF="{$icon-base}/video.png"/>
+											</xsl:when>
+											<xsl:otherwise>
+												<foxml:contentLocation TYPE="URL" REF="{$icon-base}/other.png"/>
+											</xsl:otherwise>
+										</xsl:choose>
 									</foxml:datastreamVersion>
 								</foxml:datastream>
 							</foxml:digitalObject>

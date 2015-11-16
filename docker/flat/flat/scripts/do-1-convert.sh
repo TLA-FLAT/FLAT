@@ -5,7 +5,11 @@ date
 if [ -f /app/flat/imdi-to-convert.txt ]; then
 	/app/flat/isle2clarin.sh /app/flat/imdi-to-convert.txt
 else
-	/app/flat/isle2clarin.sh /app/flat/src
+	if [ -f /app/flat/imdi-to-skip.txt ]; then
+		/app/flat/isle2clarin.sh -s /app/flat/imdi-to-skip.txt /app/flat/src
+	else
+		/app/flat/isle2clarin.sh /app/flat/src
+	fi
 fi
 
 if [ -d /app/flat/cmd ]; then

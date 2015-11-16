@@ -10,7 +10,8 @@ ENV HOME /root
 RUN /etc/my_init.d/00_regen_ssh_host_keys.sh
 
 # Use baseimage-docker's init system.
-CMD ["/sbin/my_init"]
+ENTRYPOINT ["/sbin/my_init"]
+CMD ["--", "/bin/bash", "-l"]
 
 #
 # Update and install all system libraries
@@ -261,6 +262,9 @@ RUN cd /tmp/LAT2FOX &&\
     mvn clean package &&\
     mkdir -p /app/flat/lib &&\
     mv target/lat2fox.jar /app/flat/lib/lat2fox.jar
+	
+RUN mkdir -p /app/flat/icons
+ADD flat/icons /app/flat/icons
     
 #Clean up APT and /tmp when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -269,3 +273,5 @@ EXPOSE 80
 EXPOSE 443
 EXPOSE 8080
 EXPOSE 8443
+
+WORKDIR /app/flat
