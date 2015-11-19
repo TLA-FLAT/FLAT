@@ -12,7 +12,7 @@ Quick installation link: https://docs.docker.com/installation/#installation
 On OSX you can find our your docker IP via the "docker-machine ip default" command. On unix machines you can use localhost.
 
  * Islandora, accessible via: http://IP/drupal
- * Fedora Commons, accessible via: http://IP:8443/fedora/admin
+ * Fedora Commons, accessible via: https://IP:8443/fedora/admin
  * Proai, accessible via: http://IP/oaiprovider
 
 The following accounts are created: 
