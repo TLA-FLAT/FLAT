@@ -1,4 +1,4 @@
-package nl.mpi.tla.flat.deposit.action.util;
+package nl.mpi.tla.flat.deposit.action.fits.util;
 
 import static org.junit.Assert.*;
 
@@ -13,6 +13,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import net.sf.saxon.s9api.SaxonApiException;
+import nl.mpi.tla.flat.deposit.action.fits.util.MimetypesLoader;
 
 public class MimetypesLoaderTest {
 

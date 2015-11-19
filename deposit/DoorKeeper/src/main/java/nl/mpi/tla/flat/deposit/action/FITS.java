@@ -22,11 +22,13 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.harvard.hul.ois.fits.FitsOutput;
+import edu.harvard.hul.ois.fits.exceptions.FitsException;
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
 import nl.mpi.tla.flat.deposit.Resource;
 import nl.mpi.tla.flat.deposit.SIP;
-import nl.mpi.tla.flat.deposit.action.util.FITSHandler;
+import nl.mpi.tla.flat.deposit.action.fits.util.FITSHandler;
 
 /**
  *
@@ -53,9 +55,28 @@ public class FITS extends AbstractAction {
     	for(Resource currentResource : resources) {
     		if(currentResource.hasFile()) {
     			File currentFile = currentResource.getFile();
-    			if(!fitsHandler.isFileAcceptable(currentFile)) {
+    			
+    			FitsOutput result = null;
+    			try {
+					result = fitsHandler.performFitsCheck(currentFile);
+				} catch (FitsException e) {
+					logger.error("Error while performing FITS typecheck for file '{}'", currentFile);
+					allAcceptable = false;
+					continue;
+				}
+    			
+    			String mimetype = fitsHandler.getResultMimetype(currentFile, result);
+    			
+    			if(!fitsHandler.isMimetypeAcceptable(mimetype)) {
+    				logger.error("File '{}' has a mimetype which is NOT ALLOWED in this repository: '{}'", currentFile, mimetype);
     				allAcceptable = false;
-    				logger.warn("File '{}' not acceptable", currentFile);
+    			} else {
+    				logger.debug("File '{}' has a mimetype which is ALLOWED in this repository: '{}'", currentFile, mimetype);
+    				if(currentResource.hasMime()) {
+    					logger.warn("Resource mimetype changed from '{}' to '{}'", currentResource.getMime(), mimetype);
+    				}
+    				logger.debug("Setting resource mimetype to '{}'", mimetype);
+    				currentResource.setMime(mimetype);
     			}
     		}
     	}

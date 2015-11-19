@@ -1,4 +1,4 @@
-package nl.mpi.tla.flat.deposit.action.util;
+package nl.mpi.tla.flat.deposit.action.fits.util;
 
 import static org.junit.Assert.*;
 import static org.powermock.api.support.membermodification.MemberMatcher.method;
@@ -18,6 +18,8 @@ import org.mockito.Mock;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import net.sf.saxon.s9api.SaxonApiException;
+import nl.mpi.tla.flat.deposit.action.fits.util.FileTypeChecker;
+import nl.mpi.tla.flat.deposit.action.fits.util.MimetypesLoader;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({MimetypesLoader.class})

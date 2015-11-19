@@ -1,4 +1,4 @@
-package nl.mpi.tla.flat.deposit.action.util;
+package nl.mpi.tla.flat.deposit.action.fits.util;
 
 import edu.harvard.hul.ois.fits.Fits;
 import edu.harvard.hul.ois.fits.exceptions.FitsException;

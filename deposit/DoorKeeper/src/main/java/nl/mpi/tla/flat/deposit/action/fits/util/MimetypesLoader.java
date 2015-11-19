@@ -1,4 +1,4 @@
-package nl.mpi.tla.flat.deposit.action.util;
+package nl.mpi.tla.flat.deposit.action.fits.util;
 
 import java.util.ArrayList;
 import java.util.List;
