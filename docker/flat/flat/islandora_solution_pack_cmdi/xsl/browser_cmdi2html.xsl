@@ -8,6 +8,10 @@
         Author: Twan Goosen (twan.goosen@mpi.nl)
         Date: February 2015
 	Version: 1.0
+
+	Versioning information:
+	$HeadURL: https://svn.mpi.nl/LAT/CmdiXslt/tags/cmdi-xslt-1.0/browser_cmdi2html.xsl $
+	$Id: browser_cmdi2html.xsl 43174 2015-02-02 13:10:50Z twagoo $
     -->
 
     <xsl:output encoding="UTF-8" indent="yes" method="xml" omit-xml-declaration="yes" doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN" doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"/>
@@ -21,7 +25,7 @@
     <xsl:template match="/">
             <div>
                 <h2>Component Metadata</h2>
-                <ul>
+                <ul class="panel-group" id="a{generate-id(//cmd:Components)}">
                     <xsl:apply-templates select="//cmd:Components/*" mode="components"/>
                 </ul>
             </div>
@@ -108,36 +112,47 @@
     </xsl:template>
 
     <xsl:template match="*" mode="components">
-        <li>
-            <xsl:choose>
-                <xsl:when test="@ref">
-                    <!-- make this label a link to referenced resource -->
-                    <a>
-                        <xsl:attribute name="href">
-                            <xsl:apply-templates select="//cmd:ResourceProxy[@id=current()/@ref]/cmd:ResourceRef" mode="resolveHandle"/>
-                        </xsl:attribute>
-                        <strong>
-                            <xsl:value-of select="name(.)"/>
-                        </strong>
-                    </a>
-                </xsl:when>
-                <xsl:otherwise>
-                    <!-- ordinary label -->
-                    <strong>
-                        <xsl:value-of select="name(.)"/>
-                    </strong>
-                </xsl:otherwise>
-            </xsl:choose>
-            <xsl:if test="normalize-space(text()) != ''">
-                <span>
-                    <xsl:value-of select="text()"/>
-                </span>
-            </xsl:if>
-            <xsl:if test="count(./*) &gt; 0">
-                <ul>
-                    <xsl:apply-templates select="./*" mode="components"/>
-                </ul>
-            </xsl:if>
+        <li class="panel panel-default">
+		<xsl:choose>
+            		<xsl:when test="count(./*) &gt; 0">
+            			<div class="panel-heading">
+      					<div class="panel-title">
+            					<a href="#c{generate-id(.)}" data-toggle="collapse" aria-expanded="false">
+							<xsl:choose>
+								<xsl:when test="parent::cmd:Components">
+									<xsl:attribute name="class">collapse.in</xsl:attribute>
+								</xsl:when>
+								<xsl:otherwise>
+									<xsl:attribute name="class">collapsed</xsl:attribute>
+								</xsl:otherwise>
+							</xsl:choose>
+                        				<strong>
+                            					<xsl:value-of select="name(.)"/>
+                        				</strong>
+            					</a>
+      					</div>
+    				</div>
+    				<div class="panel-collapse collapse" id="c{generate-id(.)}" aria-expanded="false" style="height: 0px;">
+      					<div class="panel-body">
+                				<ul class="panel-group" id="a{generate-id(.)}">
+                    					<xsl:apply-templates select="./*" mode="components"/>
+                				</ul>
+      					</div>
+    				</div>
+			</xsl:when>
+			<xsl:otherwise>
+                    		<!-- ordinary label -->
+                    		<strong>
+                        		<xsl:value-of select="name(.)"/>
+                    		</strong>
+				<xsl:text> : </xsl:text>
+            			<xsl:if test="normalize-space(text()) != ''">
+                			<span>
+                    				<xsl:value-of select="text()"/>
+                			</span>
+            			</xsl:if>
+			</xsl:otherwise>
+		</xsl:choose>
         </li>
     </xsl:template>
     
