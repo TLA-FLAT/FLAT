@@ -120,7 +120,7 @@
             					<a href="#c{generate-id(.)}" data-toggle="collapse" aria-expanded="false">
 							<xsl:choose>
 								<xsl:when test="parent::cmd:Components">
-									<xsl:attribute name="class">collapse.in</xsl:attribute>
+									<xsl:attribute name="class"></xsl:attribute>
 								</xsl:when>
 								<xsl:otherwise>
 									<xsl:attribute name="class">collapsed</xsl:attribute>
@@ -132,7 +132,15 @@
             					</a>
       					</div>
     				</div>
-    				<div class="panel-collapse collapse" id="c{generate-id(.)}" aria-expanded="false" style="height: 0px;">
+    				<div id="c{generate-id(.)}" aria-expanded="false">
+					<xsl:choose>
+						<xsl:when test="parent::cmd:Components">
+							<xsl:attribute name="class">panel-collapse collapse in</xsl:attribute>
+						</xsl:when>
+						<xsl:otherwise>
+							<xsl:attribute name="class">panel-collapse collapse</xsl:attribute>
+						</xsl:otherwise>
+					</xsl:choose>
       					<div class="panel-body">
                 				<ul class="panel-group" id="a{generate-id(.)}">
                     					<xsl:apply-templates select="./*" mode="components"/>
