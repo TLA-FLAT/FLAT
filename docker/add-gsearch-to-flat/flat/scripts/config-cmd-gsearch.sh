@@ -157,10 +157,10 @@ if [ $verbose -ne 0 ]; then
 fi
 
 # get the directory the script is located in
-my_dir="${0%%/*}"
-#my_dir="$(dirname "$(readlink -f "$0")")"
+#my_dir="${0%%/*}"
+my_dir="$(dirname "$(readlink -f "$0")")"
 # relative to this directory, invoke the xsl transformation
-./xsl2 -xsl:${my_dir}/createMapping.xsl -s:$gsearch_fc clarin_fc=$clarin_fc profile_cache=$profile_cache > ${output_prefix}-mapping.xml
+./xsl2.sh -xsl:${my_dir}/createMapping.xsl -s:$gsearch_fc clarin_fc=$clarin_fc profile_cache=$profile_cache > ${output_prefix}-mapping.xml
 
 if [ $verbose -ne 0 ]; then
 	echo "Output mapping file: ${output_prefix}-mapping.xml"
@@ -172,7 +172,7 @@ if [ $verbose -ne 0 ]; then
 	echo "GSearch transformer: $gsearch_xsl"
 fi
 
-./xsl2 -xsl:${my_dir}/createTransformer.xsl -s:$gsearch_xsl mapping-location=${output_prefix}-mapping.xml > ${output_prefix}-transformer.xsl
+./xsl2.sh -xsl:${my_dir}/createTransformer.xsl -s:$gsearch_xsl mapping-location=${output_prefix}-mapping.xml > ${output_prefix}-transformer.xsl
 
 if [ $verbose -ne 0 ]; then
 	echo "Output transformer file: ${output_prefix}-transformer.xsl"

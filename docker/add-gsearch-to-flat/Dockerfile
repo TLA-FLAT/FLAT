@@ -78,6 +78,19 @@ RUN cd /var/www/html/drupal/ &&\
 	/etc/init.d/postgresql stop
 
 #
+# Saxon
+#
+
+RUN mkdir /tmp/saxon &&\
+	cd /tmp/saxon &&\ 
+	wget -O SaxonHE9-6-0-7J.zip "http://downloads.sourceforge.net/project/saxon/Saxon-HE/9.6/SaxonHE9-6-0-7J.zip?r=&use_mirror=netix" &&\
+	unzip "SaxonHE9-6-0-7J.zip" &&\
+	mkdir -p /app/flat/lib/saxon &&\
+	rm "SaxonHE9-6-0-7J.zip" &&\
+	mv * /app/flat/lib/saxon/ &&\
+	rm -r /tmp/saxon
+
+#
 # Add FLAT's own scripts and tools 
 #
 
