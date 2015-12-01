@@ -20,7 +20,7 @@ docker run -p 80:80 -p 8443:8443 -p 8080 -v ~/my-resources:/lat -t -i flat-with-
 ## Additional configuration ##
 
 Add the Islandora SOLR modules to FLAT, but doesn't do the actual setup of SOLR and its population. One option is to use the 
-[../add-gsearch-to-flat](add-gsearch-to-flat) Docker setup.
+[add-gsearch-to-flat](../add-gsearch-to-flat) Docker setup.
 
 ## Notes ##
 

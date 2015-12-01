@@ -55,6 +55,6 @@ Once the indexing is done the Islandora SOLR module has to be further configured
 
 ## References ##
 
-- (Installing Solr and GSearch)[https://wiki.duraspace.org/display/ISLANDORA715/Installing+Solr+and+GSearch]
-- (Islandora Solr Search)[https://wiki.duraspace.org/display/ISLANDORA715/Islandora+Solr+Search]
-- (Search & Discovery in islandora)[https://wiki.duraspace.org/pages/viewpage.action?pageId=64326523]
+- [Installing Solr and GSearch](https://wiki.duraspace.org/display/ISLANDORA715/Installing+Solr+and+GSearch)
+- [Islandora Solr Search](https://wiki.duraspace.org/display/ISLANDORA715/Islandora+Solr+Search)
+- [Search & Discovery in islandora](https://wiki.duraspace.org/pages/viewpage.action?pageId=64326523)

@@ -35,10 +35,10 @@ The FLAT base image is required, but the other ones can be added to it as needed
 Additionally there are two docker setups specific for IMDI and CMDIfied IMDI:
 
  6. A [FLAT IMDI conversion image](docker/add-imdi-conversion-to-flat) builds on the base image and
-   1. provides tools and scripts to covert from IMDI to CMDI
+   1. provides tools and scripts to convert from IMDI to CMDI
    
  7. A [FLAT IMDI search image](docker/add-imdi-gsearch-to-flat) builds on the search image and
-   2. provides the mapping to configure the index proces for CMDIfied IMDI records and profiles
+   1. provides the mapping to configure the index proces for CMDIfied IMDI records and profiles
 
 ###Notes###
 FLAT used to be known as EasyLAT, so occassionally documentation and code might still use that name.
