@@ -1,11 +1,6 @@
 FROM		flat
 MAINTAINER	Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 
-ENV FEDORA_HOME="/var/www/fedora/"
-ENV CATALINA_HOME="/var/www/fedora/tomcat/"
-
-RUN apt-get clean &&\
-	rm -rf /var/lib/apt/lists/*
 RUN apt-get update &&\
 	apt-get -y dist-upgrade &&\
 	apt-get -y install ant
@@ -28,8 +23,8 @@ RUN mkdir /tmp/fedora-gsearch &&\
 # SOLR
 #
 
-RUN mkdir /tmp/solr
-RUN cd /tmp/solr &&\
+RUN mkdir /tmp/solr &&\
+	cd /tmp/solr &&\
 	wget "https://archive.apache.org/dist/lucene/solr/4.6.1/solr-4.6.1.zip" &&\
 	unzip solr-4.6.1.zip &&\
 	mkdir /var/www/fedora/solr &&\
@@ -52,30 +47,13 @@ RUN cd /tmp/solr &&\
 
 ADD fedora/fedora-users.xml /var/www/fedora/server/config/fedora-users.xml
 ADD gsearch/fgsconfig-basic-for-islandora.properties /var/www/fedora/tomcat/webapps/fedoragsearch/FgsConfig/fgsconfig-basic-for-islandora.properties
-RUN sed -i 's/fedoragsearch.xsltProcessor.*=.*xalan/fedoragsearch.xsltProcessor = saxon/g' /var/www/fedora/tomcat/webapps/fedoragsearch/FgsConfig/FgsConfigTemplate/fedoragsearch.properties
-#RUN sed -i 's/fgsconfig-basic.properties/fgsconfig-basic-for-islandora.properties/g' /var/www/fedora/tomcat/webapps/fedoragsearch/FgsConfig/fgsconfig-basic.xml
-RUN cd /var/www/fedora/tomcat/webapps/fedoragsearch/FgsConfig/ &&\
+RUN sed -i 's/fedoragsearch.xsltProcessor.*=.*xalan/fedoragsearch.xsltProcessor = saxon/g' /var/www/fedora/tomcat/webapps/fedoragsearch/FgsConfig/FgsConfigTemplate/fedoragsearch.properties &&\
+#	sed -i 's/fgsconfig-basic.properties/fgsconfig-basic-for-islandora.properties/g' /var/www/fedora/tomcat/webapps/fedoragsearch/FgsConfig/fgsconfig-basic.xml &&\
+	cd /var/www/fedora/tomcat/webapps/fedoragsearch/FgsConfig/ &&\
 	ant -Dlocal.FEDORA_HOME=$FEDORA_HOME -f fgsconfig-basic.xml -propertyfile fgsconfig-basic-for-islandora.properties &&\
 	mv "/var/www/fedora/solr/collection1/conf/schema.xml" "/var/www/fedora/solr/collection1/conf/schema.xml.bak" &&\
 	cp "/var/www/fedora/tomcat/webapps/fedoragsearch/WEB-INF/classes/fgsconfigFinal/index/FgsIndex/conf/schema-4.6.1-for-fgs-2.7.xml" "/var/www/fedora/solr/collection1/conf/schema.xml"
 ADD solr/solr.xml /var/www/fedora/tomcat/conf/Catalina/localhost/solr.xml
-
-RUN mkdir /tmp/islandora &&\
-	cd /tmp/islandora &&\
-	wget "https://github.com/Islandora/islandora_solr_search/archive/7.x-1.5.zip" &&\
-	mv 7.x-1.5.zip islandora_gsearch_module-7.x-1.5.zip &&\
-	unzip islandora_gsearch_module-7.x-1.5.zip -d /var/www/html/drupal/sites/all/modules/contrib/
-
-RUN cd /var/www/html/drupal/ &&\
-	export PGPASSWORD=fedora &&\
-	/etc/init.d/postgresql start &&\
-	/var/www/fedora/tomcat/bin/startup.sh &&\
-	bash -c "timeout 60 grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-	/var/www/composer/vendor/drush/drush/drush en islandora_solr -y &&\
-	/var/www/composer/vendor/drush/drush/drush en islandora_solr_config -y &&\
-	/var/www/fedora/tomcat/bin/shutdown.sh &&\
-	bash -c "timeout 60 grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-	/etc/init.d/postgresql stop
 
 #
 # Saxon
@@ -106,9 +84,5 @@ RUN cd /tmp/FindProfiles &&\
     mv target/findProfiles.jar /app/flat/lib/findProfiles.jar
     
 #Clean up APT when done.
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-EXPOSE 80
-EXPOSE 443
-EXPOSE 8443
-EXPOSE 8080 
+RUN apt-get clean &&\
+	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

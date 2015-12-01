@@ -32,7 +32,7 @@ docker build -t flat .
 1. Start your docker environment
 2. Run
 ```sh 
-docker run -p 80:80 -p 8443:8443 -v ~/my-resources:/lat -t -i flat /sbin/my_init -- bash -l
+docker run -p 80:80 -p 8443:8443 -v ~/my-resources:/lat -t -i flat
 ```
 
 This will start your docker container with the following properties:
@@ -42,15 +42,18 @@ This will start your docker container with the following properties:
 
 ## Additional configuration ##
 
+### CMD to Dublin Core ###
+
+CMD is a very flexible metadata format and there is no generic mapping to Dublin Core. Fedora Commons does require Dublin Core. Place a
+``cmd2dc.xsl`` in /app/flat with the mapping for your CMDI files. (See [cmd2dc](../add-imdi-conversion-to-flat/flat/scripts/cmd2dc.xsl) for an example.)
+
 ### Importing metadata and resources ###
 
 Inside the container the /app/flat directory contains various scripts to convert and import metadata into the FLAT repository:
 
-- [do-1-convert.sh](flat/scripts/do-1-convert.sh): converts all IMDI metdata files found in /app/flat/src into CMD records, which will be stored in /app/flat/cmd.
+- [do-1-fox.sh](flat/scripts/do-1-fox.sh): converts the CMD records found into /app/flat/cmd into FOX files, which will be stored in /app/flat/fox.
 
-- [do-2-fox.sh](flat/scripts/do-2-fox.sh): converts the CMD records found into /app/flat/cmd into FOX files, which will be stored in /app/flat/fox.
-
-- [do-3-import.sh](flat/scripts/do-3-import.sh): imports the FOX files into Fedora Commons.
+- [do-2-import.sh](flat/scripts/do-2-import.sh): imports the FOX files into Fedora Commons.
 
 ## Notes ##
 

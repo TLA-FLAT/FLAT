@@ -1,8 +1,8 @@
-Add Shibboleth to the FLAT base image
-=====================================
+Add Shibboleth to FLAT
+======================
 
 ## Requirements ##
-This docker file is based on the FLAT base image.
+This docker file depends on the FLAT base image.
 
 ## Provides ##
  * Shibboleth Apache setup
@@ -16,7 +16,7 @@ docker build -t flat-with-shibboleth .
 
 ## Running the image ##
 ```sh
-docker run -i -p 80:80 -p 8443:8443 -p 8080:8080 -t flat-with-shibboleth /sbin/my_init -- bash -l
+docker run -p 80:80 -p 8443:8443 -p 8080:8080 -i -t flat-with-shibboleth
 ```
 
 ## Additional configuration ##

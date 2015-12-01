@@ -1,13 +1,12 @@
-Add GSearch to the FLAT base image
-==================================
+Add GSearch to FLAT
+===================
 
 ## Requirements ##
-This docker file is based on the FLAT base image.
+This docker file depends on the FLAT base image and the FLAT Islandora SOLR image.
 
 ## Provides ##
  * GSearch, accessible via: http://IP:8080/fedoragsearch/rest
  * Solr, accessible via: http://IP:8080/solr/
- * Islandora_solr_search, exposed via the Islandora drupal interface
 
 The following accounts are created: 
 
@@ -20,7 +19,7 @@ docker build -t flat-with-gsearch .
 
 ## Running the image ##
 ```sh
-docker run -i -p 80:80 -p 8443:8443 -p 8080:8080 -t flat-with-gsearch /sbin/my_init -- bash -l
+docker run -p 80:80 -p 8443:8443 -p 8080 -v ~/my-resources:/lat -t -i flat-with-gsearch
 ```
 
 ## Additional configuration ##
@@ -32,7 +31,7 @@ This mapping is specified in the [/app/flat/gsearch-mapping-template.xml](flat/s
 <field name="Language">
       <xpath>.//cmd:CMD/cmd:Components/cmd:Session/cmd:MDGroup/cmd:Content/cmd:Content_Languages/cmd:Content_Language/cmd:Name/text()</xpath>
       <cmd:facet>language</cmd:facet>
-      <cmd:concept>http://hdl.handle.net/11459/CCR_C-5358_3cd089fe-ad03-6181-b20c-635ea41ed818</cmd:concept>
+      <cmd:concept>http://hdl.handle.net/11459/CCR_c-5358_3cd089fe-ad03-6181-b20c-635ea41ed818</cmd:concept>
 </field>
 ```
 
@@ -40,16 +39,19 @@ This shows that the mapping can be based on:
  * hardcoded xpaths
  * using the facet mapping of the [VLO](http://vlo.clarin.eu/) 
  * using a concept from a concept registry like the [CLARIN Concept Registry](http://www.clarin.eu/conceptregistry)
+
+The current mapping has a general CMDI based on the VLO facet mapping. Adapt the mapping if you have
+specific mappings for your own CMD profiles. (See the [CMDIfied IMDI mapping](../add-imdi-gsearch-to-flat/flat/scripts/gsearch-mapping-template.xml) for an example.)
  
 This mapping is expanded and applied to the records using these scripts in the /app/flat directory inside the container:
  
-- [do-4-config-cmd-gsearch.sh](flat/scripts/do-4-config-cmd-gsearch.sh): expands the mapping based on the profiles used by the CMD records in /app/flat/cmd
+- [do-3-config-cmd-gsearch.sh](flat/scripts/do-3-config-cmd-gsearch.sh): expands the mapping based on the profiles used by the CMD records in /app/flat/cmd
 
-- [do-5-search.sh](flat/scripts/do-5-search.sh): trigger the indexing of the CMD records
+- [do-4-search.sh](flat/scripts/do-4-search.sh): trigger the indexing of the CMD records
+
+Once the indexing is done the Islandora SOLR module has to be further configured by selecting facets as Display fields and Facet fields.
 
 ## Notes ##
-
-TODO: bundle the configuration of the SOLR modules in Islandora in a Drupal feature module.
 
 ## References ##
 
