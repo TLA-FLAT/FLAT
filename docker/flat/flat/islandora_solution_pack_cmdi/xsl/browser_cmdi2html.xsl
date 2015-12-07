@@ -127,7 +127,7 @@
 								</xsl:otherwise>
 							</xsl:choose>
                         				<strong>
-                            					<xsl:value-of select="name(.)"/>
+                            					<xsl:value-of select="local-name(.)"/>
                         				</strong>
             					</a>
       					</div>

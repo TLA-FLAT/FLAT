@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Meertens Flat feature.
+ */
+
+include_once 'meertens_flat.features.inc';

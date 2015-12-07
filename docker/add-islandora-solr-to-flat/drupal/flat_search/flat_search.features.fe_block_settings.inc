@@ -46,7 +46,7 @@ function flat_search_default_fe_block_settings() {
         'weight' => 0,
       ),
     ),
-    'title' => '',
+    'title' => ' ',
     'visibility' => 0,
   );
 
@@ -84,7 +84,7 @@ function flat_search_default_fe_block_settings() {
         'weight' => 0,
       ),
     ),
-    'title' => '<none>',
+    'title' => ' ',
     'visibility' => 0,
   );
 
@@ -122,7 +122,7 @@ function flat_search_default_fe_block_settings() {
         'weight' => -10,
       ),
     ),
-    'title' => '',
+    'title' => ' ',
     'visibility' => 0,
   );
 

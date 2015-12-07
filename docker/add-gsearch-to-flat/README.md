@@ -47,7 +47,7 @@ This mapping is expanded and applied to the records using these scripts in the /
  
 - [do-3-config-cmd-gsearch.sh](flat/scripts/do-3-config-cmd-gsearch.sh): expands the mapping based on the profiles used by the CMD records in /app/flat/cmd
 
-- [do-4-search.sh](flat/scripts/do-4-search.sh): trigger the indexing of the CMD records
+- [do-4-index.sh](flat/scripts/do-4-index.sh): trigger the indexing of the CMD records
 
 Once the indexing is done the Islandora SOLR module has to be further configured by selecting facets as Display fields and Facet fields.
 
