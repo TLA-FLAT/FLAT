@@ -1,0 +1,8 @@
+name = FLAT IMDI search
+description = FLAT IMDI search drupal setup
+core = 7.x
+package = Features
+version = 7.x-1.0-alpha
+dependencies[] = islandora_solr
+features[features_api][] = api:2
+features[islandora_solr_fields][] = all_solr_fields
