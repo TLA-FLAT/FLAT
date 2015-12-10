@@ -54,14 +54,15 @@
             <parameter name="fedoraPassword" value="{$fedoraPassword}"/>
             <parameter name="dir" value="{$work}/fox"/>
         </action>
-        <!--<action class="nl.mpi.tla.flat.deposit.action.ACL"/>
+        <!--<action class="nl.mpi.tla.flat.deposit.action.ACL"/>-->
         <action class="nl.mpi.tla.flat.deposit.action.HandleCreation">
+            <parameter name="fedoraServer" value="{$fedoraServer}"/>
             <parameter name="epicServer" value="{$epicServer}"/>
             <parameter name="epicPrefix" value="{$epicPrefix}"/>
             <parameter name="epicUser" value="{$epicUser}"/>
             <parameter name="epicPassword" value="{$epicPassword}"/>
         </action>
-        <action class="nl.mpi.tla.flat.deposit.action.Index"/>
+        <!--<action class="nl.mpi.tla.flat.deposit.action.Index"/>
         <action class="nl.mpi.tla.flat.deposit.action.WorkspaceCleanup"/>-->        
     </main>
     <exception>

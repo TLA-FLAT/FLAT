@@ -19,6 +19,8 @@ package nl.mpi.tla.flat.deposit;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Date;
+import static nl.mpi.tla.flat.deposit.util.Global.ASOF;
 import org.w3c.dom.Node;
 
 /**
@@ -30,6 +32,7 @@ public class Resource {
     protected Node node = null;
     protected URI uri = null;
     protected URI pid = null;
+    protected URI fid = null;
     protected File file = null;
     protected String mime = null;
     
@@ -97,6 +100,47 @@ public class Resource {
         return this.pid;
     }
     
+    // FID
+    public boolean hasFID() {
+        return (this.fid != null);
+    }
+    
+    public void setFID(URI fid) throws DepositException {
+        if (this.fid!=null)
+            throw new DepositException("Resource["+this.uri+"] has already a Fedora Commons PID!");
+        if (fid.toString().startsWith("lat:")) {
+            this.fid = fid;
+        } else {
+            throw new DepositException("The Resource["+fid+"] isn't a valid FLAT Fedora Commons PID!");
+        }
+    }
+    
+    public void setFIDStream(String dsid) throws DepositException {
+        if (this.fid==null)
+            throw new DepositException("Resource["+this.uri+"] has no Fedora Commons PID yet!");
+        try {
+            this.fid = new URI(this.fid.toString()+"#"+dsid);
+        } catch (URISyntaxException ex) {
+           throw new DepositException(ex);
+        }
+    }
+    
+    public void setFIDasOfTimeDate(Date date) throws DepositException {
+        if (this.fid==null)
+            throw new DepositException("Resource["+this.uri+"] has no Fedora Commons PID yet!");
+        try {
+            this.fid = new URI(this.fid.toString()+"@"+ASOF.format(date)+"Z");
+        } catch (URISyntaxException ex) {
+           throw new DepositException(ex);
+        }
+    }
+    
+    public URI getFID() throws DepositException {
+        if (this.fid==null)
+            throw new DepositException("Resource["+this.uri+"] has no Fedora Commons PID yet!");
+        return this.fid;
+    }
+       
     @Override
     public boolean equals(Object other) {
         if (other == null)

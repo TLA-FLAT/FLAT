@@ -19,12 +19,15 @@ package nl.mpi.tla.flat.deposit.action;
 import com.yourmediashelf.fedora.client.FedoraClient;
 import static com.yourmediashelf.fedora.client.FedoraClient.*;
 import com.yourmediashelf.fedora.client.FedoraCredentials;
-import com.yourmediashelf.fedora.client.request.FedoraRequest;
 import com.yourmediashelf.fedora.client.response.IngestResponse;
+import com.yourmediashelf.fedora.client.response.GetDatastreamResponse;
 import java.io.File;
+import java.net.URI;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
+import nl.mpi.tla.flat.deposit.Resource;
 import nl.mpi.tla.flat.deposit.SIP;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -47,8 +50,9 @@ public class Deposit extends AbstractAction {
                 }
         });
         try {
-            logger.info("Fedora Commons["+this.getParameter("fedoraServer",null)+"]["+this.getParameter("fedoraUser",null)+":"+this.getParameter("fedoraPassword",null)+"]");
-            FedoraCredentials credentials = new FedoraCredentials(this.getParameter("fedoraServer",null), this.getParameter("fedoraUser",null), this.getParameter("fedoraPassword",null));
+            SIP sip = context.getSIP();
+            logger.info("Fedora Commons["+this.getParameter("fedoraServer")+"]["+this.getParameter("fedoraUser")+":"+this.getParameter("fedoraPassword")+"]");
+            FedoraCredentials credentials = new FedoraCredentials(this.getParameter("fedoraServer"), this.getParameter("fedoraUser"), this.getParameter("fedoraPassword"));
             FedoraClient fedora = new FedoraClient(credentials);
             fedora.debug(true);
             //FedoraRequest.setDefaultClient(fedora);
@@ -57,9 +61,21 @@ public class Deposit extends AbstractAction {
             Collection<File> foxs = FileUtils.listFiles(new File(this.getParameter("dir", "./fox")),new String[] {"xml"},true);
             logger.info("Loading ["+foxs.size()+"] FOX files from dir["+this.getParameter("dir", "./fox")+"]");
             for (File fox:foxs) {
-                IngestResponse response = ingest().format("info:fedora/fedora-system:FOXML-1.1").content(fox).ignoreMime(true).execute(fedora);
-                logger.info("Created FedoraObject["+response.getPid()+"]");
-            }            
+                logger.info("FOX["+fox+"]");
+                IngestResponse iResponse = ingest().format("info:fedora/fedora-system:FOXML-1.1").content(fox).ignoreMime(true).execute(fedora);
+                logger.info("Created FedoraObject["+iResponse.getPid()+"]["+iResponse.getLocation()+"]");
+            }
+            for (Resource res:sip.getResources()) {
+                GetDatastreamResponse dsResponse = getDatastream(res.getFID().toString(),"OBJ").execute(fedora);
+                res.setFIDStream("OBJ");
+                res.setFIDasOfTimeDate(dsResponse.getLastModifiedDate());
+            }
+            
+            GetDatastreamResponse dsResponse = getDatastream(sip.getFID().toString()+"_CMD","CMD").execute(fedora);
+            sip.setFIDStream("CMD");
+            sip.setFIDasOfTimeDate(dsResponse.getLastModifiedDate());
+
+            sip.save();
         } catch(Exception e) {
             throw new DepositException("The actual deposit in Fedora failed!",e);
         }

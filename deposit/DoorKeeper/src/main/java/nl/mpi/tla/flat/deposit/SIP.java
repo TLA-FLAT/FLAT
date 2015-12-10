@@ -22,6 +22,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.attribute.FileTime;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -30,6 +31,8 @@ import javax.xml.transform.dom.DOMSource;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
+import static nl.mpi.tla.flat.deposit.util.Global.ASOF;
+import static nl.mpi.tla.flat.deposit.util.Global.NAMESPACES;
 import nl.mpi.tla.flat.deposit.util.Saxon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,8 +51,10 @@ public class SIP {
     public static String CMD_NS = "http://www.clarin.eu/cmd/";
     public static String LAT_NS = "http://lat.mpi.nl/";
     
+    protected Node self = null;
     protected File base = null;
     protected URI pid = null;
+    protected URI fid = null;
 
     protected Document rec = null;
     
@@ -98,34 +103,80 @@ public class SIP {
         return this.pid;
     }
        
+    // FID
+    public boolean hasFID() {
+        return (this.fid != null);
+    }
+    
+    public void setFID(URI fid) throws DepositException {
+        if (this.fid!=null)
+            throw new DepositException("SIP["+this.base+"] has already a Fedora Commons PID!");
+        if (fid.toString().startsWith("lat:")) {
+            this.fid = fid;
+        } else {
+            throw new DepositException("The URI["+fid+"] isn't a valid FLAT Fedora Commons PID!");
+        }
+    }
+    
+    public void setFIDStream(String dsid) throws DepositException {
+        if (this.fid==null)
+            throw new DepositException("SIP["+this.base+"] has no Fedora Commons PID yet!");
+        try {
+            this.fid = new URI(this.fid.toString()+"#"+dsid);
+        } catch (URISyntaxException ex) {
+           throw new DepositException(ex);
+        }
+    }
+    
+    public void setFIDasOfTimeDate(Date date) throws DepositException {
+        if (this.fid==null)
+            throw new DepositException("SIP["+this.base+"] has no Fedora Commons PID yet!");
+        try {
+            this.fid = new URI(this.fid.toString()+"@"+ASOF.format(date)+"Z");
+        } catch (URISyntaxException ex) {
+           throw new DepositException(ex);
+        }
+    }
+    
+    public URI getFID() throws DepositException {
+        if (this.fid==null)
+            throw new DepositException("SIP["+this.base+"] has no Fedora Commons PID yet!");
+        return this.fid;
+    }
+       
     // resources
     
     private void loadResourceList() throws DepositException {
         try {
-            for (XdmItem resource:Saxon.xpath(Saxon.wrapNode(this.rec),"/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Resource']",null,getNamespaces())) {
+            for (XdmItem resource:Saxon.xpath(Saxon.wrapNode(this.rec),"/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Resource']",null,NAMESPACES)) {
                 Node resNode = Saxon.unwrapNode((XdmNode)resource);
-                Resource res = new Resource(base.toURI().resolve(Saxon.xpath2string(resource,"cmd:ResourceRef",null,getNamespaces())),resNode);
-                if (Saxon.xpath2boolean(resource,"normalize-space(cmd:ResourceType/@mimetype)!=''",null,getNamespaces())) {
-                    res.setMime(Saxon.xpath2string(resource,"cmd:ResourceType/@mimetype"));
+                Resource res = new Resource(base.toURI().resolve(Saxon.xpath2string(resource,"cmd:ResourceRef",null,NAMESPACES)),resNode);
+                if (Saxon.xpath2boolean(resource,"normalize-space(cmd:ResourceType/@mimetype)!=''",null,NAMESPACES)) {
+                    res.setMime(Saxon.xpath2string(resource,"cmd:ResourceType/@mimetype",null,NAMESPACES));
                 }
-                if (Saxon.xpath2boolean(resource,"normalize-space(cmd:ResourceRef/@lat:localURI)!=''",null,getNamespaces())) {
-                    File resFile = new File(base.toPath().getParent().normalize().toString(),Saxon.xpath2string(resource,"cmd:ResourceRef/@lat:localURI",null,getNamespaces()));
+                if (Saxon.xpath2boolean(resource,"normalize-space(cmd:ResourceRef/@lat:localURI)!=''",null,NAMESPACES)) {
+                    File resFile = new File(base.toPath().getParent().normalize().toString(),Saxon.xpath2string(resource,"cmd:ResourceRef/@lat:localURI",null,NAMESPACES));
                     if (resFile.exists()) {
                         if (resFile.canRead()) {
                             res.setFile(resFile);
                         } else
-                            logger.warn("local file for ResourceProxy["+Saxon.xpath2string(resource,"cmd:ResourceRef",null,getNamespaces())+"]["+resFile.getPath()+"] isn't readable!");
+                            logger.warn("local file for ResourceProxy["+Saxon.xpath2string(resource,"cmd:ResourceRef",null,NAMESPACES)+"]["+resFile.getPath()+"] isn't readable!");
                     } else
-                        logger.warn("local file for ResourceProxy["+Saxon.xpath2string(resource,"cmd:ResourceRef",null,getNamespaces())+"]["+resFile.getPath()+"] doesn't exist!");
+                        logger.warn("local file for ResourceProxy["+Saxon.xpath2string(resource,"cmd:ResourceRef",null,NAMESPACES)+"]["+resFile.getPath()+"] doesn't exist!");
+                }
+                if (Saxon.xpath2boolean(resource,"normalize-space(cmd:ResourceRef/@lat:flatURI)!=''",null,NAMESPACES)) {
+                    res.setFID(new URI(Saxon.xpath2string(resource,"cmd:ResourceRef/@lat:flatURI",null,NAMESPACES)));
                 }
                 if (resources.contains(res)) {
-                    logger.warn("double ResourceProxy["+Saxon.xpath2string(resource,"cmd:ResourceRef",null,getNamespaces())+"]["+res.getURI()+"]!");
+                    logger.warn("double ResourceProxy["+Saxon.xpath2string(resource,"cmd:ResourceRef",null,NAMESPACES)+"]["+res.getURI()+"]!");
                 } else {
                     resources.add(res);
-                    logger.debug("ResourceProxy["+Saxon.xpath2string(resource,"cmd:ResourceRef",null,getNamespaces())+"]["+res.getURI()+"]");
+                    logger.debug("ResourceProxy["+Saxon.xpath2string(resource,"cmd:ResourceRef",null,NAMESPACES)+"]["+res.getURI()+"]");
                 }
             }
         } catch(SaxonApiException e) {
+            throw new DepositException(e);
+        } catch (URISyntaxException e) {
             throw new DepositException(e);
         }
     }
@@ -134,21 +185,34 @@ public class SIP {
         return this.resources;
     }
     
+    public Resource getResource(URI pid) throws DepositException {
+        for (Resource res:getResources()) {
+            if (res.getPID().equals(pid)) {
+                return res;
+            }
+        }
+        throw new DepositException("SIP["+this.base+"] has no Resource with this PID["+pid+"]!");
+    }
+    
     public void saveResourceList() throws DepositException {
         try {
             for (Resource res:getResources()) {
                 Node node = res.getNode();
                 if (res.hasMime()) {
-                    Element rt = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(node), "cmd:ResourceType", null, getNamespaces()));
+                    Element rt = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(node), "cmd:ResourceType", null, NAMESPACES));
                     rt.setAttribute("mimetype", res.getMime());
                 }
                 if (res.hasFile()) {
-                    Element rr = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(node), "cmd:ResourceRef", null, getNamespaces()));
+                    Element rr = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(node), "cmd:ResourceRef", null, NAMESPACES));
                     rr.setAttributeNS(LAT_NS,"lat:localURI",base.getParentFile().toPath().normalize().relativize(res.getFile().toPath().normalize()).toString());
                 }
                 if (res.hasPID()) {
-                    Element rr = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(node), "cmd:ResourceRef", null, getNamespaces()));
+                    Element rr = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(node), "cmd:ResourceRef", null, NAMESPACES));
                     rr.setTextContent(res.getPID().toString());
+                }
+                if (res.hasFID()) {
+                    Element rr = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(node), "cmd:ResourceRef", null, NAMESPACES));
+                    rr.setAttributeNS(LAT_NS,"lat:flatURI",res.getFID().toString());
                 }
             }                    
         } catch(Exception e) {
@@ -161,12 +225,20 @@ public class SIP {
     public void load(File spec) throws DepositException {
         try {
             this.rec = Saxon.buildDOM(spec);
-            String self = Saxon.xpath2string(Saxon.wrapNode(this.rec), "/cmd:CMD/cmd:Header/cmd:MdSelfLink", null, this.getNamespaces());
+            String self = Saxon.xpath2string(Saxon.wrapNode(this.rec), "/cmd:CMD/cmd:Header/cmd:MdSelfLink", null, NAMESPACES);
             if (!self.trim().equals("")) {
                 try {
                     this.setPID(new URI(self));
                 } catch(DepositException e) {
-                    logger.warn("current selfLink["+self+"] isn't a valid PID, ignored for now!");
+                    logger.warn("current MdSelfLink["+self+"] isn't a valid PID, ignored for now!");
+                }
+            }
+            String flat = Saxon.xpath2string(Saxon.wrapNode(this.rec), "/cmd:CMD/cmd:Header/cmd:MdSelfLink/@lat:flatURI", null, NAMESPACES);
+            if (!flat.trim().equals("")) {
+                try {
+                    this.setFID(new URI(flat));
+                } catch(DepositException e) {
+                    logger.warn("current MdSelfLink/@lat:flatURI["+flat+"] isn't a valid Fecora Commons PID, ignored for now!");
                 }
             }
         } catch(Exception e) {
@@ -193,15 +265,19 @@ public class SIP {
             }
             // put PID into place
             if (this.hasPID()) {
-                if (Saxon.xpath2boolean(Saxon.wrapNode(this.rec), "exists(/cmd:CMD/cmd:Header/cmd:MdSelfLink)", null, this.getNamespaces())) {
-                    Element self = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(this.rec), "/cmd:CMD/cmd:Header/cmd:MdSelfLink", null, getNamespaces()));
-                    self.setTextContent(this.getPID().toString());
-                } else {
-                    Element profile = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(this.rec), "/cmd:CMD/cmd:Header/cmd:MdProfile", null, getNamespaces()));
-                    Element header = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(this.rec), "/cmd:CMD/cmd:Header", null, getNamespaces()));
-                    Element self = rec.createElementNS(CMD_NS, "MdSelfLink");
+                Element self = null;
+                XdmItem _self = Saxon.xpathSingle(Saxon.wrapNode(this.rec),"/cmd:CMD/cmd:Header/cmd:MdSelfLink",null,NAMESPACES);
+                if (_self==null) {
+                    Element profile = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(this.rec), "/cmd:CMD/cmd:Header/cmd:MdProfile", null, NAMESPACES));
+                    Element header = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(this.rec), "/cmd:CMD/cmd:Header", null, NAMESPACES));
+                    self = rec.createElementNS(CMD_NS, "MdSelfLink");
                     self.setTextContent(this.getPID().toString());
                     header.insertBefore(self, profile);
+                } else {
+                    self = (Element)Saxon.unwrapNode((XdmNode)_self);
+                }
+                if (this.hasFID()) {
+                    self.setAttributeNS(LAT_NS,"lat:flatURI",this.getFID().toString());
                 }
             }   
             // save changes to the resource list
@@ -212,15 +288,4 @@ public class SIP {
             throw new DepositException(e);
         }
     }
-    
-    // utils
-        
-    public Map<String,String> getNamespaces() {
-        if (this.namespaces.size()==0) {
-            namespaces.put("cmd", CMD_NS);
-            namespaces.put("lat", LAT_NS);
-        }
-        return this.namespaces;
-    }
-    
 }

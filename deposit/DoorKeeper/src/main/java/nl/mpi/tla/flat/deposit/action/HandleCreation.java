@@ -16,11 +16,11 @@
  */
 package nl.mpi.tla.flat.deposit.action;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import net.sf.saxon.s9api.XdmValue;
 import nl.mpi.tla.flat.deposit.Context;
-import nl.mpi.tla.flat.deposit.SIP;
+import nl.mpi.tla.flat.deposit.DepositException;
+import nl.mpi.tla.flat.deposit.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -28,8 +28,27 @@ import nl.mpi.tla.flat.deposit.SIP;
  */
 public class HandleCreation extends AbstractAction {
     
+    private static final Logger logger = LoggerFactory.getLogger(HandleCreation.class.getName());
+
     @Override
-    public boolean perform(Context context) {
+    public boolean perform(Context context) throws DepositException {
+        
+        String fedora = this.getParameter("fedoraServer");
+        
+        String fid = context.getSIP().getFID().toString().replaceAll("#.*","");
+        String dsid = context.getSIP().getFID().getRawFragment().replaceAll("@.*","");
+        String asof = context.getSIP().getFID().getRawFragment().replaceAll(".*@","");
+        
+        logger.info(" create handle["+context.getSIP().getPID()+"] -> URI["+fedora+"/objects/"+fid+"_CMD/datastreams/"+dsid+"/content?asOfDateTime="+asof+"]");
+        
+        for (Resource res:context.getSIP().getResources()) {
+            String rfid = res.getFID().toString().replaceAll("#.*","");
+            String rdsid = res.getFID().getRawFragment().replaceAll("@.*","");
+            String rasof = res.getFID().getRawFragment().replaceAll(".*@","");
+
+            logger.info(" create handle["+res.getPID()+"] -> URI["+fedora+"/objects/"+rfid+"/datastreams/"+rdsid+"/content?asOfDateTime="+rasof+"]");
+        }
+        
         return true;
     }
     
