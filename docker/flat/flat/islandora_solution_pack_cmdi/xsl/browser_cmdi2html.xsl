@@ -151,7 +151,7 @@
 			<xsl:otherwise>
                     		<!-- ordinary label -->
                     		<strong>
-                        		<xsl:value-of select="name(.)"/>
+                        		<xsl:value-of select="local-name(.)"/>
                     		</strong>
 				<xsl:text> : </xsl:text>
             			<xsl:if test="normalize-space(text()) != ''">

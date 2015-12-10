@@ -603,9 +603,17 @@
 													<xsl:variable name="compounds" select="
 															distinct-values($rels-doc/key('rels-to', ($resPID,
 															$resURI))[type = 'Resource']/from)"/>
-													<xsl:for-each select="$compounds">
-														<fedora:isConstituentOf rdf:resource="info:fedora/{cmd:lat('lat:',current())}"/>
-													</xsl:for-each>
+													<xsl:choose>
+														<xsl:when test="exists($compounds)">
+															<xsl:for-each select="$compounds">
+																<fedora:isConstituentOf rdf:resource="info:fedora/{cmd:lat('lat:',current())}"/>
+															</xsl:for-each>
+														</xsl:when>
+														<xsl:otherwise>
+															<!-- the resource should be at least a member of the compound we're creating -->
+															<fedora:isConstituentOf rdf:resource="info:fedora/{$fid}"/>
+														</xsl:otherwise>
+													</xsl:choose>
 													<!-- resource has to become a member of the collection the compound is a member of -->
 													<xsl:choose>
 														<xsl:when test="exists($parents)">
