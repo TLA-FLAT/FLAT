@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.harvard.hul.ois.fits.FitsOutput;
+import edu.harvard.hul.ois.fits.exceptions.FitsConfigurationException;
 import edu.harvard.hul.ois.fits.exceptions.FitsException;
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
@@ -48,7 +49,14 @@ public class FITS extends AbstractAction {
     	String fitsHome = getParameter("fits_home", null);
     	String mimetypesFileLocation = getParameter("mimetypes", null);
     	
-    	FITSHandler fitsHandler = FITSHandler.getNewFITSHandler(fitsHome, mimetypesFileLocation);
+    	FITSHandler fitsHandler = null;
+		try {
+			fitsHandler = FITSHandler.getNewFITSHandler(fitsHome, mimetypesFileLocation);
+		} catch (FitsConfigurationException ex) {
+			String message = "Error retrieving FITS instance";
+			logger.error(message, ex);
+			throw new DepositException(message, ex);
+		}
     	
     	SIP sip = context.getSIP();
     	Set<Resource> resources = sip.getResources();

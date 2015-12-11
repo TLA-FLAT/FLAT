@@ -9,6 +9,11 @@
         <property name="epicUser" value="test"/>
         <property name="epicPassword" value="test"/>
         <property name="epicServer" value="http://www.pidconsortium.eu/"/>
+        <property name="tlaHandlePrefix" value="11142"/>
+        <property name="tlaHandleAdminKeyFilePath" value="/flat/resources/admpriv.bin"/>
+        <property name="tlaHandleAdminUserHandleIndex" value="300"/>
+        <property name="tlaHandleAdminUserHandle" value="0.NA/11142"/>
+        <property name="tlaHandleAdminPassword" value="null"/>
         <property name="fedoraUser" value="fedoraAdmin"/>
         <property name="fedoraPassword" value="fedora"/>
         <property name="fedoraServer" value="https://192.168.99.100:8443/fedora"/>
@@ -62,6 +67,14 @@
             <parameter name="epicUser" value="{$epicUser}"/>
             <parameter name="epicPassword" value="{$epicPassword}"/>
         </action>
+        <!--<action class="nl.mpi.tla.flat.deposit.action.TLAHandleCreation">
+        	<parameter name="fedoraServer" value="{$fedoraServer}"/>
+        	<parameter name="handlePrefix" value="{$tlaHandlePrefix}"/>
+        	<parameter name="handleAdminKeyFilePath" value="{$tlaHandleAdminKeyFilePath}"/>
+        	<parameter name="handleAdminUserHandleIndex" value="{$tlaHandleAdminUserHandleIndex}"/>
+        	<parameter name="handleAdminUserHandle" value="{$tlaHandleAdminUserHandle}"/>
+        	<parameter name="handleAdminPassword" value="{$tlaHandleAdminPassword}"/>
+        </action>-->
         <!--<action class="nl.mpi.tla.flat.deposit.action.Index"/>
         <action class="nl.mpi.tla.flat.deposit.action.WorkspaceCleanup"/>-->        
     </main>

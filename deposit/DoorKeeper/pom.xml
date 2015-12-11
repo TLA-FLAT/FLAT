@@ -151,6 +151,14 @@
         	<version>1.4.7</version>
         </dependency>
         
+        
+        <!-- TLA Handle Assignment -->
+        <dependency>
+        	<groupId>nl.mpi</groupId>
+        	<artifactId>handle-utils</artifactId>
+        	<version>1.3.0-SNAPSHOT</version>
+        </dependency>
+        
         <!-- for testing -->
         
         <dependency>

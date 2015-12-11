@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.harvard.hul.ois.fits.Fits;
 import edu.harvard.hul.ois.fits.FitsOutput;
+import edu.harvard.hul.ois.fits.exceptions.FitsConfigurationException;
 import edu.harvard.hul.ois.fits.exceptions.FitsException;
 import edu.harvard.hul.ois.fits.identity.FitsIdentity;
 
@@ -34,8 +35,9 @@ public class FITSHandler {
 	
 	/**
 	 * Factory method
+	 * @throws FitsConfigurationException 
 	 */
-	public static FITSHandler getNewFITSHandler(String fitsHome, String mimetypesFileLocation) {
+	public static FITSHandler getNewFITSHandler(String fitsHome, String mimetypesFileLocation) throws FitsConfigurationException {
 		return new FITSHandler(FitsFactory.getNewFits(fitsHome), FileTypeChecker.getNewFileTypeChecker(new File(mimetypesFileLocation)));
 	}
 	
