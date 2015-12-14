@@ -14,7 +14,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -22,6 +24,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import edu.harvard.hul.ois.fits.FitsOutput;
+import edu.harvard.hul.ois.fits.exceptions.FitsConfigurationException;
 import edu.harvard.hul.ois.fits.exceptions.FitsException;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmAtomicValue;
@@ -37,6 +40,9 @@ import nl.mpi.tla.flat.deposit.action.fits.util.FITSHandler;
 public class FITSTest {
 
 	private FITS fits;
+	
+	@Rule
+	public ExpectedException exceptionCheck = ExpectedException.none();
 	
 	@Mock Context mockContext;
 	@Mock SIP mockSIP;
@@ -108,6 +114,17 @@ public class FITSTest {
 		boolean result = fits.perform(mockContext);
 		
 		assertFalse("Result should be false", result);
+	}
+	
+	@Test
+	public void errorCreatingFits() throws DepositException {
+		
+		exceptionCheck.expect(DepositException.class);
+		FitsConfigurationException exceptionToThrow = new FitsConfigurationException();
+		
+		stub(method(FITSHandler.class, "getNewFITSHandler", String.class, String.class)).toThrow(exceptionToThrow);
+		
+		fits.perform(mockContext);
 	}
 	
 	@Test

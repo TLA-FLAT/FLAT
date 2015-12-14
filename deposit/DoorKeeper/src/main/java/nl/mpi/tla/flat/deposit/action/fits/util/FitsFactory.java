@@ -1,7 +1,7 @@
 package nl.mpi.tla.flat.deposit.action.fits.util;
 
 import edu.harvard.hul.ois.fits.Fits;
-import edu.harvard.hul.ois.fits.exceptions.FitsException;
+import edu.harvard.hul.ois.fits.exceptions.FitsConfigurationException;
 
 public class FitsFactory {
 
@@ -10,14 +10,7 @@ public class FitsFactory {
 		throw new AssertionError();
 	}
 	
-	public static Fits getNewFits(String fitsHome) {
-		
-		try {
-			return new Fits(fitsHome);
-		} catch (FitsException e) {
-			
-			// TODO Handle the exception
-			return null;
-		}
+	public static Fits getNewFits(String fitsHome) throws FitsConfigurationException {
+		return new Fits(fitsHome);
 	}
 }
