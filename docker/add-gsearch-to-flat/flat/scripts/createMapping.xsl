@@ -29,7 +29,7 @@
 				<xsl:when test="$multiple">
 					<xsl:for-each-group select="$paths" group-by="ancestor::CMD_ComponentSpec//Header/ID">
 						<xpath>
-							<xsl:text>string-join(distinct-values(.//cmd:CMD[exists(cmd:Header/cmd:MdProfile[contains(.,'</xsl:text>
+							<xsl:text>distinct-values(.//cmd:CMD[exists(cmd:Header/cmd:MdProfile[contains(.,'</xsl:text>
 							<xsl:value-of select="current-grouping-key()"/>
 							<xsl:text>')])]/cmd:Components/(cmd:</xsl:text>
 							<xsl:for-each select="current-group()">
@@ -39,7 +39,7 @@
 									<xsl:text>,cmd:</xsl:text>
 								</xsl:if>
 							</xsl:for-each>
-							<xsl:text>)),';')</xsl:text>
+							<xsl:text>))</xsl:text>
 						</xpath>
 					</xsl:for-each-group>
 				</xsl:when>
@@ -67,7 +67,7 @@
 	</xsl:template>
 	
 	<xsl:template match="cmd:concept">
-		<xsl:copy-of select="cmd:findConceptPaths(current(),not(../@cmd:allowMultipleValues eq 'false'))"/>
+		<xsl:copy-of select="cmd:findConceptPaths(current(),not(../@multiValued eq 'false'))"/>
 	</xsl:template>
 	
 	<xsl:template match="facetConcept" mode="clarin">

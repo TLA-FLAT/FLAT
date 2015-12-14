@@ -176,6 +176,18 @@ fi
 
 if [ $verbose -ne 0 ]; then
 	echo "Output transformer file: ${output_prefix}-transformer.xsl"
-	#cho "Output transformer:"
+	#echo "Output transformer:"
 	#cat ${output_prefix}-transformer.xsl
+fi
+
+if [ $verbose -ne 0 ]; then
+	echo "GSearch SOLR schema: $gsearch_solr"
+fi
+
+./xsl2.sh -xsl:${my_dir}/createSchema.xsl -s:$gsearch_solr mapping-location=${output_prefix}-mapping.xml > ${output_prefix}-schema.xml
+
+if [ $verbose -ne 0 ]; then
+	echo "Output SOLR schema file: ${output_prefix}-schema.xml"
+	#echo "Output SOLR schema:"
+	#cat ${output_prefix}-schema.xml
 fi

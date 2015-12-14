@@ -1,0 +1,13 @@
+name = Meertens FLAT
+description = Meertens FLAT Drupal settings
+core = 7.x
+package = Features
+version = 7.x-1.0-alpha
+dependencies[] = fe_block
+dependencies[] = features
+dependencies[] = islandora_solr
+features[fe_block_boxes][] = flat
+features[fe_block_settings][] = block-flat
+features[fe_block_settings][] = system-navigation
+features[features_api][] = api:2
+features[islandora_solr_fields][] = all_solr_fields

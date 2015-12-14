@@ -7,21 +7,21 @@
 
   <mappings>
 
-    <field name="Language">
+    <field name="Language" type="string">
       <cmd:facet>language</cmd:facet>
       <cmd:facet>languageCode</cmd:facet>
       <cmd:facet>languages</cmd:facet>
     </field>
 
-    <field name="Format">
+    <field name="Format" type="string">
       <cmd:facet>format</cmd:facet>
     </field>
 
-    <field name="Collection">
+    <field name="Collection" type="string">
       <cmd:facet>collection</cmd:facet>
     </field>
 
-    <field name="Country">
+    <field name="Country" type="string">
       <cmd:facet>country</cmd:facet>
     </field>
 
@@ -41,15 +41,15 @@
       <cmd:facet>text</cmd:facet>
     </field>
 
-    <field name="ResourceClass">
+    <field name="ResourceClass" type="string">
       <cmd:facet>resourceClass</cmd:facet>
     </field>
 
-    <field name="Organisation">
+    <field name="Organisation" type="string">
       <cmd:facet>organisation</cmd:facet>
     </field>
 
-    <field name="Date">
+    <field name="Date" type="string">
       <cmd:facet>date</cmd:facet>
     </field>
 

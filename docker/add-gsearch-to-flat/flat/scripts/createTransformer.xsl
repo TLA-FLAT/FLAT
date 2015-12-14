@@ -57,7 +57,7 @@
 		<xsl:variable name="name" select="@name"/>
 		<xslx:choose>
 			<xsl:for-each select="xpath">
-				<xslx:when test="normalize-space({.})!=''">
+				<xslx:when test="exists({normalize-space(.)}[normalize-space()!=''])">
 					<xslx:for-each select="{normalize-space(.)}">
 						<field name="cmd.{$name}">
 							<xslx:value-of select="normalize-space(.)"/>
