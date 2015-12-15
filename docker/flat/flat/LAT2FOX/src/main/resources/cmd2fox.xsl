@@ -21,6 +21,13 @@
 		<map/>
 	</xsl:param>
 	
+	<xsl:param name="oai-include-eval" select="'true()'"/>
+	
+	<xsl:variable name="namespaces">
+		<ns/>
+	</xsl:variable>
+	<xsl:variable name="NS" select="$namespaces/descendant-or-self::ns"/>
+	
 	<xsl:param name="icon-base" select="'file:/app/flat/icons'"/>
 
 	<xsl:function name="cmd:hdl">
@@ -285,9 +292,11 @@
 												<rdf:RDF xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:fedora-model="info:fedora/fedora-system:def/model#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:islandora="http://islandora.ca/ontology/relsext#">
 													<rdf:Description rdf:about="info:fedora/{$cmdID}">
 														<!-- OAI -->
-														<oai:itemID xmlns="http://www.openarchives.org/OAI/2.0/">
-															<xsl:value-of select="concat('oai:', $repository, ':', $cmdID)"/>
-														</oai:itemID>
+														<xsl:if test="sx:evaluate($rec, $oai-include-eval, $NS)">
+															<oai:itemID xmlns="http://www.openarchives.org/OAI/2.0/">
+																<xsl:value-of select="concat('oai:', $repository, ':', $cmdID)"/>
+															</oai:itemID>
+														</xsl:if>
 														<!-- relationship to the compound -->
 														<fedora:isConstituentOf rdf:resource="info:fedora/{$fid}"/>
 														<!-- make it the first object in the compound -->
@@ -396,9 +405,11 @@
 								<xsl:if test="not($create-cmd-object)">
 									<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_cmdiCModel"/>
 									<!-- OAI -->
-									<oai:itemID xmlns="http://www.openarchives.org/OAI/2.0/">
-										<xsl:value-of select="concat('oai:', $repository, ':', $fid)"/>
-									</oai:itemID>
+									<xsl:if test="sx:evaluate($rec, $oai-include-eval, $NS)">
+										<oai:itemID xmlns="http://www.openarchives.org/OAI/2.0/">
+											<xsl:value-of select="concat('oai:', $repository, ':', $fid)"/>
+										</oai:itemID>
+									</xsl:if>
 								</xsl:if>
 							</rdf:Description>
 						</rdf:RDF>

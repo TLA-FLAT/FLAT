@@ -42,18 +42,20 @@ public class Main {
     
     private static void showHelp() {
         System.err.println("INF: lat2fox <options> -- <DIR>?");
-        System.err.println("INF: <DIR>     source directory to recurse for CMD files (default: .)");
+        System.err.println("INF: <DIR>      source directory to recurse for CMD files (default: .)");
         System.err.println("INF: lat2fox options:");
-        System.err.println("INF: -e=<EXT>  the extension of CMD records (default: cmdi)");
-        System.err.println("INF: -r=<FILE> load/store the relations map from/in this <FILE> (optional)");
-        System.err.println("INF: -f=<DIR>  directory to store the FOX files (default: ./fox)");
-        System.err.println("INF: -x=<DIR>  directory to store the FOX files with problems (default: ./fox-error)");
-        System.err.println("INF: -i=<DIR>  replace source <DIR> by this <DIR> in the FOX files (optional)");
-        System.err.println("INF: -n=<NUM>  create subdirectories to contain <NUM> FOX files (default: 0, i.e., no subdirectories)");
-        System.err.println("INF: -c=<FILE> file containing the mapping to collections (optional)");
-        System.err.println("INF: -d=<FILE> stylesheet containing the mapping from CMDI to Dublin Core (recommended)");
-        System.err.println("INF: -v        validate the FOX files (optional)");
-        System.err.println("INF: -l        lax check if a local resource exists (optional)");
+        System.err.println("INF: -e=<EXT>   the extension of CMD records (default: cmdi)");
+        System.err.println("INF: -r=<FILE>  load/store the relations map from/in this <FILE> (optional)");
+        System.err.println("INF: -f=<DIR>   directory to store the FOX files (default: ./fox)");
+        System.err.println("INF: -x=<DIR>   directory to store the FOX files with problems (default: ./fox-error)");
+        System.err.println("INF: -i=<DIR>   replace source <DIR> by this <DIR> in the FOX files (optional)");
+        System.err.println("INF: -n=<NUM>   create subdirectories to contain <NUM> FOX files (default: 0, i.e., no subdirectories)");
+        System.err.println("INF: -c=<FILE>  file containing the mapping to collections (optional)");
+        System.err.println("INF: -d=<FILE>  stylesheet containing the mapping from CMD to Dublin Core (recommended)");
+        System.err.println("INF: -o=<XPATH> XPath 2.0 expressions determining if the CMD should be offered via OAI-PMH");
+        System.err.println("INF: -s=<NAME>  name of the server/repository used by OAI");
+        System.err.println("INF: -v         validate the FOX files (optional)");
+        System.err.println("INF: -l         lax check if a local resource exists (optional)");
     }
 
     public static void main(String[] args) {
@@ -65,12 +67,14 @@ public class Main {
         String cext = "cmdi";
         String cfile = null;
         String dfile = null;
+        String oxp = null;
+        String server = null;
         XdmNode collsDoc = null;
         boolean validateFOX = false;
         boolean laxResourceCheck = false;
         int ndir = 0;
         // check command line
-        OptionParser parser = new OptionParser( "lve:r:f:i:x:n:c:d:?*" );
+        OptionParser parser = new OptionParser( "lve:r:f:i:x:n:c:d:o:?*" );
         OptionSet options = parser.parse(args);
         if (options.has("l"))
             laxResourceCheck = true;
@@ -128,6 +132,12 @@ public class Main {
                 showHelp();
                 System.exit(1);
             }
+        }
+        if (options.has("o")) {
+            oxp = (String)options.valueOf("o");
+        }
+        if (options.has("s")) {
+            server = (String)options.valueOf("s");
         }
         if (options.has("?")) {
             showHelp();
@@ -215,6 +225,10 @@ public class Main {
                         fox.setParameter(new QName("lax-resource-check"),new XdmAtomicValue(laxResourceCheck));
                         if (collsDoc != null)
                             fox.setParameter(new QName("collections-map"), collsDoc);
+                        if (server != null)
+                            fox.setParameter(new QName("repository"), new XdmAtomicValue(server));
+                        if (oxp != null)
+                            fox.setParameter(new QName("oai-include-eval"), new XdmAtomicValue(oxp));
                         fox.setSource(new StreamSource(input));
                         XdmDestination destination = new XdmDestination();
                         fox.setDestination(destination);
