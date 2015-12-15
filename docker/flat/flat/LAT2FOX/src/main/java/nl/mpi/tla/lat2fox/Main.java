@@ -74,7 +74,7 @@ public class Main {
         boolean laxResourceCheck = false;
         int ndir = 0;
         // check command line
-        OptionParser parser = new OptionParser( "lve:r:f:i:x:n:c:d:o:?*" );
+        OptionParser parser = new OptionParser( "lve:r:f:i:x:n:c:d:o:s:?*" );
         OptionSet options = parser.parse(args);
         if (options.has("l"))
             laxResourceCheck = true;
