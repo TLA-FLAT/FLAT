@@ -16,21 +16,70 @@
  */
 package nl.mpi.tla.flat.deposit.action;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import net.sf.saxon.s9api.XdmValue;
+import java.io.File;
+import java.util.Set;
+
+import javax.xml.transform.stream.StreamSource;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import net.sf.saxon.s9api.SaxonApiException;
 import nl.mpi.tla.flat.deposit.Context;
-import nl.mpi.tla.flat.deposit.SIP;
+import nl.mpi.tla.flat.deposit.DepositException;
+import nl.mpi.tla.flat.deposit.Resource;
+import nl.mpi.tla.flat.deposit.action.persist.util.PersistencePolicies;
+import nl.mpi.tla.flat.deposit.action.persist.util.PersistencePolicy;
+import nl.mpi.tla.flat.deposit.action.persist.util.PersistencePolicyLoader;
+import nl.mpi.tla.flat.deposit.action.persist.util.PersistencePolicyMatcher;
 
 /**
  *
  * @author menzowi
+ * @author guisil
  */
 public class Persist extends AbstractAction {
+	
+	private static final Logger logger = LoggerFactory.getLogger(Persist.class);
     
     @Override
-    public boolean perform(Context context) {
-        return true;
+    public boolean perform(Context context) throws DepositException {
+        
+    	String resourcesDir = getParameter("resourcesDir", null);
+    	String policyFile = getParameter("policyFile", null);
+    	
+    	PersistencePolicyLoader policyLoader = newPersistencePolicyLoader(new File(resourcesDir));
+    	
+    	Set<Resource> sipResources = context.getSIP().getResources();
+    	
+    	for(Resource res : sipResources) {
+    		
+    		PersistencePolicies policies;
+    		try {
+				policies = policyLoader.loadPersistencePolicies(new StreamSource(policyFile));
+			} catch (SaxonApiException | IllegalStateException ex) {
+				String message = "Error loading policy file '" + policyFile.toString() + "'";
+				logger.error(message, ex);
+				throw new DepositException(message, ex);
+			}
+
+    		PersistencePolicyMatcher policyMatcher = newPersistencePolicyMatcher(policies);
+    		PersistencePolicy matchedPolicy = policyMatcher.matchPersistencePolicy(res);
+    		logger.info("Matched policy for resource '" + res.getFID() + "': " + matchedPolicy);
+    		File newResourceDir = matchedPolicy.getTarget();
+    		File newResourceFile = new File(newResourceDir, res.getFile().getName());
+    		logger.info("Setting new resource location to: " + newResourceFile);
+    		res.setFile(newResourceFile);
+    	}
+    	
+    	return true;
     }
     
+    PersistencePolicyLoader newPersistencePolicyLoader(File resourcesBaseDir) {
+    	return new PersistencePolicyLoader(resourcesBaseDir);
+    }
+    
+    PersistencePolicyMatcher newPersistencePolicyMatcher(PersistencePolicies policies) {
+    	return new PersistencePolicyMatcher(policies);
+    }
 }

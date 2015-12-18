@@ -38,11 +38,12 @@
         	<parameter name="mimetypes" value="{$param-base}/policies/fits-mimetypes.xml"/>
         </action>
         <!--<action name="quality assessment" class="nl.mpi.tla.flat.deposit.action.QualityAssessment"/>
-        <action name="manual evaluation" class="nl.mpi.tla.flat.deposit.action.Evaluate"/>
+        <action name="manual evaluation" class="nl.mpi.tla.flat.deposit.action.Evaluate"/>-->
         <action name="persist resources" class="nl.mpi.tla.flat.deposit.action.Persist">
-            <parameter name="data" value="{$param-base}/data"/>
+            <parameter name="resourcesDir" value="{$work}/resources"/>
+            <parameter name="policyFile" value="{$param-base}/policies/persistence-policy.xml"/>
         </action>
-        <action class="nl.mpi.tla.flat.deposit.action.Versions"/>-->
+        <!--<action class="nl.mpi.tla.flat.deposit.action.Versions"/>-->
         <action class="nl.mpi.tla.flat.deposit.action.HandleAssignment">
             <parameter name="prefix" value="{$epicPrefix}"/>
         </action>
