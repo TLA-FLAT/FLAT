@@ -15,6 +15,8 @@ RUN mkdir -p /app/flat
 ADD flat/scripts/* /app/flat/
 RUN chmod +x /app/flat/*.sh
 
+ADD proai/proai.properties /var/www/fedora/tomcat/webapps/oaiprovider/WEB-INF/classes/proai.properties
+
 RUN cd /tmp &&\
     git clone -b development https://github.com/TheLanguageArchive/MetadataTranslator.git MetadataTranslator &&\
     cd /tmp/MetadataTranslator &&\
@@ -30,7 +32,7 @@ RUN cd /tmp &&\
     mvn clean package &&\
     mkdir -p /app/flat/lib &&\
     mv target/isle2clarin.jar /app/flat/lib/isle2clarin.jar
-
+    
 #Clean up APT when done.
 RUN apt-get clean &&\
 	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

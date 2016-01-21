@@ -80,8 +80,8 @@ RUN chmod 0755 /tmp/wait.sh &&\
 	/var/www/fedora/tomcat/bin/startup.sh &&\
 	/tmp/wait.sh &&\
 	bash -c "timeout 60 grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-    # apparantly the shutdown port is not directly available after startup
- 	sleep 10 &&\
+# apparantly the shutdown port is not directly available after startup
+sleep 60 &&\
 	/var/www/fedora/tomcat/bin/shutdown.sh &&\
 	bash -c "timeout 60 grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 	/etc/init.d/postgresql stop
@@ -151,8 +151,10 @@ ADD flat/islandora_solution_pack_cmdi /var/www/html/drupal/sites/all/modules/con
     
 RUN mkdir -p /tmp/bootstrap &&\
 	cd /tmp/bootstrap &&\
-	wget "http://ftp.drupal.org/files/projects/bootstrap-7.x-3.x-dev.zip" &&\
-	unzip bootstrap-7.x-3.x-dev.zip &&\
+#	wget "http://ftp.drupal.org/files/projects/bootstrap-7.x-3.x-dev.zip" &&\
+#	unzip bootstrap-7.x-3.x-dev.zip &&\
+	wget "http://ftp.drupal.org/files/projects/bootstrap-7.x-3.1-beta3.zip" &&\
+	unzip bootstrap-7.x-3.1-beta3.zip &&\
 	mv /tmp/bootstrap/bootstrap /var/www/html/drupal/sites/all/themes/bootstrap
 
 RUN cp -r /var/www/html/drupal/sites/all/themes/bootstrap/starterkits/cdn  /var/www/html/drupal/sites/all/themes/flat_bootstrap_theme &&\

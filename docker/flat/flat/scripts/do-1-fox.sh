@@ -5,9 +5,14 @@ if [ ! -f /app/flat/cmd2dc.xsl ]; then
 	exit 1
 fi
 
+ARGS=""
+if [ -f /app/flat/cmd2other.xsl ]; then
+	ARGS="$ARGS -m=/app/flat/cmd2other.xsl"
+fi
+
 date
 
-/app/flat/lat2fox.sh -n=1000 -r=/app/flat/relations.xml -d=/app/flat/cmd2dc.xsl -f=/app/flat/fox -x=/app/flat/fox-error -i=/lat /app/flat/cmd
+/app/flat/lat2fox.sh -n=1000 -r=/app/flat/relations.xml -d=/app/flat/cmd2dc.xsl -f=/app/flat/fox -x=/app/flat/fox-error -i=/lat $ARGS /app/flat/cmd
 ERR=$?
 
 date
