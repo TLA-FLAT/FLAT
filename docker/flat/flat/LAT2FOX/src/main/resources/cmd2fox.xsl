@@ -345,6 +345,11 @@
 											<foxml:contentLocation TYPE="URL" REF="{$icon-base}/metadata.png"/>
 										</foxml:datastreamVersion>
 									</foxml:datastream>
+									<!-- Metadata: other -->
+									<xsl:apply-templates mode="other">
+										<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
+										<xsl:with-param name="base" select="$base" tunnel="yes"/>
+									</xsl:apply-templates>
 								</foxml:digitalObject>
 							</xsl:result-document>
 						</xsl:when>
@@ -364,6 +369,11 @@
 							</foxml:xmlContent>
 						</foxml:datastreamVersion>
 					</foxml:datastream>
+					<!-- Metadata: other -->
+					<xsl:apply-templates mode="other">
+						<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
+						<xsl:with-param name="base" select="$base" tunnel="yes"/>
+					</xsl:apply-templates>
 				</xsl:otherwise>
 			</xsl:choose>
 			<!-- Relations: RELS-EXT -->
@@ -848,5 +858,8 @@
 			<!-- nothing, please overwrite with your own template -->
 		</oai_dc:dc>
 	</xsl:template>
+
+	<!-- Other -->
+	<xsl:template match="cmd:CMD" mode="other"/>
 
 </xsl:stylesheet>

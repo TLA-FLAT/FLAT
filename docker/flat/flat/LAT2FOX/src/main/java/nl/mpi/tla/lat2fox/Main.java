@@ -52,6 +52,7 @@ public class Main {
         System.err.println("INF: -n=<NUM>   create subdirectories to contain <NUM> FOX files (default: 0, i.e., no subdirectories)");
         System.err.println("INF: -c=<FILE>  file containing the mapping to collections (optional)");
         System.err.println("INF: -d=<FILE>  stylesheet containing the mapping from CMD to Dublin Core (recommended)");
+        System.err.println("INF: -m=<FILE>  stylesheet containing the mapping from CMD to other (non CMD and non DC) metadata formats (optional)");
         System.err.println("INF: -o=<XPATH> XPath 2.0 expressions determining if the CMD should be offered via OAI-PMH");
         System.err.println("INF: -s=<NAME>  name of the server/repository used by OAI");
         System.err.println("INF: -v         validate the FOX files (optional)");
@@ -67,6 +68,7 @@ public class Main {
         String cext = "cmdi";
         String cfile = null;
         String dfile = null;
+        String mfile = null;
         String oxp = null;
         String server = null;
         XdmNode collsDoc = null;
@@ -74,7 +76,7 @@ public class Main {
         boolean laxResourceCheck = false;
         int ndir = 0;
         // check command line
-        OptionParser parser = new OptionParser( "lve:r:f:i:x:n:c:d:o:s:?*" );
+        OptionParser parser = new OptionParser( "lve:r:f:i:x:n:c:d:m:o:s:?*" );
         OptionSet options = parser.parse(args);
         if (options.has("l"))
             laxResourceCheck = true;
@@ -114,12 +116,26 @@ public class Main {
             dfile = (String)options.valueOf("d");
             File d = new File(dfile);
             if (!d.isFile()) {
-                System.err.println("FTL: -c expects a <FILE> argument!");
+                System.err.println("FTL: -d expects a <FILE> argument!");
                 showHelp();
                 System.exit(1);
             }
             if (!d.canRead()) {
-                System.err.println("FTL: -c <FILE> argument isn't readable!");
+                System.err.println("FTL: -d <FILE> argument isn't readable!");
+                showHelp();
+                System.exit(1);
+            }
+        }
+        if (options.has("m")) {
+            mfile = (String)options.valueOf("m");
+            File m = new File(mfile);
+            if (!m.isFile()) {
+                System.err.println("FTL: -m expects a <FILE> argument!");
+                showHelp();
+                System.exit(1);
+            }
+            if (!m.canRead()) {
+                System.err.println("FTL: -m <FILE> argument isn't readable!");
                 showHelp();
                 System.exit(1);
             }
@@ -196,12 +212,15 @@ public class Main {
             FileUtils.forceMkdir(new File(fdir));
             FileUtils.forceMkdir(new File(xdir));
             Collection<File> inputs = FileUtils.listFiles(new File(dir),new String[] {cext},true);
-            // if there is a CMD 2 DC XSLT include it
+            // if there is a CMD 2 DC or 2 other XSLT include it
             XsltExecutable cmd2fox = null;
-            if (dfile != null) {
-                XsltTransformer inclCMD2DC = SaxonUtils.buildTransformer(Main.class.getResource("/inclCMD2DC.xsl")).load();
+            if (dfile != null || mfile != null) {
+                XsltTransformer inclCMD2DC = SaxonUtils.buildTransformer(Main.class.getResource("/inclCMD2DCother.xsl")).load();
                 inclCMD2DC.setSource(new StreamSource(Main.class.getResource("/cmd2fox.xsl").toString()));
-                inclCMD2DC.setParameter(new QName("cmd2dc"),new XdmAtomicValue("file://"+(new File(dfile)).getAbsolutePath()));
+                if (dfile != null)
+                    inclCMD2DC.setParameter(new QName("cmd2dc"),new XdmAtomicValue("file://"+(new File(dfile)).getAbsolutePath()));
+                if (mfile != null)
+                    inclCMD2DC.setParameter(new QName("cmd2other"),new XdmAtomicValue("file://"+(new File(mfile)).getAbsolutePath()));
                 XdmDestination destination = new XdmDestination();
                 inclCMD2DC.setDestination(destination);
                 inclCMD2DC.transform();
