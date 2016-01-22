@@ -17,6 +17,8 @@
 package nl.mpi.tla.flat.deposit.action;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Set;
 
 import javax.xml.transform.stream.StreamSource;
@@ -28,6 +30,7 @@ import net.sf.saxon.s9api.SaxonApiException;
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
 import nl.mpi.tla.flat.deposit.Resource;
+import nl.mpi.tla.flat.deposit.SIP;
 import nl.mpi.tla.flat.deposit.action.persist.util.PersistencePolicies;
 import nl.mpi.tla.flat.deposit.action.persist.util.PersistencePolicy;
 import nl.mpi.tla.flat.deposit.action.persist.util.PersistencePolicyLoader;
@@ -50,7 +53,8 @@ public class Persist extends AbstractAction {
     	
     	PersistencePolicyLoader policyLoader = newPersistencePolicyLoader(new File(resourcesDir));
     	
-    	Set<Resource> sipResources = context.getSIP().getResources();
+    	SIP sip = context.getSIP();
+    	Set<Resource> sipResources = sip.getResources();
     	
     	for(Resource res : sipResources) {
     		
@@ -65,12 +69,25 @@ public class Persist extends AbstractAction {
 
     		PersistencePolicyMatcher policyMatcher = newPersistencePolicyMatcher(policies);
     		PersistencePolicy matchedPolicy = policyMatcher.matchPersistencePolicy(res);
-    		logger.info("Matched policy for resource '" + res.getFID() + "': " + matchedPolicy);
+    		logger.info("Matched policy for resource '" + res.getFile().getName() + "': " + matchedPolicy);
     		File newResourceDir = matchedPolicy.getTarget();
     		File newResourceFile = new File(newResourceDir, res.getFile().getName());
-    		logger.info("Setting new resource location to: " + newResourceFile);
+
+    		try {
+    			Files.createDirectories(newResourceDir.toPath());
+				Files.move(res.getFile().toPath(), newResourceFile.toPath());
+			} catch (IOException ex) {
+				String message = "Error moving resource from " + res.getFile() + " to " + newResourceFile; 
+				logger.error(message, ex);
+				throw new DepositException(message, ex);
+				
+			}
+    		logger.info("Moved resource location. From " + res.getFile() + " to " + newResourceFile);
     		res.setFile(newResourceFile);
     	}
+    	
+    	sip.save();
+    	logger.info("Saved SIP with new locations set");
     	
     	return true;
     }

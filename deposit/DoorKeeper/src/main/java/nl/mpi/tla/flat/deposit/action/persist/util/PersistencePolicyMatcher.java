@@ -33,7 +33,7 @@ public class PersistencePolicyMatcher {
 	 */
 	public PersistencePolicy matchPersistencePolicy(Resource resource) throws DepositException {
 		
-		logger.info("Trying to find policy for resource '{}'", resource.getFID());
+		logger.info("Trying to find policy for resource '{}'", resource.getFile().getName());
 		for(PersistencePolicy policy : policies.getAllPolicies()) {
 			if("mimetype".equals(policy.getProperty())) {
 				Pattern p = Pattern.compile(policy.getRegex());

@@ -2,7 +2,7 @@ package nl.mpi.tla.flat.deposit.action;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -48,6 +49,8 @@ import nl.mpi.tla.flat.deposit.action.persist.util.PersistencePolicyMatcher;
 @RunWith(NestedRunner.class)
 public class PersistTest {
 	
+	@Rule public TemporaryFolder testFolder = new TemporaryFolder();
+	
 	@Mock Context mockContext;
 	@Mock SIP mockSIP;
 	@Mock PersistencePolicyLoader mockPolicyLoader;
@@ -55,27 +58,30 @@ public class PersistTest {
 	
 	private Set<Resource> sipResources;
 	
+	private String resourcesInitialFolderName = "initialFolder";
+	private File resourcesInitialDir;
+	
 	private String resource1_filename = "resource1.pdf";
 	private Resource resource1 = new Resource(URI.create("http://some/location/" + resource1_filename), null);
-	private File resource1_file = new File("/some/path/" + resource1_filename);
+	private File resource1_file;
 	
 	private String resource2_filename = "resource2.xxx";
 	private Resource resource2 = new Resource(URI.create("http://some/location/" + resource2_filename), null);
-	private File resource2_file = new File("/some/path/" + resource2_filename);
+	private File resource2_file;
 	
 	private String resource3_filename = "resource3.txt";
 	private Resource resource3 = new Resource(URI.create("http://some/location/" + resource3_filename), null);
-	private File resource3_file = new File("/some/path/" + resource3_filename);
+	private File resource3_file;
 	
-	private String resourcesBaseDirStr = "/proper/persist/path/resources";
-	private File resourcesBaseDir = new File(resourcesBaseDirStr);
+	private String resourcesTargetFolderName = "targetFolder";
+	private File resourcesTargetDir;
 	private String policyTarget_pdf = "pdf";
 	private String policyTarget_text = "text";
 	private String policyTarget_default = "default";
 	private PersistencePolicies policies;
-	private PersistencePolicy policy1 = new PersistencePolicy("mimetype", "^.+/pdf$", new File(resourcesBaseDir, policyTarget_pdf));
-	private PersistencePolicy policy2 = new PersistencePolicy("mimetype", "text/.+$", new File(resourcesBaseDir, policyTarget_text));
-	private PersistencePolicy defaultPolicy = new PersistencePolicy(null, null, new File(resourcesBaseDir, policyTarget_default));
+	private PersistencePolicy policy1;
+	private PersistencePolicy policy2;
+	private PersistencePolicy defaultPolicy;
 	
 	
 	private Persist persist;
@@ -83,6 +89,24 @@ public class PersistTest {
 	
 	@Before
 	public void setUp() throws Exception {
+		
+		testFolder.create();
+		assertTrue("Test folder was not created", testFolder.getRoot().exists());
+		
+		resourcesInitialDir = testFolder.newFolder(resourcesInitialFolderName);
+		assertTrue("Initial folder was not created", resourcesInitialDir.exists());
+		resource1_file = new File(resourcesInitialDir, resource1_filename);
+		resource1_file.createNewFile();
+		assertTrue("resource1_file was not created", resource1_file.exists());
+		resource2_file = new File(resourcesInitialDir, resource2_filename);
+		resource2_file.createNewFile();
+		assertTrue("resource2_file was not created", resource2_file.exists());
+		resource3_file = new File(resourcesInitialDir, resource3_filename);
+		resource3_file.createNewFile();
+		assertTrue("resource3_file was not created", resource3_file.exists());
+		
+		resourcesTargetDir = testFolder.newFolder(resourcesTargetFolderName);
+		assertTrue("Target folder was not created", resourcesTargetDir.exists());
 		
 		sipResources = new HashSet<>();
 		
@@ -104,13 +128,19 @@ public class PersistTest {
 		resource3.setFile(resource3_file);
 		resource3.setMime("text/plain");
 		
+		
+		policy1 = new PersistencePolicy("mimetype", "^.+/pdf$", new File(resourcesTargetDir, policyTarget_pdf));
+		policy2 = new PersistencePolicy("mimetype", "text/.+$", new File(resourcesTargetDir, policyTarget_text));
+		defaultPolicy = new PersistencePolicy(null, null, new File(resourcesTargetDir, policyTarget_default));
+		
 		List<PersistencePolicy> policyList = new ArrayList<>();
 		policyList.add(policy1);
 		policyList.add(policy2);
 		policies = new PersistencePolicies(policyList, defaultPolicy);
 		
 		Map<String, XdmValue> parameters = new HashMap<>();
-		parameters.put("resourcesDir", new XdmAtomicValue(resourcesBaseDirStr));
+		parameters.put("resourcesDir", new XdmAtomicValue(resourcesTargetDir.getAbsolutePath()));
+		
 		parameters.put("policyFile", new XdmAtomicValue("/some/location/resources/policies/persistence-policy.xml"));
 		
 		MockitoAnnotations.initMocks(this);
@@ -118,9 +148,10 @@ public class PersistTest {
 		persist = spy(new Persist());
 		persist.setParameters(parameters);
 		
-		doReturn(mockPolicyLoader).when(persist).newPersistencePolicyLoader(resourcesBaseDir);
+		doReturn(mockPolicyLoader).when(persist).newPersistencePolicyLoader(resourcesTargetDir);
 		when(mockContext.getSIP()).thenReturn(mockSIP);
 	}
+	
 	
 	public class UseMimetypeProperty {
 		
@@ -137,16 +168,24 @@ public class PersistTest {
 				}
 				
 				@Test
-				public void resultShouldBeTrue() throws DepositException, SaxonApiException {
+				public void resultShouldBeTrue() throws DepositException {
 					boolean result = persist.perform(mockContext);
 					assertTrue("Result should be true", result);
 				}
 				
 				@Test
-				public void resourceFileShouldBeSetToMatchedMimetypeLocation() throws DepositException, SaxonApiException {
-					File resource1_expected_file = new File(resourcesBaseDirStr + File.separator + policyTarget_pdf + File.separator + resource1_filename);
+				public void resourceFileShouldBeSetToMatchedMimetypeLocation() throws DepositException {
+					File resource1_expected_file = new File(new File(resourcesTargetDir, policyTarget_pdf), resource1_filename);
 					persist.perform(mockContext);
 					assertEquals("Final resource (1) File different from expected", resource1_expected_file, resource1.getFile());
+				}
+				
+				@Test
+				public void resourceFileShouldBeMovedFromInitialLocationToTargetLocation( ) throws DepositException {
+					File resource1_expected_file = new File(new File(resourcesTargetDir, policyTarget_pdf), resource1_filename);
+					persist.perform(mockContext);
+					assertFalse("Resource (1) still exists in its initial location", resource1_file.exists());
+					assertTrue("Resource (1) was not moved to its target location", resource1_expected_file.exists());
 				}
 			}
 			
@@ -161,16 +200,24 @@ public class PersistTest {
 				}
 				
 				@Test
-				public void resultShouldBeTrue() throws DepositException, SaxonApiException {
+				public void resultShouldBeTrue() throws DepositException {
 					boolean result = persist.perform(mockContext);
 					assertTrue("Result should be true", result);
 				}
 				
 				@Test
-				public void resourceFileShouldBeSetToDefaultLocation() throws DepositException, SaxonApiException {
-					File resource2_expected_file = new File(resourcesBaseDirStr + File.separator + policyTarget_default + File.separator + resource2_filename);
+				public void resourceFileShouldBeSetToDefaultLocation() throws DepositException {
+					File resource2_expected_file = new File(new File(resourcesTargetDir, policyTarget_default), resource2_filename);
 					persist.perform(mockContext);
 					assertEquals("Final resource (2) file different from expected", resource2_expected_file, resource2.getFile());
+				}
+				
+				@Test
+				public void resourceFileShouldBeMovedFromInitialLocationToTargetLocation( ) throws DepositException {
+					File resource2_expected_file = new File(new File(resourcesTargetDir, policyTarget_default), resource2_filename);
+					persist.perform(mockContext);
+					assertFalse("Resource (2) still exists in its initial location", resource2_file.exists());
+					assertTrue("Resource (2) was not moved to its target location", resource2_expected_file.exists());
 				}
 			}
 			
@@ -179,18 +226,42 @@ public class PersistTest {
 				@Rule
 				public ExpectedException exceptionCheck = ExpectedException.none();
 				
-				@Test
-				public void shouldThrowDepositException() throws DepositException, SaxonApiException {
-					
-					exceptionCheck.expect(DepositException.class);
+				@Before
+				public void setUp() throws Exception {
 					SaxonApiException exceptionToThrow = new SaxonApiException("some issue");
 					
-					sipResources.add(resource1);
+					sipResources.add(resource2);
 					
 					when(mockSIP.getResources()).thenReturn(sipResources);
 					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class))).thenThrow(exceptionToThrow);
-					
+				}
+				
+				@Test
+				public void shouldThrowDepositException() throws DepositException, SaxonApiException {
+					exceptionCheck.expect(DepositException.class);
 					persist.perform(mockContext);
+				}
+				
+				@Test
+				public void resourceFileShouldBeUnchanged() {
+					try {
+						persist.perform(mockContext);
+					} catch (DepositException e) {
+						// not what is being tested in this particular test - was already tested before
+					}
+					assertEquals("Resource (2) file location shouldn't have been changed", resource2_file, resource2.getFile());
+				}
+				
+				@Test
+				public void resourceFileShouldBeMovedFromInitialLocationToTargetLocation( ) {
+					File resource2_target_file = new File(new File(resourcesTargetDir, policyTarget_default), resource2_filename);
+					try {
+						persist.perform(mockContext);
+					} catch (DepositException e) {
+						// not what is being tested in this particular test - was already tested before
+					}
+					assertTrue("Resource (2) shouldn't have been moved from its initial location", resource2_file.exists());
+					assertFalse("Resource (2) shouldn't have been moved to a different location", resource2_target_file.exists());
 				}
 			}
 			
@@ -199,18 +270,221 @@ public class PersistTest {
 				@Rule
 				public ExpectedException exceptionCheck = ExpectedException.none();
 				
-				@Test
-				public void shouldThrowDepositException() throws DepositException, SaxonApiException {
-					
-					exceptionCheck.expect(DepositException.class);
+				@Before
+				public void setUp() throws Exception {
 					IllegalStateException exceptionToThrow = new IllegalStateException("some issue with the policy file");
 					
 					sipResources.add(resource1);
 					
 					when(mockSIP.getResources()).thenReturn(sipResources);
 					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class))).thenThrow(exceptionToThrow);
-					
+				}
+				
+				@Test
+				public void shouldThrowDepositException() throws DepositException, SaxonApiException {
+					exceptionCheck.expect(DepositException.class);
 					persist.perform(mockContext);
+				}
+				
+				@Test
+				public void resourceFileShouldBeUnchanged() {
+					try {
+						persist.perform(mockContext);
+					} catch (DepositException e) {
+						// not what is being tested in this particular test - was already tested before
+					}
+					assertEquals("Resource (1) file location shouldn't have been changed", resource1_file, resource1.getFile());
+				}
+				
+				@Test
+				public void resourceFileShouldBeMovedFromInitialLocationToTargetLocation( ) {
+					File resource1_target_file = new File(new File(resourcesTargetDir, policyTarget_pdf), resource1_filename);
+					try {
+						persist.perform(mockContext);
+					} catch (DepositException e) {
+						// not what is being tested in this particular test - was already tested before
+					}
+					assertTrue("Resource (1) shouldn't have been moved from its initial location", resource1_file.exists());
+					assertFalse("Resource (1) shouldn't have been moved to a different location", resource1_target_file.exists());
+				}
+			}
+			
+			public class WhenTargetDirectoryCannotBeCreated {
+				
+				@Rule
+				public ExpectedException exceptionCheck = ExpectedException.none();
+				
+				@Before
+				public void setUp() throws Exception {
+					sipResources.add(resource1);
+					
+					when(mockSIP.getResources()).thenReturn(sipResources);
+					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class))).thenReturn(policies);
+					
+					resourcesTargetDir.setReadOnly();
+				}
+				
+				@Test
+				public void shouldThrowDepositException() throws DepositException {
+					exceptionCheck.expect(DepositException.class);
+					persist.perform(mockContext);
+				}
+				
+				@Test
+				public void resourceFileShouldBeUnchanged() {
+					try {
+						persist.perform(mockContext);
+					} catch (DepositException e) {
+						// not what is being tested in this particular test - was already tested before
+					}
+					assertEquals("Resource (1) file location shouldn't have been changed", resource1_file, resource1.getFile());
+				}
+				
+				@Test
+				public void resourceFileShouldBeMovedFromInitialLocationToTargetLocation( ) {
+					File resource1_target_file = new File(new File(resourcesTargetDir, policyTarget_pdf), resource1_filename);
+					try {
+						persist.perform(mockContext);
+					} catch (DepositException e) {
+						// not what is being tested in this particular test - was already tested before
+					}
+					assertTrue("Resource (1) shouldn't have been moved from its initial location", resource1_file.exists());
+					assertFalse("Resource (1) shouldn't have been moved to a different location", resource1_target_file.exists());
+				}
+			}
+			
+			public class WhenTargetFileAlreadyExists {
+
+				@Rule
+				public ExpectedException exceptionCheck = ExpectedException.none();
+				
+				File resource1_expected_file = new File(new File(resourcesTargetDir, policyTarget_pdf), resource1_filename);
+				
+				@Before
+				public void setUp() throws Exception {
+					sipResources.add(resource1);
+					
+					when(mockSIP.getResources()).thenReturn(sipResources);
+					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class))).thenReturn(policies);
+					
+					File resource1_target_folder = new File(resourcesTargetDir, policyTarget_pdf);
+					resource1_target_folder.createNewFile();
+				}
+				
+				@Test
+				public void shouldThrowDepositException() throws DepositException {
+					exceptionCheck.expect(DepositException.class);
+					persist.perform(mockContext);
+				}
+				
+				@Test
+				public void resourceFileShouldBeUnchanged() {
+					try {
+						persist.perform(mockContext);
+					} catch (DepositException e) {
+						// not what is being tested in this particular test - was already tested before
+					}
+					assertEquals("Resource (1) file location shouldn't have been changed", resource1_file, resource1.getFile());
+				}
+				
+				@Test
+				public void resourceFileShouldBeMovedFromInitialLocation( ) {
+					try {
+						persist.perform(mockContext);
+					} catch (DepositException e) {
+						// not what is being tested in this particular test - was already tested before
+					}
+					assertTrue("Resource (1) shouldn't have been moved from its initial location", resource1_file.exists());
+				}
+			}
+			
+			public class WhenInitialFileCannotBeDeleted {
+
+				@Rule
+				public ExpectedException exceptionCheck = ExpectedException.none();
+				
+				@Before
+				public void setUp() throws Exception {
+					sipResources.add(resource1);
+					
+					when(mockSIP.getResources()).thenReturn(sipResources);
+					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class))).thenReturn(policies);
+					
+					resourcesInitialDir.setReadOnly();
+				}
+				
+				@Test
+				public void shouldThrowDepositException() throws DepositException {
+					exceptionCheck.expect(DepositException.class);
+					persist.perform(mockContext);
+				}
+				
+				@Test
+				public void resourceFileShouldBeUnchanged() {
+					try {
+						persist.perform(mockContext);
+					} catch (DepositException e) {
+						// not what is being tested in this particular test - was already tested before
+					}
+					assertEquals("Resource (1) file location shouldn't have been changed", resource1_file, resource1.getFile());
+				}
+				
+				@Test
+				public void resourceFileShouldBeMovedFromInitialLocationToTargetLocation( ) {
+					File resource1_target_file = new File(new File(resourcesTargetDir, policyTarget_pdf), resource1_filename);
+					try {
+						persist.perform(mockContext);
+					} catch (DepositException e) {
+						// not what is being tested in this particular test - was already tested before
+					}
+					assertTrue("Resource (1) shouldn't have been moved from its initial location", resource1_file.exists());
+					assertFalse("Resource (1) shouldn't have been moved to a different location", resource1_target_file.exists());
+				}
+			}
+			
+			public class WhenTargetFileCannotBeWritten {
+				
+				@Rule
+				public ExpectedException exceptionCheck = ExpectedException.none();
+				
+				@Before
+				public void setUp() throws Exception {
+					sipResources.add(resource1);
+					
+					when(mockSIP.getResources()).thenReturn(sipResources);
+					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class))).thenReturn(policies);
+					
+					File resource1_target_folder = new File(resourcesTargetDir, policyTarget_pdf);
+					resource1_target_folder.createNewFile();
+					resource1_target_folder.setReadOnly();
+				}
+				
+				@Test
+				public void shouldThrowDepositException() throws DepositException {
+					exceptionCheck.expect(DepositException.class);
+					persist.perform(mockContext);
+				}
+				
+				@Test
+				public void resourceFileShouldBeUnchanged() {
+					try {
+						persist.perform(mockContext);
+					} catch (DepositException e) {
+						// not what is being tested in this particular test - was already tested before
+					}
+					assertEquals("Resource (1) file location shouldn't have been changed", resource1_file, resource1.getFile());
+				}
+				
+				@Test
+				public void resourceFileShouldBeMovedFromInitialLocationToTargetLocation( ) {
+					File resource1_target_file = new File(new File(resourcesTargetDir, policyTarget_pdf), resource1_filename);
+					try {
+						persist.perform(mockContext);
+					} catch (DepositException e) {
+						// not what is being tested in this particular test - was already tested before
+					}
+					assertTrue("Resource (1) shouldn't have been moved from its initial location", resource1_file.exists());
+					assertFalse("Resource (1) shouldn't have been moved to a different location", resource1_target_file.exists());
 				}
 			}
 		}
@@ -229,18 +503,29 @@ public class PersistTest {
 				}
 				
 				@Test
-				public void resultShouldBeTrue() throws DepositException, SaxonApiException {
+				public void resultShouldBeTrue() throws DepositException {
 					boolean result = persist.perform(mockContext);
 					assertTrue("Result should be true", result);
 				}
 				
 				@Test
-				public void resourceFilesShouldBeSetToMatchedMimetypeLocations() throws DepositException, SaxonApiException {
-					File resource1_expected_file = new File(resourcesBaseDirStr + File.separator + policyTarget_pdf + File.separator + resource1_filename);
-					File resource3_expected_file = new File(resourcesBaseDirStr + File.separator + policyTarget_text + File.separator + resource3_filename);
+				public void resourceFilesShouldBeSetToMatchedMimetypeLocations() throws DepositException {
+					File resource1_expected_file = new File(new File(resourcesTargetDir, policyTarget_pdf), resource1_filename);
+					File resource3_expected_file = new File(new File(resourcesTargetDir, policyTarget_text), resource3_filename);
 					persist.perform(mockContext);
 					assertEquals("Final resource (1) File different from expected", resource1_expected_file, resource1.getFile());
 					assertEquals("Final resource (3) File different from expected", resource3_expected_file, resource3.getFile());
+				}
+				
+				@Test
+				public void resourceFilesShouldBeMovedFromInitialLocationsToTargetLocations( ) throws DepositException {
+					File resource1_expected_file = new File(new File(resourcesTargetDir, policyTarget_pdf), resource1_filename);
+					File resource3_expected_file = new File(new File(resourcesTargetDir, policyTarget_text), resource3_filename);
+					persist.perform(mockContext);
+					assertFalse("Resource (1) still exists in its initial location", resource1_file.exists());
+					assertTrue("Resource (1) was not moved to its target location", resource1_expected_file.exists());
+					assertFalse("Resource (3) still exists in its initial location", resource3_file.exists());
+					assertTrue("Resource (3) was not moved to its target location", resource3_expected_file.exists());
 				}
 			}
 			
@@ -263,11 +548,22 @@ public class PersistTest {
 				
 				@Test
 				public void resourceFilesShouldBeSetToMatchedMimetypeLocationsOrDefaultLocation() throws DepositException, SaxonApiException {
-					File resource1_expected_file = new File(resourcesBaseDirStr + File.separator + policyTarget_pdf + File.separator + resource1_filename);
-					File resource2_expected_file = new File(resourcesBaseDirStr + File.separator + policyTarget_default + File.separator + resource2_filename);
+					File resource1_expected_file = new File(new File(resourcesTargetDir, policyTarget_pdf), resource1_filename);
+					File resource2_expected_file = new File(new File(resourcesTargetDir, policyTarget_default), resource2_filename);
 					persist.perform(mockContext);
 					assertEquals("Final resource (1) File different from expected", resource1_expected_file, resource1.getFile());
 					assertEquals("Final resource (2) file different from expected", resource2_expected_file, resource2.getFile());
+				}
+				
+				@Test
+				public void resourceFilesShouldBeMovedFromInitialLocationsToTargetLocations( ) throws DepositException {
+					File resource1_expected_file = new File(new File(resourcesTargetDir, policyTarget_pdf), resource1_filename);
+					File resource2_expected_file = new File(new File(resourcesTargetDir, policyTarget_default), resource2_filename);
+					persist.perform(mockContext);
+					assertFalse("Resource (1) still exists in its initial location", resource1_file.exists());
+					assertTrue("Resource (1) was not moved to its target location", resource1_expected_file.exists());
+					assertFalse("Resource (2) still exists in its initial location", resource2_file.exists());
+					assertTrue("Resource (2) was not moved to its target location", resource2_expected_file.exists());
 				}
 			}
 		}

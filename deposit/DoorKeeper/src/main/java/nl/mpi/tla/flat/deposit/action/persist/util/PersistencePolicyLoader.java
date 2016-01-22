@@ -63,6 +63,8 @@ public class PersistencePolicyLoader {
         	policyList.add(new PersistencePolicy(property, regex, new File(resourcesBaseDir, target)));
         }
         
+        logger.debug("Persistence policy loaded.");
+        
         return new PersistencePolicies(policyList, defaultPolicy);
     }
 }
