@@ -9,11 +9,11 @@
         <property name="epicUser" value="test"/>
         <property name="epicPassword" value="test"/>
         <property name="epicServer" value="http://www.pidconsortium.eu/"/>
-        <property name="tlaHandlePrefix" value="11142"/>
+        <!--<property name="tlaHandlePrefix" value="11142"/>
         <property name="tlaHandleAdminKeyFilePath" value="/flat/resources/admpriv.bin"/>
         <property name="tlaHandleAdminUserHandleIndex" value="300"/>
         <property name="tlaHandleAdminUserHandle" value="0.NA/11142"/>
-        <property name="tlaHandleAdminPassword" value="null"/>
+        <property name="tlaHandleAdminPassword" value="null"/>-->
         <property name="fedoraUser" value="fedoraAdmin"/>
         <property name="fedoraPassword" value="fedora"/>
         <property name="fedoraServer" value="https://192.168.99.100:8443/fedora"/>
@@ -29,6 +29,7 @@
         <action name="assemble package" class="nl.mpi.tla.flat.deposit.action.PackageAssembly">
             <parameter name="dir" value="{$work}/resources"/>
             <parameter name="prefix" value="{$epicPrefix}"/>
+ 			<!--<parameter name="prefix" value="{$tlaHandlePrefix}"/>-->
         </action>
         <action name="validate metadata" class="nl.mpi.tla.flat.deposit.action.Validate">
             <parameter name="rules" value="{$param-base}/policies/rules.sch"/>
@@ -42,10 +43,13 @@
         <action name="persist resources" class="nl.mpi.tla.flat.deposit.action.Persist">
             <parameter name="resourcesDir" value="{$work}/resources"/>
             <parameter name="policyFile" value="{$param-base}/policies/persistence-policy.xml"/>
+            <parameter name="xpathDatasetName" value="replace(//*[name()='MdSelfLink'], 'hdl:{$epicPrefix}/','')"/>
+            <!--<parameter name="xpathDatasetName" value="replace(//*[name()='MdSelfLink'], 'hdl:{$tlaHandlePrefix}/','')"/>-->
         </action>
         <!--<action class="nl.mpi.tla.flat.deposit.action.Versions"/>-->
         <action class="nl.mpi.tla.flat.deposit.action.HandleAssignment">
             <parameter name="prefix" value="{$epicPrefix}"/>
+	 		<!--<parameter name="prefix" value="{$tlaHandlePrefix}"/>-->
         </action>
         <!--<action class="nl.mpi.tla.flat.deposit.action.Relate"/>-->
         <action class="nl.mpi.tla.flat.deposit.action.CreateFOX">

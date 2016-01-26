@@ -31,6 +31,7 @@ import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
 import nl.mpi.tla.flat.deposit.Resource;
 import nl.mpi.tla.flat.deposit.SIP;
+import nl.mpi.tla.flat.deposit.action.persist.util.PersistDatasetNameRetriever;
 import nl.mpi.tla.flat.deposit.action.persist.util.PersistencePolicies;
 import nl.mpi.tla.flat.deposit.action.persist.util.PersistencePolicy;
 import nl.mpi.tla.flat.deposit.action.persist.util.PersistencePolicyLoader;
@@ -56,17 +57,21 @@ public class Persist extends AbstractAction {
     	SIP sip = context.getSIP();
     	Set<Resource> sipResources = sip.getResources();
     	
+    	PersistDatasetNameRetriever datasetNameRetrieved = newPersistDatasetNameRetriever();
+    	logger.debug("xpath_dataset_name: " + getParameter("xpathDatasetName"));
+    	String datasetName = datasetNameRetrieved.getDatasetName(sip.getRecord(), getParameter("xpathDatasetName"));
+    	
+    	PersistencePolicies policies;
+		try {
+			policies = policyLoader.loadPersistencePolicies(new StreamSource(policyFile), sip, datasetName);
+		} catch (SaxonApiException | IllegalStateException ex) {
+			String message = "Error loading policy file '" + policyFile.toString() + "'";
+			logger.error(message, ex);
+			throw new DepositException(message, ex);
+		}
+		
     	for(Resource res : sipResources) {
     		
-    		PersistencePolicies policies;
-    		try {
-				policies = policyLoader.loadPersistencePolicies(new StreamSource(policyFile));
-			} catch (SaxonApiException | IllegalStateException ex) {
-				String message = "Error loading policy file '" + policyFile.toString() + "'";
-				logger.error(message, ex);
-				throw new DepositException(message, ex);
-			}
-
     		PersistencePolicyMatcher policyMatcher = newPersistencePolicyMatcher(policies);
     		PersistencePolicy matchedPolicy = policyMatcher.matchPersistencePolicy(res);
     		logger.info("Matched policy for resource '" + res.getFile().getName() + "': " + matchedPolicy);
@@ -98,5 +103,9 @@ public class Persist extends AbstractAction {
     
     PersistencePolicyMatcher newPersistencePolicyMatcher(PersistencePolicies policies) {
     	return new PersistencePolicyMatcher(policies);
+    }
+    
+    PersistDatasetNameRetriever newPersistDatasetNameRetriever() {
+    	return new PersistDatasetNameRetriever();
     }
 }

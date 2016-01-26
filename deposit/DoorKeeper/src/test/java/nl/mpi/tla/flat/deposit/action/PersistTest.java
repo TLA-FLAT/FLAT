@@ -4,12 +4,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.net.URI;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,6 +31,7 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.w3c.dom.Document;
 
 import com.nitorcreations.junit.runners.NestedRunner;
 
@@ -38,6 +42,7 @@ import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
 import nl.mpi.tla.flat.deposit.Resource;
 import nl.mpi.tla.flat.deposit.SIP;
+import nl.mpi.tla.flat.deposit.action.persist.util.PersistDatasetNameRetriever;
 import nl.mpi.tla.flat.deposit.action.persist.util.PersistencePolicies;
 import nl.mpi.tla.flat.deposit.action.persist.util.PersistencePolicy;
 import nl.mpi.tla.flat.deposit.action.persist.util.PersistencePolicyLoader;
@@ -53,8 +58,10 @@ public class PersistTest {
 	
 	@Mock Context mockContext;
 	@Mock SIP mockSIP;
+	@Mock Document mockRecord;
 	@Mock PersistencePolicyLoader mockPolicyLoader;
 	@Mock PersistencePolicyMatcher mockPolicyMatcher;
+	@Mock PersistDatasetNameRetriever mockDatasetNameRetriever;
 	
 	private Set<Resource> sipResources;
 	
@@ -73,11 +80,13 @@ public class PersistTest {
 	private Resource resource3 = new Resource(URI.create("http://some/location/" + resource3_filename), null);
 	private File resource3_file;
 	
-	private String resourcesTargetFolderName = "targetFolder";
+	private String datasetNameXpath = "replace(//*[name()='MdSelfLink'], 'hdl:{$tlaHandlePrefix}/',''";
+	private String datasetName = "dataset-123456";
+	
 	private File resourcesTargetDir;
-	private String policyTarget_pdf = "pdf";
-	private String policyTarget_text = "text";
-	private String policyTarget_default = "default";
+	private String policyTarget_pdf = datasetName + File.separator + "pdf";
+	private String policyTarget_text = datasetName + File.separator + "text";
+	private String policyTarget_default = datasetName + File.separator + "default";
 	private PersistencePolicies policies;
 	private PersistencePolicy policy1;
 	private PersistencePolicy policy2;
@@ -105,7 +114,7 @@ public class PersistTest {
 		resource3_file.createNewFile();
 		assertTrue("resource3_file was not created", resource3_file.exists());
 		
-		resourcesTargetDir = testFolder.newFolder(resourcesTargetFolderName);
+		resourcesTargetDir = testFolder.newFolder(datasetName);
 		assertTrue("Target folder was not created", resourcesTargetDir.exists());
 		
 		sipResources = new HashSet<>();
@@ -140,8 +149,8 @@ public class PersistTest {
 		
 		Map<String, XdmValue> parameters = new HashMap<>();
 		parameters.put("resourcesDir", new XdmAtomicValue(resourcesTargetDir.getAbsolutePath()));
-		
 		parameters.put("policyFile", new XdmAtomicValue("/some/location/resources/policies/persistence-policy.xml"));
+		parameters.put("xpathDatasetName", new XdmAtomicValue(datasetNameXpath));
 		
 		MockitoAnnotations.initMocks(this);
 		
@@ -149,7 +158,10 @@ public class PersistTest {
 		persist.setParameters(parameters);
 		
 		doReturn(mockPolicyLoader).when(persist).newPersistencePolicyLoader(resourcesTargetDir);
+		doReturn(mockDatasetNameRetriever).when(persist).newPersistDatasetNameRetriever();
 		when(mockContext.getSIP()).thenReturn(mockSIP);
+		when(mockSIP.getRecord()).thenReturn(mockRecord);
+		when(mockDatasetNameRetriever.getDatasetName(mockRecord, datasetNameXpath)).thenReturn(datasetName);
 	}
 	
 	
@@ -164,7 +176,7 @@ public class PersistTest {
 					sipResources.add(resource1);
 					
 					when(mockSIP.getResources()).thenReturn(sipResources);
-					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class))).thenReturn(policies);
+					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class), same(mockSIP), eq(datasetName))).thenReturn(policies);
 				}
 				
 				@Test
@@ -196,7 +208,7 @@ public class PersistTest {
 					sipResources.add(resource2);
 					
 					when(mockSIP.getResources()).thenReturn(sipResources);
-					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class))).thenReturn(policies);
+					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class), same(mockSIP), eq(datasetName))).thenReturn(policies);
 				}
 				
 				@Test
@@ -233,7 +245,7 @@ public class PersistTest {
 					sipResources.add(resource2);
 					
 					when(mockSIP.getResources()).thenReturn(sipResources);
-					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class))).thenThrow(exceptionToThrow);
+					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class), same(mockSIP), eq(datasetName))).thenThrow(exceptionToThrow);
 				}
 				
 				@Test
@@ -277,7 +289,7 @@ public class PersistTest {
 					sipResources.add(resource1);
 					
 					when(mockSIP.getResources()).thenReturn(sipResources);
-					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class))).thenThrow(exceptionToThrow);
+					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class), same(mockSIP), eq(datasetName))).thenThrow(exceptionToThrow);
 				}
 				
 				@Test
@@ -319,7 +331,7 @@ public class PersistTest {
 					sipResources.add(resource1);
 					
 					when(mockSIP.getResources()).thenReturn(sipResources);
-					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class))).thenReturn(policies);
+					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class), same(mockSIP), eq(datasetName))).thenReturn(policies);
 					
 					resourcesTargetDir.setReadOnly();
 				}
@@ -358,17 +370,17 @@ public class PersistTest {
 				@Rule
 				public ExpectedException exceptionCheck = ExpectedException.none();
 				
-				File resource1_expected_file = new File(new File(resourcesTargetDir, policyTarget_pdf), resource1_filename);
-				
 				@Before
 				public void setUp() throws Exception {
 					sipResources.add(resource1);
 					
 					when(mockSIP.getResources()).thenReturn(sipResources);
-					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class))).thenReturn(policies);
+					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class), same(mockSIP), eq(datasetName))).thenReturn(policies);
 					
 					File resource1_target_folder = new File(resourcesTargetDir, policyTarget_pdf);
-					resource1_target_folder.createNewFile();
+					File resource1_expected_file = new File(resource1_target_folder, resource1_filename);
+					Files.createDirectories(resource1_target_folder.toPath());
+					Files.createFile(resource1_expected_file.toPath());
 				}
 				
 				@Test
@@ -388,7 +400,7 @@ public class PersistTest {
 				}
 				
 				@Test
-				public void resourceFileShouldBeMovedFromInitialLocation( ) {
+				public void resourceFileShouldNotBeMovedFromInitialLocation( ) {
 					try {
 						persist.perform(mockContext);
 					} catch (DepositException e) {
@@ -408,7 +420,7 @@ public class PersistTest {
 					sipResources.add(resource1);
 					
 					when(mockSIP.getResources()).thenReturn(sipResources);
-					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class))).thenReturn(policies);
+					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class), same(mockSIP), eq(datasetName))).thenReturn(policies);
 					
 					resourcesInitialDir.setReadOnly();
 				}
@@ -452,9 +464,10 @@ public class PersistTest {
 					sipResources.add(resource1);
 					
 					when(mockSIP.getResources()).thenReturn(sipResources);
-					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class))).thenReturn(policies);
+					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class), same(mockSIP), eq(datasetName))).thenReturn(policies);
 					
 					File resource1_target_folder = new File(resourcesTargetDir, policyTarget_pdf);
+					Files.createDirectories(resource1_target_folder.toPath());
 					resource1_target_folder.createNewFile();
 					resource1_target_folder.setReadOnly();
 				}
@@ -499,7 +512,7 @@ public class PersistTest {
 					sipResources.add(resource3);
 					
 					when(mockSIP.getResources()).thenReturn(sipResources);
-					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class))).thenReturn(policies);
+					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class), same(mockSIP), eq(datasetName))).thenReturn(policies);
 				}
 				
 				@Test
@@ -537,7 +550,7 @@ public class PersistTest {
 					sipResources.add(resource2);
 					
 					when(mockSIP.getResources()).thenReturn(sipResources);
-					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class))).thenReturn(policies);
+					when(mockPolicyLoader.loadPersistencePolicies(any(StreamSource.class), same(mockSIP), eq(datasetName))).thenReturn(policies);
 				}
 				
 				@Test
