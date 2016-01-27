@@ -47,7 +47,7 @@ docker build --rm=true -t flat add-imdi-conversion-to-flat/
 docker build --rm=true -t flat add-gsearch-to-flat/
 docker build --rm=true -t flat add-islandora-solr-to-flat/
 docker build --rm=true -t flat add-imdi-gsearch-to-flat/
-docker build --rm=true -t flat add-Flat-UI/
+docker build --rm=true -t flat add-flat-ui/
 
 #cleanup
 docker rm flat-base-con
