@@ -19,7 +19,7 @@ docker run -p 80:80 -p 8443:8443 -p 8080:8080 --name <Container> -i -t <name FLA
 ```
 
 ## Additional configuration ##
-
+```sh
 cd <directory FLAT>
 
 #if newest version is needed
@@ -52,6 +52,7 @@ docker build --rm=true -t flat add-Flat-UI/
 #cleanup
 docker rm flat-base-con
 docker rmi flat-base
+```sh
 
 ## Notes ##
 need to run /usr/sbin/sshd from within container
