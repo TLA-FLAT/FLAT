@@ -58,7 +58,7 @@ docker build --rm=true -t flat add-flat-ui/
 docker rm flat-base-con
 docker rmi flat-base
 rm flat-base.tar
-```sh
+```
 
 ## Notes ##
 need to run /usr/sbin/sshd from within container
