@@ -4,8 +4,98 @@
  * Custom user interface for the FLAT data repository
  */
 
-
 /**
  * Implements hook_help().
  */
+function flat_deposit_ui_help($path, $arg){
+    switch ($path){
+        case 'admin/help#flat_deposit_ui':{
+            $ret_val = '<h3>' . t('About') . '</h3>';
+            $ret_val = '<p>' . t('The FLAT deposit UI module is designed to manage the project data of each institutes employee') . '</p>';
+            return $ret_val;
+            break;
+        }
+    }
 
+}
+
+/**
+ * Implements hook_permission().
+ */
+function flat_deposit_ui_permission()
+{
+    return array(
+        'upload' => array(
+            'title' => t('Upload'),
+            'description' => t('Upload data to the FLAT deposit')),
+        'view' => array(
+            'title' => t('View'),
+            'description' => t('View files uploaded to the FLAT deposit')),
+        'manage' => array(
+            'title' => t('Manage'),
+            'description' => t('Manage files uploaded to the FLAT deposit')),
+       'commit' => array(
+            'title' => t('Commit'),
+            'description' => t('Commit changes to FLAT deposit')),
+
+
+    );
+}
+
+
+/**
+ * Implements hook_menu().
+ */
+function flat_deposit_ui_menu()
+{
+    $items = array();
+
+    // Admin configuration group
+    $items['admin/config/flat_deposit_ui'] = array(
+        'title' => 'FLAT deposit UI',
+        'description' => 'Administer FLAT deposit user interface',
+        'access arguments' => array ('administer FLAT deposit UI'),
+    );
+
+    // Admin configuration - Upload settings
+    $items['admin/config/flat_deposit_ui/manage'] = array(
+        'title' => 'Customize settings',
+        'description' => 'Administer FLAT deposit settings',
+        'access arguments' => array ('administer FLAT deposit UI'),
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array( 'flat_deposit_ui_admin_form'),
+    );
+
+    return $items;
+};
+
+/**
+ * Implements hook_form().
+ */
+function flat_deposit_ui_admin_form($node, &$form_state)
+{
+    $form = array();
+
+    $form['overview'] = array(
+        '#markup' => t('This interface allows users to admin their deposit preferences'),
+        '#prefix' => '<p>',
+        '#suffix' => '</p>',
+    );
+
+    $form['enable_delete'] = array (
+        '#title' => t('View only'),
+        '#description' => t('Prevent yourself to accidentally delete data'),
+        '#type' => 'checkbox',
+        '#default_value' => 1,
+        '#required' => TRUE,
+    );
+
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => 'save',
+    );
+
+
+    
+    return $form;
+}
