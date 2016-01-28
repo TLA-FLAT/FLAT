@@ -32,7 +32,7 @@ docker build --rm=true -t flat flat/
 docker build --rm=true -t flat add-Flat-UI/
 
 
-#option B: flat base image has > 127 parents
+#option B: flat base image has > 127 parents (all dockerfiles are added to the image)
 
 #create a base image container
 docker build --rm=true -t flat-base flat/
@@ -41,6 +41,11 @@ docker run -p 80:80 -p 8443:8443 --name flat-base-con -t -i flat-base
 #exit manually and export container to image; resulting image will have 0 parents
 docker export --output=flat-base.tar flat-base-con
 cat flat-base.tar | docker import - flat
+
+#add environment and entry points from original image to the flattened image
+mkdir add-flat-env
+echo "FROM flat" > add-flat-env/Dockerfile
+egrep '^(ENV|CMD|ENTRYPOINT|EXPOSE|WORKDIR).*' flat/Dockerfile >> add-flat-env/Dockerfile
 
 #add all parents to image
 docker build --rm=true -t flat add-imdi-conversion-to-flat/
@@ -52,6 +57,7 @@ docker build --rm=true -t flat add-flat-ui/
 #cleanup
 docker rm flat-base-con
 docker rmi flat-base
+rm flat-base.tar
 ```sh
 
 ## Notes ##
