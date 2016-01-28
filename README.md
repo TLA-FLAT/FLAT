@@ -1,1 +1,2 @@
-# flat_deposit_ui
+# FLAT_UI
+FLAT data repository user interface
