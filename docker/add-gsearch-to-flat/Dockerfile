@@ -29,16 +29,25 @@ RUN mkdir /tmp/solr &&\
 	unzip solr-4.6.1.zip &&\
 	mkdir /var/www/fedora/solr &&\
 	cp -r /tmp/solr/solr-4.6.1/example/solr/* /var/www/fedora/solr &&\
-# following http://wiki.apache.org/solr/SolrLogging#Using_the_example_logging_setup_in_containers_other_than_Jetty
-	cp -r /tmp/solr/solr-4.6.1/example/lib/ext/* /var/www/fedora/tomcat/lib &&\
-# slf4j-log4j12-1.6.6.jar leads to clashes with fedoragsearch which contains the same class
-# removing the jar leads to a no-operation logger implementation, see http://www.slf4j.org/codes.html#StaticLoggerBinder
-	mv /var/www/fedora/tomcat/lib/slf4j-log4j12-1.6.6.jar /var/www/fedora/tomcat/lib/slf4j-log4j12-1.6.6.jar.BAK &&\
-	cp /tmp/solr/solr-4.6.1/example/resources/log4j.properties /var/www/fedora/tomcat/lib &&\
+	sed -i 's/\.\.\/\.\.\/\.\.\//\.\.\//g' /var/www/fedora/solr/collection1/conf/solrconfig.xml  &&\
+	# based on http://wiki.apache.org/solr/SolrLogging#Using_the_example_logging_setup_in_containers_other_than_Jetty
+	cp -r /tmp/solr/solr-4.6.1/dist/ /var/www/fedora/solr &&\
+	cp -r /tmp/solr/solr-4.6.1/contrib/ /var/www/fedora/solr &&\
 	cp -r /tmp/solr/solr-4.6.1/example/webapps/solr.war /var/www/fedora/tomcat/webapps/solr.war &&\
 	mkdir /var/www/fedora/tomcat/webapps/solr &&\
 	cd /var/www/fedora/tomcat/webapps/solr/ &&\
 	unzip ../solr.war &&\
+	# slf4j-log4j12-1.6.6.jar leads to clashes with fedoragsearch and fedora. So we copy the logging jars to the solr webapp lib instead of tomcat/lib
+	cp -r /tmp/solr/solr-4.6.1/example/lib/ext/* WEB-INF/lib &&\
+	mkdir WEB-INF/classes &&\
+	cp /tmp/solr/solr-4.6.1/example/resources/log4j.properties WEB-INF/classes &&\
+	# configure logging to use the same directory and format as fedora and fedoragsearch servlets
+	sed -ie "s|logs\/|$FEDORA_HOME\/server\/logs\/|g" WEB-INF/classes/log4j.properties &&\
+	sed -i 's/RollingFileAppender/DailyRollingFileAppender/g' WEB-INF/classes/log4j.properties &&\
+	sed -i '/MaxFileSize/d' WEB-INF/classes/log4j.properties &&\
+	sed -i '/MaxBackupIndex/d' WEB-INF/classes/log4j.properties &&\
+	sed -i 's/\/solr\.log/\/solr\.daily\.log/g' WEB-INF/classes/log4j.properties &&\
+	sed -i 's/, CONSOLE//g' WEB-INF/classes/log4j.properties &&\
 	rm -r /tmp/solr
 
 #
