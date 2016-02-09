@@ -2,5 +2,8 @@ name = Flat deposit UI
 description = The FLAT repository drupal-based user interface for data deposit
 core = 7.x
 version = 7.x-0.1-dev
+configure = admin/config/flat_deposit_ui/manage
+dependencies[] = imce
+files[] = flat_deposit_ui.test
 
 

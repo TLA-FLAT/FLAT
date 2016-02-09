@@ -65,6 +65,12 @@ function flat_deposit_ui_menu()
         'page callback' => 'drupal_get_form',
         'page arguments' => array( 'flat_deposit_ui_admin_form'),
     );
+    $items['example'] = array(
+        'title' => 'Example Page',
+        'page callback' => 'example_page',
+        'access arguments' => array('access content'),
+        'type' => MENU_SUGGESTED_ITEM,
+    );
 
     return $items;
 };
@@ -95,7 +101,70 @@ function flat_deposit_ui_admin_form($node, &$form_state)
         '#value' => 'save',
     );
 
-
-    
     return $form;
 }
+
+
+/**
+ * Implements hook_block_info().
+ */
+function flat_deposit_ui_block_info()
+{
+    $blocks = array();
+    
+    $blocks['flat_deposit_menu'] = array(
+        'info' => t('FLAT Deposit Main Menu'),
+    );
+    return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function flat_deposit_ui_block_view($delta = '')
+{
+    if ($delta == 'flat_deposit_menu') {
+        return array(
+            'subject' => t('FLAT Deposit Main Menu'),
+            'content' => flat_deposit_ui_menu_block_generate(),
+        );
+
+    }
+}
+
+
+// Implements flat deposit main menu block
+function flat_deposit_ui_menu_block_generate(){
+    // Build a render array.
+    $output = array(
+        'link_upload' => array(
+            '#type' => 'markup',
+            '#prefix' => '<div>',
+            '#markup' => '<a href="/drupal/user/' . $GLOBALS['user']->uid  . '/imce" title="Upload data"><img title="Upload data" alt="Upload data" src="/drupal/sites/default/files/Upload.png"/></a><br/>',
+            '#suffix' => '<a href="/drupal/user/' . $GLOBALS['user']->uid  . '/imce">Upload data</a><br/></div>'),
+        'link_view' => array(
+            '#type' => 'markup',
+            '#prefix' => '<div>',
+            '#markup' => '<a href="/drupal/node/10" title="View uploads"><img title="View uploads" alt="View uploads" src="/drupal/sites/default/files/View.png"/></a><br/>',
+            '#suffix' => '<a href="/drupal/node/10">View uploads</a><br/></div>'),
+        'link_manage_bundles' => array(
+            '#type' => 'markup',
+            '#prefix' => '<div>',
+            '#markup' => '<a href="/drupal/node/12" title="Manage bundles"><img title="Manage bundles" alt="Manage bundles" src="/drupal/sites/default/files/Manage.png"/></a><br/>',
+            '#suffix' => '<a href="/drupal/node/12">Manage bundles</a><br/></div>'),
+        'link_manage_collections' => array(
+            '#type' => 'markup',
+            '#prefix' => '<div>',
+            '#markup' => '<a href="/drupal/node/13" title="Manage collections"><img title="Manage collections" alt="Manage collections" src="/drupal/sites/default/files/Manage_coll.png"/></a><br/>',
+            '#suffix' => '<a href="/drupal/node/13">Manage collections</a><br/></div>'),
+        'link_commit' => array(
+            '#type' => 'markup',
+            '#prefix' => '<div>',
+            '#markup' => '<a href="/drupal/node/14" title="Commit changes"><img title="Commit changes" alt="Commit changes" src="/drupal/sites/default/files/Commit.png"/></a><br/>',
+            '#suffix' => '<a href="/drupal/node/14">Commit changes</a><br/></div>'),
+    );
+
+    return $output;
+}
+//theme_menu_link()
+?>
