@@ -111,7 +111,7 @@ function flat_deposit_ui_admin_form($node, &$form_state)
 function flat_deposit_ui_block_info()
 {
     $blocks = array();
-    
+
     $blocks['flat_deposit_menu'] = array(
         'info' => t('FLAT Deposit Main Menu'),
     );
