@@ -145,23 +145,23 @@ function flat_deposit_ui_menu_block_generate(){
         'link_view' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
-            '#markup' => '<a href="/drupal/node/10" title="View uploads"><img title="View uploads" alt="View uploads" src="/drupal/sites/default/files/View.png"/></a><br/>',
-            '#suffix' => '<a href="/drupal/node/10">View uploads</a><br/></div>'),
+            '#markup' => '<a href="http://api.drupal.org/" title="View uploads"><img title="View uploads" alt="View uploads" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/View.png"/></a><br/>',
+            '#suffix' => '<a href="http://api.drupal.org/">View uploads</a><br/></div>'),
         'link_manage_bundles' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
-            '#markup' => '<a href="/drupal/node/12" title="Manage bundles"><img title="Manage bundles" alt="Manage bundles" src="/drupal/sites/default/files/Manage.png"/></a><br/>',
-            '#suffix' => '<a href="/drupal/node/12">Manage bundles</a><br/></div>'),
+            '#markup' => '<a href="http://api.drupal.org/" title="Manage bundles"><img title="Manage bundles" alt="Manage bundles" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Manage.png"/></a><br/>',
+            '#suffix' => '<a href="http://api.drupal.org/">Manage bundles</a><br/></div>'),
         'link_manage_collections' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
-            '#markup' => '<a href="/drupal/node/13" title="Manage collections"><img title="Manage collections" alt="Manage collections" src="/drupal/sites/default/files/Manage_coll.png"/></a><br/>',
-            '#suffix' => '<a href="/drupal/node/13">Manage collections</a><br/></div>'),
+            '#markup' => '<a href="http://api.drupal.org/" title="Manage collections"><img title="Manage collections" alt="Manage collections" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Manage_coll.png"/></a><br/>',
+            '#suffix' => '<a href="http://api.drupal.org/">Manage collections</a><br/></div>'),
         'link_commit' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
-            '#markup' => '<a href="/drupal/node/14" title="Commit changes"><img title="Commit changes" alt="Commit changes" src="/drupal/sites/default/files/Commit.png"/></a><br/>',
-            '#suffix' => '<a href="/drupal/node/14">Commit changes</a><br/></div>'),
+            '#markup' => '<a href="http://api.drupal.org/" title="Commit changes"><img title="Commit changes" alt="Commit changes" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Commit.png"/></a><br/>',
+            '#suffix' => '<a href="http://api.drupal.org/">Commit changes</a><br/></div>'),
     );
 
     return $output;
