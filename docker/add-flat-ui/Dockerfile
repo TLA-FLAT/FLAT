@@ -22,12 +22,24 @@ ENV NOTVISIBLE "in users profile"
 RUN echo "export VISIBLE=now" >> /etc/profile
 
 # Add deposit module to installation
-RUN git clone path... /var/www/html/drupal/sites/all/modules/custom/flat_deposit_ui
-http://download.cksource.com/CKEditor/CKEditor/CKEditor%203.6.2/ckeditor_3.6.2.tar.gz
+RUN git clone https://github.com/danrhe/flat_deposit_ui.git /var/www/html/drupal/sites/all/modules/custom/flat_deposit_ui
+
+# add WYSIWYG editor
+RUN cd /var/www/html/drupal/sites/all/libraries/ &&\
+    wget http://download.cksource.com/CKEditor/CKEditor/CKEditor%203.6.2/ckeditor_3.6.2.tar.gz &&\
+    tar xzvf ckeditor_3.6.2.tar.gz
+
+# add extra modules    
 RUN cd /var/www/html/drupal/ &&\
-    /var/www/composer/vendor/drush/drush/drush en admin_menu &&\
-    /var/www/composer/vendor/drush/drush/drush en imce            &&\
-    /var/www/composer/vendor/drush/drush/drush en flat_deposit_ui
+    /var/www/composer/vendor/drush/drush/drush dl admin_menu &&\
+    /var/www/composer/vendor/drush/drush/drush en -y admin_menu &&\
+    /var/www/composer/vendor/drush/drush/drush dl -y wysiwyg  &&\
+    /var/www/composer/vendor/drush/drush/drush en -y wysiwyg  &&\
+    /var/www/composer/vendor/drush/drush/drush dl -y imce  &&\
+    /var/www/composer/vendor/drush/drush/drush en -y imce  &&\
+    /var/www/composer/vendor/drush/drush/drush dl -y imce_wysiwyg  &&\
+    /var/www/composer/vendor/drush/drush/drush en -y imce_wysiwyg  &&\
+    /var/www/composer/vendor/drush/drush/drush en -y flat_deposit_ui
 
 #Clean up when done.
 RUN apt-get clean &&\
