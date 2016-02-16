@@ -65,15 +65,52 @@ function flat_deposit_ui_menu()
         'page callback' => 'drupal_get_form',
         'page arguments' => array( 'flat_deposit_ui_admin_form'),
     );
-    $items['example'] = array(
-        'title' => 'Example Page',
-        'page callback' => 'example_page',
-        'access arguments' => array('access content'),
-        'type' => MENU_SUGGESTED_ITEM,
+    // Page for view content
+    $items['view'] = array(
+        'title' => 'View uploaded data',
+        'page callback' => 'flat_deposit_ui_view_info',
+        'access callback' => TRUE,
+        'page arguments' => array(
+            'content' => 'Under construction'),
+    );
+    // Page for manage bundles
+    $items['managebundles'] = array(
+        'title' => 'Manage bundles',
+        'page callback' => 'flat_deposit_ui_view_info',
+        'access callback' => TRUE,
+        'page arguments' => array(
+            'content' => 'Under construction'),
+    );
+    // Page for manage bundles
+    $items['managecollections'] = array(
+        'title' => 'Manage Collections',
+        'page callback' => 'flat_deposit_ui_view_info',
+        'access callback' => TRUE,
+        'page arguments' => array(
+            'content' => 'Under construction'),
+    );
+    // Page for manage bundles
+    $items['commitchanges'] = array(
+        'title' => 'Commit changes',
+        'page callback' => 'flat_deposit_ui_view_info',
+        'access callback' => TRUE,
+        'page arguments' => array(
+            'content' => 'Under construction'),
     );
 
     return $items;
 };
+
+/**
+ * @return string to be displayed on the page
+ */
+function flat_deposit_ui_view_info($variable)
+{
+    return t($variable);
+}
+
+
+
 
 /**
  * Implements hook_form().
@@ -114,6 +151,11 @@ function flat_deposit_ui_block_info()
 
     $blocks['flat_deposit_menu'] = array(
         'info' => t('FLAT Deposit Main Menu'),
+        'status' => TRUE,
+        'region' => 'sidebar_second',
+        'visibility' => BLOCK_VISIBILITY_NOTLISTED,
+        'pages' => 'islandora/*',
+
     );
     return $blocks;
 }
@@ -140,28 +182,28 @@ function flat_deposit_ui_menu_block_generate(){
         'link_upload' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
-            '#markup' => '<a href="/drupal/user/' . $GLOBALS['user']->uid  . '/imce" title="Upload data"><img title="Upload data" alt="Upload data" src="/drupal/sites/default/files/Upload.png"/></a><br/>',
+            '#markup' => '<a href="/drupal/user/' . $GLOBALS['user']->uid  . '/imce" title="Upload data"><img title="Upload data" alt="Upload data" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Upload.png"/></a><br/>',
             '#suffix' => '<a href="/drupal/user/' . $GLOBALS['user']->uid  . '/imce">Upload data</a><br/></div>'),
         'link_view' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
-            '#markup' => '<a href="http://api.drupal.org/" title="View uploads"><img title="View uploads" alt="View uploads" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/View.png"/></a><br/>',
-            '#suffix' => '<a href="http://api.drupal.org/">View uploads</a><br/></div>'),
+            '#markup' => '<a href="view" title="View uploads"><img title="View uploads" alt="View uploads" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/View.png"/></a><br/>',
+            '#suffix' => '<a href="view">View uploads</a><br/></div>'),
         'link_manage_bundles' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
-            '#markup' => '<a href="http://api.drupal.org/" title="Manage bundles"><img title="Manage bundles" alt="Manage bundles" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Manage.png"/></a><br/>',
-            '#suffix' => '<a href="http://api.drupal.org/">Manage bundles</a><br/></div>'),
+            '#markup' => '<a href="managebundles/" title="Manage bundles"><img title="Manage bundles" alt="Manage bundles" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Manage.png"/></a><br/>',
+            '#suffix' => '<a href="managebundles">Manage bundles</a><br/></div>'),
         'link_manage_collections' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
-            '#markup' => '<a href="http://api.drupal.org/" title="Manage collections"><img title="Manage collections" alt="Manage collections" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Manage_coll.png"/></a><br/>',
-            '#suffix' => '<a href="http://api.drupal.org/">Manage collections</a><br/></div>'),
+            '#markup' => '<a href="managecollections" title="Manage collections"><img title="Manage collections" alt="Manage collections" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Manage_coll.png"/></a><br/>',
+            '#suffix' => '<a href="managecollections">Manage collections</a><br/></div>'),
         'link_commit' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
-            '#markup' => '<a href="http://api.drupal.org/" title="Commit changes"><img title="Commit changes" alt="Commit changes" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Commit.png"/></a><br/>',
-            '#suffix' => '<a href="http://api.drupal.org/">Commit changes</a><br/></div>'),
+            '#markup' => '<a href="commitchanges" title="Commit changes"><img title="Commit changes" alt="Commit changes" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Commit.png"/></a><br/>',
+            '#suffix' => '<a href="commitchanges">Commit changes</a><br/></div>'),
     );
 
     return $output;
