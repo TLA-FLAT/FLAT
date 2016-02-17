@@ -48,51 +48,58 @@
 	<xsl:function name="cmd:pid">
 		<xsl:param name="locs"/>
 		<xsl:param name="lvl"/>
-		<xsl:variable name="to" select="
-				$rels-doc/key('rels-to', for $l in $locs
-				return
-					cmd:hdl($l))"/>
-		<xsl:variable name="from" select="
-				$rels-doc/key('rels-from', for $l in $locs
-				return
-					cmd:hdl($l))"/>
-		<xsl:variable name="refs" select="
-				distinct-values(($from/src,
-				$from/from,
-				$to/dst,
-				$to/to))[normalize-space(.) != '']"/>
-		<xsl:variable name="hdl" select="$refs[starts-with(., 'hdl:')]"/>
 		<xsl:choose>
-			<xsl:when test="count($hdl) eq 0">
-				<xsl:message>
-					<xsl:value-of select="$lvl"/>
-					<xsl:text>: the handle for resource[</xsl:text>
-					<xsl:value-of select="
-							string-join(distinct-values(for $l in $locs
-							return
-								cmd:hdl($l)), ', ')"/>
-					<xsl:text>][</xsl:text>
-					<xsl:value-of select="string-join($refs, ', ')"/>
-					<xsl:text>] can't be determined!</xsl:text>
-				</xsl:message>
-				<xsl:sequence select="()"/>
+			<xsl:when test="empty($rels-doc/relations/relation)">
+				<xsl:sequence select="cmd:hdl($locs[1])"/>
 			</xsl:when>
 			<xsl:otherwise>
-				<xsl:if test="count($hdl) gt 1">
-					<xsl:message>
-						<xsl:text>ERR: there are multiple handles[</xsl:text>
-						<xsl:value-of select="string-join($hdl, ', ')"/>
-						<xsl:text>] for resource[</xsl:text>
-						<xsl:value-of select="
+				<xsl:variable name="to" select="
+					$rels-doc/key('rels-to', for $l in $locs
+					return
+					cmd:hdl($l))"/>
+				<xsl:variable name="from" select="
+					$rels-doc/key('rels-from', for $l in $locs
+					return
+					cmd:hdl($l))"/>
+				<xsl:variable name="refs" select="
+					distinct-values(($from/src,
+					$from/from,
+					$to/dst,
+					$to/to))[normalize-space(.) != '']"/>
+				<xsl:variable name="hdl" select="$refs[starts-with(., 'hdl:')]"/>
+				<xsl:choose>
+					<xsl:when test="count($hdl) eq 0">
+						<xsl:message>
+							<xsl:value-of select="$lvl"/>
+							<xsl:text>: the handle for resource[</xsl:text>
+							<xsl:value-of select="
 								string-join(distinct-values(for $l in $locs
 								return
+								cmd:hdl($l)), ', ')"/>
+							<xsl:text>][</xsl:text>
+							<xsl:value-of select="string-join($refs, ', ')"/>
+							<xsl:text>] can't be determined!</xsl:text>
+						</xsl:message>
+						<xsl:sequence select="()"/>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:if test="count($hdl) gt 1">
+							<xsl:message>
+								<xsl:text>ERR: there are multiple handles[</xsl:text>
+								<xsl:value-of select="string-join($hdl, ', ')"/>
+								<xsl:text>] for resource[</xsl:text>
+								<xsl:value-of select="
+									string-join(distinct-values(for $l in $locs
+									return
 									cmd:hdl($l)), ', ')"/>
-						<xsl:text>][</xsl:text>
-						<xsl:value-of select="string-join($refs, ', ')"/>
-						<xsl:text>]! Using the first one ...</xsl:text>
-					</xsl:message>
-				</xsl:if>
-				<xsl:sequence select="cmd:hdl(($hdl)[1])"/>
+								<xsl:text>][</xsl:text>
+								<xsl:value-of select="string-join($refs, ', ')"/>
+								<xsl:text>]! Using the first one ...</xsl:text>
+							</xsl:message>
+						</xsl:if>
+						<xsl:sequence select="cmd:hdl(($hdl)[1])"/>
+					</xsl:otherwise>
+				</xsl:choose>
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:function>

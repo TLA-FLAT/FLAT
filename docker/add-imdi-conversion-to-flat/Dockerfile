@@ -23,8 +23,8 @@ RUN cd /tmp &&\
     mvn clean install
     
 RUN cd /tmp &&\
-    wget https://nexus.clarin.eu/content/repositories/clarin-snapshot/eu/clarin/cmdi/cmdi-validator-core/0.0.6-SNAPSHOT/cmdi-validator-core-0.0.6-20150702.082849-1.jar &&\
-    mvn install:install-file -Dfile=cmdi-validator-core-0.0.6-20150702.082849-1.jar -DgroupId=eu.clarin.cmdi -DartifactId=cmdi-validator-core -Dversion=0.0.6-SNAPSHOT -Dpackaging=jar
+    wget https://nexus.clarin.eu/content/repositories/clarin-snapshot/eu/clarin/cmdi/cmdi-validator-core/0.0.6-SNAPSHOT/cmdi-validator-core-0.0.6-20160203.101033-2.jar &&\
+    mvn install:install-file -Dfile=cmdi-validator-core-0.0.6-20160203.101033-2.jar -DgroupId=eu.clarin.cmdi -DartifactId=cmdi-validator-core -Dversion=0.0.6-SNAPSHOT -Dpackaging=jar
  
 RUN cd /tmp &&\
     git clone https://github.com/TheLanguageArchive/ISLE2CLARIN.git ISLE2CLARIN &&\

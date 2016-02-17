@@ -29,34 +29,40 @@
 				<xsl:when test="$multiple">
 					<xsl:for-each-group select="$paths" group-by="ancestor::CMD_ComponentSpec//Header/ID">
 						<xpath>
-							<xsl:text>distinct-values(.//cmd:CMD[exists(cmd:Header/cmd:MdProfile[contains(.,'</xsl:text>
-							<xsl:value-of select="current-grouping-key()"/>
-							<xsl:text>')])]/cmd:Components/(cmd:</xsl:text>
 							<xsl:for-each select="current-group()">
+								<xsl:text>/cmd:CMD[cmd:Header/cmd:MdProfile[contains(.,'</xsl:text>
+								<xsl:value-of select="current-grouping-key()"/>
+								<xsl:text>')]]/cmd:Components/cmd:</xsl:text>
 								<xsl:value-of select="string-join(ancestor-or-self::*/@name,'/cmd:')"/>
-								<xsl:text>/text()</xsl:text>
 								<xsl:if test="position()!=last()">
-									<xsl:text>,cmd:</xsl:text>
+									<xsl:text>|</xsl:text>
 								</xsl:if>
 							</xsl:for-each>
-							<xsl:text>))</xsl:text>
 						</xpath>
 					</xsl:for-each-group>
 				</xsl:when>
 				<xsl:otherwise>
 					<xsl:for-each select="$paths">
 						<xpath>
-							<xsl:text>.//cmd:CMD[contains(cmd:Header/cmd:MdProfile,'</xsl:text>
+							<xsl:text>/cmd:CMD[contains(cmd:Header/cmd:MdProfile,'</xsl:text>
 							<xsl:value-of select="ancestor::CMD_ComponentSpec//Header/ID"/>
 							<xsl:text>')]/cmd:Components/cmd:</xsl:text>
 							<xsl:value-of select="string-join(ancestor-or-self::*/@name,'/cmd:')"/>
-							<xsl:text>/text()</xsl:text>
 						</xpath>
 					</xsl:for-each>
 				</xsl:otherwise>
 			</xsl:choose>
 		</xsl:if>
 	</xsl:function>
+	
+	<xsl:template match="namespaces">
+		<xsl:copy>
+			<xsl:apply-templates select="@*"/>
+			<namespace ns="cmd" uri="http://www.clarin.eu/cmd/"/>
+			<namespace ns="set" uri="http://exslt.org/sets"/>
+			<xsl:apply-templates/>
+		</xsl:copy>
+	</xsl:template>
 	
 	<xsl:template match="xpath/text()">
 		<xsl:value-of select="normalize-space(.)"/>
@@ -77,7 +83,7 @@
 	
 	<xsl:template match="pattern" mode="clarin">
 		<xpath>
-			<xsl:value-of select="replace(replace(.,'c:','cmd:'),'(^|\.)(/)?/cmd:CMD','.//cmd:CMD')"/>
+			<xsl:value-of select="replace(replace(replace(replace(.,'c:','cmd:'),'(^|\.)(/)?/cmd:CMD','/cmd:CMD'),'//text\(\)','//*'),'/text\(\)','')"/>
 		</xpath>
 	</xsl:template>
 	

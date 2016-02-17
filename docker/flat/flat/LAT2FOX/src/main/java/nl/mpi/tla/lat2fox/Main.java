@@ -57,6 +57,8 @@ public class Main {
         System.err.println("INF: -s=<NAME>  name of the server/repository used by OAI");
         System.err.println("INF: -v         validate the FOX files (optional)");
         System.err.println("INF: -l         lax check if a local resource exists (optional)");
+        System.err.println("INF: -h         don't create a CMD object as first child of the compound, but include the CMD in the compound itself (optional)");
+        System.err.println("INF: -z         skip the relations check");
     }
 
     public static void main(String[] args) {
@@ -74,14 +76,20 @@ public class Main {
         XdmNode collsDoc = null;
         boolean validateFOX = false;
         boolean laxResourceCheck = false;
+        boolean createCMDObject = true;
+        boolean relationCheck = true;
         int ndir = 0;
         // check command line
-        OptionParser parser = new OptionParser( "lve:r:f:i:x:n:c:d:m:o:s:?*" );
+        OptionParser parser = new OptionParser( "zhlve:r:f:i:x:n:c:d:m:o:s:?*" );
         OptionSet options = parser.parse(args);
         if (options.has("l"))
             laxResourceCheck = true;
         if (options.has("v"))
             validateFOX = true;
+        if (options.has("h"))
+            createCMDObject = false;
+        if (options.has("z"))
+            relationCheck = false;
         if (options.has("e"))
             cext = (String)options.valueOf("e");
         if (options.has("r"))
@@ -199,13 +207,15 @@ public class Main {
                     System.err.println("DBG: saved["+rfile.getAbsolutePath()+"]");
                 }
             }
-            // Check the relations
-            XsltTransformer rcheck = SaxonUtils.buildTransformer(Main.class.getResource("/checkRels.xsl")).load();
-            rcheck.setParameter(new QName("rels-doc"), relsDoc);
-            rcheck.setSource(new StreamSource(Main.class.getResource("/null.xml").toString()));
-            XdmDestination dest = new XdmDestination();
-            rcheck.setDestination(dest);
-            rcheck.transform();
+            if (relationCheck) {
+                // Check the relations
+                XsltTransformer rcheck = SaxonUtils.buildTransformer(Main.class.getResource("/checkRels.xsl")).load();
+                rcheck.setParameter(new QName("rels-doc"), relsDoc);
+                rcheck.setSource(new StreamSource(Main.class.getResource("/null.xml").toString()));
+                XdmDestination dest = new XdmDestination();
+                rcheck.setDestination(dest);
+                rcheck.transform();
+            }
             //System.exit(0);
             // CMDI 2 FOX
             // create the fox dirs
@@ -248,6 +258,7 @@ public class Main {
                             fox.setParameter(new QName("repository"), new XdmAtomicValue(server));
                         if (oxp != null)
                             fox.setParameter(new QName("oai-include-eval"), new XdmAtomicValue(oxp));
+                        fox.setParameter(new QName("create-cmd-object"), new XdmAtomicValue(createCMDObject));
                         fox.setSource(new StreamSource(input));
                         XdmDestination destination = new XdmDestination();
                         fox.setDestination(destination);

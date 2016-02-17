@@ -7,25 +7,24 @@
   </namespaces>
   <mappings>
     <field name="Creator" type="string" multiValued="true">
-      <xpath>distinct-values(.//cmd:CMD/cmd:Components/cmd:Session/cmd:MDGroup/cmd:Actors/cmd:Actor[cmd:Role
+      <xpath>/cmd:CMD/cmd:Components/cmd:Session/cmd:MDGroup/cmd:Actors/cmd:Actor[cmd:Role
         = 'Author' or cmd:Role = 'Collector' or cmd:Role = 'Researcher' or cmd:Role = 'Annotator' or
-        cmd:Role = 'Filmer' or cmd:Role = 'Recorder']/cmd:FullName/text())</xpath>
-      <xpath>distinct-values(.//cmd:CMD/cmd:Components/cmd:Session/cmd:MDGroup/cmd:Actors/cmd:Actor[cmd:Role
+        cmd:Role = 'Filmer' or cmd:Role = 'Recorder']/cmd:FullName</xpath>
+      <xpath>/cmd:CMD/cmd:Components/cmd:Session/cmd:MDGroup/cmd:Actors/cmd:Actor[cmd:Role
         = 'Author' or cmd:Role = 'Collector' or cmd:Role = 'Researcher' or cmd:Role = 'Annotator' or
-        cmd:Role = 'Filmer' or cmd:Role = 'Recorder']/cmd:Name/text())</xpath>
-      <xpath>substring-before(substring-after(.//cmd:CMD/cmd:Components/cmd:Session/cmd:Resources/cmd:Source[1]/cmd:descriptions/cmd:Description[@LanguageId
-        = 'ISO639:eng' or @LanguageId = 'ISO639-2:eng' or @LanguageId = '']/text(), 'Author: '),
-        '&#10;')</xpath>
+        cmd:Role = 'Filmer' or cmd:Role = 'Recorder']/cmd:Name</xpath>
+      <xpath use="substring-before(substring-after(., 'Author: '),'&#10;')">/cmd:CMD/cmd:Components/cmd:Session/cmd:Resources/cmd:Source[1]/cmd:descriptions/cmd:Description[@LanguageId
+        = 'ISO639:eng' or @LanguageId = 'ISO639-2:eng' or @LanguageId = '']</xpath>
     </field>
 
     <field name="Contributor" type="string" multiValued="true">
-      <xpath>distinct-values(.//cmd:CMD/cmd:Components/cmd:Session/cmd:MDGroup/cmd:Actors/cmd:Actor/cmd:FullName/text())</xpath>
-      <xpath>distinct-values(.//cmd:CMD/cmd:Components/cmd:Session/cmd:MDGroup/cmd:Actors/cmd:Actor/cmd:Name/text())</xpath>
+      <xpath>/cmd:CMD/cmd:Components/cmd:Session/cmd:MDGroup/cmd:Actors/cmd:Actor/cmd:FullName</xpath>
+      <xpath>/cmd:CMD/cmd:Components/cmd:Session/cmd:MDGroup/cmd:Actors/cmd:Actor/cmd:Name</xpath>
     </field>
 
     <field name="Language" type="string" multiValued="true">
-      <xpath>.//cmd:CMD/cmd:Components/cmd:Session/cmd:MDGroup/cmd:Content/cmd:Content_Languages/cmd:Content_Language/cmd:Name/text()</xpath>
-      <xpath>.//cmd:CMD/cmd:Components/cmd:Song/cmd:Language/cmd:LanguageName/text()</xpath>
+      <xpath>/cmd:CMD/cmd:Components/cmd:Session/cmd:MDGroup/cmd:Content/cmd:Content_Languages/cmd:Content_Language/cmd:Name</xpath>
+      <xpath>/cmd:CMD/cmd:Components/cmd:Song/cmd:Language/cmd:LanguageName</xpath>
       <cmd:facet>language</cmd:facet>
       <cmd:facet>languageCode</cmd:facet>
       <cmd:facet>languages</cmd:facet>
@@ -33,48 +32,45 @@
 
     <!-- The date field is unstructured. A date unifying function will be implemented later. -->
     <field name="CreationDate" type="string">
-      <xpath>.//cmd:CMD/cmd:Header/cmd:MdCreationDate/text()</xpath>
-      <xpath>.//cmd:CMD/cmd:Components/cmd:Session/cmd:Date/text()</xpath>
+      <xpath>/cmd:CMD/cmd:Header/cmd:MdCreationDate</xpath>
+      <xpath>/cmd:CMD/cmd:Components/cmd:Session/cmd:Date</xpath>
     </field>
 
     <field name="Format" type="string" multiValued="true">
-      <xpath>distinct-values(.//cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy/cmd:ResourceType/@mimetype)</xpath>
-      <xpath>.//cmd:CMD/cmd:Components/cmd:Session/cmd:Resources/cmd:WrittenResource/cmd:Format/text()</xpath>
+      <xpath>/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy/cmd:ResourceType/@mimetype</xpath>
+      <xpath>/cmd:CMD/cmd:Components/cmd:Session/cmd:Resources/cmd:WrittenResource/cmd:Format</xpath>
       <cmd:facet>format</cmd:facet>
     </field>
 
     <field name="Discipline" type="string" multiValued="true">
-      <xpath>if
-        (normalize-space(string(.//cmd:CMD/cmd:Components/cmd:Session/cmd:MDGroup/cmd:Content/cmd:Genre/text()))
-        = '') then ('') else ('Linguistics',.//cmd:CMD/cmd:Components/cmd:Session/cmd:MDGroup/cmd:Content/cmd:Genre/text())</xpath>
-      <string>Linguistics</string>
+      <xpath>/cmd:CMD/cmd:Components/cmd:Session/cmd:MDGroup/cmd:Content/cmd:Genre[normalize-space(.) != '']</xpath>
     </field>
 
     <field name="Collection" type="string">
-      <xpath>.//cmd:CMD/cmd:Header/cmd:MdCollectionDisplayName/text()</xpath>
+      <xpath>/cmd:CMD/cmd:Header/cmd:MdCollectionDisplayName</xpath>
       <cmd:facet>collection</cmd:facet>
     </field>
 
     <field name="Country" type="string">
-      <xpath>.//cmd:CMD/cmd:Components/cmd:Session/cmd:MDGroup/cmd:Location/cmd:Country/text()</xpath>
+      <xpath>/cmd:CMD/cmd:Components/cmd:Session/cmd:MDGroup/cmd:Location/cmd:Country</xpath>
       <cmd:facet>country</cmd:facet>
     </field>
 
     <field name="title" allowMultiple="true">
-      <xpath>.//cmd:CMD/cmd:Components/cmd:Session/cmd:Title/text()</xpath>
-      <xpath>.//cmd:CMD/cmd:Components/cmd:Session/cmd:Name/text()</xpath>
-      <xpath>.//cmd:CMD/cmd:Components/cmd:imdi-corpus/cmd:Corpus/cmd:Title/text()</xpath>
-      <xpath>.//cmd:CMD/cmd:Components/cmd:imdi-corpus/cmd:Corpus/cmd:Name/text()</xpath>
+      <xpath>/cmd:CMD/cmd:Components/cmd:Session/cmd:Title</xpath>
+      <xpath>/cmd:CMD/cmd:Components/cmd:Session/cmd:Name</xpath>
+      <xpath>/cmd:CMD/cmd:Components/cmd:imdi-corpus/cmd:Corpus/cmd:Title</xpath>
+      <xpath>/cmd:CMD/cmd:Components/cmd:imdi-corpus/cmd:Corpus/cmd:Name</xpath>
       <cmd:facet>name</cmd:facet>
     </field>
 
     <field name="notes">
-      <xpath>.//cmd:CMD/cmd:Components/cmd:Session/cmd:descriptions/cmd:Description[@LanguageId =
-        'ISO639:eng' or @LanguageId = 'ISO639-2:eng' or @LanguageId = '']/text()</xpath>
-      <xpath>.//cmd:CMD/cmd:Components/cmd:Session/cmd:Resources/cmd:Source/cmd:descriptions/cmd:Description[@LanguageId
-        = 'ISO639:eng' or @LanguageId = 'ISO639-2:eng' or @LanguageId = '']/text()</xpath>
-      <xpath>.//cmd:CMD/cmd:Components/cmd:imdi-corpus/cmd:Corpus/cmd:descriptions/cmd:Description[@LanguageId
-        = 'ISO639:eng' or @LanguageId = 'ISO639-2:eng' or @LanguageId = '']/text()</xpath>
+      <xpath>/cmd:CMD/cmd:Components/cmd:Session/cmd:descriptions/cmd:Description[@LanguageId =
+        'ISO639:eng' or @LanguageId = 'ISO639-2:eng' or @LanguageId = '']</xpath>
+      <xpath>/cmd:CMD/cmd:Components/cmd:Session/cmd:Resources/cmd:Source/cmd:descriptions/cmd:Description[@LanguageId
+        = 'ISO639:eng' or @LanguageId = 'ISO639-2:eng' or @LanguageId = '']</xpath>
+      <xpath>/cmd:CMD/cmd:Components/cmd:imdi-corpus/cmd:Corpus/cmd:descriptions/cmd:Description[@LanguageId
+        = 'ISO639:eng' or @LanguageId = 'ISO639-2:eng' or @LanguageId = '']</xpath>
       <cmd:facet>description</cmd:facet>
     </field>
 
@@ -83,14 +79,9 @@
     </field>
 
     <field name="url" type="string">
-      <xpath>if (contains(.//cmd:CMD/cmd:Header/cmd:MdSelfLink/text(), 'http://') or
-        contains(.//cmd:CMD/cmd:Header/cmd:MdSelfLink/text(), 'https://')) then
-        .//cmd:CMD/cmd:Header/cmd:MdSelfLink/text() else ''</xpath>
-      <xpath>if (contains(.//cmd:CMD/cmd:Header/cmd:MdSelfLink/text(), 'hdl:')) then
-        concat('http://hdl.handle.net/',replace(substring-after(.//cmd:CMD/cmd:Header/cmd:MdSelfLink/text(),
-        'hdl:'),'@format=cmdi',''),'@view') else ''</xpath>
-      <xpath>concat('http://hdl.handle.net/',
-        replace(.//cmd:CMD/cmd:Header/cmd:MdSelfLink/text(),'@format=cmdi',''),'@view')</xpath>
+      <xpath>/cmd:CMD/cmd:Header/cmd:MdSelfLink[contains(.,'http://') or contains(.,'https://')]</xpath>
+      <xpath use="concat('http://hdl.handle.net/',substring-after(substring-before(.,'@format=cmdi'),'hdl:'),'@view')">/cmd:CMD/cmd:Header/cmd:MdSelfLink[contains(.,'hdl:')][contains(.,'@format=cmdi')]</xpath>
+      <xpath use="concat('http://hdl.handle.net/',substring-after(.,'hdl:'),'@view')">/cmd:CMD/cmd:Header/cmd:MdSelfLink[contains(.,'hdl:')]</xpath>
     </field>
 
     <field name="MetadataSource" type="string">
@@ -98,7 +89,7 @@
     </field>
 
     <field name="fulltext">
-      <xpath>normalize-space(string(/))</xpath>
+      <xpath use="normalize-space(string(.))">normalize-space(string(.))!=''</xpath>
       <cmd:facet>text</cmd:facet>
     </field>
 
@@ -113,17 +104,17 @@
     <field name="TemporalCoverage" type="string"/>
 
     <field name="DataProvider" type="string">
-      <xpath>.//cmd:CMD/cmd:Components/cmd:Session/cmd:MDGroup/cmd:Project/cmd:Contact/cmd:Organisation/text()</xpath>
+      <xpath>/cmd:CMD/cmd:Components/cmd:Session/cmd:MDGroup/cmd:Project/cmd:Contact/cmd:Organisation</xpath>
       <cmd:facet>organisation</cmd:facet>
     </field>
 
     <field name="PublicationDate" type="string">
       <!-- works for CLARIN_Centre_Vienna_Language_Resources_Portal -->
-      <xpath>.//cmd:CMD/cmd:Components/cmd:LexicalResourceProfile/cmd:GeneralInfo/cmd:PublicationDate/text()</xpath>
+      <xpath>/cmd:CMD/cmd:Components/cmd:LexicalResourceProfile/cmd:GeneralInfo/cmd:PublicationDate</xpath>
 
       <!-- fire creation date if publication date is not found -->
-      <xpath>.//cmd:CMD/cmd:Header/cmd:MdCreationDate/text()</xpath>
-      <xpath>.//cmd:CMD/cmd:Components/cmd:Session/cmd:Date/text()</xpath>
+      <xpath>/cmd:CMD/cmd:Header/cmd:MdCreationDate</xpath>
+      <xpath>/cmd:CMD/cmd:Components/cmd:Session/cmd:Date</xpath>
       <!-- <cmd:facet>date</cmd:facet> -->
     </field>
 

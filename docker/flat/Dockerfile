@@ -14,7 +14,21 @@ RUN /etc/my_init.d/00_regen_ssh_host_keys.sh
 #
 RUN apt-get update &&\
 	apt-get -y dist-upgrade &&\
-	apt-get -y install curl wget openssl apache2 postgresql php5 php5-gd php5-pgsql php5-xsl php5-curl unzip default-jdk libapache2-mod-jk expect ssh rsync git maven
+	apt-get -y install curl wget openssl apache2 postgresql php5 php5-gd php5-pgsql php5-xsl php5-curl unzip default-jdk libapache2-mod-jk expect ssh rsync git maven libxml2-utils
+
+#
+# Install Java 1.8
+#
+RUN set -x; \
+    java_version=8u72; \
+    wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" \
+    http://download.oracle.com/otn-pub/java/jdk/$java_version-b15/jdk-$java_version-linux-x64.tar.gz &&\
+    echo "54cde24fc0596f0f05b5d0d8f329053d  jdk-$java_version-linux-x64.tar.gz" | md5sum -c - &&\
+    tar -zxvf jdk-$java_version-linux-x64.tar.gz -C /opt &&\
+    rm jdk-$java_version-linux-x64.tar.gz
+
+ENV JAVA_HOME /opt/jdk1.8.0_72
+ENV PATH $JAVA_HOME/bin:$PATH
 
 #
 # Configure apache
@@ -62,12 +76,12 @@ ENV CATALINA_HOME /var/www/fedora/tomcat
 
 RUN mkdir /tmp/fedora &&\
 	cd /tmp/fedora &&\ 
-	wget "http://downloads.sourceforge.net/project/fedora-commons/fedora/3.8.0/fcrepo-installer-3.8.0.jar"
+	wget "http://downloads.sourceforge.net/project/fedora-commons/fedora/3.8.1/fcrepo-installer-3.8.1.jar"
 
 ADD fedora/install.properties /tmp/fedora/install.properties
 RUN /etc/init.d/postgresql start &&\
 	cd /tmp/fedora &&\
-	java -jar fcrepo-installer-3.8.0.jar install.properties &&\
+	java -jar fcrepo-installer-3.8.1.jar install.properties &&\
 	/etc/init.d/postgresql stop
 
 #
@@ -94,7 +108,7 @@ RUN cd /var/www/fedora/data/fedora-xacml-policies/repository-policies/ &&\
 	rm master.zip &&\
 	mv islandora-xacml-policies-master islandora
 RUN cd /var/www/fedora/tomcat/webapps/fedora/WEB-INF/lib &&\ 
-	wget "https://github.com/Islandora/islandora_drupal_filter/releases/download/v7.1.3/fcrepo-drupalauthfilter-3.8.0.jar"
+	wget "https://github.com/Islandora/islandora_drupal_filter/releases/download/v7.1.3/fcrepo-drupalauthfilter-3.8.1.jar"
 ADD fedora/jaas.conf /var/www/fedora/server/config/jaas.conf
 ADD fedora/filter-drupal.xml /var/www/fedora/server/config/filter-drupal.xml
 
@@ -126,41 +140,41 @@ ADD drupal/flat-logo.php /tmp/
 
 RUN mkdir /tmp/tuque &&\
 	cd /tmp/tuque &&\
-	wget "https://github.com/islandora/tuque/archive/1.4.zip" &&\
-	unzip 1.4.zip &&\
-	mv /tmp/tuque/tuque-1.4 /var/www/html/drupal/sites/all/libraries/tuque &&\
+	wget "https://github.com/islandora/tuque/archive/1.6.zip" &&\
+	unzip 1.6.zip &&\
+	mv /tmp/tuque/tuque-1.6 /var/www/html/drupal/sites/all/libraries/tuque &&\
 	sed -i 's|public $verifyPeer = TRUE;|public $verifyPeer = FALSE;|g' /var/www/html/drupal/sites/all/libraries/tuque/HttpConnection.php
 
 RUN mkdir -p /tmp/islandora &&\
 	mkdir -p /var/www/html/drupal/sites/all/modules/contrib &&\
 	mkdir -p /var/www/html/drupal/sites/all/themes &&\
 	cd /tmp/islandora &&\
-	wget "https://github.com/Islandora/islandora/archive/7.x-1.5.tar.gz" &&\
-	tar -xf 7.x-1.5.tar.gz -C /var/www/html/drupal/sites/all/modules/contrib/ &&\
+	wget "https://github.com/Islandora/islandora/archive/7.x-1.6.tar.gz" &&\
+	tar -xf 7.x-1.6.tar.gz -C /var/www/html/drupal/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
-	wget "https://github.com/islandora/islandora_solution_pack_collection/archive/7.x-1.5.zip" &&\
-	mv 7.x-1.5.zip islandora_solution_pack_collection-7.x-1.5.zip &&\
-	unzip islandora_solution_pack_collection-7.x-1.5.zip -d /var/www/html/drupal/sites/all/modules/contrib/ &&\
+	wget "https://github.com/islandora/islandora_solution_pack_collection/archive/7.x-1.6.zip" &&\
+	mv 7.x-1.6.zip islandora_solution_pack_collection-7.x-1.6.zip &&\
+	unzip islandora_solution_pack_collection-7.x-1.6.zip -d /var/www/html/drupal/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
-	wget "https://github.com/Islandora/islandora_solution_pack_compound/archive/7.x-1.5.zip" &&\
-	mv 7.x-1.5.zip islandora_solution_pack_compound-7.x-1.5.zip &&\
-	unzip islandora_solution_pack_compound-7.x-1.5.zip -d /var/www/html/drupal/sites/all/modules/contrib/
+	wget "https://github.com/Islandora/islandora_solution_pack_compound/archive/7.x-1.6.zip" &&\
+	mv 7.x-1.6.zip islandora_solution_pack_compound-7.x-1.6.zip &&\
+	unzip islandora_solution_pack_compound-7.x-1.6.zip -d /var/www/html/drupal/sites/all/modules/contrib/ &&\
+    sed -i 's|function islandora_compound_object_islandora_compoundCModel_islandora_view_object|function islandora_compound_object_islandora_compoundCModel_islandora_view_object_DISABLED_BY_FLAT|g' /var/www/html/drupal/sites/all/modules/contrib/islandora_solution_pack_compound-7.x-1.6/islandora_compound_object.module
 
 RUN mkdir -p /var/www/html/drupal/sites/all/modules/contrib/islandora_solution_pack_cmdi
 ADD flat/islandora_solution_pack_cmdi /var/www/html/drupal/sites/all/modules/contrib/islandora_solution_pack_cmdi
     
 RUN mkdir -p /tmp/bootstrap &&\
 	cd /tmp/bootstrap &&\
-#	wget "http://ftp.drupal.org/files/projects/bootstrap-7.x-3.x-dev.zip" &&\
-#	unzip bootstrap-7.x-3.x-dev.zip &&\
-	wget "http://ftp.drupal.org/files/projects/bootstrap-7.x-3.1-beta3.zip" &&\
-	unzip bootstrap-7.x-3.1-beta3.zip &&\
+	wget "http://ftp.drupal.org/files/projects/bootstrap-7.x-3.4.zip" &&\
+	unzip bootstrap-7.x-3.4.zip &&\
 	mv /tmp/bootstrap/bootstrap /var/www/html/drupal/sites/all/themes/bootstrap
 
 RUN cp -r /var/www/html/drupal/sites/all/themes/bootstrap/starterkits/cdn  /var/www/html/drupal/sites/all/themes/flat_bootstrap_theme &&\
 	cd /var/www/html/drupal/sites/all/themes/flat_bootstrap_theme/ &&\
 	mv cdn.starterkit flat_bootstrap_theme.info &&\
 	echo "settings[bootstrap_cdn_jsdelivr_theme] = 'flatly'" >> flat_bootstrap_theme.info
+ADD islandora/islandora-default.tpl.php /var/www/html/drupal/sites/all/themes/flat_bootstrap_theme/templates
 
 RUN cd /var/www/html/drupal/ &&\
 	export PGPASSWORD=fedora &&\
@@ -225,6 +239,8 @@ RUN chmod u+x /var/www/fedora/tomcat/bin/tomcat-fedora.sh &&\
 #
 # Add FLAT's own scripts, tools and icons
 #
+
+ENV MAVEN_OPTS -Xss10M
 
 RUN cd /tmp &&\
     git clone https://github.com/TheLanguageArchive/SchemAnon.git SchemAnon &&\
