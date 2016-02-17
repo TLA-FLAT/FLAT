@@ -264,7 +264,7 @@ public class Main {
                         fox.setDestination(destination);
                         fox.transform();
                         String fid = SaxonUtils.evaluateXPath(destination.getXdmNode(),"/*/@PID").evaluateSingle().getStringValue();
-                        File out = new File(fdir + "/"+fid.replaceAll("[^a-zA-Z0-9]", "_")+".xml");
+                        File out = new File(fdir + "/"+fid.replaceAll("[^a-zA-Z0-9]", "_")+"_CMD.xml");
                         if (out.exists()) {
                             System.err.println("ERR:"+i+"/"+s+": FOX["+out.getAbsolutePath()+"] already exists!");
                             out = new File(xdir + "/lat-error-"+(++err)+".xml");
