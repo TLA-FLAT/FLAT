@@ -174,7 +174,7 @@ RUN cp -r /var/www/html/drupal/sites/all/themes/bootstrap/starterkits/cdn  /var/
 	cd /var/www/html/drupal/sites/all/themes/flat_bootstrap_theme/ &&\
 	mv cdn.starterkit flat_bootstrap_theme.info &&\
 	echo "settings[bootstrap_cdn_jsdelivr_theme] = 'flatly'" >> flat_bootstrap_theme.info
-ADD islandora/islandora-default.tpl.php /var/www/html/drupal/sites/all/themes/flat_bootstrap_theme/templates
+ADD islandora/islandora-default.tpl.php /var/www/html/drupal/sites/all/themes/flat_bootstrap_theme/templates/islandora-default.tpl.php
 
 RUN cd /var/www/html/drupal/ &&\
 	export PGPASSWORD=fedora &&\
