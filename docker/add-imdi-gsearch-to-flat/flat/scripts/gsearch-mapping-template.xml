@@ -13,7 +13,7 @@
       <xpath>/cmd:CMD/cmd:Components/cmd:Session/cmd:MDGroup/cmd:Actors/cmd:Actor[cmd:Role
         = 'Author' or cmd:Role = 'Collector' or cmd:Role = 'Researcher' or cmd:Role = 'Annotator' or
         cmd:Role = 'Filmer' or cmd:Role = 'Recorder']/cmd:Name</xpath>
-      <xpath use="substring-before(substring-after(., 'Author: '),'&#10;')">/cmd:CMD/cmd:Components/cmd:Session/cmd:Resources/cmd:Source[1]/cmd:descriptions/cmd:Description[@LanguageId
+      <xpath val="substring-before(substring-after(., 'Author: '),'&#10;')">/cmd:CMD/cmd:Components/cmd:Session/cmd:Resources/cmd:Source[1]/cmd:descriptions/cmd:Description[@LanguageId
         = 'ISO639:eng' or @LanguageId = 'ISO639-2:eng' or @LanguageId = '']</xpath>
     </field>
 
@@ -80,8 +80,8 @@
 
     <field name="url" type="string">
       <xpath>/cmd:CMD/cmd:Header/cmd:MdSelfLink[contains(.,'http://') or contains(.,'https://')]</xpath>
-      <xpath use="concat('http://hdl.handle.net/',substring-after(substring-before(.,'@format=cmdi'),'hdl:'),'@view')">/cmd:CMD/cmd:Header/cmd:MdSelfLink[contains(.,'hdl:')][contains(.,'@format=cmdi')]</xpath>
-      <xpath use="concat('http://hdl.handle.net/',substring-after(.,'hdl:'),'@view')">/cmd:CMD/cmd:Header/cmd:MdSelfLink[contains(.,'hdl:')]</xpath>
+      <xpath val="concat('http://hdl.handle.net/',substring-after(substring-before(.,'@format=cmdi'),'hdl:'),'@view')">/cmd:CMD/cmd:Header/cmd:MdSelfLink[contains(.,'hdl:')][contains(.,'@format=cmdi')]</xpath>
+      <xpath val="concat('http://hdl.handle.net/',substring-after(.,'hdl:'),'@view')">/cmd:CMD/cmd:Header/cmd:MdSelfLink[contains(.,'hdl:')]</xpath>
     </field>
 
     <field name="MetadataSource" type="string">
@@ -89,7 +89,7 @@
     </field>
 
     <field name="fulltext">
-      <xpath use="normalize-space(string(.))">normalize-space(string(.))!=''</xpath>
+      <xpath val="normalize-space(string(.))">normalize-space(string(.))!=''</xpath>
       <cmd:facet>text</cmd:facet>
     </field>
 

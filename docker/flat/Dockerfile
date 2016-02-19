@@ -262,6 +262,7 @@ RUN chmod +x /app/flat/*.sh
 
 RUN mkdir -p /app/flat/icons
 ADD flat/icons /app/flat/icons
+ENV FLAT_ICONS /app/flat/icons
     
 # Clean up APT and /tmp when done.
 RUN apt-get clean &&\

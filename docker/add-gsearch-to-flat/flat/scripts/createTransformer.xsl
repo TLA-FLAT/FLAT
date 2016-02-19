@@ -66,8 +66,8 @@
 								<xslx:if test="generate-id(current()) = generate-id(key('cmd-key-{$name}-{position()}', string())[1])">
 									<field name="cmd.{$name}">
 										<xsl:choose>
-											<xsl:when test="normalize-space(@use) != ''">
-												<xslx:value-of select="{@use}"/>
+											<xsl:when test="normalize-space(@val) != ''">
+												<xslx:value-of select="{@val}"/>
 											</xsl:when>
 											<xsl:otherwise>
 												<xslx:value-of select="normalize-space(.)"/>
@@ -82,8 +82,8 @@
 						<xslx:when test="{normalize-space($xp)}">
 							<field name="cmd.{$name}">
 								<xsl:choose>
-									<xsl:when test="normalize-space(@use) != ''">
-										<xslx:value-of select="{@use}"/>
+									<xsl:when test="normalize-space(@val) != ''">
+										<xslx:value-of select="{@val}"/>
 									</xsl:when>
 									<xsl:otherwise>
 										<xslx:value-of select="normalize-space(.)"/>

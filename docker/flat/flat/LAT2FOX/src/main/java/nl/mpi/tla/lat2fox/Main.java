@@ -55,6 +55,7 @@ public class Main {
         System.err.println("INF: -m=<FILE>  stylesheet containing the mapping from CMD to other (non CMD and non DC) metadata formats (optional)");
         System.err.println("INF: -o=<XPATH> XPath 2.0 expressions determining if the CMD should be offered via OAI-PMH");
         System.err.println("INF: -s=<NAME>  name of the server/repository used by OAI");
+        System.err.println("INF: -b=<DIR>   directory where the icons are stored (default: /app/flat/icons)");
         System.err.println("INF: -v         validate the FOX files (optional)");
         System.err.println("INF: -l         lax check if a local resource exists (optional)");
         System.err.println("INF: -h         don't create a CMD object as first child of the compound, but include the CMD in the compound itself (optional)");
@@ -66,6 +67,7 @@ public class Main {
         String dir = ".";
         String fdir = null;
         String idir = null;
+        String bdir = null;
         String xdir = null;
         String cext = "cmdi";
         String cfile = null;
@@ -80,7 +82,7 @@ public class Main {
         boolean relationCheck = true;
         int ndir = 0;
         // check command line
-        OptionParser parser = new OptionParser( "zhlve:r:f:i:x:n:c:d:m:o:s:?*" );
+        OptionParser parser = new OptionParser( "zhlve:r:f:i:x:n:c:d:m:o:s:b:?*" );
         OptionSet options = parser.parse(args);
         if (options.has("l"))
             laxResourceCheck = true;
@@ -100,6 +102,8 @@ public class Main {
             idir = (String)options.valueOf("i");
         if (options.has("x"))
             xdir = (String)options.valueOf("x");
+        if (options.has("b"))
+            bdir = (String)options.valueOf("b");
         if (options.has("c")) {
             cfile = (String)options.valueOf("c");
             File c = new File(cfile);
@@ -258,6 +262,8 @@ public class Main {
                             fox.setParameter(new QName("repository"), new XdmAtomicValue(server));
                         if (oxp != null)
                             fox.setParameter(new QName("oai-include-eval"), new XdmAtomicValue(oxp));
+                        if (bdir != null)
+                            fox.setParameter(new QName("icon-base"), new XdmAtomicValue(bdir));
                         fox.setParameter(new QName("create-cmd-object"), new XdmAtomicValue(createCMDObject));
                         fox.setSource(new StreamSource(input));
                         XdmDestination destination = new XdmDestination();

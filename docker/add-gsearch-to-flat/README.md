@@ -24,21 +24,23 @@ docker run -p 80:80 -p 8443:8443 -p 8080 -v ~/my-resources:/lat -t -i flat-with-
 
 ## Additional configuration ##
 
-FLAT uses the Component Metadata (CMD) Infrastructure and allows arbitary CMD profiles. For the Solr facets a mapping from these profiles to the facets need to be created.
+FLAT uses the Component Metadata (CMD) Infrastructure and allows arbitary CMD profiles. For the Solr facets a mapping from these profiles to the wanted facets needs to be created.
 This mapping is specified in the [/app/flat/gsearch-mapping-template.xml](flat/scripts/gsearch-mapping-template.xml) file. The core of the mapping is a facet (or field) specification like
 
 ```xml
 <field name="Language">
-      <xpath>.//cmd:CMD/cmd:Components/cmd:Session/cmd:MDGroup/cmd:Content/cmd:Content_Languages/cmd:Content_Language/cmd:Name/text()</xpath>
+      <xpath val="lower-case(.)">.//cmd:CMD/cmd:Components/cmd:Session/cmd:MDGroup/cmd:Content/cmd:Content_Languages/cmd:Content_Language/cmd:Name</xpath>
       <cmd:facet>language</cmd:facet>
       <cmd:concept>http://hdl.handle.net/11459/CCR_c-5358_3cd089fe-ad03-6181-b20c-635ea41ed818</cmd:concept>
 </field>
 ```
 
 This shows that the mapping can be based on:
- * hardcoded xpaths
+ * hardcoded XPaths (version 1.0)
  * using the facet mapping of the [VLO](http://vlo.clarin.eu/) 
  * using a concept from a concept registry like the [CLARIN Concept Registry](http://www.clarin.eu/conceptregistry)
+ 
+Potentially the facet values found can be further manipulated with a XPath 1.0 expression, which have to be placed in the `@val` attribute on the `xpath`, `cmd:facet` or `cmd:concept` elements.
 
 The current mapping has a general CMDI based on the VLO facet mapping. Adapt the mapping if you have
 specific mappings for your own CMD profiles. (See the [CMDIfied IMDI mapping](../add-imdi-gsearch-to-flat/flat/scripts/gsearch-mapping-template.xml) for an example.)

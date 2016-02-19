@@ -23,12 +23,16 @@
 	<xsl:function name="cmd:findConceptPaths">
 		<xsl:param name="concepts"/>
 		<xsl:param name="multiple" as="xs:boolean"/>
+		<xsl:param name="val"/>
 		<xsl:variable name="paths" select="$profiles//*[@ConceptLink=$concepts]"/>
 		<xsl:if test="exists($paths)">
 			<xsl:choose>
 				<xsl:when test="$multiple">
 					<xsl:for-each-group select="$paths" group-by="ancestor::CMD_ComponentSpec//Header/ID">
 						<xpath>
+							<xsl:if test="exists($val)">
+								<xsl:attribute name="val" select="$val"/>
+							</xsl:if>
 							<xsl:for-each select="current-group()">
 								<xsl:text>/cmd:CMD[cmd:Header/cmd:MdProfile[contains(.,'</xsl:text>
 								<xsl:value-of select="current-grouping-key()"/>
@@ -44,6 +48,9 @@
 				<xsl:otherwise>
 					<xsl:for-each select="$paths">
 						<xpath>
+							<xsl:if test="exists($val)">
+								<xsl:attribute name="val" select="$val"/>
+							</xsl:if>
 							<xsl:text>/cmd:CMD[contains(cmd:Header/cmd:MdProfile,'</xsl:text>
 							<xsl:value-of select="ancestor::CMD_ComponentSpec//Header/ID"/>
 							<xsl:text>')]/cmd:Components/cmd:</xsl:text>
@@ -53,6 +60,12 @@
 				</xsl:otherwise>
 			</xsl:choose>
 		</xsl:if>
+	</xsl:function>
+	
+	<xsl:function name="cmd:findConceptPaths">
+		<xsl:param name="concepts"/>
+		<xsl:param name="multiple" as="xs:boolean"/>
+		<xsl:sequence select="cmd:findConceptPaths($concepts,$multiple,())"></xsl:sequence>
 	</xsl:function>
 	
 	<xsl:template match="namespaces">
@@ -73,11 +86,11 @@
 	</xsl:template>
 	
 	<xsl:template match="cmd:concept">
-		<xsl:copy-of select="cmd:findConceptPaths(current(),not(../@multiValued eq 'false'))"/>
+		<xsl:copy-of select="cmd:findConceptPaths(current(),not(../@multiValued eq 'false'),@val)"/>
 	</xsl:template>
 	
 	<xsl:template match="facetConcept" mode="clarin">
-		<xsl:copy-of select="cmd:findConceptPaths(concept,not(@allowMultipleValues eq 'false'))"/>
+		<xsl:copy-of select="cmd:findConceptPaths(concept,not(@allowMultipleValues eq 'false'),@val)"/>
 		<xsl:apply-templates select="pattern" mode="#current"/>
 	</xsl:template>
 	

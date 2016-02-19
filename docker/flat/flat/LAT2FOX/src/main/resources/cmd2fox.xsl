@@ -28,7 +28,7 @@
 	</xsl:variable>
 	<xsl:variable name="NS" select="$namespaces/descendant-or-self::ns"/>
 	
-	<xsl:param name="icon-base" select="'file:/app/flat/icons'"/>
+	<xsl:param name="icon-base" select="'/app/flat/icons'"/>
 
 	<xsl:function name="cmd:hdl">
 		<xsl:param name="pid"/>
@@ -349,7 +349,7 @@
 									</foxml:datastream>
 									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="TN" STATE="A" CONTROL_GROUP="E">
 										<foxml:datastreamVersion ID="TN.0" LABEL="icon.png" MIMETYPE="image/png">
-											<foxml:contentLocation TYPE="URL" REF="{$icon-base}/metadata.png"/>
+											<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/metadata.png"/>
 										</foxml:datastreamVersion>
 									</foxml:datastream>
 									<!-- Metadata: other -->
@@ -435,7 +435,7 @@
 			</foxml:datastream>
 			<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="TN" STATE="A" CONTROL_GROUP="E">
 				<foxml:datastreamVersion ID="TN.0" LABEL="icon.png" MIMETYPE="image/png">
-					<foxml:contentLocation TYPE="URL" REF="{$icon-base}/folder.png"/>
+					<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/folder.png"/>
 				</foxml:datastreamVersion>
 			</foxml:datastream>		
 			<!-- Resource Proxies -->
@@ -705,19 +705,19 @@
 									<foxml:datastreamVersion ID="TN.0" LABEL="icon.png" MIMETYPE="image/png">
 										<xsl:choose>
 											<xsl:when test="starts-with($resMIME,'audio/')">
-												<foxml:contentLocation TYPE="URL" REF="{$icon-base}/audio.png"/>
+												<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/audio.png"/>
 											</xsl:when>
 											<xsl:when test="starts-with($resMIME,'image/')">
-												<foxml:contentLocation TYPE="URL" REF="{$icon-base}/image.png"/>
+												<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/image.png"/>
 											</xsl:when>
 											<xsl:when test="starts-with($resMIME,'text/')">
-												<foxml:contentLocation TYPE="URL" REF="{$icon-base}/text.png"/>
+												<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/text.png"/>
 											</xsl:when>
 											<xsl:when test="starts-with($resMIME,'video/')">
-												<foxml:contentLocation TYPE="URL" REF="{$icon-base}/video.png"/>
+												<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/video.png"/>
 											</xsl:when>
 											<xsl:otherwise>
-												<foxml:contentLocation TYPE="URL" REF="{$icon-base}/other.png"/>
+												<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/other.png"/>
 											</xsl:otherwise>
 										</xsl:choose>
 									</foxml:datastreamVersion>

@@ -12,7 +12,7 @@ fi
 
 date
 
-/app/flat/lat2fox.sh -h -n=1000 -r=/app/flat/relations.xml -d=/app/flat/cmd2dc.xsl -f=/app/flat/fox -x=/app/flat/fox-error -i=/lat $ARGS /app/flat/cmd
+/app/flat/lat2fox.sh -h -n=1000 -r=/app/flat/relations.xml -d=/app/flat/cmd2dc.xsl -f=/app/flat/fox -x=/app/flat/fox-error -i=/lat -b=$FLAT_ICONS $ARGS /app/flat/cmd
 ERR=$?
 
 date
