@@ -11,7 +11,7 @@ function flat_deposit_ui_help($path, $arg){
     switch ($path){
         case 'admin/help#flat_deposit_ui':{
             $ret_val = '<h3>' . t('About') . '</h3>';
-            $ret_val = '<p>' . t('The FLAT deposit UI module is designed to manage the project data of each institutes employee') . '</p>';
+            $ret_val .= '<p>' . t('The FLAT deposit UI module is designed to manage the project data of each institutes employee') . '</p>';
             return $ret_val;
             break;
         }
@@ -65,10 +65,12 @@ function flat_deposit_ui_menu()
         'page callback' => 'drupal_get_form',
         'page arguments' => array( 'flat_deposit_ui_admin_form'),
     );
-    // Page for view content
+    // Page for ingested data
     $items['view'] = array(
-        'title' => 'View uploaded data',
-        'page callback' => 'flat_deposit_ui_view_info',
+        'title' => 'View archived data',
+        'description' => 'Notification of data ingested to server',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'flat_deposit_ui_view_ingested_files',
         'access callback' => TRUE,
         'page arguments' => array(
             'content' => 'Under construction'),
@@ -76,23 +78,26 @@ function flat_deposit_ui_menu()
     // Page for manage bundles
     $items['managebundles'] = array(
         'title' => 'Manage bundles',
-        'page callback' => 'flat_deposit_ui_view_info',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'flat_deposit_ui_other_info',
         'access callback' => TRUE,
         'page arguments' => array(
             'content' => 'Under construction'),
     );
-    // Page for manage bundles
+    // Page for manage collections
     $items['managecollections'] = array(
         'title' => 'Manage Collections',
-        'page callback' => 'flat_deposit_ui_view_info',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'flat_deposit_ui_view_collections',
         'access callback' => TRUE,
         'page arguments' => array(
             'content' => 'Under construction'),
     );
-    // Page for manage bundles
+    // Page for commiting changes
     $items['commitchanges'] = array(
         'title' => 'Commit changes',
-        'page callback' => 'flat_deposit_ui_view_info',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'flat_deposit_ui_other_info',
         'access callback' => TRUE,
         'page arguments' => array(
             'content' => 'Under construction'),
@@ -104,9 +109,10 @@ function flat_deposit_ui_menu()
 /**
  * @return string to be displayed on the page
  */
-function flat_deposit_ui_view_info($variable)
+function flat_deposit_ui_other_info($variable)
 {
     return t($variable);
+    #drupal_goto("islandora/object/islandora:root");
 }
 
 
@@ -187,26 +193,151 @@ function flat_deposit_ui_menu_block_generate(){
         'link_view' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
-            '#markup' => '<a href="view" title="View uploads"><img title="View uploads" alt="View uploads" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/View.png"/></a><br/>',
-            '#suffix' => '<a href="view">View uploads</a><br/></div>'),
+            '#markup' => '<a href="/drupal/view" title="View uploads"><img title="View uploads" alt="View uploads" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/View.png"/></a><br/>',
+            '#suffix' => '<a href="/drupal/view">View uploads</a><br/></div>'),
         'link_manage_bundles' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
-            '#markup' => '<a href="managebundles/" title="Manage bundles"><img title="Manage bundles" alt="Manage bundles" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Manage.png"/></a><br/>',
-            '#suffix' => '<a href="managebundles">Manage bundles</a><br/></div>'),
+            '#markup' => '<a href="/drupal/managebundles/" title="Manage bundles"><img title="Manage bundles" alt="Manage bundles" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Manage.png"/></a><br/>',
+            '#suffix' => '<a href="/drupal/managebundles">Manage bundles</a><br/></div>'),
         'link_manage_collections' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
-            '#markup' => '<a href="managecollections" title="Manage collections"><img title="Manage collections" alt="Manage collections" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Manage_coll.png"/></a><br/>',
-            '#suffix' => '<a href="managecollections">Manage collections</a><br/></div>'),
+            '#markup' => '<a href="/drupal/managecollections" title="Manage collections"><img title="Manage collections" alt="Manage collections" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Manage_coll.png"/></a><br/>',
+            '#suffix' => '<a href="/drupal/managecollections">Manage collections</a><br/></div>'),
         'link_commit' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
-            '#markup' => '<a href="commitchanges" title="Commit changes"><img title="Commit changes" alt="Commit changes" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Commit.png"/></a><br/>',
-            '#suffix' => '<a href="commitchanges">Commit changes</a><br/></div>'),
+            '#markup' => '<a href="/drupal/commitchanges" title="Commit changes"><img title="Commit changes" alt="Commit changes" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Commit.png"/></a><br/>',
+            '#suffix' => '<a href="/drupal/commitchanges">Commit changes</a><br/></div>'),
     );
 
     return $output;
 }
-//theme_menu_link()
+
+
+/**
+ * Fedora SPARQL query for all owned data.
+ */
+
+function create_query_all_owned_files($user) {
+    $query = "";
+    $query .= "PREFIX fm: <" . FEDORA_MODEL_URI . ">
+            PREFIX fv: <info:fedora/fedora-system:def/view#>
+            SELECT ?pid ?label ?created
+            FROM <#ri>
+            WHERE {
+                ?object <http://purl.org/dc/elements/1.1/identifier> ?pid;
+                fm:state fm:Active;
+                fm:label ?label;
+                fm:createdDate ?created;
+                fm:ownerId ?owner;
+                fv:disseminates ?dis
+                FILTER (REGEX (STR(?dis), 'OBJ') && REGEX (STR(?owner),'" . $user . "'))
+            }
+            ORDER BY DESC(?created)";
+    return $query;
+}
+
+/**
+ * Gets a list of all data ingested since last login
+ */
+function flat_deposit_ui_view_ingested_files() {
+
+    $tuque = islandora_get_tuque_connection();
+
+    $query = create_query_all_owned_files($GLOBALS['user']->name);
+
+    $results = $tuque->repository->ri->sparqlQuery($query);
+
+    $rows = array();
+    foreach ($results as $result) {
+        $pid = $result['pid']['value'];
+        $label = $result['label']['value'];
+        $createdDate = $result['created']['value'];
+
+        $createdDate_formatted = format_date(strtotime($createdDate));
+
+        $var = array(
+            'theme' => 'link',
+            'text' => 'click here',
+            'path' => "islandora/object/$pid",
+            'options' => array(
+                'attributes' => array(),
+                'html' => FALSE
+            )
+        );
+
+        $link = theme_link($var);
+        #$link = 'link';
+        $row = array($label, $createdDate_formatted, $link) ;
+        array_push($rows,$row);
+    }
+
+    // creating header array
+    $header = array( t('File name'), t('Date ingested'),t('Direct link'));
+    #islandora_object_load($object_id)
+    $output = array(
+    // Table, using the theme hook 'table'.
+    'notification' => array(
+        '#theme' => 'table',
+        '#caption' => t('Notification'),
+        '#header' => $header,
+        '#rows' => $rows,
+    ),
+  );
+
+    return $output;
+}
+
+
+/**
+ * Gets a list of all data ingested since last login
+ */
+
+function query_owned_collection($name)
+{
+    $content_model = "islandora:sp_cmdiCModel";
+
+    $query = "PREFIX fm: <" . FEDORA_MODEL_URI . ">
+            PREFIX fr: <" . FEDORA_RELS_EXT_URI . ">
+            SELECT ?pid ?label
+            FROM <#ri>
+            WHERE {
+                ?object fm:state fm:Active;
+                ?pid fm:label ?label ;
+                }";
+
+    return $query;
+}
+/**
+ * Gets a list of all data ingested since last login
+ */
+function flat_deposit_ui_view_collections()
+{
+
+    $tuque = islandora_get_tuque_connection();
+
+    $query = query_owned_collections($GLOBALS['user']->name);
+
+    $results = $tuque->repository->ri->sparqlQuery($query);
+
+    $rows = array();
+
+    // creating header array
+    $header = array( t('Project name'), t('Date ingested'),t('Direct link'));
+    #islandora_object_load($object_id)
+    $output = array(
+        // Table, using the theme hook 'table'.
+        'notification' => array(
+            '#theme' => 'table',
+            '#caption' => t('Notification'),
+            '#header' => $header,
+            '#rows' => $rows,
+        ),
+    );
+
+    return $output;
+}
+
 ?>
