@@ -163,6 +163,9 @@ RUN mkdir -p /tmp/islandora &&\
 
 RUN mkdir -p /var/www/html/drupal/sites/all/modules/contrib/islandora_solution_pack_cmdi
 ADD flat/islandora_solution_pack_cmdi /var/www/html/drupal/sites/all/modules/contrib/islandora_solution_pack_cmdi
+
+RUN sed -i "/\"json\"/a \"cmdi\" => \"application/x-cmdi+xml\"," /var/www/html/drupal/sites/all/modules/contrib/islandora-7.x-1.6/includes/mimetype.utils.inc &&\
+	sed -i "/header('Content-type: ' . \$datastream/a if (\$datastream->ID == 'CMD') {\nheader('Content-type: ' . 'application/xml');\n}" /var/www/html/drupal/sites/all/modules/contrib/islandora-7.x-1.6/includes/datastream.inc
     
 RUN mkdir -p /tmp/bootstrap &&\
 	cd /tmp/bootstrap &&\
