@@ -31,8 +31,8 @@ RUN cd /var/www/html/drupal/sites/all/libraries/ &&\
 
 # add extra modules    
 RUN cd /var/www/html/drupal/ &&\
-    /var/www/composer/vendor/drush/drush/drush dis toolbar &&\
-    /var/www/composer/vendor/drush/drush/drush dl admin_menu &&\
+    /var/www/composer/vendor/drush/drush/drush dis -y toolbar &&\
+    /var/www/composer/vendor/drush/drush/drush dl -y admin_menu &&\
     /var/www/composer/vendor/drush/drush/drush en -y admin_menu &&\
     /var/www/composer/vendor/drush/drush/drush dl -y wysiwyg  &&\
     /var/www/composer/vendor/drush/drush/drush en -y wysiwyg  &&\
