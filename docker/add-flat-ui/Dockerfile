@@ -31,16 +31,21 @@ RUN cd /var/www/html/drupal/sites/all/libraries/ &&\
 
 # add extra modules    
 RUN cd /var/www/html/drupal/ &&\
-    /var/www/composer/vendor/drush/drush/drush dis -y toolbar &&\
-    /var/www/composer/vendor/drush/drush/drush dl -y admin_menu &&\
-    /var/www/composer/vendor/drush/drush/drush en -y admin_menu &&\
-    /var/www/composer/vendor/drush/drush/drush dl -y wysiwyg  &&\
-    /var/www/composer/vendor/drush/drush/drush en -y wysiwyg  &&\
-    /var/www/composer/vendor/drush/drush/drush dl -y imce  &&\
-    /var/www/composer/vendor/drush/drush/drush en -y imce  &&\
-    /var/www/composer/vendor/drush/drush/drush dl -y imce_wysiwyg  &&\
-    /var/www/composer/vendor/drush/drush/drush en -y imce_wysiwyg  &&\
-    /var/www/composer/vendor/drush/drush/drush en -y flat_deposit_ui
+    export PGPASSWORD=fedora &&\
+	/etc/init.d/postgresql start &&\
+	/var/www/fedora/tomcat/bin/startup.sh &&\
+	bash -c "timeout 60 grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
+    sleep 10 &&\
+    /var/www/composer/vendor/drush/drush/drush dis toolbar -y &&\
+    /var/www/composer/vendor/drush/drush/drush dl admin_menu -y &&\
+    /var/www/composer/vendor/drush/drush/drush en admin_menu -y &&\
+    /var/www/composer/vendor/drush/drush/drush dl wysiwyg -y  &&\
+    /var/www/composer/vendor/drush/drush/drush en wysiwyg -y  &&\
+    /var/www/composer/vendor/drush/drush/drush dl imce -y  &&\
+    /var/www/composer/vendor/drush/drush/drush en imce -y  &&\
+    /var/www/composer/vendor/drush/drush/drush dl imce_wysiwyg -y  &&\
+    /var/www/composer/vendor/drush/drush/drush en imce_wysiwyg -y  &&\
+    /var/www/composer/vendor/drush/drush/drush en flat_deposit_ui -y
 
 #Clean up when done.
 RUN apt-get clean &&\
