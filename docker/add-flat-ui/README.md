@@ -52,7 +52,13 @@ docker build --rm=true -t flat add-imdi-conversion-to-flat/
 docker build --rm=true -t flat add-gsearch-to-flat/
 docker build --rm=true -t flat add-islandora-solr-to-flat/
 docker build --rm=true -t flat add-imdi-gsearch-to-flat/
-docker build --rm=true -t flat add-flat-ui/
+
+# optional with solutionpacks (for safety make new image)
+docker build --rm=true -t flat-with-sps add-solution-packs-to-flat/
+docker tag <image-ID> flat-with-sps
+
+#new image for deposit UI
+docker build --rm=true -t flat_dvr add-flat-ui/
 
 #cleanup
 docker rm flat-base-con
