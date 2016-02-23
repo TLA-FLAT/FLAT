@@ -1,4 +1,4 @@
-FROM        flat
+FROM        flat-with-sps
 MAINTAINER	Daniel von Rhein <daniel.vonrhein@mpi.nl>
 
 #Build xdebug library
