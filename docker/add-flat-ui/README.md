@@ -46,6 +46,7 @@ cat flat-base.tar | docker import - flat
 mkdir add-flat-env
 echo "FROM flat" > add-flat-env/Dockerfile
 egrep '^(ENV|CMD|ENTRYPOINT|EXPOSE|WORKDIR).*' flat/Dockerfile >> add-flat-env/Dockerfile
+docker build --rm=true -t flat add-flat-env/
 
 #add all parents to image
 docker build --rm=true -t flat add-imdi-conversion-to-flat/
