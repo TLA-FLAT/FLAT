@@ -59,7 +59,9 @@
 						/cmd:CMD[contains(cmd:Header/cmd:MdProfile, 'clarin.eu:cr1:p_1396012485083')]/cmd:Components/cmd:VALID/cmd:Session/cmd:Title/text(),
 						/cmd:CMD[contains(cmd:Header/cmd:MdProfile, 'clarin.eu:cr1:p_1396012485083')]/cmd:Components/cmd:VALID/cmd:Session/cmd:Resources/cmd:MediaFile/cmd:ResourceID/text(),
 						/cmd:CMD[contains(cmd:Header/cmd:MdProfile, 'clarin.eu:cr1:p_1396012485083')]/cmd:Components/cmd:VALID/cmd:Session/cmd:Resources/cmd:WrittenResource/cmd:ResourceId/text(),
-						/cmd:CMD[contains(cmd:Header/cmd:MdProfile, 'clarin.eu:cr1:p_1396012485083')]/cmd:Components/cmd:VALID/cmd:Session/cmd:Resources/cmd:TestScores/cmd:ResourceID/text()"/>
+						/cmd:CMD[contains(cmd:Header/cmd:MdProfile, 'clarin.eu:cr1:p_1396012485083')]/cmd:Components/cmd:VALID/cmd:Session/cmd:Resources/cmd:TestScores/cmd:ResourceID/text(),
+						/cmd:CMD[contains(cmd:Header/cmd:MdProfile, 'clarin.eu:cr1:p_1361876010525')]/cmd:Components/cmd:DiscAn_Project/cmd:Project/cmd:ProjectName/text(),
+						/cmd:CMD[contains(cmd:Header/cmd:MdProfile, 'clarin.eu:cr1:p_1361876010525')]/cmd:Components/cmd:DiscAn_Project/cmd:Project/cmd:ProjectTitle/text()" />
 				<xsl:if test="exists($title[normalize-space() != ''][1])">
 					<dc:title>
 						<xsl:value-of select="$title[normalize-space() != ''][1]"/>
