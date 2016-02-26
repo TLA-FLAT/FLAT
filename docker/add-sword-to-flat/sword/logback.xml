@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="3 minutes">
+    <property name="LOGDIR" value="/app/flat/deposit/sword" />
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <Pattern>%-5level [%thread]: %msg %n</Pattern>
+        </encoder>
+    </appender>    
+
+    <appender name="EASY_DEPOSIT_LOG"
+        class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOGDIR}/easy-deposit.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>${LOGDIR}/easy-deposit.%d{yyyy-MM-dd}.log</fileNamePattern>
+
+            <!-- keep 30 days' worth of history -->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%p %d [%t] - %m%n</pattern>
+        </encoder>
+    </appender> 
+    
+    <root level="warn">
+        <appender-ref ref="CONSOLE" />
+    </root>
+
+    <logger name="nl.knaw.dans" level="DEBUG" >
+       <appender-ref ref="EASY_DEPOSIT_LOG" />
+    </logger>
+</configuration>
