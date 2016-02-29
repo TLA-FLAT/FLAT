@@ -70,4 +70,10 @@ rm flat-base.tar
 ## Notes ##
 need to run /usr/sbin/sshd from within container
 
+In order to see the data on the fedora server, we need to change a parameter in our native fedora config file (/var/www/fedora/server/config/fedora.fcfg):
+
+```ssh
+<param name="ENFORCE-MODE" value="permit-all-requests"/>
+```
+
 ## References ##
