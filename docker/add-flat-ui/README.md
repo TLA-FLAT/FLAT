@@ -53,6 +53,7 @@ docker build --rm=true -t flat add-imdi-conversion-to-flat/
 docker build --rm=true -t flat add-gsearch-to-flat/
 docker build --rm=true -t flat add-islandora-solr-to-flat/
 docker build --rm=true -t flat add-imdi-gsearch-to-flat/
+docker build --rm=true -t flat flat-with-sword/
 
 # optional with solutionpacks (for safety make new image)
 docker build --rm=true -t flat-with-sps add-solution-packs-to-flat/
