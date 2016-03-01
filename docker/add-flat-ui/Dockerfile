@@ -49,7 +49,7 @@ RUN cd /var/www/html/drupal/ &&\
 
 # add module configuration
 COPY wysiwyg/wysiwyg.sql /tmp/ &&\
-    /var/www/composer/vendor/drush/drush/drush sql-query "$(cat /tmp/query.sql)” -y
+    /var/www/composer/vendor/drush/drush/drush sql-query "$(cat /tmp/query.sql)" -y
 
 #Clean up when done.
 RUN apt-get clean &&\
