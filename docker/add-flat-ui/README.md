@@ -48,15 +48,15 @@ echo "FROM flat" > add-flat-env/Dockerfile
 egrep '^(ENV|CMD|ENTRYPOINT|EXPOSE|WORKDIR).*' flat/Dockerfile >> add-flat-env/Dockerfile
 docker build --rm=true -t flat add-flat-env/
 
-#add all parents to image
+#(optional) add gsearch and solar to image
 docker build --rm=true -t flat add-imdi-conversion-to-flat/
 docker build --rm=true -t flat add-gsearch-to-flat/
 docker build --rm=true -t flat add-islandora-solr-to-flat/
 docker build --rm=true -t flat add-imdi-gsearch-to-flat/
 
-# optional with solutionpacks (for safety make new image)
+# add solution packs and sword (for safety make new image)
 docker build --rm=true -t flat-with-sps add-solution-packs-to-flat/
-docker tag <image-ID> flat-with-sps
+docker build --rm=true -t flat add-sword-to-flat/
 
 #new image for deposit UI
 docker build --rm=true -t flat_dvr add-flat-ui/
@@ -68,12 +68,17 @@ rm flat-base.tar
 ```
 
 ## Notes ##
-need to run /usr/sbin/sshd from within container
-
-In order to see the data on the fedora server, we need to change a parameter in our native fedora config file (/var/www/fedora/server/config/fedora.fcfg):
+Start ssh server on container
 
 ```ssh
-<param name="ENFORCE-MODE" value="permit-all-requests"/>
+/usr/sbin/sshd 
+```
+
+In order to see the data on the fedora server, we need to change a parameter in our native fedora config file 
+
+```ssh
+vim /var/www/fedora/server/config/fedora.fcfg
+# change value of ENFORCE MODE to permit all requests: <param name="ENFORCE-MODE" value="permit-all-requests"/>
 ```
 
 ## References ##
