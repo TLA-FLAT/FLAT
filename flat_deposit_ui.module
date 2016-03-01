@@ -3,6 +3,7 @@
  * @file
  * Custom user interface for the FLAT data repository
  */
+require_once ('fedora_queries.php');
 
 /**
  * Implements hook_help().
@@ -11,7 +12,7 @@ function flat_deposit_ui_help($path, $arg){
     switch ($path){
         case 'admin/help#flat_deposit_ui':{
             $ret_val = '<h3>' . t('About') . '</h3>';
-            $ret_val = '<p>' . t('The FLAT deposit UI module is designed to manage the project data of each institutes employee') . '</p>';
+            $ret_val .= '<p>' . t('The FLAT deposit UI module is designed to manage the project data of each institutes employee') . '</p>';
             return $ret_val;
             break;
         }
@@ -65,15 +66,58 @@ function flat_deposit_ui_menu()
         'page callback' => 'drupal_get_form',
         'page arguments' => array( 'flat_deposit_ui_admin_form'),
     );
-    $items['example'] = array(
-        'title' => 'Example Page',
-        'page callback' => 'example_page',
-        'access arguments' => array('access content'),
-        'type' => MENU_SUGGESTED_ITEM,
+    // Page for ingested data
+    $items['view'] = array(
+        'title' => 'View archived data',
+        'description' => 'Notification of data ingested to server',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'flat_deposit_ui_view_ingested_files',
+        'access callback' => TRUE,
+        'page arguments' => array(
+            'content' => 'Under construction'),
+    );
+    // Page for manage bundles
+    $items['managebundles'] = array(
+        'title' => 'Manage bundles',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'flat_deposit_ui_other_info',
+        'access callback' => TRUE,
+        'page arguments' => array(
+            'content' => 'Under construction'),
+    );
+    // Page for manage collections
+    $items['managecollections'] = array(
+        'title' => 'Manage Collections',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'flat_deposit_ui_view_collections',
+        'access callback' => TRUE,
+        'page arguments' => array(
+            'content' => 'Under construction'),
+    );
+    // Page for commiting changes
+    $items['commitchanges'] = array(
+        'title' => 'Commit changes',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'flat_deposit_ui_commit',
+        'access callback' => TRUE,
+        'page arguments' => array(
+            'content' => 'Under construction'),
     );
 
     return $items;
 };
+
+/**
+ * @return string to be displayed on the page
+ */
+function flat_deposit_ui_other_info($variable)
+{
+    return t($variable);
+    #drupal_goto("islandora/object/islandora:root");
+}
+
+
+
 
 /**
  * Implements hook_form().
@@ -114,6 +158,11 @@ function flat_deposit_ui_block_info()
 
     $blocks['flat_deposit_menu'] = array(
         'info' => t('FLAT Deposit Main Menu'),
+        'status' => TRUE,
+        'region' => 'sidebar_second',
+        'visibility' => BLOCK_VISIBILITY_NOTLISTED,
+        'pages' => 'islandora/*',
+
     );
     return $blocks;
 }
@@ -140,31 +189,192 @@ function flat_deposit_ui_menu_block_generate(){
         'link_upload' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
-            '#markup' => '<a href="/drupal/user/' . $GLOBALS['user']->uid  . '/imce" title="Upload data"><img title="Upload data" alt="Upload data" src="/drupal/sites/default/files/Upload.png"/></a><br/>',
+            '#markup' => '<a href="/drupal/user/' . $GLOBALS['user']->uid  . '/imce" title="Upload data"><img title="Upload data" alt="Upload data" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Upload.png"/></a><br/>',
             '#suffix' => '<a href="/drupal/user/' . $GLOBALS['user']->uid  . '/imce">Upload data</a><br/></div>'),
         'link_view' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
-            '#markup' => '<a href="/drupal/node/10" title="View uploads"><img title="View uploads" alt="View uploads" src="/drupal/sites/default/files/View.png"/></a><br/>',
-            '#suffix' => '<a href="/drupal/node/10">View uploads</a><br/></div>'),
+            '#markup' => '<a href="/drupal/view" title="View uploads"><img title="View uploads" alt="View uploads" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/View.png"/></a><br/>',
+            '#suffix' => '<a href="/drupal/view">View uploads</a><br/></div>'),
         'link_manage_bundles' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
-            '#markup' => '<a href="/drupal/node/12" title="Manage bundles"><img title="Manage bundles" alt="Manage bundles" src="/drupal/sites/default/files/Manage.png"/></a><br/>',
-            '#suffix' => '<a href="/drupal/node/12">Manage bundles</a><br/></div>'),
+            '#markup' => '<a href="/drupal/managebundles/" title="Manage bundles"><img title="Manage bundles" alt="Manage bundles" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Manage.png"/></a><br/>',
+            '#suffix' => '<a href="/drupal/managebundles">Manage bundles</a><br/></div>'),
         'link_manage_collections' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
-            '#markup' => '<a href="/drupal/node/13" title="Manage collections"><img title="Manage collections" alt="Manage collections" src="/drupal/sites/default/files/Manage_coll.png"/></a><br/>',
-            '#suffix' => '<a href="/drupal/node/13">Manage collections</a><br/></div>'),
+            '#markup' => '<a href="/drupal/managecollections" title="Manage collections"><img title="Manage collections" alt="Manage collections" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Manage_coll.png"/></a><br/>',
+            '#suffix' => '<a href="/drupal/managecollections">Manage collections</a><br/></div>'),
         'link_commit' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
-            '#markup' => '<a href="/drupal/node/14" title="Commit changes"><img title="Commit changes" alt="Commit changes" src="/drupal/sites/default/files/Commit.png"/></a><br/>',
-            '#suffix' => '<a href="/drupal/node/14">Commit changes</a><br/></div>'),
+            '#markup' => '<a href="/drupal/commitchanges" title="Commit changes"><img title="Commit changes" alt="Commit changes" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Commit.png"/></a><br/>',
+            '#suffix' => '<a href="/drupal/commitchanges">Commit changes</a><br/></div>'),
     );
 
     return $output;
 }
-//theme_menu_link()
-?>
+
+
+
+/**
+ * Gets a list of all data ingested since last login
+ */
+function flat_deposit_ui_view_ingested_files() {
+
+    $tuque = islandora_get_tuque_connection();
+
+    $query = create_query_all_owned_files($GLOBALS['user']->name);
+
+    $results = $tuque->repository->ri->sparqlQuery($query);
+
+    $rows = array();
+    foreach ($results as $result) {
+        $pid = $result['pid']['value'];
+        $label = $result['label']['value'];
+        $createdDate = $result['created']['value'];
+
+        $createdDate_formatted = format_date(strtotime($createdDate));
+
+        $var = array(
+            'theme' => 'link',
+            'text' => 'click here',
+            'path' => "islandora/object/$pid",
+            'options' => array(
+                'attributes' => array(),
+                'html' => FALSE
+            )
+        );
+        $link = theme_link($var);
+
+        $row = array($label, $createdDate_formatted, $link) ;
+        array_push($rows,$row);
+
+#    export_array_to_db($rows);
+
+    }
+    // creating header array
+    $header = array( t('File name'), t('Date ingested'),t('Direct link'));
+    #islandora_object_load($object_id)
+    $output = array(
+    // Table, using the theme hook 'table'.
+    'notification' => array(
+        '#theme' => 'table',
+        '#caption' => t('Notification'),
+        '#header' => $header,
+        '#rows' => $rows,
+    ),
+  );
+
+    return $output;
+}
+
+
+/**
+ * Gets a list of all data ingested since last login
+ */
+function flat_deposit_ui_view_collections()
+{
+    $tuque = islandora_get_tuque_connection();
+
+    $query = query_owned_collections($GLOBALS['user']->name);
+
+    $results = $tuque->repository->ri->sparqlQuery($query);
+
+    $rows = array();
+
+    foreach ($results as $result) {
+        $pid = $result['pid']['value'];
+        $label = $result['label']['value'];
+        $createdDate = $result['created']['value'];
+
+        $createdDate_formatted = format_date(strtotime($createdDate));
+
+        $tmp = array(
+            'theme' => 'link',
+            'text' => 'click here',
+            'path' => "islandora/object/$pid",
+            'options' => array(
+                'attributes' => array(),
+                'html' => FALSE
+            )
+        );
+        $link = theme_link($tmp);
+
+        $row = array($label, $createdDate_formatted, $link) ;
+        array_push($rows,$row);
+    }
+
+    // creating header array
+    $header = array( t('Name'), t('Date ingested'),t('Direct link'));
+    #islandora_object_load($object_id)
+    $output = array(
+        // Table, using the theme hook 'table'.
+        'notification' => array(
+            '#theme' => 'table',
+            '#caption' => t('Projects'),
+            '#header' => $header,
+            '#rows' => $rows,
+        ),
+    );
+
+    return $output;
+}
+
+/**
+ * Gets a list of all data ingested since last login
+ */
+function flat_deposit_ui_commit()
+{
+    $tuque = islandora_get_tuque_connection();
+
+    $query = query_owned_collections($GLOBALS['user']->name);
+
+    $results = $tuque->repository->ri->sparqlQuery($query);
+
+    // convert results to table format
+    $header = array( t('PID'));
+    $rows = array();
+
+    foreach ($results as $result) {
+        $pid = $result['pid']['value'];
+        $row = array($pid) ;
+        array_push($rows,$row);
+    }
+
+    #Test section
+    $api_m = $tuque->repository->api->m;
+
+    $query2 = query_owned_collections('');
+
+    $results2 = $tuque->repository->ri->sparqlQuery($query2);
+
+    // convert results to table format
+    $rows2 = array();
+    foreach ($results2 as $result2) {
+        $pid = $result2['pid']['value'];
+        $row = array($pid) ;
+        array_push($rows2,$row);
+    }
+
+
+    $output = array(
+        // Table, using the theme hook 'table'.
+        'output sparql query' => array(
+            '#theme' => 'table',
+            '#caption' => t('Objects owned by ""'),
+            '#header' => $header,
+            '#rows' => $rows,
+        ),
+        // Table, using the theme hook 'table'.
+        'output api_a' => array(
+            '#theme' => 'table',
+            '#caption' => t('Objects owned by ' . $GLOBALS['user']->name),
+            '#header' => $header,
+            '#rows' => $rows2,
+        ),
+    );
+    return $output;
+}
+
