@@ -5,7 +5,7 @@ Add SWORD to FLAT
 This docker file depends on the FLAT base image.
 
 ## Provides ##
- * SWORD v2 API, accessible via: https://IP:8443/easy-deposit
+ * [easy-deposit](https://github.com/DANS-KNAW/easy-deposit) which provides a [SWORD v2 API](http://swordapp.github.io/SWORDv2-Profile/SWORDProfile.html) to receive [bags](https://tools.ietf.org/html/bagit), accessible via: https://IP:8443/easy-deposit
 
 The following accounts are created: 
 

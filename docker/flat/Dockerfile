@@ -108,7 +108,7 @@ RUN cd /var/www/fedora/data/fedora-xacml-policies/repository-policies/ &&\
 	rm master.zip &&\
 	mv islandora-xacml-policies-master islandora
 RUN cd /var/www/fedora/tomcat/webapps/fedora/WEB-INF/lib &&\ 
-	wget "https://github.com/Islandora/islandora_drupal_filter/releases/download/v7/fcrepo-drupalauthfilter-3.8.1.jar"
+	wget "https://github.com/Islandora/islandora_drupal_filter/releases/download/v7.1.3/fcrepo-drupalauthfilter-3.8.1.jar"
 ADD fedora/jaas.conf /var/www/fedora/server/config/jaas.conf
 ADD fedora/filter-drupal.xml /var/www/fedora/server/config/filter-drupal.xml
 
@@ -178,6 +178,7 @@ RUN cp -r /var/www/html/drupal/sites/all/themes/bootstrap/starterkits/cdn  /var/
 	mv cdn.starterkit flat_bootstrap_theme.info &&\
 	echo "settings[bootstrap_cdn_jsdelivr_theme] = 'flatly'" >> flat_bootstrap_theme.info
 ADD islandora/islandora-default.tpl.php /var/www/html/drupal/sites/all/themes/flat_bootstrap_theme/templates/islandora-default.tpl.php
+ADD islandora/template.php /var/www/html/drupal/sites/all/themes/flat_bootstrap_theme/template.php
 
 RUN cd /var/www/html/drupal/ &&\
 	export PGPASSWORD=fedora &&\
