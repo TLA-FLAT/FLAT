@@ -8,7 +8,6 @@
  * Theme function for the compound navigation block parts.
  */
 function flat_bootstrap_theme_preprocess_islandora_compound_prev_next(array &$variables) {
-  error_log("!MENZO: flat_bootstrap_theme_preprocess_islandora_compound_prev_next");
   if (($variables['child_count'] > 0 && !$variables['parent_tn']) || ($variables['child_count'] > 0 && $variables['parent_tn'])) {
     for ($i = 0; $i < count($variables['siblings']); $i += 1) {
       $sibling = array();
