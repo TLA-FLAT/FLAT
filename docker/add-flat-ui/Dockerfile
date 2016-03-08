@@ -22,7 +22,7 @@ ENV NOTVISIBLE "in users profile"
 RUN echo "export VISIBLE=now" >> /etc/profile
 
 # Add deposit module to installation
-RUN git clone https://github.com/danrhe/flat_deposit_ui.git /var/www/html/drupal/sites/all/modules/custom/flat_deposit_ui
+# RUN git clone https://github.com/danrhe/flat_deposit_ui.git /var/www/html/drupal/sites/all/modules/custom/flat_deposit_ui
 
 # add WYSIWYG editor
 RUN cd /var/www/html/drupal/sites/all/libraries/ &&\
@@ -44,8 +44,8 @@ RUN cd /var/www/html/drupal/ &&\
     /var/www/composer/vendor/drush/drush/drush dl imce -y  &&\
     /var/www/composer/vendor/drush/drush/drush en imce -y  &&\
     /var/www/composer/vendor/drush/drush/drush dl imce_wysiwyg -y  &&\
-    /var/www/composer/vendor/drush/drush/drush en imce_wysiwyg -y  &&\
-    /var/www/composer/vendor/drush/drush/drush en flat_deposit_ui -y
+    /var/www/composer/vendor/drush/drush/drush en imce_wysiwyg -y  #&&\
+    #/var/www/composer/vendor/drush/drush/drush en flat_deposit_ui -y
 
 # add module configuration
 ENV PGPASSWORD=fedora
