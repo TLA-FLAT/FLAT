@@ -48,8 +48,8 @@ RUN cd /var/www/html/drupal/ &&\
     /var/www/composer/vendor/drush/drush/drush en flat_deposit_ui -y
 
 # add module configuration
-COPY drupal/wysiwyg.sql /tmp/wysiwyg.sql &&\
-cd /var/www/html/drupal/ &&\
+COPY drupal/wysiwyg.sql /tmp/wysiwyg.sql 
+RUN cd /var/www/html/drupal/ &&\
     /var/www/composer/vendor/drush/drush/drush sql-query "$(cat /tmp/wysiwyg.sql)" -y
 
 #Clean up when done.
