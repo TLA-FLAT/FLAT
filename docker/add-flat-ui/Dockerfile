@@ -55,7 +55,7 @@ RUN /etc/init.d/postgresql start &&\
 	cd /var/www/html/drupal/ &&\
     	/var/www/composer/vendor/drush/drush/drush sql-query "$(cat /tmp/wysiwyg.sql)" -y
 
-RUN /etc/init.d/postgresql stop &&\
+RUN /etc/init.d/postgresql stop
 
 #Clean up when done.
 RUN apt-get clean &&\
