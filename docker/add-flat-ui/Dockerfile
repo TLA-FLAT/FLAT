@@ -48,9 +48,14 @@ RUN cd /var/www/html/drupal/ &&\
     /var/www/composer/vendor/drush/drush/drush en flat_deposit_ui -y
 
 # add module configuration
+ENV PGPASSWORD=fedora
 COPY drupal/wysiwyg.sql /tmp/wysiwyg.sql 
-RUN cd /var/www/html/drupal/ &&\
-    /var/www/composer/vendor/drush/drush/drush sql-query "$(cat /tmp/wysiwyg.sql)" -y
+
+RUN /etc/init.d/postgresql start &&\
+	cd /var/www/html/drupal/ &&\
+    	/var/www/composer/vendor/drush/drush/drush sql-query "$(cat /tmp/wysiwyg.sql)" -y
+
+RUN /etc/init.d/postgresql stop &&\
 
 #Clean up when done.
 RUN apt-get clean &&\
