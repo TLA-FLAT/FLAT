@@ -66,6 +66,15 @@ function flat_deposit_ui_menu()
         'page callback' => 'drupal_get_form',
         'page arguments' => array( 'flat_deposit_ui_admin_form'),
     );
+
+    // Page for uploading data
+    $items['workspace'] = array(
+        'title' => 'Workspace',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('flat_deposit_ui_workspace_form'),
+        'access callback' => TRUE,
+    );
     // Page for ingested data
     $items['view'] = array(
         'title' => 'View archived data',
@@ -73,17 +82,14 @@ function flat_deposit_ui_menu()
         'type' => MENU_LOCAL_TASK,
         'page callback' => 'flat_deposit_ui_view_ingested_files',
         'access callback' => TRUE,
-        'page arguments' => array(
-            'content' => 'Under construction'),
     );
     // Page for manage bundles
     $items['managebundles'] = array(
         'title' => 'Manage bundles',
         'type' => MENU_LOCAL_TASK,
-        'page callback' => 'flat_deposit_ui_other_info',
+        'page callback' => 'flat_deposit_ui_manage_bundles',
+        'page arguments' => array('Under construction'),
         'access callback' => TRUE,
-        'page arguments' => array(
-            'content' => 'Under construction'),
     );
     // Page for manage collections
     $items['managecollections'] = array(
@@ -106,17 +112,6 @@ function flat_deposit_ui_menu()
 
     return $items;
 };
-
-/**
- * @return string to be displayed on the page
- */
-function flat_deposit_ui_other_info($variable)
-{
-    return t($variable);
-    #drupal_goto("islandora/object/islandora:root");
-}
-
-
 
 
 /**
@@ -181,16 +176,17 @@ function flat_deposit_ui_block_view($delta = '')
     }
 }
 
-
 // Implements flat deposit main menu block
 function flat_deposit_ui_menu_block_generate(){
     // Build a render array.
+    global $user;
+
     $output = array(
-        'link_upload' => array(
+        'link_workspace' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
-            '#markup' => '<a href="/drupal/user/' . $GLOBALS['user']->uid  . '/imce" title="Upload data"><img title="Upload data" alt="Upload data" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Upload.png"/></a><br/>',
-            '#suffix' => '<a href="/drupal/user/' . $GLOBALS['user']->uid  . '/imce">Upload data</a><br/></div>'),
+            '#markup' => '<a href="/drupal/workspace" title="My Workspace"><img title="My Workspace" alt="My Workspace" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Upload.png"/></a><br/>',
+            '#suffix' => '<a href="/drupal/workspace">My Workspace</a><br/></div>'),
         'link_view' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
@@ -216,6 +212,88 @@ function flat_deposit_ui_menu_block_generate(){
     return $output;
 }
 
+
+/**
+ * @return string to be displayed on the page
+ */
+function flat_deposit_ui_workspace_form($form, &$form_state)
+{
+    $my_code = 'window.open(\'imce\', \'windowName\', \'width=640, height=480\');';
+    // Define the form array.
+
+    $form ['init_name'] = array(
+        '#type' => 'textfield',
+        '#title' => 'Create new project');
+    $form['init_submit'] = array(
+        '#type' => 'submit',
+        '#value' => t('Click to create new project'),
+        '#submit' => array('flat_deposit_ui_workspace_project_init_submit'),
+        '#validate' => array('flat_deposit_ui_workspace_project_init_validate'));
+
+    $form['upload_submit'] = array(
+        '#type' => 'submit',
+        '#value' => t('Upload data'),
+        '#submit' => array('flat_deposit_ui_workspace_upload_submit'),
+        );
+
+
+
+    return $form;
+}
+
+function flat_deposit_ui_workspace_project_init_validate(&$form, &$form_state)
+{
+    global $user;
+    $user_root = 'public://users/' . $user->name;
+
+    $field = $form_state['values']['init_name'];
+    $message = FALSE;
+
+    $form_state['newdir'] = $user_root . '/' .  $field;
+
+    //Check that the input values are of the proper format
+    if (!preg_match('/^[a-zA-Z0-9\_]{2,20}+$/', $field)) {
+        $message = 'Allowed are all letters, numbers and underscores (max length 20)';}
+    elseif (file_exists($form_state['newdir'])){
+        $message = "Project already exists";}
+    else{
+        $dirs = scandir($user_root);
+        foreach ($dirs as $dir){
+            if (strtolower($dir)==strtolower($field)){$message = "Project with very similar project name exists";}
+            };
+        };
+    if ($message) {form_set_error ('init_name', $message);}
+
+}
+/**
+ * $workspace_project_init_form_submit
+ * create new local folders on click; to get absolute path of local path type drupal_realpath("public://")
+ */
+
+function flat_deposit_ui_workspace_project_init_submit(&$form, &$form_state)
+{   #recursive folder creation doesn't work unfortunately
+
+    drupal_set_message(t('Creating new project folders'));
+
+    drupal_mkdir($form_state['newdir']);
+    drupal_chmod($form_state['newdir'], 0775);
+    drupal_mkdir($form_state['newdir'] . '/data');
+    drupal_mkdir($form_state['newdir'] . '/metadata');
+}
+#
+/**
+ * $manage_bundles_form_submit
+ */
+
+function flat_deposit_ui_workspace_upload_submit(&$form, &$form_state)
+{
+    drupal_set_message(t('Do your uploads'));
+    $options=array();
+    $options['absolute'] = TRUE;
+    global $user;
+    $form_state['redirect'] = url('user/' . $user->uid  . '/imce', $options);
+    #drupal_redirect_form( url('/IMCE'));
+}
 
 
 /**
@@ -258,18 +336,26 @@ function flat_deposit_ui_view_ingested_files() {
     $header = array( t('File name'), t('Date ingested'),t('Direct link'));
     #islandora_object_load($object_id)
     $output = array(
-    // Table, using the theme hook 'table'.
-    'notification' => array(
-        '#theme' => 'table',
-        '#caption' => t('Notification'),
-        '#header' => $header,
-        '#rows' => $rows,
-    ),
-  );
+        // Table, using the theme hook 'table'.
+        'notification' => array(
+            '#theme' => 'table',
+            '#caption' => t('Notification'),
+            '#header' => $header,
+            '#rows' => $rows,
+        ),
+    );
 
     return $output;
 }
 
+
+/**
+ * Gets a list of all data ingested since last login
+ */
+function flat_deposit_ui_manage_bundles($variable)
+{
+    return (t($variable));
+}
 
 /**
  * Gets a list of all data ingested since last login
@@ -327,9 +413,10 @@ function flat_deposit_ui_view_collections()
  */
 function flat_deposit_ui_commit()
 {
+    global $user;
     $tuque = islandora_get_tuque_connection();
 
-    $query = query_owned_collections($GLOBALS['user']->name);
+    $query = query_owned_collections($user->name);
 
     $results = $tuque->repository->ri->sparqlQuery($query);
 
@@ -370,11 +457,10 @@ function flat_deposit_ui_commit()
         // Table, using the theme hook 'table'.
         'output api_a' => array(
             '#theme' => 'table',
-            '#caption' => t('Objects owned by ' . $GLOBALS['user']->name),
+            '#caption' => t('Objects owned by ' . $user->name),
             '#header' => $header,
             '#rows' => $rows2,
         ),
     );
     return $output;
 }
-
