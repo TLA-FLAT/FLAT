@@ -44,9 +44,8 @@ RUN cd /var/www/html/drupal/ &&\
     /var/www/composer/vendor/drush/drush/drush dl imce -y  &&\
     /var/www/composer/vendor/drush/drush/drush en imce -y  &&\
     /var/www/composer/vendor/drush/drush/drush dl imce_wysiwyg -y  &&\
-    /var/www/composer/vendor/drush/drush/drush en imce_wysiwyg -y  
-    
-    # &&\ /var/www/composer/vendor/drush/drush/drush en flat_deposit_ui -y
+    /var/www/composer/vendor/drush/drush/drush en imce_wysiwyg -y   &&\ 
+    /var/www/composer/vendor/drush/drush/drush en flat_deposit_ui -y
 
 # add module configuration
 ENV PGPASSWORD=fedora
@@ -58,8 +57,10 @@ RUN /etc/init.d/postgresql start &&\
 
 RUN /etc/init.d/postgresql stop
 
-#Clean up when done.
+#Clean up when done. 
 RUN apt-get clean &&\
   rm -rf /tmp/* /var/tmp/*
 
+# Comment this line of code if you don't have a local installation of the deposit UI that is mounted as /var/www/html/drupal/sites/all/modules/custom/flat_deposit_ui
+RUN rm -rf /var/www/html/drupal/sites/all/modules/custom/flat_deposit_ui
 
