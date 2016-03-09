@@ -6,7 +6,7 @@ $profiles = variable_get('imce_profiles', array());
 $new_profile = array(
  'name' => "Custom",
  'usertab' => 1,
- 'filesize' => "0",
+ 'filesize' => 0,
  'quota' => "2",
  'tuquota' => "10",
  'extensions' => "*",
@@ -67,14 +67,26 @@ $new_profile = array(
    ),
 );
 
-$profiles['2'] = $new_profile;
+#$profiles['2'] = $new_profile;
+$profiles['1'] ['quota'] = "2";
+$profiles['1'] ['tuquota'] = "10";
+$profiles['1'] ['extensions'] = "cmdi";
+$profiles['1'] ['directories'] ['0'] = array(
+  'name' => "php: return 'users/'.\$user->name;",
+   'subnav' => 1,
+   'browse' => 1,
+   'upload' => 1,
+   'thumb' => 0,
+   'delete' => 1,
+   'resize' => 0);
+
 variable_set('imce_profiles', $profiles);
 
 $roles = array (
   '3' => array(
-    'public_pid' => "2"),
+    'public_pid' => "1"),
   '2' => array(
-    'public_pid' => "2"),
+    'public_pid' => "1"),
   '1' => array(
     'public_pid' => 0),
   );
