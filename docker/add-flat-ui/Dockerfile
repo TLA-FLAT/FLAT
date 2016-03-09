@@ -55,8 +55,8 @@ COPY drupal/settings_imce.php /tmp/settings_imce.php
 RUN /etc/init.d/postgresql start &&\
 	cd /var/www/html/drupal/ &&\
     	/var/www/composer/vendor/drush/drush/drush sql-query "$(cat /tmp/wysiwyg.sql)" -y &&\
-    	/var/www/composer/vendor/drush/drush/drush php-script settings_imce --script-path=/tmp &&\
-    	/var/www/composer/vendor/drush/drush/drush cache-clear all
+    	/var/www/composer/vendor/drush/drush/drush php-script settings_imce --script-path=/tmp 
+#    	/var/www/composer/vendor/drush/drush/drush cache-clear all
 
 RUN /etc/init.d/postgresql stop
 
