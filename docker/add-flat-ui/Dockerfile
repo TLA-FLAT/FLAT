@@ -57,7 +57,7 @@ RUN /etc/init.d/postgresql start &&\
     	/var/www/composer/vendor/drush/drush/drush sql-query "$(cat /tmp/wysiwyg.sql)" -y &&\
     	/var/www/composer/vendor/drush/drush/drush php-script settings_imce --script-path=/tmp &&\
 #    	/var/www/composer/vendor/drush/drush/drush cache-clear all
-	RUN /etc/init.d/postgresql stop
+	/etc/init.d/postgresql stop
 
 # add owncloud to version
 RUN wget -nv https://download.owncloud.org/download/repositories/stable/xUbuntu_14.04/Release.key -O Release.key &&\
@@ -78,8 +78,9 @@ RUN /etc/init.d/postgresql start &&\
 COPY owncloud/changeRights.sh /tmp/changeRights.sh &&\
     sudo /tmp/changeRights.sh
 
-COPY owncloud/addTrusted.php /tmp/addTrusted.php &&\
-    RUN mv /var/www/owncloud/config/config.php /var/www/owncloud/config/config.backup &&\
+COPY owncloud/addTrusted.php /tmp/addTrusted.php
+
+RUN mv /var/www/owncloud/config/config.php /var/www/owncloud/config/config.backup &&\
     printf "\$CONFIG = $(php config/addTrusted.php)  ';'" >/var/www/owncloud/config/config.php
 
 #Clean up when done.
