@@ -55,10 +55,9 @@ COPY drupal/settings_imce.php /tmp/settings_imce.php
 RUN /etc/init.d/postgresql start &&\
 	cd /var/www/html/drupal/ &&\
     	/var/www/composer/vendor/drush/drush/drush sql-query "$(cat /tmp/wysiwyg.sql)" -y &&\
-    	/var/www/composer/vendor/drush/drush/drush php-script settings_imce --script-path=/tmp
+    	/var/www/composer/vendor/drush/drush/drush php-script settings_imce --script-path=/tmp &&\
 #    	/var/www/composer/vendor/drush/drush/drush cache-clear all
-
-RUN /etc/init.d/postgresql stop
+	RUN /etc/init.d/postgresql stop
 
 # add owncloud to version
 RUN wget -nv https://download.owncloud.org/download/repositories/stable/xUbuntu_14.04/Release.key -O Release.key &&\
@@ -69,10 +68,12 @@ RUN sh -c "echo 'deb http://download.owncloud.org/download/repositories/stable/x
 	apt-get install -y owncloud
 
 RUN /etc/init.d/postgresql start &&\
-    su -c "createdb -O fedora owncloud" postgres
+    su -c "createdb -O fedora owncloud" postgres &&\
+    /etc/init.d/postgresql stop
 
-RUN cd /var/www/owncloud &&\
-    sudo -u www-data php occ maintenance:install --database "pgsql" --database-name "owncloud" --database-user "fedora" --database-pass "fedora" --admin-user "admin" --admin-pass "admin"
+RUN /etc/init.d/postgresql start &&\
+	cd /var/www/owncloud &&\
+    	sudo -u www-data php occ maintenance:install --database "pgsql" --database-name "owncloud" --database-user "fedora" --database-pass "fedora" --admin-user "admin" --admin-pass "admin"
 
 COPY owncloud/changeRights.sh /tmp/changeRights.sh &&\
     sudo /tmp/changeRights.sh
