@@ -56,7 +56,7 @@ docker build --rm=true -t flat add-imdi-gsearch-to-flat/
 
 # add solution packs and sword (for safety make new image)
 docker build --rm=true -t flat-with-sps add-solution-packs-to-flat/
-docker build --rm=true -t flat add-sword-to-flat/
+docker build --rm=true -t flat-with-sps add-sword-to-flat/
 
 #new image for deposit UI
 docker build --rm=true -t flat_dvr add-flat-ui/
