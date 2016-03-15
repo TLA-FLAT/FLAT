@@ -48,12 +48,14 @@ public class Main {
         System.err.println("INF: -r=<FILE>  load/store the relations map from/in this <FILE> (optional)");
         System.err.println("INF: -f=<DIR>   directory to store the FOX files (default: ./fox)");
         System.err.println("INF: -x=<DIR>   directory to store the FOX files with problems (default: ./fox-error)");
+        System.err.println("INF: -p=<DIR>   directory to pickup policies (default: ./policies)");
         System.err.println("INF: -i=<DIR>   replace source <DIR> by this <DIR> in the FOX files (optional)");
         System.err.println("INF: -n=<NUM>   create subdirectories to contain <NUM> FOX files (default: 0, i.e., no subdirectories)");
         System.err.println("INF: -c=<FILE>  file containing the mapping to collections (optional)");
         System.err.println("INF: -d=<FILE>  stylesheet containing the mapping from CMD to Dublin Core (recommended)");
         System.err.println("INF: -m=<FILE>  stylesheet containing the mapping from CMD to other (non CMD and non DC) metadata formats (optional)");
         System.err.println("INF: -o=<XPATH> XPath 2.0 expressions determining if the CMD should be offered via OAI-PMH");
+        System.err.println("INF: -a=<XPATH> XPath 2.0 expressions determining if the DO should always be a collection and a compound");
         System.err.println("INF: -s=<NAME>  name of the server/repository used by OAI");
         System.err.println("INF: -b=<DIR>   directory where the icons are stored (default: /app/flat/icons)");
         System.err.println("INF: -v         validate the FOX files (optional)");
@@ -69,11 +71,13 @@ public class Main {
         String idir = null;
         String bdir = null;
         String xdir = null;
+        String pdir = null;
         String cext = "cmdi";
         String cfile = null;
         String dfile = null;
         String mfile = null;
         String oxp = null;
+        String axp = null;
         String server = null;
         XdmNode collsDoc = null;
         boolean validateFOX = false;
@@ -82,7 +86,7 @@ public class Main {
         boolean relationCheck = true;
         int ndir = 0;
         // check command line
-        OptionParser parser = new OptionParser( "zhlve:r:f:i:x:n:c:d:m:o:s:b:?*" );
+        OptionParser parser = new OptionParser( "zhlve:r:f:i:x:p:n:c:d:m:o:a:s:b:?*" );
         OptionSet options = parser.parse(args);
         if (options.has("l"))
             laxResourceCheck = true;
@@ -102,6 +106,8 @@ public class Main {
             idir = (String)options.valueOf("i");
         if (options.has("x"))
             xdir = (String)options.valueOf("x");
+        if (options.has("p"))
+            pdir = (String)options.valueOf("p");
         if (options.has("b"))
             bdir = (String)options.valueOf("b");
         if (options.has("c")) {
@@ -164,6 +170,9 @@ public class Main {
         if (options.has("o")) {
             oxp = (String)options.valueOf("o");
         }
+        if (options.has("a")) {
+            axp = (String)options.valueOf("a");
+        }
         if (options.has("s")) {
             server = (String)options.valueOf("s");
         }
@@ -192,6 +201,8 @@ public class Main {
                 fdir = dir + "/fox";
             if (xdir == null)
                 xdir = dir + "/fox-error";
+            if (pdir == null)
+                pdir = dir + "/policies";
             XdmNode relsDoc = null;
             if (rfile != null && rfile.exists()) {
                 relsDoc = SaxonUtils.buildDocument(new StreamSource(rfile));
@@ -262,8 +273,14 @@ public class Main {
                             fox.setParameter(new QName("repository"), new XdmAtomicValue(server));
                         if (oxp != null)
                             fox.setParameter(new QName("oai-include-eval"), new XdmAtomicValue(oxp));
+                        if (axp != null) {
+                            fox.setParameter(new QName("always-collection-eval"), new XdmAtomicValue(axp));
+                            fox.setParameter(new QName("always-compound-eval"), new XdmAtomicValue(axp));
+                        }
                         if (bdir != null)
                             fox.setParameter(new QName("icon-base"), new XdmAtomicValue(bdir));
+                        if (pdir != null)
+                            fox.setParameter(new QName("policies-dir"), new XdmAtomicValue(pdir));
                         fox.setParameter(new QName("create-cmd-object"), new XdmAtomicValue(createCMDObject));
                         fox.setSource(new StreamSource(input));
                         XdmDestination destination = new XdmDestination();

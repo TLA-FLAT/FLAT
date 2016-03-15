@@ -23,6 +23,12 @@
 	
 	<xsl:param name="oai-include-eval" select="'true()'"/>
 	
+	<xsl:param name="policies-dir" select="()"/>
+	
+	<xsl:param name="always-collection-eval" select="'false()'"/>
+	
+	<xsl:param name="always-compound-eval" select="'false()'"/>
+	
 	<xsl:variable name="namespaces">
 		<ns/>
 	</xsl:variable>
@@ -411,11 +417,11 @@
 									</xsl:otherwise>
 								</xsl:choose>
 								<!-- if the CMD has references to other metadata files it's a collection -->
-								<xsl:if test="exists(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType = 'Metadata'])">
+								<xsl:if test="sx:evaluate($rec, $always-collection-eval, $NS) or exists(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType = 'Metadata'])">
 									<fedora-model:hasModel rdf:resource="info:fedora/islandora:collectionCModel"/>
 								</xsl:if>
 								<!-- if the CMD is a separate object and/or the CMD has references to resources it's a compound -->
-								<xsl:if test="$create-cmd-object or exists(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType = 'Resource'])">
+								<xsl:if test="sx:evaluate($rec, $always-compound-eval, $NS) or $create-cmd-object or exists(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType = 'Resource'])">
 									<fedora-model:hasModel rdf:resource="info:fedora/islandora:compoundCModel"/>
 								</xsl:if>
 								<!-- if the CMD is part of the compound FOXML it uses the cmdi content model and is member of the cmdi collection -->
@@ -722,6 +728,35 @@
 										</xsl:choose>
 									</foxml:datastreamVersion>
 								</foxml:datastream>
+								<!-- add POLICY data stream -->
+								<xsl:choose>
+									<xsl:when test="empty($policies-dir)"/>
+									<xsl:when test="sx:fileExists(concat($policies-dir, '/', replace($resID, '[^a-zA-Z0-9]', '_'), '.xml'))">
+										<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="POLICY" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
+											<foxml:datastreamVersion ID="POLICY.0" LABEL="Access policy for this object" MIMETYPE="text/xml">
+												<foxml:xmlContent>
+													<xsl:copy-of select="doc(concat($policies-dir, '/', replace($resID, '[^a-zA-Z0-9]', '_'), '.xml'))"/>
+												</foxml:xmlContent>
+											</foxml:datastreamVersion>
+										</foxml:datastream>
+									</xsl:when>
+									<xsl:when test="sx:fileExists(concat($policies-dir, '/default-policy.xml'))">
+										<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="POLICY" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
+											<foxml:datastreamVersion ID="POLICY.0" LABEL="Access policy for this object" MIMETYPE="text/xml">
+												<foxml:xmlContent>
+													<xsl:copy-of select="doc(concat($policies-dir, '/default-policy.xml'))"/>
+												</foxml:xmlContent>
+											</foxml:datastreamVersion>
+										</foxml:datastream>
+									</xsl:when>
+									<xsl:otherwise>
+										<xsl:message>
+											<xsl:text>WRN: resource FOX[</xsl:text>
+											<xsl:value-of select="$resFOX"/>
+											<xsl:text>] will be created without access policy!</xsl:text>
+										</xsl:message>
+									</xsl:otherwise>
+								</xsl:choose>
 							</foxml:digitalObject>
 						</xsl:result-document>
 					</xsl:if>

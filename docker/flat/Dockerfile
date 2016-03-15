@@ -176,7 +176,9 @@ RUN mkdir -p /tmp/bootstrap &&\
 RUN cp -r /var/www/html/drupal/sites/all/themes/bootstrap/starterkits/cdn  /var/www/html/drupal/sites/all/themes/flat_bootstrap_theme &&\
 	cd /var/www/html/drupal/sites/all/themes/flat_bootstrap_theme/ &&\
 	mv cdn.starterkit flat_bootstrap_theme.info &&\
-	echo "settings[bootstrap_cdn_jsdelivr_theme] = 'flatly'" >> flat_bootstrap_theme.info
+    echo ";; FLAT settings" >> flat_bootstrap_theme.info &&\
+	echo "settings[bootstrap_cdn_jsdelivr_theme] = 'flatly'" >> flat_bootstrap_theme.info &&\
+    echo "settings[bootstrap_fluid_container] = 1" >> flat_bootstrap_theme.info
 ADD islandora/islandora-default.tpl.php /var/www/html/drupal/sites/all/themes/flat_bootstrap_theme/templates/islandora-default.tpl.php
 ADD islandora/template.php /var/www/html/drupal/sites/all/themes/flat_bootstrap_theme/template.php
 
@@ -263,6 +265,9 @@ RUN cd /tmp/LAT2FOX &&\
 RUN mkdir -p /app/flat
 ADD flat/scripts/* /app/flat/
 RUN chmod +x /app/flat/*.sh
+
+RUN mkdir -p /app/flat/policies
+ADD flat/policies/default-policy.xml /app/flat/policies/default-policy.xml
 
 RUN mkdir -p /app/flat/icons
 ADD flat/icons /app/flat/icons
