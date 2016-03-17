@@ -83,6 +83,17 @@ COPY owncloud/addTrusted.php /tmp/addTrusted.php
 RUN mv /var/www/owncloud/config/config.php /var/www/owncloud/config/config.backup &&\
     printf "<?php\n\$CONFIG = $(php /tmp/addTrusted.php) ;" >/var/www/owncloud/config/config.php
 
+#Add bagit to image
+RUN cd /app/flat &&\
+	git clone https://github.com/LibraryOfCongress/bagit-java.git bagit &&\
+	cd bagit &&\
+	git checkout bagit-4.9.0 &&\
+	mvn clean install &&\
+	cp target/bagit-4.9.0-bin.zip /usr/local/bin/ &&\
+	cd /usr/local/bin/ &&\
+	unzip bagit-4.9.0-bin.zip &&\
+	PATH=/usr/local/bin/bagit-4.9.0/bin:$PATH
+
 #Clean up when done.
 RUN apt-get clean &&\
   rm -rf /tmp/* /var/tmp/*
