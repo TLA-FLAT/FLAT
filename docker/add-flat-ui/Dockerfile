@@ -75,13 +75,14 @@ RUN /etc/init.d/postgresql start &&\
 	cd /var/www/owncloud &&\
     	sudo -u www-data php occ maintenance:install --database "pgsql" --database-name "owncloud" --database-user "fedora" --database-pass "fedora" --admin-user "admin" --admin-pass "admin"
 
+COPY owncloud/addTrusted.php /tmp/addTrusted.php
+RUN mv /var/www/owncloud/config/config.php /var/www/owncloud/config/config.backup &&\
+    printf "<?php\n\$CONFIG = $(php /tmp/addTrusted.php) ;" >/var/www/owncloud/config/config.php
+
+
 COPY owncloud/changeRights.sh /tmp/changeRights.sh
 RUN /tmp/changeRights.sh
 
-COPY owncloud/addTrusted.php /tmp/addTrusted.php
-
-RUN mv /var/www/owncloud/config/config.php /var/www/owncloud/config/config.backup &&\
-    printf "<?php\n\$CONFIG = $(php /tmp/addTrusted.php) ;" >/var/www/owncloud/config/config.php
 
 #Add bagit to image
 RUN cd /app/flat &&\
