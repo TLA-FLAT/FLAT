@@ -7,6 +7,9 @@ This docker file depends on the FLAT base image.
 ## Provides ##
  * apache xdebug library
  * root account for ssh-login
+ * owncloud server
+ * drupal modules (IMCE, wysiwyg, ckeditor)
+ * Web based GUI for ingesting user data
 
 ## Building the image ##
 ```sh
@@ -80,5 +83,8 @@ In order to see the data on the fedora server, we need to change a parameter in 
 vim /var/www/fedora/server/config/fedora.fcfg
 # change value of ENFORCE MODE to permit all requests: <param name="ENFORCE-MODE" value="permit-all-requests"/>
 ```
+
+In order to ingest data without doorkeeper plugin, the existing 'do'-scripts (flat) needs to be adapted. remove the -r relation.xml flag and set the raw data flag (i) to "/app/flat/deposit/bag/"
+
 
 ## References ##
