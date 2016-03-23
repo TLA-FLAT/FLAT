@@ -89,7 +89,7 @@ RUN cd /app/flat &&\
 	git clone https://github.com/LibraryOfCongress/bagit-java.git bagit &&\
 	cd bagit &&\
 	git checkout bagit-4.9.0 &&\
-	mvn clean install &&\
+	mvn -Dmaven.test.skip=true clean install &&\
 	cp target/bagit-4.9.0-bin.zip /usr/local/bin/ &&\
 	cd /usr/local/bin/ &&\
 	unzip bagit-4.9.0-bin.zip &&\
