@@ -10,7 +10,7 @@
 function meertens_flat_islandora_solr_fields_features_default_fields() {
   return array(
   0 => array(
-    'solr_field' => 'title',
+    'solr_field' => 'dc.title',
     'field_type' => 'result_fields',
     'weight' => -10,
     'solr_field_settings' => array(
@@ -41,7 +41,7 @@ function meertens_flat_islandora_solr_fields_features_default_fields() {
     ),
   ),
   2 => array(
-    'solr_field' => 'clarin.eu_cr1_c_1440426460261_description',
+    'solr_field' => 'dc.description',
     'field_type' => 'result_fields',
     'weight' => -9,
     'solr_field_settings' => array(

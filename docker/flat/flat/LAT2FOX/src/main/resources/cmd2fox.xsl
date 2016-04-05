@@ -38,7 +38,7 @@
 
 	<xsl:function name="cmd:hdl">
 		<xsl:param name="pid"/>
-		<xsl:sequence select="replace(replace($pid, '^http://hdl.handle.net/', 'hdl:'), '@format=[a-z]+', '')"/>
+		<xsl:sequence select="replace(replace($pid, '^http(s?)://hdl.handle.net/', 'hdl:'), '@format=[a-z]+', '')"/>
 	</xsl:function>
 
 	<xsl:function name="cmd:lat">

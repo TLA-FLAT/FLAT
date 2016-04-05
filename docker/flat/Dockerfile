@@ -282,7 +282,6 @@ ENTRYPOINT ["/sbin/my_init"]
 CMD ["--", "/bin/bash", "-l"]
 
 EXPOSE 80
-EXPOSE 443
 EXPOSE 8080
 EXPOSE 8443
 
