@@ -96,6 +96,14 @@ RUN cd /app/flat &&\
 	PATH=/usr/local/bin/bagit-4.9.0/bin:$PATH &&\
 	apt-get -y install zip unzip
 
+
+#Add folders and scripts for backend ingest
+RUN mkdir -p /app/flat/backend &&\
+    chown www-data:www-data /app/flat/backend
+
+COPY shell/*.sh /app/flat/
+
+
 #Clean up when done.
 RUN apt-get clean &&\
   rm -rf /tmp/* /var/tmp/*
