@@ -1,3 +1,4 @@
+#!/bin/bash
 if [ $# -ne 2 ];then
   echo "Not enough parameters specified"
   echo "Please provide user acronym and project name"
@@ -6,13 +7,16 @@ else
   user=$1
   project=$2
 fi
+PATH=/usr/local/bin/bagit-4.9.0/bin/:$PATH
+echo $(dirname "$0")/$(basename "$0")
+echo "date modified: " $(date -r $(dirname "$0")/$(basename "$0"))
 
-export PATH=/usr/local/bin/bagit-4.9.0/bin/:$PATH
 #user=admin
-#project=Test
+#project=DES
 bag_dir="/app/flat/deposit/bags"
 user_bag_dir="/app/flat/deposit/${user}_temp"
-user_server_data=/var/www/html/drupal/sites/default/files/users/${user}/
+user_server_data=/app/flat/backend/${user}/
+
 
 #Remove existing files
 echo "cleaning folders"
@@ -51,7 +55,7 @@ if [ $(bag verifyvalid ${user_bag_dir}/${project} | awk -F " " '{print $3}' | tr
   /app/flat/do-sword-upload.sh $user_bag_dir/${project}.zip
 
   #Check for bag ID
-  bag_path=${user_bag_dir}/../bags/*/${project}
+  bag_path=${bag_dir}/*/${project}
   bag_id=$(echo $bag_path | awk -F 'bags' '{print $2}' | awk -F "/" '{print $2}')
 
   #Validate
@@ -76,8 +80,5 @@ rm -rf ${user_bag_dir}/${project}
 
 echo $mess
 exit $exit_code
-
-
-
 
 

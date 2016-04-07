@@ -1,3 +1,4 @@
+#!/bin/bash
 if [ $# -ne 2 ];then
   echo "Not enough parameters specified"
   echo "Please provide user acronym and project name"
