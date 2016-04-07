@@ -78,7 +78,7 @@ RUN /etc/init.d/postgresql start &&\
 COPY owncloud/addTrusted.php /tmp/addTrusted.php
 RUN mv /var/www/owncloud/config/config.php /var/www/owncloud/config/config.backup &&\
     printf "<?php\n\$CONFIG = $(php /tmp/addTrusted.php) ;" >/var/www/owncloud/config/config.php &&\
-    chmod www-data:www-data /var/www/owncloud/config/config.php
+    chown www-data:www-data /var/www/owncloud/config/config.php
 
 
 COPY owncloud/changeRights.sh /tmp/changeRights.sh
