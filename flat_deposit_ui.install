@@ -144,3 +144,92 @@ function flat_deposit_ui_uninstall(){
     //Clean up deleted fields
     field_purge_batch(1000);
 }
+
+/**
+ * Implements hook_schema().
+ */
+function flat_deposit_ui_schema() {
+
+    $schema['flat_deposit_ui_files_info'] = array(
+        'description' => 'Inventory of user files on the fedora backend.',
+        'fields' => array(
+            'pid'  => array(
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => TRUE,
+                'description' => 'File ID'
+            ),
+            'filename' => array(
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => FALSE,
+                'default' => '',
+                'description' => 'File_name.'
+            ),
+            'name' => array(
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => FALSE,
+                'default' => '',
+                'description' => 'Name of the file owner.'
+            ),
+            'dateIngested' => array(
+                'type' => 'int',
+                'length' => 12,
+                'not null' => FALSE,
+                'description' => 'Date when file is ingested.'
+            ),
+        ),
+        'primary key' => array('pid'),
+
+        'indexes' => array(
+            'filename'    => array('filename'),
+            'name' => array('name')
+        ),
+    );
+
+    $schema['flat_deposit_ui_project_info'] = array(
+        'description' => 'Inventory of user projects.',
+        'fields' => array(
+            'user_id'  => array(
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => TRUE,
+                'description' => 'User ID'
+            ),
+            'pname' => array(
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => TRUE,
+                'description' => 'Project name.'
+            ),
+            'is_frozen' => array(
+                'type' => 'int',
+                'pgsql_type' => 'boolean',
+                'not null' => FALSE,
+                'description' => 'Freezing status of the project'
+            ),
+            'ingested' => array(
+                'type' => 'int',
+                'length' => 2,
+                'not null' => FALSE,
+                'description' => 'Ingest status of the project'
+            ),
+            'field_str' => array(
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => FALSE,
+                'default' => '',
+                'description' => 'Temp string field'
+            ),
+            'field_int' => array(
+                'type' => 'int',
+                'length' => 2,
+                'not null' => FALSE,
+                'description' => 'Temp int field'
+            ),
+        ),
+    );
+
+    return $schema;
+}
