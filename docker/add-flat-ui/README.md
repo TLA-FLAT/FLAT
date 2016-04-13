@@ -84,7 +84,17 @@ vim /var/www/fedora/server/config/fedora.fcfg
 # change value of ENFORCE MODE to permit all requests: <param name="ENFORCE-MODE" value="permit-all-requests"/>
 ```
 
-In order to ingest data without doorkeeper plugin, the existing 'do'-scripts (flat) needs to be adapted. remove the -r relation.xml flag and set the raw data flag (i) to "/app/flat/deposit/bag/"
+In order to ingest data without doorkeeper plugin, the sudoer file (visudo) needs to be adapted. Please add following code.
+
+```ssh
+sudo /usr/sbin/visudo
+www-data        ALL=(ALL) ALL
+www-data        ALL=(ALL) NOPASSWD: ALL
+
+
+```
+
+
 
 
 ## References ##
