@@ -94,6 +94,7 @@ RUN cd /app/flat &&\
 	cd /usr/local/bin/ &&\
 	unzip bagit-4.9.0-bin.zip &&\
 	PATH=/usr/local/bin/bagit-4.9.0/bin:$PATH &&\
+	chmod 777 /usr/local/bin/bagit-4.9.0/bin/bag &&\
 	apt-get -y install zip unzip
 
 
