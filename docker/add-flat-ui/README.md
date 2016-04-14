@@ -93,7 +93,7 @@ www-data        ALL=(ALL) NOPASSWD: ALL
 
 
 ```
-
+Also the rights of the deposit folder need to be adapted in order to write on them as www-data as well as the rights for this user to call /usr/local/bin/bagit-4.9.0/bin/bag
 
 
 
