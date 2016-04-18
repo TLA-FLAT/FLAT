@@ -1,6 +1,6 @@
 <?php
 /**
- * @file
+ * @filefgoiwgjwigo
  * Custom user interface for the FLAT data repository
  */
 require_once ('fedora_queries.php');
@@ -35,7 +35,7 @@ function flat_deposit_ui_permission()
         'manage' => array(
             'title' => t('Manage'),
             'description' => t('Manage files uploaded to the FLAT deposit')),
-       'commit' => array(
+        'commit' => array(
             'title' => t('Commit'),
             'description' => t('Commit changes to FLAT deposit')),
 
@@ -242,7 +242,7 @@ function flat_deposit_ui_workspace_form($form, &$form_state)
         '#type' => 'submit',
         '#value' => t('Upload data'),
         '#submit' => array('flat_deposit_ui_workspace_upload_submit'),
-        );
+    );
 
     $v = variable_get('imce_roles_profiles',array());
     $w = variable_get('imce_profiles',array());
@@ -279,8 +279,8 @@ function flat_deposit_ui_workspace_project_init_validate(&$form, &$form_state)
         $dirs = scandir($user_drupal_data_dir);
         foreach ($dirs as $dir){
             if (strtolower($dir)==strtolower($project_name)){$message = "Project with very similar project name exists";}
-            };
         };
+    };
     //redirect to form in case error message is created
     if ($message) {form_set_error ('init_name', $message);}
 }
@@ -454,8 +454,6 @@ function flat_deposit_ui_manage_bundles()
         array_push($rows,$row);
     }
 
-    #Test section
-    $api_m = $tuque->repository->api->m;
 
     $query2 = query_owned_collections('');
 
@@ -531,9 +529,17 @@ function flat_deposit_ui_commit_form($form, $form_state, $cleanup=false)
         }
     }
 
-    #Delete when done
-    #array_push($open_projects, 'open_checked', 'open_unchecked');
-    #array_push($frozen_projects, 'frozen_checked', 'frozen_unchecked');
+    #make array of projects on fedora database
+    $tuque = islandora_get_tuque_connection();
+    $api_a = $tuque->repository->api->a;
+    $condition = "ownerId=" . $user_name;
+    $results = $api_a->findObjects('query',$condition);
+
+    $datasets = [];
+    foreach ($results['results'] as $result) {
+        $pid = $result['pid'];
+        if (preg_match('/_CMD/', $pid)) array_push($datasets, $result['title'][0]);
+    }
 
     #make form with three fields : 1) open projects, 2) frozen projects 3) additional (admin) tasks
     $form = array();
@@ -578,13 +584,18 @@ function flat_deposit_ui_commit_form($form, $form_state, $cleanup=false)
     $form['field_2']['actions']['ingest'] = array(
         '#type' => 'submit',
         '#value' => t('Upload project to database'),
-        '#submit' => array('flat_deposit_ui_commit_form_unfreeze_submit'),
+        '#submit' => array('flat_deposit_ui_commit_form_ingest_submit'),
     );
 
     # Ingested #
     $form['field_3'] = array(
         '#type' => 'fieldset',
-        '#title' => t('Project on database'),
+        '#title' => t('Projects on database'),
+    );
+
+    $form['field_3']['fedora_projects'] = array(
+        '#type' => 'checkboxes',
+        '#options' => drupal_map_assoc(array_unique($datasets)),
     );
 
     # other #
@@ -642,10 +653,17 @@ function flat_deposit_ui_commit_form_freeze_validate (&$form, &$form_state)
         }
     }
 
-    // Check if project directory on backend already exists
-    // for each checked box
+    // Check for each checked box
     foreach ($form_state['values']['freezable_projects'] as $key => $value) {
         if ($value){
+
+            // Check if upload contains at least one cmdi file
+            if (count(glob(drupal_realpath($user_drupal_data_dir . '/'. $value . '/metadata/*.cmdi')))== 0) {
+                    form_set_error('freeze_error', "No meta data available for upload bundle. Please provide .cmdi file(s)");
+                    return $form;
+            }
+
+            // if project directory on backend already exists
             $frozen_project_dir = $backend . '/' . $user_name . '/' . $value ;
             if (file_exists($frozen_project_dir)) {
                 if (!$message) $message = "";
@@ -764,8 +782,114 @@ function flat_deposit_ui_commit_form_unfreeze_submit ($form, &$form_state)
     }
 }
 
+function flat_deposit_ui_commit_form_ingest_submit ($form, &$form_state)
+{
+    global $user;
+    $user_name = $user->name;
+    $backend = '/app/flat/backend';
+    $user_backend_dir = $backend . '/' . $user_name;
+    $user_temp_dir="/app/flat/deposit/" . $user_name . "_temp";
+    $bag_dir="/app/flat/deposit/bags/";
+
+    foreach ($form_state['values']['frozen_projects'] as $key => $value) {
+        if ($value) {
+
+            if (file_exists ( $user_temp_dir . '/' . $value)) {
+                drupal_set_message(t('Bag directory with same name exist', array()), 'error');
+                watchdog('Fedora ingest', t('Couldn\'t create bag'), array(), WATCHDOG_ERROR);
+                return $form;
+            }
+            #Create temp project dir
+            if (!file_exists ( $user_temp_dir . '/' . $value)) drupal_mkdir($user_temp_dir . '/' . $value, NULL, True);
+
+            #move data dir to temp directory
+            $source = $user_backend_dir . '/' . $value;
+            $destination = $user_temp_dir . '/' . $value;
+            $moved = rename ($source . '/data', $destination . '/data');
+
+            #make bag with data at right location
+            $command = '/usr/local/bin/bagit-4.9.0/bin/bag baginplace ' . $user_temp_dir . '/' . $value;
+            exec($command, $output, $return_var);
+
+            #move metadata dir to temp directory
+            $moved = rename ($source . '/metadata', $destination . '/metadata');
+
+            #make bag with data at right location
+            $command = '/usr/local/bin/bagit-4.9.0/bin/bag update ' . $user_temp_dir . '/' . $value;
+            exec($command, $output, $return_var);
+
+            //Zip all unhidden files
+            $command = "/lat/scripts/prepare_for_doorkeeper_mini.sh $user_name $value";
+            exec($command, $output_prep, $return_var);
+            $nFiles = str_split($output_prep['0'], 18)[1] ;
+
+            $temp = preg_grep("/The_Bag_ID_is:/", $output_prep);
+            if ($temp) {
+                $bag_id = str_replace("The_Bag_ID_is: ", "", array_values($temp)[0]);
+            } else {$bag_id = FALSE;}
+
+
+            # Ingest validated bag
+            if (file_exists($bag_dir . '/' . $bag_id)){
+                $command = "sudo /lat/scripts/ingest_one.sh 2>&1 " . $user_name . " " . $bag_id;
+                exec($command, $output_ingest, $return_var);
+            }
+
+            # Finish
+            $temp = preg_grep("/nIngested:/", $output_ingest );
+            if ($temp) {
+                $nIngested = str_split(array_values($temp)[0], 11)[1];
+            } else {$nIngested = FALSE;}
+
+
+            if ($nIngested == $nFiles && ($nIngested) && ($nFiles)){
+                #Change ownership ingested files
+                $tuque = islandora_get_tuque_connection();
+                $api_a = $tuque->repository->api->a;
+                $api_m = $tuque->repository->api->m;
+                $condition="ownerId=";
+
+                $changeOwner = preg_grep("/ingest succeeded for:/", $output_ingest );
+                foreach ($changeOwner as $f){
+                    $pid = str_replace("ingest succeeded for: ", "", $f);
+                    $pid = str_replace(".xml", "", $pid);
+                    $pid = str_replace("lat_", "lat:", $pid);
+                    $commit = $api_m->modifyObject($pid, array('ownerId' => $user_name, 'logMessage' => 'Commit changes' . $value ));
+                    #$commit = $api_m->purgeObject($pid, array('ownerId' => $user_name, 'logMessage' => 'Commit changes Purge' . $value ));
+                }
+
+
+
+                #$results =  $api_a->findObjects('query',$condition);
+                drupal_set_message('Project ' . $value . ' ingested!');
+
+                #Delete frozen data
+                array_map('unlink', glob($user_temp_dir . '/' . $value)); #doesn't work
+
+                #Update drupal database
+                clear_db_user_projects($user_name);
+
+            } else {
+                array_map('unlink', glob($user_temp_dir . "/" . $value . "/*.txt"));
+                $moved = rename ($destination, $source);
+                drupal_set_message(t('Couldn\'t create bag for project ' . $value, array()), 'error');
+                watchdog('Fedora ingest', t('Couldn\'t create bag'), array(), WATCHDOG_ERROR);
+            }
+
+            #Cleanup
+            #unlink($user_temp_dir . "/" . $value . ".zip"); #doesn't work
+            #rmdir($user_temp_dir);
+            rmdir($user_backend_dir . '/' . $value);
+            $command = "sudo /lat/scripts/cleanup.sh 2>&1 " . $user_name . " " . $bag_id;
+            exec($command, $output_ingest, $return_var);
+
+        }
+    }
+}
+
+
 function clear_db_user_projects($user){
-   $results = db_delete('flat_deposit_ui_project_info')
+    $results = db_delete('flat_deposit_ui_project_info')
         ->condition('user_id', $user)
         ->execute();
     return $results;
@@ -783,12 +907,12 @@ function refresh_db_user_projects($user){
 function insert_db_user_projects($user, $project, $is_frozen){
     if (!$is_frozen) {$is_frozen = '0';};
     $res = db_insert('flat_deposit_ui_project_info')
-    ->fields(array(
-        'user_id' => $user,
-        'pname' => $project,
-        'is_frozen' => $is_frozen,
-        'ingested' => REQUEST_TIME,
-    ))
+        ->fields(array(
+            'user_id' => $user,
+            'pname' => $project,
+            'is_frozen' => $is_frozen,
+            'freeze_date' => REQUEST_TIME,
+        ))
         ->execute();
     return $res;
 }

@@ -209,11 +209,23 @@ function flat_deposit_ui_schema() {
                 'not null' => FALSE,
                 'description' => 'Freezing status of the project'
             ),
-            'ingested' => array(
+            'freeze_date' => array(
                 'type' => 'int',
-                'length' => 2,
+                'length' => 10,
+                'not null' => FALSE,
+                'description' => 'Freeze date of the project'
+            ),
+            'is_ingested' => array(
+                'type' => 'int',
+                'pgsql_type' => 'boolean',
                 'not null' => FALSE,
                 'description' => 'Ingest status of the project'
+            ),
+            'ingest_date' => array(
+                'type' => 'int',
+                'length' => 10,
+                'not null' => FALSE,
+                'description' => 'Ingest date of the project'
             ),
             'field_str' => array(
                 'type' => 'varchar',
