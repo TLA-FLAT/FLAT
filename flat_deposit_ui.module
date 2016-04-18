@@ -1,6 +1,6 @@
 <?php
 /**
- * @filefgoiwgjwigo
+ * @file
  * Custom user interface for the FLAT data repository
  */
 require_once ('fedora_queries.php');
