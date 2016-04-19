@@ -4,6 +4,18 @@
  * Custom user interface for the FLAT data repository
  */
 require_once ('fedora_queries.php');
+require_once ('drupal_queries.php');
+
+if ($GLOBALS['user']->uid){
+    define('USER', $GLOBALS['user']->name);
+
+    define('FREEZE_DIR', variable_get('flat_deposit_paths',array())['freeze']);
+    define('TEMP_DIR', variable_get('flat_deposit_paths',array())['temp']);
+    define('BAG_DIR', variable_get('flat_deposit_paths',array())['bag']);
+
+    define('USER_FREEZE_DIR', FREEZE_DIR . USER);
+    define('USER_DRUPAL_DATA_DIR', 'public://users/' . USER );
+}
 
 /**
  * Implements hook_help().
@@ -26,23 +38,95 @@ function flat_deposit_ui_help($path, $arg){
 function flat_deposit_ui_permission()
 {
     return array(
-        'upload' => array(
-            'title' => t('Upload'),
+        'admin deposit module' => array(
+            'title' => t('Administration of the deposit module'),
+            'description' => t('All administrative tasks'),
+            'restrict access' => TRUE),
+        'workspace' => array(
+            'title' => t('workspace'),
             'description' => t('Upload data to the FLAT deposit')),
         'view' => array(
-            'title' => t('View'),
+            'title' => t('view'),
             'description' => t('View files uploaded to the FLAT deposit')),
-        'manage' => array(
-            'title' => t('Manage'),
-            'description' => t('Manage files uploaded to the FLAT deposit')),
+        'bundle' => array(
+            'title' => t('bundle'),
+            'description' => t('Manage file bundle uploaded to the FLAT deposit')),
+        'collection' => array(
+            'title' => t('Collection'),
+            'description' => t('Manage files collections uploaded to the FLAT deposit')),
         'commit' => array(
-            'title' => t('Commit'),
-            'description' => t('Commit changes to FLAT deposit')),
-
-
-    );
+            'title' => t('commit'),
+            'description' => t('Commit changes to FLAT deposit')));
 }
 
+
+/**
+ * Implements hook_menu().
+ */
+function flat_deposit_ui_menu()
+{
+    $access=array('admin deposit module');
+
+    $items = array();
+
+    // Admin configuration group
+    $items['admin/config/flat_deposit_ui'] = array(
+        'title' => 'FLAT deposit UI',
+        'description' => 'Administer FLAT deposit user interface',
+        'access callback' => TRUE);
+
+    // Admin configuration - Upload settings
+    $items['admin/config/flat_deposit_ui/manage'] = array(
+        'title' => 'Customize settings',
+        'description' => 'Administer FLAT deposit settings',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array( 'flat_deposit_ui_admin_form'),
+        'access arguments' => $access);
+
+    // Page for uploading data
+    $items['workspace'] = array(
+        'title' => 'Workspace',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('flat_deposit_ui_workspace_form'),
+        'access arguments' => array('workspace'));
+
+    // Page for ingested data
+    $items['view'] = array(
+        'title' => 'View archived data',
+        'description' => 'Notification of data ingested to server',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'flat_deposit_ui_view_ingested_files',
+        'access arguments' => array('view'));
+
+    // Page for manage bundles
+    $items['managebundles'] = array(
+        'title' => 'Manage bundles',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'flat_deposit_ui_manage_bundles',
+        'page arguments' => array(
+            'content' => 'Under construction'),
+        'access arguments' => array('bundle'));
+
+    // Page for manage collections
+    $items['managecollections'] = array(
+        'title' => 'Manage Collections',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'flat_deposit_ui_view_collections',
+        'page arguments' => array(
+            'content' => 'Under construction'),
+        'access arguments' => array('collection'));
+
+    // Page for commiting changes
+    $items['commitchanges'] = array(
+        'title' => 'Commit changes',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('flat_deposit_ui_commit_form'),
+        'access arguments' => array('commit'));
+
+    return $items;
+};
 
 
 /**
@@ -53,95 +137,76 @@ function flat_deposit_ui_admin_form($node, &$form_state)
     $form = array();
 
     $form['overview'] = array(
-        '#markup' => t('This interface allows users to admin their deposit preferences'),
+        '#markup' => t('This interface allows administrators to customize the deposit\'s settings'),
         '#prefix' => '<p>',
-        '#suffix' => '</p>',
-    );
+        '#suffix' => '</p>',);
 
-    $form['enable_delete'] = array (
-        '#title' => t('View only'),
-        '#description' => t('Prevent yourself to accidentally delete data'),
+    $form['paths'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Paths'));
+
+    $form['paths']['freeze'] = array (
+        '#type' => 'textfield',
+        '#title' => 'Freeze',
+        '#description' => t('Absolute path of the location where frozen data will be stored'),
+        '#default_value' => FREEZE_DIR,
+        '#required' => TRUE,);
+
+    $form['paths']['temp'] = array (
+        '#type' => 'textfield',
+        '#title' => 'Temporary',
+        '#description' => t('Absolute path of the location where the user data will temporarily be stored for ingestion'),
+        '#default_value' => TEMP_DIR,
+        '#required' => TRUE,);
+
+    $form['paths']['bags'] = array (
+        '#type' => 'textfield',
+        '#title' => 'Bags',
+        '#description' => t('Absolute path of the location where Fedora can needs to search for complete SIP\'s that will be ingested'),
+        '#default_value' => BAG_DIR,
+        '#required' => TRUE,);
+
+    $form['modules'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Modules'));
+
+    $form['modules']['owncloud'] = array (
+        '#title' => t('Owncloud'),
+        '#description' => t('Incorporate owncloud into module'),
         '#type' => 'checkbox',
-        '#default_value' => 1,
-        '#required' => TRUE,
-    );
+        '#default_value' => variable_get('flat_deposit_modules',array())['owncloud'],);
 
     $form['submit'] = array (
         '#type' => 'submit',
-        '#value' => 'save',
-    );
+        '#value' => t('Save'));
+
+    $form['restore'] = array (
+        '#type' => 'submit',
+        '#value' => t('Reset to defaults'),
+        '#submit' => array('flat_deposit_ui_admin_form_reset_submit'));
 
     return $form;
 }
 
-/**
- * Implements hook_menu().
- */
-function flat_deposit_ui_menu()
+function flat_deposit_ui_admin_form_submit ($form, &$form_state)
 {
-    $items = array();
+    variable_set('flat_deposit_paths', array(
+            'freeze' => $form_state['values']['freeze'],
+            'temp' => $form_state['values']['temp'],
+            'bag'=> $form_state['values']['bags']));
 
-    // Admin configuration group
-    $items['admin/config/flat_deposit_ui'] = array(
-        'title' => 'FLAT deposit UI',
-        'description' => 'Administer FLAT deposit user interface',
-        'access arguments' => array ('administer FLAT deposit UI'),
-    );
+    variable_set('flat_deposit_modules', array(
+        'owncloud' =>$form_state['values']['owncloud']));
 
-    // Admin configuration - Upload settings
-    $items['admin/config/flat_deposit_ui/manage'] = array(
-        'title' => 'Customize settings',
-        'description' => 'Administer FLAT deposit settings',
-        'access arguments' => array ('administer FLAT deposit UI'),
-        'page callback' => 'drupal_get_form',
-        'page arguments' => array( 'flat_deposit_ui_admin_form'),
-    );
+    drupal_set_message(t('Changed values have been saved'));
+}
 
-    // Page for uploading data
-    $items['workspace'] = array(
-        'title' => 'Workspace',
-        'type' => MENU_LOCAL_TASK,
-        'page callback' => 'drupal_get_form',
-        'page arguments' => array('flat_deposit_ui_workspace_form'),
-        'access callback' => TRUE,
-    );
-    // Page for ingested data
-    $items['view'] = array(
-        'title' => 'View archived data',
-        'description' => 'Notification of data ingested to server',
-        'type' => MENU_LOCAL_TASK,
-        'page callback' => 'flat_deposit_ui_view_ingested_files',
-        'access callback' => TRUE,
-    );
-    // Page for manage bundles
-    $items['managebundles'] = array(
-        'title' => 'Manage bundles',
-        'type' => MENU_LOCAL_TASK,
-        'page callback' => 'flat_deposit_ui_manage_bundles',
-        'page arguments' => array(
-            'content' => 'Under construction'),
-        'access callback' => TRUE,
-    );
-    // Page for manage collections
-    $items['managecollections'] = array(
-        'title' => 'Manage Collections',
-        'type' => MENU_LOCAL_TASK,
-        'page callback' => 'flat_deposit_ui_view_collections',
-        'access callback' => TRUE,
-        'page arguments' => array(
-            'content' => 'Under construction'),
-    );
-    // Page for commiting changes
-    $items['commitchanges'] = array(
-        'title' => 'Commit changes',
-        'type' => MENU_LOCAL_TASK,
-        'page callback' => 'drupal_get_form',
-        'page arguments' => array('flat_deposit_ui_commit_form'),
-        'access callback' => TRUE,
-    );
-
-    return $items;
-};
+function flat_deposit_ui_admin_form_reset_submit ($form, &$form_state){
+    module_load_include('inc', 'flat_deposit_ui', 'inc/flat_deposit_ui_core_settings');
+    flat_deposit_set_paths();
+    flat_deposit_set_modules();
+    drupal_set_message(t('All settings have been reset to default'));
+}
 
 
 /**
@@ -218,25 +283,32 @@ function flat_deposit_ui_menu_block_generate(){
  */
 function flat_deposit_ui_workspace_form($form, &$form_state)
 {
-    // initiate user directories if necessary
-    global $user;
 
+    // initiate user directories if necessary
     module_load_include('inc', 'imce', 'inc/imce.page');
+    global $user;
     imce_initiate_profile ($user);
 
-    module_load_include('inc', 'flat_deposit_ui', 'inc/owncloud_api');
-    $oc = owncloud_account_exists($user);
-    $my_code = 'window.open(\'imce\', \'windowName\', \'width=640, height=480\');';
-    // Define the form array.
+    #$my_code = 'window.open(\'imce\', \'windowName\', \'width=640, height=480\');';
 
-    $form ['init_name'] = array(
+    // Define the workspace form
+    $form['field_1'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Create projects'));
+
+    $form ['field_1'] ['init_name'] = array(
         '#type' => 'textfield',
-        '#title' => 'Create new project');
-    $form['init_submit'] = array(
+        '#title' => 'Name of new project');
+
+    $form ['field_1']['init_submit'] = array(
         '#type' => 'submit',
         '#value' => t('Click to create new project'),
         '#submit' => array('flat_deposit_ui_workspace_project_init_submit'),
         '#validate' => array('flat_deposit_ui_workspace_project_init_validate'));
+
+    $form['field_2'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Upload data'));
 
     $form['upload_submit'] = array(
         '#type' => 'submit',
@@ -244,29 +316,29 @@ function flat_deposit_ui_workspace_form($form, &$form_state)
         '#submit' => array('flat_deposit_ui_workspace_upload_submit'),
     );
 
-    $v = variable_get('imce_roles_profiles',array());
-    $w = variable_get('imce_profiles',array());
-    if ($oc){
+
+    // Check for integrity with owncloud in case this features is selected
+    $owncloud = variable_get('flat_deposit_modules',array())['owncloud'];
+    if ($owncloud){
+        module_load_include('inc', 'flat_deposit_ui', 'inc/owncloud_api');
+        $oc = owncloud_account_exists($user);
+        if ($oc){
+            return $form;
+        }
+    }
+    // otherwise just return form for validation
+    else {
         return $form;
     }
-
 }
 
 function flat_deposit_ui_workspace_project_init_validate(&$form, &$form_state)
 {
-    global $user;
-    $user_name = $user->name;
-    $user_drupal_data_dir = 'public://users/' . $user_name;
-    $user_backend_dir = '/app/flat/backend/' . $user_name;
-
-
-    $project_name = $form_state['values']['init_name'];
+    $project_name = $form_state['values']['field_1']['init_name'];
     $message = FALSE;
 
-    $form_state['user_name'] = $user_name;
-    $form_state['user_drupal_data_dir'] = $user_drupal_data_dir;
     $form_state['project_name'] =  $project_name;
-    $form_state['full_directory_path'] = $user_drupal_data_dir . '/' .  $project_name;
+    $form_state['full_directory_path'] = USER_DRUPAL_DATA_DIR . '/' .  $project_name;
 
     //Check that the input values are of the proper format
     if (!preg_match('/^[a-zA-Z0-9\_]{2,20}+$/', $project_name)) {
@@ -276,7 +348,7 @@ function flat_deposit_ui_workspace_project_init_validate(&$form, &$form_state)
         $message = "Project already exists";}
     //Check that prject name is distinctive from existing projects
     else{
-        $dirs = scandir($user_drupal_data_dir);
+        $dirs = scandir(USER_DRUPAL_DATA_DIR);
         foreach ($dirs as $dir){
             if (strtolower($dir)==strtolower($project_name)){$message = "Project with very similar project name exists";}
         };
@@ -302,10 +374,10 @@ function flat_deposit_ui_workspace_project_init_submit(&$form, &$form_state)
 
     //create symbolic link in owncloud user directory and refresh to see new directory
     module_load_include('inc', 'flat_deposit_ui', 'inc/owncloud_api');
-    $ln = OC_ROOT . 'data/' . $form_state['user_name'] . '/files/' . $form_state['project_name'];
+    $ln = OC_ROOT . 'data/' . USER . '/files/' . $form_state['project_name'];
 
     symlink (drupal_realpath($target).'/data', $ln);
-    $occ_command = 'php /var/www/owncloud/occ  files:scan --path="/'. $form_state['user_name'] . '/files"';
+    $occ_command = 'php /var/www/owncloud/occ  files:scan --path="/'. USER . '/files"';
     shell_exec ( $occ_command );
 
 }
@@ -320,9 +392,8 @@ function flat_deposit_ui_workspace_upload_submit(&$form, &$form_state)
 
     $options=array();
     $options['absolute'] = TRUE;
-    global $user;
 
-    $form_state ['redirect'] = 'user/' . $user->uid  . '/imce';
+    $form_state ['redirect'] = 'user/' . $GLOBALS['user']->uid  . '/imce';
 
 
 }
@@ -360,13 +431,11 @@ function flat_deposit_ui_view_ingested_files() {
 
         $row = array($label, $createdDate_formatted, $link) ;
         array_push($rows,$row);
-
-#    export_array_to_db($rows);
-
     }
+
     // creating header array
     $header = array( t('File name'), t('Date ingested'),t('Direct link'));
-    #islandora_object_load($object_id)
+
     $output = array(
         // Table, using the theme hook 'table'.
         'notification' => array(
@@ -388,7 +457,7 @@ function flat_deposit_ui_view_collections()
 {
     $tuque = islandora_get_tuque_connection();
 
-    $query = query_owned_collections($GLOBALS['user']->name);
+    $query = query_owned_collections(USER);
 
     $results = $tuque->repository->ri->sparqlQuery($query);
 
@@ -437,10 +506,9 @@ function flat_deposit_ui_view_collections()
  */
 function flat_deposit_ui_manage_bundles()
 {
-    global $user;
     $tuque = islandora_get_tuque_connection();
 
-    $query = query_owned_collections($user->name);
+    $query = query_owned_collections(USER);
 
     $results = $tuque->repository->ri->sparqlQuery($query);
 
@@ -479,7 +547,7 @@ function flat_deposit_ui_manage_bundles()
         // Table, using the theme hook 'table'.
         'output api_a' => array(
             '#theme' => 'table',
-            '#caption' => t('Objects owned by ' . $user->name),
+            '#caption' => t('Objects owned by ' . USER),
             '#header' => $header,
             '#rows' => $rows2,
         ),
@@ -492,36 +560,30 @@ function flat_deposit_ui_manage_bundles()
  */
 function flat_deposit_ui_commit_form($form, $form_state, $cleanup=false)
 {
-    global $user;
-    $user_name = $user->name;
-    $user_drupal_data_dir = 'public://users/' . $user_name;
-    $user_backend_dir = '/app/flat/backend/' . $user_name;
-
-    # get all project folders exclusive . and ..
-    $project_folders = array_diff(scandir($user_drupal_data_dir), array('..', '.'));
-    if (file_exists($user_backend_dir)){
-        $project_folders = array_merge($project_folders, array_diff(scandir($user_backend_dir), array('..', '.')));
+    // get all project folders exclusive . and ..
+    $project_folders = array_diff(scandir(USER_DRUPAL_DATA_DIR), array('..', '.'));
+    if (file_exists(USER_FREEZE_DIR)){
+        $project_folders = array_merge($project_folders, array_diff(scandir(USER_FREEZE_DIR), array('..', '.')));
     }
 
-    # Cleanup before
-    if ($cleanup) {clear_db_user_projects($user_name);};
+    // Cleanup
+    if ($cleanup) {clear_db_user_projects(USER);};
 
-    #Update drupal database
+    // Update drupal database
     foreach ($project_folders as $project) {
-        $is_frozen = file_exists($user_backend_dir . '/' . $project);
+        $is_frozen = file_exists(USER_FREEZE_DIR . '/' . $project);
 
-
-        if (!check_entry_exists($user_name, $project)) {
-            insert_db_user_projects($user_name, $project, $is_frozen);
+        if (!check_entry_exists(USER, $project)) {
+            insert_db_user_projects(USER, $project, $is_frozen);
         } else {
-            update_db_user_projects($user_name, $project, $is_frozen);
+            update_db_user_projects(USER, $project, $is_frozen);
         }
     }
 
-    #make array of open / frozen projects in order to use these in a form
+    // make array of open / frozen projects in order to use these in a form
     $open_projects = array();
     $frozen_projects = array();
-    foreach (select_db_user_all_projects($user_name) as $project) {
+    foreach (select_db_user_all_projects(USER) as $project) {
         if ($project->is_frozen) {
             array_push($frozen_projects, $project->pname);
         } else {
@@ -529,10 +591,10 @@ function flat_deposit_ui_commit_form($form, $form_state, $cleanup=false)
         }
     }
 
-    #make array of projects on fedora database
+    // Fedora commons database actions
     $tuque = islandora_get_tuque_connection();
     $api_a = $tuque->repository->api->a;
-    $condition = "ownerId=" . $user_name;
+    $condition = "ownerId=" . USER;
     $results = $api_a->findObjects('query',$condition);
 
     $datasets = [];
@@ -542,45 +604,46 @@ function flat_deposit_ui_commit_form($form, $form_state, $cleanup=false)
     }
 
     #make form with three fields : 1) open projects, 2) frozen projects 3) additional (admin) tasks
-    $form = array();
 
-    # open #
+    $form = array();
+    # open projects#
     $form['field_1'] = array(
         '#type' => 'fieldset',
-        '#title' => t('Open projects'),
-    );
+        '#title' => t('Open projects'),);
 
     # key and value of each checkbox will be the same
     $form['field_1']['freezable_projects'] = array(
         '#type' => 'checkboxes',
-        '#options' => drupal_map_assoc($open_projects),
-    );
+        '#options' => drupal_map_assoc($open_projects),);
 
     $form['field_1']['actions']['freeze'] = array(
         '#type' => 'submit',
         '#value' => t('Freeze project'),
         '#submit' => array('flat_deposit_ui_commit_form_freeze_submit'),
-        '#validate' => array('flat_deposit_ui_commit_form_freeze_validate'),
-    );
+        '#validate' => array('flat_deposit_ui_commit_form_freeze_validate'),);
 
-    # frozen #
+    $form['field_1']['actions']['delete'] = array(
+        '#type' => 'submit',
+        '#value' => t('Delete project'),
+        '#submit' => array('flat_deposit_ui_commit_form_delete_submit'),
+        '#validate' => array('flat_deposit_ui_commit_form_delete_validate'),);
+
+    # frozen projects#
     $form['field_2'] = array(
         '#type' => 'fieldset',
-        '#title' => t('Projects ready to ingest'),
-    );
+        '#title' => t('Projects ready to ingest'),);
 
     $form['field_2']['frozen_projects'] = array(
         '#type' => 'checkboxes',
-        '#options' => drupal_map_assoc($frozen_projects),
-    );
+        '#options' => drupal_map_assoc($frozen_projects),);
 
-    // Allow actions for frozen data ready to ingest
+    // Allow actions for frozen data: ingest or open up for changes
     $form['field_2']['actions']['unfreeze'] = array(
         '#type' => 'submit',
         '#value' => t('Unfreeze project'),
         '#submit' => array('flat_deposit_ui_commit_form_unfreeze_submit'),
-        '#validate' => array('flat_deposit_ui_commit_form_unfreeze_validate'),
-    );
+        '#validate' => array('flat_deposit_ui_commit_form_unfreeze_validate'),);
+
     $form['field_2']['actions']['ingest'] = array(
         '#type' => 'submit',
         '#value' => t('Upload project to database'),
@@ -619,55 +682,44 @@ function flat_deposit_ui_commit_form_cleanup_DB_submit ($form, &$form_state)
 
 function flat_deposit_ui_commit_form_freeze_validate (&$form, &$form_state)
 {
-    global $user;
-    $user_name = $user->name;
     $message = FALSE;
-    $backend = '/app/flat/backend';
-    $user_drupal_data_dir = 'public://users/' . $user_name;
-    $user_backend_dir = $backend . '/' . $user_name;
-
-    // variables needed during submission
-    $form_state['user_name'] = $user_name;
-    $form_state['user_backend_dir'] = $user_backend_dir;
-    $form_state['user_drupal_data_dir'] = $user_drupal_data_dir;
 
     // Check if backend directory exists
-    if (!file_exists($backend)) {
+    if (!file_exists(FREEZE_DIR)) {
         form_set_error ('freeze_error', "No freeze directory exists. Please contact administator");
         return $form;
     }
 
     // Check if backend is owned by www-data and writable
-    $owner = posix_getpwuid(fileowner($backend));
+    $owner = posix_getpwuid(fileowner(FREEZE_DIR));
     if ($owner['name'] != "www-data") {
         form_set_error ('freeze_error', "Freeze directory is not writable by application. Please contact administator");
         return $form;
     }
 
     // Check if user backend directory exists
-    if (!file_exists($user_backend_dir)) {
-        $created = drupal_mkdir($user_backend_dir, NULL, true);
+    if (!file_exists(USER_FREEZE_DIR)) {
+        $created = drupal_mkdir(USER_FREEZE_DIR, NULL, true);
         if (!$created) {
             form_set_error('freeze_error', "Could not create user backend directory. Please contact administator");
             return $form;
         }
     }
 
-    // Check for each checked box
-    foreach ($form_state['values']['freezable_projects'] as $key => $value) {
-        if ($value){
-
-            // Check if upload contains at least one cmdi file
-            if (count(glob(drupal_realpath($user_drupal_data_dir . '/'. $value . '/metadata/*.cmdi')))== 0) {
+    // Check for each checked checkbox
+    foreach ($form_state['values']['freezable_projects'] as $key => $project) {
+        if ($project){
+            // if upload contains at least one cmdi file
+            if (count(glob(drupal_realpath(USER_DRUPAL_DATA_DIR . '/'. $project . '/metadata/*.cmdi')))== 0) {
                     form_set_error('freeze_error', "No meta data available for upload bundle. Please provide .cmdi file(s)");
                     return $form;
             }
-
             // if project directory on backend already exists
-            $frozen_project_dir = $backend . '/' . $user_name . '/' . $value ;
+            $frozen_project_dir = FREEZE_DIR . '/' . USER . '/' . $project ;
             if (file_exists($frozen_project_dir)) {
                 if (!$message) $message = "";
-                $message .= 'A projects with the name ' . $value . ' has already been frozen.';}
+                $message .= 'A projects with the name ' . $project . ' has already been frozen.';
+            }
         }
     }
 
@@ -683,15 +735,15 @@ function flat_deposit_ui_commit_form_freeze_validate (&$form, &$form_state)
 
 function flat_deposit_ui_commit_form_freeze_submit ($form, &$form_state)
 {
-    foreach ($form_state['values']['freezable_projects'] as $key => $value) {
-        if ($value){
-            $destination = $form_state['user_backend_dir'] . '/' . $value;
-            $source = drupal_realpath($form_state['user_drupal_data_dir'] . '/' . $value);
+    foreach ($form_state['values']['freezable_projects'] as $key => $project) {
+        if ($project){
+            $destination = USER_FREEZE_DIR . '/' . $project;
+            $source = drupal_realpath(USER_DRUPAL_DATA_DIR . '/' . $project);
             $moved = rename($source, $destination);
             if ($moved) {
                 //remove symbolic link in owncloud user directory
                 module_load_include('inc', 'flat_deposit_ui', 'inc/owncloud_api');
-                $symlink = OC_ROOT . 'data/' . $form_state['user_name'] . '/files/' . $value;
+                $symlink = OC_ROOT . 'data/' . USER . '/files/' . $project;
 
                 if(is_link($symlink)) {
                     unlink($symlink);
@@ -700,10 +752,10 @@ function flat_deposit_ui_commit_form_freeze_submit ($form, &$form_state)
                 }
 
                 //refresh owncloud to see only unfrozen projects
-                $occ_command = 'php /var/www/owncloud/occ  files:scan --path="/'. $form_state['user_name'] . '/files"';
+                $occ_command = 'php /var/www/owncloud/occ  files:scan --path="/'. USER . '/files"';
                 shell_exec ( $occ_command );
 
-                drupal_set_message(t('Project ' . $value . ' is frozen'));
+                drupal_set_message(t('Project ' . $project . ' is frozen'));
             }
         }
     }
@@ -711,26 +763,17 @@ function flat_deposit_ui_commit_form_freeze_submit ($form, &$form_state)
 
 function flat_deposit_ui_commit_form_unfreeze_validate (&$form, &$form_state)
 {
-    global $user;
-    $user_name = $user->name;
-    $message = FALSE;
-    $backend = '/app/flat/backend';
-    $user_drupal_data_dir = 'public://users/' . $user_name;
-    $user_backend_dir = $backend . '/' . $user_name;
 
-    // variables needed during submission
-    $form_state['user_name'] = $user_name;
-    $form_state['user_backend_dir'] = $user_backend_dir;
-    $form_state['user_drupal_data_dir'] = $user_drupal_data_dir;
+    $message = FALSE;
 
     // Check if user drupal data directory exists
-    if (!file_exists($user_drupal_data_dir)) {
+    if (!file_exists(USER_DRUPAL_DATA_DIR)) {
         form_set_error ('unfreeze_error', "User Drupal data directory does not exist. Please contact administator");
         return $form;
     }
 
     // Check if backend is owned by www-data and writable
-    $owner = posix_getpwuid(fileowner($user_drupal_data_dir));
+    $owner = posix_getpwuid(fileowner(USER_DRUPAL_DATA_DIR));
     if ($owner['name'] != "www-data") {
         form_set_error ('unfreeze_error', "User Drupal data directory is not writable by application. Please contact administator");
         return $form;
@@ -740,7 +783,7 @@ function flat_deposit_ui_commit_form_unfreeze_validate (&$form, &$form_state)
     // for each checked box
     foreach ($form_state['values']['frozen_projects'] as $key => $value) {
         if ($value){
-            $open_project_dir = $user_drupal_data_dir . '/' . $value ;
+            $open_project_dir = USER_DRUPAL_DATA_DIR . '/' . $value ;
             if (file_exists($open_project_dir)) {
                 if (!$message) $message = "";
                 $message .= 'A projects with the name ' . $value . ' has already been frozen.';}
@@ -758,25 +801,25 @@ function flat_deposit_ui_commit_form_unfreeze_validate (&$form, &$form_state)
 
 function flat_deposit_ui_commit_form_unfreeze_submit ($form, &$form_state)
 {
-    foreach ($form_state['values']['frozen_projects'] as $key => $value) {
-        if ($value){
-            $source = $form_state['user_backend_dir'] . '/' . $value;
-            $destination = drupal_realpath($form_state['user_drupal_data_dir'] . '/' . $value);
+    foreach ($form_state['values']['frozen_projects'] as $key => $project) {
+        if ($project){
+            $source = USER_FREEZE_DIR . '/' . $project;
+            $destination = drupal_realpath(USER_DRUPAL_DATA_DIR . '/' . $project);
             $moved = rename($source, $destination);
 
 
             if ($moved) {
                 //add symbolic link to owncloud user directory
                 module_load_include('inc', 'flat_deposit_ui', 'inc/owncloud_api');
-                $symlink = OC_ROOT . 'data/' . $form_state['user_name'] . '/files/' . $value;
+                $symlink = OC_ROOT . 'data/' . USER . '/files/' . $project;
 
-                symlink (drupal_realpath($form_state['user_drupal_data_dir']) . '/' . $value . '/data', $symlink);
+                symlink (drupal_realpath(USER_DRUPAL_DATA_DIR) . '/' . $project . '/data', $symlink);
 
                 //refresh owncloud to see only unfrozen projects
-                $occ_command = 'php /var/www/owncloud/occ  files:scan --path="/'. $form_state['user_name'] . '/files"';
+                $occ_command = 'php /var/www/owncloud/occ  files:scan --path="/'. USER . '/files"';
                 shell_exec ( $occ_command );
 
-                drupal_set_message(t('Project ' . $value . ' is open and can be changed'));
+                drupal_set_message(t('Project ' . $project . ' is open and can be changed'));
             }
         }
     }
@@ -784,42 +827,39 @@ function flat_deposit_ui_commit_form_unfreeze_submit ($form, &$form_state)
 
 function flat_deposit_ui_commit_form_ingest_submit ($form, &$form_state)
 {
-    global $user;
-    $user_name = $user->name;
-    $backend = '/app/flat/backend';
-    $user_backend_dir = $backend . '/' . $user_name;
-    $user_temp_dir="/app/flat/deposit/" . $user_name . "_temp";
-    $bag_dir="/app/flat/deposit/bags/";
 
-    foreach ($form_state['values']['frozen_projects'] as $key => $value) {
-        if ($value) {
+    $user_temp_dir = TEMP_DIR . USER . "_temp";
+    $bag_dir = BAG_DIR;
 
-            if (file_exists ( $user_temp_dir . '/' . $value)) {
+    foreach ($form_state['values']['frozen_projects'] as $key => $project) {
+        if ($project) {
+
+            if (file_exists ( $user_temp_dir . '/' . $project)) {
                 drupal_set_message(t('Bag directory with same name exist', array()), 'error');
                 watchdog('Fedora ingest', t('Couldn\'t create bag'), array(), WATCHDOG_ERROR);
                 return $form;
             }
             #Create temp project dir
-            if (!file_exists ( $user_temp_dir . '/' . $value)) drupal_mkdir($user_temp_dir . '/' . $value, NULL, True);
+            if (!file_exists ( $user_temp_dir . '/' . $project)) drupal_mkdir($user_temp_dir . '/' . $project, NULL, True);
 
             #move data dir to temp directory
-            $source = $user_backend_dir . '/' . $value;
-            $destination = $user_temp_dir . '/' . $value;
+            $source = USER_FREEZE_DIR . '/' . $project;
+            $destination = $user_temp_dir . '/' . $project;
             $moved = rename ($source . '/data', $destination . '/data');
 
             #make bag with data at right location
-            $command = '/usr/local/bin/bagit-4.9.0/bin/bag baginplace ' . $user_temp_dir . '/' . $value;
+            $command = '/usr/local/bin/bagit-4.9.0/bin/bag baginplace ' . $user_temp_dir . '/' . $project;
             exec($command, $output, $return_var);
 
             #move metadata dir to temp directory
             $moved = rename ($source . '/metadata', $destination . '/metadata');
 
             #make bag with data at right location
-            $command = '/usr/local/bin/bagit-4.9.0/bin/bag update ' . $user_temp_dir . '/' . $value;
+            $command = '/usr/local/bin/bagit-4.9.0/bin/bag update ' . $user_temp_dir . '/' . $project;
             exec($command, $output, $return_var);
 
             //Zip all unhidden files
-            $command = "/lat/scripts/prepare_for_doorkeeper_mini.sh $user_name $value";
+            $command = "/lat/scripts/prepare_for_doorkeeper_mini.sh " . USER . " $project";
             exec($command, $output_prep, $return_var);
             $nFiles = str_split($output_prep['0'], 18)[1] ;
 
@@ -831,7 +871,7 @@ function flat_deposit_ui_commit_form_ingest_submit ($form, &$form_state)
 
             # Ingest validated bag
             if (file_exists($bag_dir . '/' . $bag_id)){
-                $command = "sudo /lat/scripts/ingest_one.sh 2>&1 " . $user_name . " " . $bag_id;
+                $command = "sudo /lat/scripts/ingest_one.sh 2>&1 " . USER . " " . $bag_id;
                 exec($command, $output_ingest, $return_var);
             }
 
@@ -854,107 +894,35 @@ function flat_deposit_ui_commit_form_ingest_submit ($form, &$form_state)
                     $pid = str_replace("ingest succeeded for: ", "", $f);
                     $pid = str_replace(".xml", "", $pid);
                     $pid = str_replace("lat_", "lat:", $pid);
-                    $commit = $api_m->modifyObject($pid, array('ownerId' => $user_name, 'logMessage' => 'Commit changes' . $value ));
+                    $commit = $api_m->modifyObject($pid, array('ownerId' => USER, 'logMessage' => 'Commit changes' . $project ));
                     #$commit = $api_m->purgeObject($pid, array('ownerId' => $user_name, 'logMessage' => 'Commit changes Purge' . $value ));
                 }
 
 
 
                 #$results =  $api_a->findObjects('query',$condition);
-                drupal_set_message('Project ' . $value . ' ingested!');
+                drupal_set_message('Project ' . $project . ' ingested!');
 
                 #Delete frozen data
-                array_map('unlink', glob($user_temp_dir . '/' . $value)); #doesn't work
+                array_map('unlink', glob($user_temp_dir . '/' . $project)); #doesn't work
 
                 #Update drupal database
-                clear_db_user_projects($user_name);
+                clear_db_user_projects(USER);
 
             } else {
-                array_map('unlink', glob($user_temp_dir . "/" . $value . "/*.txt"));
+                array_map('unlink', glob($user_temp_dir . "/" . $project . "/*.txt"));
                 $moved = rename ($destination, $source);
-                drupal_set_message(t('Couldn\'t create bag for project ' . $value, array()), 'error');
+                drupal_set_message(t('Couldn\'t create bag for project ' . $project, array()), 'error');
                 watchdog('Fedora ingest', t('Couldn\'t create bag'), array(), WATCHDOG_ERROR);
             }
 
             #Cleanup
             #unlink($user_temp_dir . "/" . $value . ".zip"); #doesn't work
             #rmdir($user_temp_dir);
-            rmdir($user_backend_dir . '/' . $value);
-            $command = "sudo /lat/scripts/cleanup.sh 2>&1 " . $user_name . " " . $bag_id;
+            rmdir(USER_FREEZE_DIR . '/' . $project);
+            $command = "sudo /lat/scripts/cleanup.sh 2>&1 " . USER . " " . $bag_id;
             exec($command, $output_ingest, $return_var);
 
         }
     }
-}
-
-
-function clear_db_user_projects($user){
-    $results = db_delete('flat_deposit_ui_project_info')
-        ->condition('user_id', $user)
-        ->execute();
-    return $results;
-}
-
-
-function refresh_db_user_projects($user){
-    $results = db_select('flat_deposit_ui_project_info')
-        ->fields('pname')
-        ->condition('user_id', $user)
-        ->execute();
-    return $results;
-}
-
-function insert_db_user_projects($user, $project, $is_frozen){
-    if (!$is_frozen) {$is_frozen = '0';};
-    $res = db_insert('flat_deposit_ui_project_info')
-        ->fields(array(
-            'user_id' => $user,
-            'pname' => $project,
-            'is_frozen' => $is_frozen,
-            'freeze_date' => REQUEST_TIME,
-        ))
-        ->execute();
-    return $res;
-}
-
-function select_db_user_all_projects($user)
-{
-    $entries = array();
-
-    $results = db_select('flat_deposit_ui_project_info', 'p')
-        ->fields('p', array('pname', 'is_frozen'))
-        ->condition('user_id', $user)
-        ->execute();
-    foreach ($results as $row) {
-        $entries[] = $row;
-    }
-    return $entries;
-}
-
-function check_entry_exists($user, $project){
-    $bool = FALSE;
-    $entries = array();
-
-
-    $results = db_select('flat_deposit_ui_project_info','p')
-        ->fields('p',array('pname'))
-        ->condition('user_id', $user)
-        ->condition('pname', $project)
-        ->execute();
-    foreach ($results as $row){
-        array_push($entries, $row);
-    }
-    if (count($entries) >0){$bool=TRUE;}
-    return $bool;
-}
-
-function update_db_user_projects($user, $project, $is_frozen)
-{
-    if (!$is_frozen) {$is_frozen = '0';};
-    db_update('flat_deposit_ui_project_info')
-        ->fields(array(
-            'is_frozen' => $is_frozen))
-        ->condition('user_id', $user)
-        ->condition('pname', $project)
-        ->execute();
 }
