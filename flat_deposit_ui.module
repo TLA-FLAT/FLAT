@@ -306,9 +306,17 @@ function flat_deposit_ui_workspace_form($form, &$form_state)
         '#submit' => array('flat_deposit_ui_workspace_project_init_submit'),
         '#validate' => array('flat_deposit_ui_workspace_project_init_validate'));
 
+
+    $open_projects = array_diff(scandir(USER_DRUPAL_DATA_DIR), array('..', '.'));
+    $list_open_projects = theme('item_list', array('items' => $open_projects,
+        'title' => '',
+        'type' => 'ul',
+        'attributes' => array()));
+
     $form['field_2'] = array(
         '#type' => 'fieldset',
-        '#title' => t('Upload data'));
+        '#title' => t('Upload data'),
+        '#description' => $list_open_projects );
 
     $form['upload_submit'] = array(
         '#type' => 'submit',
@@ -334,7 +342,7 @@ function flat_deposit_ui_workspace_form($form, &$form_state)
 
 function flat_deposit_ui_workspace_project_init_validate(&$form, &$form_state)
 {
-    $project_name = $form_state['values']['field_1']['init_name'];
+    $project_name = $form_state['values']['init_name'];
     $message = FALSE;
 
     $form_state['project_name'] =  $project_name;
@@ -555,10 +563,11 @@ function flat_deposit_ui_manage_bundles()
     return $output;
 }
 
+
 /**
  * function that presents all data found in the users directory and allows for data freeze and further ingest
  */
-function flat_deposit_ui_commit_form($form, $form_state, $cleanup=false)
+function flat_deposit_ui_commit_form($form_state, $cleanup=false)
 {
     // get all project folders exclusive . and ..
     $project_folders = array_diff(scandir(USER_DRUPAL_DATA_DIR), array('..', '.'));
@@ -625,8 +634,7 @@ function flat_deposit_ui_commit_form($form, $form_state, $cleanup=false)
     $form['field_1']['actions']['delete'] = array(
         '#type' => 'submit',
         '#value' => t('Delete project'),
-        '#submit' => array('flat_deposit_ui_commit_form_delete_submit'),
-        '#validate' => array('flat_deposit_ui_commit_form_delete_validate'),);
+        '#submit' => array('flat_deposit_ui_commit_form_delete_submit'));
 
     # frozen projects#
     $form['field_2'] = array(
@@ -672,6 +680,7 @@ function flat_deposit_ui_commit_form($form, $form_state, $cleanup=false)
         '#value' => 'Refresh projects',
         '#submit' => array('flat_deposit_ui_commit_form_cleanup_DB_submit'),
     );
+
     return $form;
 }
 
@@ -760,6 +769,21 @@ function flat_deposit_ui_commit_form_freeze_submit ($form, &$form_state)
         }
     }
 }
+
+function flat_deposit_ui_commit_form_delete_submit($form, &$form_state)
+{
+    foreach ($form_state['values']['freezable_projects'] as $key => $project) {
+        if ($project){
+            $source = USER_DRUPAL_DATA_DIR . '/' . $project;
+            $del = file_unmanaged_delete_recursive($source);
+            if ($del){
+                drupal_set_message(t('Project ' . $project . ' has been deleted'));
+            }
+        }
+    }
+}
+
+
 
 function flat_deposit_ui_commit_form_unfreeze_validate (&$form, &$form_state)
 {
