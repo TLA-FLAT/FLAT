@@ -36,11 +36,22 @@ function flat_deposit_set_modules()
         )
     );
 
-    #define('OC_ADMIN', 'admin');
-    #define('OC_PASS', 'admin');
-    #define('OC_ROOT', '/var/www/owncloud/');
-
-
     return TRUE;
 }
 
+function flat_deposit_set_owncloud(){
+
+    $owncloud_settings = variable_get('owncloud_settings', array());
+
+    //already installed
+    if (!empty($owncloud_settings[0])) {
+        variable_del('owncloud_settings');
+    }
+    variable_set('owncloud_settings', array(
+        'admin_name' => 'admin',
+        'admin_pass' => 'admin',
+        'root_dir'=> '/var/www/owncloud/'));
+
+
+
+}

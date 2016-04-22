@@ -13,6 +13,7 @@ function flat_deposit_ui_install(){
 
     flat_deposit_set_paths();
     flat_deposit_set_modules();
+    flat_deposit_set_owncloud();
 
     $t = get_t();
 
@@ -155,6 +156,7 @@ function flat_deposit_ui_uninstall(){
     // clean up global variables
     variable_del('flat_deposit_paths');
     variable_del('flat_deposit_modules');
+    variable_del('owncloud_settings');
 }
 
 /**

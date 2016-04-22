@@ -5,6 +5,7 @@
  */
 require_once ('fedora_queries.php');
 require_once ('drupal_queries.php');
+module_load_include('inc', 'flat_deposit_ui', 'inc/owncloud_api');
 
 if ($GLOBALS['user']->uid){
     define('USER', $GLOBALS['user']->name);
@@ -76,11 +77,19 @@ function flat_deposit_ui_menu()
         'access callback' => TRUE);
 
     // Admin configuration - Upload settings
-    $items['admin/config/flat_deposit_ui/manage'] = array(
-        'title' => 'Customize settings',
-        'description' => 'Administer FLAT deposit settings',
+    $items['admin/config/flat_deposit_ui/customize'] = array(
+        'title' => 'Customize deposit settings',
+        'description' => 'Administer FLAT deposit settings such as temporal storage folders and used plugins',
         'page callback' => 'drupal_get_form',
         'page arguments' => array( 'flat_deposit_ui_admin_form'),
+        'access arguments' => $access);
+
+    // Admin configuration - Owncloud settings
+    $items['admin/config/flat_deposit_ui/manage_owncloud'] = array(
+        'title' => 'Administer owncloud',
+        'description' => 'Administer owncloud root path and credentials',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array( 'flat_deposit_ui_owncloud_form'),
         'access arguments' => $access);
 
     // Page for uploading data
@@ -191,9 +200,9 @@ function flat_deposit_ui_admin_form($node, &$form_state)
 function flat_deposit_ui_admin_form_submit ($form, &$form_state)
 {
     variable_set('flat_deposit_paths', array(
-            'freeze' => $form_state['values']['freeze'],
-            'temp' => $form_state['values']['temp'],
-            'bag'=> $form_state['values']['bags']));
+        'freeze' => $form_state['values']['freeze'],
+        'temp' => $form_state['values']['temp'],
+        'bag'=> $form_state['values']['bags']));
 
     variable_set('flat_deposit_modules', array(
         'owncloud' =>$form_state['values']['owncloud']));
@@ -205,7 +214,75 @@ function flat_deposit_ui_admin_form_reset_submit ($form, &$form_state){
     module_load_include('inc', 'flat_deposit_ui', 'inc/flat_deposit_ui_core_settings');
     flat_deposit_set_paths();
     flat_deposit_set_modules();
+    #flat_deposit_set_owncloud();
     drupal_set_message(t('All settings have been reset to default'));
+}
+
+
+/**
+ * Implements hook_form().
+ */
+function flat_deposit_ui_owncloud_form($node, &$form_state)
+{
+    $form = array();
+
+    $form['overview'] = array(
+        '#markup' => t('Administrators can configure here owncloud settings. It is required that owncloud runs on the same server as this drupal installation'),
+        '#prefix' => '<p>',
+        '#suffix' => '</p>',);
+
+    $form['settings'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Owncloud settings'));
+
+    $form['settings']['admin_name'] = array (
+        '#type' => 'textfield',
+        '#title' => 'Owncloud admin name',
+        '#description' => t('The owncloud admin user name'),
+        '#default_value' => variable_get('owncloud_settings',array())['admin_name'],
+        '#required' => TRUE,);
+
+    $form['settings']['admin_pass'] = array (
+        '#type' => 'textfield',
+        '#title' => 'Owncloud admin password',
+        '#description' => t('The owncloud admin user password'),
+        '#default_value' => variable_get('owncloud_settings',array())['admin_pass'],
+        '#required' => TRUE,);
+
+    $form['settings']['root_dir'] = array (
+        '#type' => 'textfield',
+        '#title' => 'Owncloud root directory',
+        '#description' => t('The owncloud installation path'),
+        '#default_value' => variable_get('owncloud_settings',array())['root_dir'],
+        '#required' => TRUE,);
+
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => t('Save'));
+
+    $form['restore'] = array (
+        '#type' => 'submit',
+        '#value' => t('Reset to defaults'),
+        '#submit' => array('flat_deposit_ui_admin_form_reset_submit'));
+
+    return $form;
+}
+
+
+function flat_deposit_ui_owncloud_form_submit ($form, &$form_state)
+{
+    variable_set('owncloud_settings', array(
+        'admin_name' => $form_state['values']['admin_name'],
+        'admin_pass' => $form_state['values']['admin_pass'],
+        'root_dir'=> $form_state['values']['root_dir']));
+
+    drupal_set_message(t('Changed values have been saved'));
+}
+
+function flat_deposit_ui_owncloud_form_reset_submit ($form, &$form_state){
+    module_load_include('inc', 'flat_deposit_ui', 'inc/flat_deposit_ui_core_settings');
+    flat_deposit_set_owncloud();
+    drupal_set_message(t('Owncloud settings have been reset to default'));
 }
 
 
@@ -294,48 +371,38 @@ function flat_deposit_ui_workspace_form($form, &$form_state)
     // Define the workspace form
     $form['field_1'] = array(
         '#type' => 'fieldset',
-        '#title' => t('Create projects'));
+        '#title' => t('Create bundles'));
 
     $form ['field_1'] ['init_name'] = array(
         '#type' => 'textfield',
-        '#title' => 'Name of new project');
+        '#title' => 'Name of bundle');
 
     $form ['field_1']['init_submit'] = array(
         '#type' => 'submit',
-        '#value' => t('Click to create new project'),
+        '#value' => t('Click to create new workspace bundle'),
         '#submit' => array('flat_deposit_ui_workspace_project_init_submit'),
         '#validate' => array('flat_deposit_ui_workspace_project_init_validate'));
 
 
     $open_projects = array_diff(scandir(USER_DRUPAL_DATA_DIR), array('..', '.'));
     $list_open_projects = theme('item_list', array('items' => $open_projects,
-        'title' => '',
-        'type' => 'ul',
-        'attributes' => array()));
+                                                    'title' => '',
+                                                    'type' => 'ul',
+                                                    'attributes' => array()));
 
     $form['field_2'] = array(
         '#type' => 'fieldset',
-        '#title' => t('Upload data'),
+        '#title' => t('Open bundles'),
         '#description' => $list_open_projects );
 
-    $form['upload_submit'] = array(
+    $form['field_2']['upload_submit'] = array(
         '#type' => 'submit',
-        '#value' => t('Upload data'),
-        '#submit' => array('flat_deposit_ui_workspace_upload_submit'),
-    );
-
+        '#value' => t('Upload or browse data'),
+        '#submit' => array('flat_deposit_ui_workspace_upload_submit'),);
 
     // Check for integrity with owncloud in case this features is selected
-    $owncloud = variable_get('flat_deposit_modules',array())['owncloud'];
-    if ($owncloud){
-        module_load_include('inc', 'flat_deposit_ui', 'inc/owncloud_api');
-        $oc = owncloud_account_exists($user);
-        if ($oc){
-            return $form;
-        }
-    }
-    // otherwise just return form for validation
-    else {
+    $oc = new OwnCloud();
+    if ($oc->ok){
         return $form;
     }
 }
@@ -357,6 +424,8 @@ function flat_deposit_ui_workspace_project_init_validate(&$form, &$form_state)
     //Check that prject name is distinctive from existing projects
     else{
         $dirs = scandir(USER_DRUPAL_DATA_DIR);
+        if (file_exists(USER_FREEZE_DIR)){ $dirs = array_merge($dirs, array_diff(scandir(USER_FREEZE_DIR), array('..', '.')));}
+
         foreach ($dirs as $dir){
             if (strtolower($dir)==strtolower($project_name)){$message = "Project with very similar project name exists";}
         };
@@ -364,11 +433,11 @@ function flat_deposit_ui_workspace_project_init_validate(&$form, &$form_state)
     //redirect to form in case error message is created
     if ($message) {form_set_error ('init_name', $message);}
 }
+
 /**
  * $workspace_project_init_form_submit
  * create new local folders on click; to get absolute path of local path type drupal_realpath("public://")
  */
-
 function flat_deposit_ui_workspace_project_init_submit(&$form, &$form_state)
 {
     drupal_set_message(t('Creating new project folders'));
@@ -381,14 +450,11 @@ function flat_deposit_ui_workspace_project_init_submit(&$form, &$form_state)
 
 
     //create symbolic link in owncloud user directory and refresh to see new directory
-    module_load_include('inc', 'flat_deposit_ui', 'inc/owncloud_api');
-    $ln = OC_ROOT . 'data/' . USER . '/files/' . $form_state['project_name'];
-
-    symlink (drupal_realpath($target).'/data', $ln);
-    $occ_command = 'php /var/www/owncloud/occ  files:scan --path="/'. USER . '/files"';
-    shell_exec ( $occ_command );
-
+    $oc = new OwnCloud();
+    $project = $form_state['project_name'];
+    $oc->CreateLinkAndSync($target, $project);
 }
+
 #
 /**
  * $manage_bundles_form_submit
@@ -746,24 +812,14 @@ function flat_deposit_ui_commit_form_freeze_submit ($form, &$form_state)
 {
     foreach ($form_state['values']['freezable_projects'] as $key => $project) {
         if ($project){
-            $destination = USER_FREEZE_DIR . '/' . $project;
             $source = drupal_realpath(USER_DRUPAL_DATA_DIR . '/' . $project);
+            $destination = USER_FREEZE_DIR . '/' . $project;
             $moved = rename($source, $destination);
+
             if ($moved) {
                 //remove symbolic link in owncloud user directory
-                module_load_include('inc', 'flat_deposit_ui', 'inc/owncloud_api');
-                $symlink = OC_ROOT . 'data/' . USER . '/files/' . $project;
-
-                if(is_link($symlink)) {
-                    unlink($symlink);
-                } else {
-                    exit("$symlink exists but not symbolic link\n");
-                }
-
-                //refresh owncloud to see only unfrozen projects
-                $occ_command = 'php /var/www/owncloud/occ  files:scan --path="/'. USER . '/files"';
-                shell_exec ( $occ_command );
-
+                $oc = new OwnCloud();
+                $oc->DeleteLinkAndSync($project);
                 drupal_set_message(t('Project ' . $project . ' is frozen'));
             }
         }
@@ -776,6 +832,11 @@ function flat_deposit_ui_commit_form_delete_submit($form, &$form_state)
         if ($project){
             $source = USER_DRUPAL_DATA_DIR . '/' . $project;
             $del = file_unmanaged_delete_recursive($source);
+
+            //#unlink owncloud symlink
+            $oc = new OwnCloud();
+            $oc->DeleteLinkAndSync($project);
+
             if ($del){
                 drupal_set_message(t('Project ' . $project . ' has been deleted'));
             }
@@ -834,14 +895,8 @@ function flat_deposit_ui_commit_form_unfreeze_submit ($form, &$form_state)
 
             if ($moved) {
                 //add symbolic link to owncloud user directory
-                module_load_include('inc', 'flat_deposit_ui', 'inc/owncloud_api');
-                $symlink = OC_ROOT . 'data/' . USER . '/files/' . $project;
-
-                symlink (drupal_realpath(USER_DRUPAL_DATA_DIR) . '/' . $project . '/data', $symlink);
-
-                //refresh owncloud to see only unfrozen projects
-                $occ_command = 'php /var/www/owncloud/occ  files:scan --path="/'. USER . '/files"';
-                shell_exec ( $occ_command );
+                $oc = new OwnCloud();
+                $oc->CreateLinkAndSync($destination, $project);
 
                 drupal_set_message(t('Project ' . $project . ' is open and can be changed'));
             }
@@ -928,7 +983,7 @@ function flat_deposit_ui_commit_form_ingest_submit ($form, &$form_state)
                 drupal_set_message('Project ' . $project . ' ingested!');
 
                 #Delete frozen data
-                array_map('unlink', glob($user_temp_dir . '/' . $project)); #doesn't work
+                file_unmanaged_delete_recursive($user_temp_dir . '/' . $project);
 
                 #Update drupal database
                 clear_db_user_projects(USER);
@@ -941,12 +996,9 @@ function flat_deposit_ui_commit_form_ingest_submit ($form, &$form_state)
             }
 
             #Cleanup
-            #unlink($user_temp_dir . "/" . $value . ".zip"); #doesn't work
-            #rmdir($user_temp_dir);
-            rmdir(USER_FREEZE_DIR . '/' . $project);
-            $command = "sudo /lat/scripts/cleanup.sh 2>&1 " . USER . " " . $bag_id;
-            exec($command, $output_ingest, $return_var);
-
+            if (file_exists($user_temp_dir . '/' . $project)){file_unmanaged_delete_recursive($user_temp_dir . '/' . $project);}
+            if (file_exists(USER_FREEZE_DIR . '/' . $project)){file_unmanaged_delete_recursive(USER_FREEZE_DIR . '/' . $project);}
+            if (file_exists(BAG_DIR . '/' . $bag_id)){file_unmanaged_delete_recursive(BAG_DIR . '/' . $bag_id);}
         }
     }
 }
