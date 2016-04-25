@@ -57,7 +57,7 @@ public class CreateFOX extends AbstractAction {
             File xsl = new File(getParameter("cmd2fox"));
             XsltExecutable cmd2fox = null;
             if (hasParameter("cmd2dc")) {
-                XsltTransformer inclCMD2DC = Saxon.buildTransformer(CreateFOX.class.getResource("/inclCMD2DC.xsl")).load();
+                XsltTransformer inclCMD2DC = Saxon.buildTransformer(CreateFOX.class.getResource("/CreateFOX/inclCMD2DC.xsl")).load();
                 inclCMD2DC.setSource(new StreamSource(xsl));
                 inclCMD2DC.setParameter(new QName("cmd2dc"),new XdmAtomicValue("file://"+(new File(getParameter("cmd2dc"))).getAbsolutePath()));
                 XdmDestination destination = new XdmDestination();
@@ -70,12 +70,13 @@ public class CreateFOX extends AbstractAction {
             XsltTransformer fox = cmd2fox.load();
             fox.setParameter(new QName("fox-base"), new XdmAtomicValue(dir.toString()));
             fox.setParameter(new QName("rels-uri"), new XdmAtomicValue(getParameter("relations")));
+            fox.setParameter(new QName("create-cmd-object"), new XdmAtomicValue(false));
             fox.setSource(new DOMSource(context.getSIP().getRecord(),context.getSIP().getBase().toURI().toString()));
             XdmDestination destination = new XdmDestination();
             fox.setDestination(destination);
             fox.transform();
             String fid = Saxon.xpath2string(destination.getXdmNode(),"/*/@PID").replaceAll("[^a-zA-Z0-9]", "_");
-            File out = new File(dir + "/"+fid+".xml");
+            File out = new File(dir + "/"+fid+"_CMD.xml");
             if (out.exists()) {
                 // create a backup of the previous run
             }

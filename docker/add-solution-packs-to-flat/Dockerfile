@@ -2,7 +2,7 @@ FROM		flat
 MAINTAINER	Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 
 RUN mkdir -p /tmp/islandora &&\
-	mkdir -p /var/www/html/drupal/sites/all/modules/contrib
+	mkdir -p /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib
 
 #
 # Audio solution pack
@@ -15,8 +15,8 @@ RUN apt-get update &&\
 RUN cd /tmp/islandora &&\
 	wget "https://github.com/Islandora/islandora_solution_pack_audio/archive/7.x-1.5.zip" &&\
 	mv 7.x-1.5.zip islandora_solution_pack_audio-7.x-1.5.zip &&\
-	unzip islandora_solution_pack_audio-7.x-1.5.zip -d /var/www/html/drupal/sites/all/modules/contrib/ &&\
-	cd /var/www/html/drupal/ &&\
+	unzip islandora_solution_pack_audio-7.x-1.5.zip -d /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/ &&\
+	cd /var/www/html/$DRUPAL_PROJECT/ &&\
 	export PGPASSWORD=fedora &&\
 	/etc/init.d/postgresql start &&\
 	/var/www/fedora/tomcat/bin/startup.sh &&\
@@ -34,20 +34,20 @@ sleep 10 &&\
 RUN cd /tmp/islandora &&\
 	wget "https://github.com/Islandora/php_lib/archive/7.x-1.5.zip" &&\
 	mv 7.x-1.5.zip php_lib-7.x-1.5.zip &&\
-	unzip php_lib-7.x-1.5.zip -d /var/www/html/drupal/sites/all/modules/contrib/ &&\
+	unzip php_lib-7.x-1.5.zip -d /var/www/html/ $DRUPAL_PROJECT/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
 	wget "https://github.com/Islandora/objective_forms/archive/7.x-1.5.zip" &&\
 	mv 7.x-1.5.zip objective_forms-7.x-1.5.zip &&\
-	unzip objective_forms-7.x-1.5.zip -d /var/www/html/drupal/sites/all/modules/contrib/ &&\
+	unzip objective_forms-7.x-1.5.zip -d /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
 	wget "https://github.com/Islandora/islandora_xml_forms/archive/7.x-1.5.zip" &&\
 	mv 7.x-1.5.zip islandora_xml_forms-7.x-1.5.zip &&\
-	unzip islandora_xml_forms-7.x-1.5.zip -d /var/www/html/drupal/sites/all/modules/contrib/ &&\
+	unzip islandora_xml_forms-7.x-1.5.zip -d /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
 	wget "https://github.com/qadan/islandora_batch_derivative_trigger/archive/7.x.zip" &&\
 	mv 7.x.zip islandora_batch_derivative_trigger-7.x.zip &&\
-	unzip islandora_batch_derivative_trigger-7.x.zip -d /var/www/html/drupal/sites/all/modules/contrib/ &&\
-	cd /var/www/html/drupal/ &&\
+	unzip islandora_batch_derivative_trigger-7.x.zip -d /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/ &&\
+	cd /var/www/html/$DRUPAL_PROJECT/ &&\
 	export PGPASSWORD=fedora &&\
 	/etc/init.d/postgresql start &&\
 	/var/www/fedora/tomcat/bin/startup.sh &&\

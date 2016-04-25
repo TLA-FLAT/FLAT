@@ -9,11 +9,11 @@ RUN mkdir /tmp/islandora &&\
 	cd /tmp/islandora &&\
 	wget "https://github.com/Islandora/islandora_solr_search/archive/7.x-1.6.zip" &&\
 	mv 7.x-1.6.zip islandora_gsearch_module-7.x-1.6.zip &&\
-	unzip islandora_gsearch_module-7.x-1.6.zip -d /var/www/html/drupal/sites/all/modules/contrib/
+	unzip islandora_gsearch_module-7.x-1.6.zip -d /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/
 
-ADD drupal/flat_search /var/www/html/drupal/sites/all/modules/custom/
+ADD drupal/flat_search /var/www/html/$DRUPAL_PROJECT/sites/all/modules/custom/
 
-RUN cd /var/www/html/drupal/ &&\
+RUN cd /var/www/html/$DRUPAL_PROJECT/ &&\
 	export PGPASSWORD=fedora &&\
 	/etc/init.d/postgresql start &&\
 	/var/www/fedora/tomcat/bin/startup.sh &&\

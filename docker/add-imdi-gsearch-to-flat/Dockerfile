@@ -9,9 +9,9 @@ RUN apt-get update &&\
 # SOLR configuration
 #
 
-ADD drupal/flat_imdi_search /var/www/html/drupal/sites/all/modules/custom/
+ADD drupal/flat_imdi_search /var/www/html/$DRUPAL_PROJECT/sites/all/modules/custom/
 
-RUN cd /var/www/html/drupal/ &&\
+RUN cd /var/www/html/$DRUPAL_PROJECT/ &&\
 	export PGPASSWORD=fedora &&\
 	/etc/init.d/postgresql start &&\
 	/var/www/fedora/tomcat/bin/startup.sh &&\

@@ -117,7 +117,7 @@ public class Context {
             if (Saxon.xpath2boolean(param,"../"+type+"[@name='"+name+"']/@uniq='true'")) {
                 if (props.containsKey(name)) {
                     this.logger.error(type+"["+name+"] should be unique!");
-                    continue;
+                    throw new DepositException(type+"["+name+"] should be unique!");
                 }
             }
             if (Saxon.hasAttribute(param,"value")) {

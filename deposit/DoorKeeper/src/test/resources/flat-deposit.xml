@@ -4,7 +4,9 @@
         <import class="nl.mpi.tla.flat.deposit.context.Environment" prefix="env-"/>
         <import class="nl.mpi.tla.flat.deposit.context.SystemProperties" prefix="sys-"/>
         <import class="nl.mpi.tla.flat.deposit.context.CLIParameters" prefix="param-"/>
+        <property name="fits" value="../../../lib/fits/lib" uniq="true"/>
         <property name="work" value="{$param-base}/workdir/{$param-user}" uniq="true"/>
+        <property name="bags" value="{$param-base}/bags" uniq="true"/>
         <property name="epicPrefix" value="12345"/>
         <property name="epicUser" value="test"/>
         <property name="epicPassword" value="test"/>
@@ -27,21 +29,21 @@
     <main>
         <action name="check workspace" class="nl.mpi.tla.flat.deposit.action.SIPLoad"/>
         <action name="assemble package" class="nl.mpi.tla.flat.deposit.action.PackageAssembly">
-            <parameter name="dir" value="{$work}/resources"/>
+            <parameter name="dir" value="{$work}/data"/>
             <parameter name="prefix" value="{$epicPrefix}"/>
  			<!--<parameter name="prefix" value="{$tlaHandlePrefix}"/>-->
         </action>
         <action name="validate metadata" class="nl.mpi.tla.flat.deposit.action.Validate">
             <parameter name="rules" value="{$param-base}/policies/rules.sch"/>
         </action>
-        <action name="validate resources" class="nl.mpi.tla.flat.deposit.action.FITS">
+	<!--<action name="validate resources" class="nl.mpi.tla.flat.deposit.action.FITS" classpath="{$fits}/*.jar:{$fits}/droid/*.jar:{$fits}/jhove/*.jar:{$fits}/mediainfo/*.jar:{$fits}/nzmetool/*.jar:{$fits}/nzmetool/adapters/*.jar:{$fits}/xml/nlnz:../../../target/doorkeeper-fits.jar">
         	<parameter name="fits_home" value="{$fitsFolder}"/>
         	<parameter name="mimetypes" value="{$param-base}/policies/fits-mimetypes.xml"/>
-        </action>
+        </action>-->
         <!--<action name="quality assessment" class="nl.mpi.tla.flat.deposit.action.QualityAssessment"/>
         <action name="manual evaluation" class="nl.mpi.tla.flat.deposit.action.Evaluate"/>-->
         <action name="persist resources" class="nl.mpi.tla.flat.deposit.action.Persist">
-            <parameter name="resourcesDir" value="{$work}/resources"/>
+            <parameter name="resourcesDir" value="{$work}/data"/>
             <parameter name="policyFile" value="{$param-base}/policies/persistence-policy.xml"/>
             <parameter name="xpathDatasetName" value="replace(//*[name()='MdSelfLink'], 'hdl:{$epicPrefix}/','')"/>
             <!--<parameter name="xpathDatasetName" value="replace(//*[name()='MdSelfLink'], 'hdl:{$tlaHandlePrefix}/','')"/>-->
@@ -57,6 +59,13 @@
             <parameter name="cmd2fox" value="{$param-base}/../../../../../docker/flat/flat/LAT2FOX/src/main/resources/cmd2fox.xsl"/>
             <parameter name="dir" value="{$work}/fox"/>
             <parameter name="relations" value="{$param-base}/dummies/relations.xml"/>
+        </action>
+        <action class="nl.mpi.tla.flat.deposit.action.EasyBag">
+            <parameter name="bags" value="{$bags}"/>
+            <parameter name="foxes" value="{$work}/fox"/>
+            <parameter name="dataset" value="/Users/menzowi/Documents/Temp/bag/test-flat-easy/metadata/dataset.xml"/>
+            <parameter name="creator" value="{$param-base}/policies/easy-bag-creator.xml"/>
+            <parameter name="files" value="/Users/menzowi/Documents/Temp/bag/test-flat-easy/metadata/files.xml"/>
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.Deposit">
             <parameter name="fedoraServer" value="{$fedoraServer}"/>

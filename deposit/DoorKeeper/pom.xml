@@ -36,6 +36,7 @@
             <groupId>xml-apis</groupId>
             <artifactId>xml-apis</artifactId>
             <version>1.4.01</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.yourmediashelf.fedora.client</groupId>
@@ -47,6 +48,11 @@
             		<artifactId>log4j-over-slf4j</artifactId>
             	</exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>gov.loc</groupId>
+            <artifactId>bagit</artifactId>
+            <version>4.12.0</version>
         </dependency>
         
         <!-- FITS and dependencies needed to build and test -->
@@ -69,6 +75,25 @@
         	<version>1.1</version>
         	<scope>provided</scope>
         </dependency>
+        <dependency>
+                <groupId>jaxen</groupId>
+                <artifactId>jaxen</artifactId>
+                <version>full</version>
+                <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jdom</groupId>
+            <artifactId>jaxen-jdom</artifactId>
+            <version>1.0-FCS</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jdom</groupId>
+            <artifactId>saxpath</artifactId>
+            <version>1.0-FCS</version>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
         	<groupId>commons-cli</groupId>
         	<artifactId>commons-cli</artifactId>
@@ -145,10 +170,26 @@
         	</exclusions>
         </dependency>
         
+         <dependency>
+        	<groupId>com.twmacinta</groupId>
+        	<artifactId>fast-md5</artifactId>
+        	<version>1.0</version>
+                <scope>provided</scope>
+        </dependency>
+
+        <!-- own compiled Saxon-JDOM, needed to upgrade FITS to Saxon-HE -->
+         <dependency>
+        	<groupId>net.sf.saxon</groupId>
+        	<artifactId>Saxon-JDOM</artifactId>
+        	<version>1.0</version>
+                <scope>provided</scope>
+        </dependency>
+        
         <dependency>
         	<groupId>javax.mail</groupId>
         	<artifactId>mail</artifactId>
         	<version>1.4.7</version>
+                <scope>provided</scope>
         </dependency>
         
         

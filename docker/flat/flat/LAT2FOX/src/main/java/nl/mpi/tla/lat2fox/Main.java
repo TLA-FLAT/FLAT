@@ -49,6 +49,7 @@ public class Main {
         System.err.println("INF: -f=<DIR>   directory to store the FOX files (default: ./fox)");
         System.err.println("INF: -x=<DIR>   directory to store the FOX files with problems (default: ./fox-error)");
         System.err.println("INF: -p=<DIR>   directory to pickup policies (default: ./policies)");
+        System.err.println("INF: -q=<DIR>   directory to pickup management info (default: ./management)");
         System.err.println("INF: -i=<DIR>   replace source <DIR> by this <DIR> in the FOX files (optional)");
         System.err.println("INF: -n=<NUM>   create subdirectories to contain <NUM> FOX files (default: 0, i.e., no subdirectories)");
         System.err.println("INF: -c=<FILE>  file containing the mapping to collections (optional)");
@@ -72,6 +73,7 @@ public class Main {
         String bdir = null;
         String xdir = null;
         String pdir = null;
+        String mdir = null;
         String cext = "cmdi";
         String cfile = null;
         String dfile = null;
@@ -86,7 +88,7 @@ public class Main {
         boolean relationCheck = true;
         int ndir = 0;
         // check command line
-        OptionParser parser = new OptionParser( "zhlve:r:f:i:x:p:n:c:d:m:o:a:s:b:?*" );
+        OptionParser parser = new OptionParser( "zhlve:r:f:i:x:p:q:n:c:d:m:o:a:s:b:?*" );
         OptionSet options = parser.parse(args);
         if (options.has("l"))
             laxResourceCheck = true;
@@ -108,6 +110,8 @@ public class Main {
             xdir = (String)options.valueOf("x");
         if (options.has("p"))
             pdir = (String)options.valueOf("p");
+        if (options.has("q"))
+            mdir = (String)options.valueOf("q");
         if (options.has("b"))
             bdir = (String)options.valueOf("b");
         if (options.has("c")) {
@@ -203,6 +207,8 @@ public class Main {
                 xdir = dir + "/fox-error";
             if (pdir == null)
                 pdir = dir + "/policies";
+            if (mdir == null)
+                mdir = dir + "/management";
             XdmNode relsDoc = null;
             if (rfile != null && rfile.exists()) {
                 relsDoc = SaxonUtils.buildDocument(new StreamSource(rfile));
@@ -281,6 +287,8 @@ public class Main {
                             fox.setParameter(new QName("icon-base"), new XdmAtomicValue(bdir));
                         if (pdir != null)
                             fox.setParameter(new QName("policies-dir"), new XdmAtomicValue(pdir));
+                        if (mdir != null)
+                            fox.setParameter(new QName("management-dir"), new XdmAtomicValue(mdir));
                         fox.setParameter(new QName("create-cmd-object"), new XdmAtomicValue(createCMDObject));
                         fox.setSource(new StreamSource(input));
                         XdmDestination destination = new XdmDestination();

@@ -10,7 +10,7 @@ RUN apt-get update &&\
     apt-get -y dist-upgrade &&\
     apt-get -y install libapache2-mod-shib2
 
-RUN cd /var/www/html/drupal/ &&\
+RUN cd /var/www/html/$DRUPAL_PROJECT/ &&\
 	export PGPASSWORD=fedora &&\
 	/etc/init.d/postgresql start &&\
 	/var/www/fedora/tomcat/bin/startup.sh &&\

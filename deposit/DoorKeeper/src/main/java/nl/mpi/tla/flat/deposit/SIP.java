@@ -31,7 +31,7 @@ import javax.xml.transform.dom.DOMSource;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
-import static nl.mpi.tla.flat.deposit.util.Global.ASOF;
+import nl.mpi.tla.flat.deposit.util.Global;
 import static nl.mpi.tla.flat.deposit.util.Global.NAMESPACES;
 import nl.mpi.tla.flat.deposit.util.Saxon;
 import org.slf4j.Logger;
@@ -132,7 +132,7 @@ public class SIP {
         if (this.fid==null)
             throw new DepositException("SIP["+this.base+"] has no Fedora Commons PID yet!");
         try {
-            this.fid = new URI(this.fid.toString()+"@"+ASOF.format(date)+"Z");
+            this.fid = new URI(this.fid.toString()+"@"+Global.asOfDateTime(date));
         } catch (URISyntaxException ex) {
            throw new DepositException(ex);
         }

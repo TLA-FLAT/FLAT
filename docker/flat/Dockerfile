@@ -120,74 +120,75 @@ RUN mkdir -p /var/www/composer &&\
 ENV COMPOSER_HOME=/var/www/composer
 RUN $COMPOSER_HOME/composer global require drush/drush:7.*
 
+ENV DRUPAL_PROJECT=flat
 RUN cd /var/www/html &&\
-	/var/www/composer/vendor/drush/drush/drush -v dl drupal --drupal-project-rename=drupal
+	/var/www/composer/vendor/drush/drush/drush -v dl drupal --drupal-project-rename=$DRUPAL_PROJECT
 ENV PGPASSWORD=fedora
 RUN /etc/init.d/postgresql start &&\
-	cd /var/www/html/drupal &&\
+	cd /var/www/html/$DRUPAL_PROJECT &&\
 	export PHP_OPTIONS="-d sendmail_path=`which true`" &&\
 	/var/www/composer/vendor/drush/drush/drush site-install standard --site-name=FLAT --account-name=admin --account-pass=admin --db-su=fedora --db-su-pw=fedora --db-url=pgsql://fedora:fedora@localhost/drupal -y &&\
 	/etc/init.d/postgresql stop
 
-RUN mkdir -p /var/www/html/drupal/sites/all/modules/custom &&\
-	chown www-data:www-data /var/www/html/drupal/sites/default/files &&\
-	chown www-data:www-data /var/www/html/drupal/sites/default/settings.php &&\
-	chown www-data:www-data /var/www/html/drupal/sites/all/modules/custom
+RUN mkdir -p /var/www/html/$DRUPAL_PROJECT/sites/all/modules/custom &&\
+	chown www-data:www-data /var/www/html/$DRUPAL_PROJECT/sites/default/files &&\
+	chown www-data:www-data /var/www/html/$DRUPAL_PROJECT/sites/default/settings.php &&\
+	chown www-data:www-data /var/www/html/$DRUPAL_PROJECT/sites/all/modules/custom
     
-ADD drupal/flat-logo.png /var/www/html/drupal/sites/default/files/flat-logo.png
-ADD drupal/flat /var/www/html/drupal/sites/all/modules/custom/
+ADD drupal/flat-logo.png /var/www/html/$DRUPAL_PROJECT/sites/default/files/flat-logo.png
+ADD drupal/flat /var/www/html/$DRUPAL_PROJECT/sites/all/modules/custom/
 ADD drupal/flat-logo.php /tmp/
 
 RUN mkdir /tmp/tuque &&\
 	cd /tmp/tuque &&\
 	wget "https://github.com/islandora/tuque/archive/1.6.zip" &&\
 	unzip 1.6.zip &&\
-	mv /tmp/tuque/tuque-1.6 /var/www/html/drupal/sites/all/libraries/tuque &&\
-	sed -i 's|public $verifyPeer = TRUE;|public $verifyPeer = FALSE;|g' /var/www/html/drupal/sites/all/libraries/tuque/HttpConnection.php
+	mv /tmp/tuque/tuque-1.6 /var/www/html/$DRUPAL_PROJECT/sites/all/libraries/tuque &&\
+	sed -i 's|public $verifyPeer = TRUE;|public $verifyPeer = FALSE;|g' /var/www/html/$DRUPAL_PROJECT/sites/all/libraries/tuque/HttpConnection.php
 
 RUN mkdir -p /tmp/islandora &&\
-	mkdir -p /var/www/html/drupal/sites/all/modules/contrib &&\
-	mkdir -p /var/www/html/drupal/sites/all/themes &&\
+	mkdir -p /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib &&\
+	mkdir -p /var/www/html/$DRUPAL_PROJECT/sites/all/themes &&\
 	cd /tmp/islandora &&\
 	wget "https://github.com/Islandora/islandora/archive/7.x-1.6.tar.gz" &&\
-	tar -xf 7.x-1.6.tar.gz -C /var/www/html/drupal/sites/all/modules/contrib/ &&\
+	tar -xf 7.x-1.6.tar.gz -C /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
 	wget "https://github.com/islandora/islandora_solution_pack_collection/archive/7.x-1.6.zip" &&\
 	mv 7.x-1.6.zip islandora_solution_pack_collection-7.x-1.6.zip &&\
-	unzip islandora_solution_pack_collection-7.x-1.6.zip -d /var/www/html/drupal/sites/all/modules/contrib/ &&\
+	unzip islandora_solution_pack_collection-7.x-1.6.zip -d /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
 	wget "https://github.com/Islandora/islandora_solution_pack_compound/archive/7.x-1.6.zip" &&\
 	mv 7.x-1.6.zip islandora_solution_pack_compound-7.x-1.6.zip &&\
-	unzip islandora_solution_pack_compound-7.x-1.6.zip -d /var/www/html/drupal/sites/all/modules/contrib/ &&\
-    sed -i 's|function islandora_compound_object_islandora_compoundCModel_islandora_view_object|function islandora_compound_object_islandora_compoundCModel_islandora_view_object_DISABLED_BY_FLAT|g' /var/www/html/drupal/sites/all/modules/contrib/islandora_solution_pack_compound-7.x-1.6/islandora_compound_object.module
+	unzip islandora_solution_pack_compound-7.x-1.6.zip -d /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/ &&\
+    sed -i 's|function islandora_compound_object_islandora_compoundCModel_islandora_view_object|function islandora_compound_object_islandora_compoundCModel_islandora_view_object_DISABLED_BY_FLAT|g' /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/islandora_solution_pack_compound-7.x-1.6/islandora_compound_object.modules
+	
+RUN mkdir -p /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/islandora_solution_pack_cmdi
+ADD flat/islandora_solution_pack_cmdi /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/islandora_solution_pack_cmdi
 
-RUN mkdir -p /var/www/html/drupal/sites/all/modules/contrib/islandora_solution_pack_cmdi
-ADD flat/islandora_solution_pack_cmdi /var/www/html/drupal/sites/all/modules/contrib/islandora_solution_pack_cmdi
-
-RUN sed -i "/\"json\"/a \"cmdi\" => \"application/x-cmdi+xml\"," /var/www/html/drupal/sites/all/modules/contrib/islandora-7.x-1.6/includes/mimetype.utils.inc &&\
-	sed -i "/header('Content-type: ' . \$datastream/a if (\$datastream->ID == 'CMD') {\nheader('Content-type: ' . 'application/xml');\n}" /var/www/html/drupal/sites/all/modules/contrib/islandora-7.x-1.6/includes/datastream.inc
+RUN sed -i "/\"json\"/a \"cmdi\" => \"application/x-cmdi+xml\"," /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/islandora-7.x-1.6/includes/mimetype.utils.inc &&\
+	sed -i "/header('Content-type: ' . \$datastream/a if (\$datastream->ID == 'CMD') {\nheader('Content-type: ' . 'application/xml');\n}" /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/islandora-7.x-1.6/includes/datastream.inc
     
 RUN mkdir -p /tmp/bootstrap &&\
 	cd /tmp/bootstrap &&\
 	wget "http://ftp.drupal.org/files/projects/bootstrap-7.x-3.4.zip" &&\
 	unzip bootstrap-7.x-3.4.zip &&\
-	mv /tmp/bootstrap/bootstrap /var/www/html/drupal/sites/all/themes/bootstrap
+	mv /tmp/bootstrap/bootstrap /var/www/html/$DRUPAL_PROJECT/sites/all/themes/bootstrap
 
-RUN cp -r /var/www/html/drupal/sites/all/themes/bootstrap/starterkits/cdn  /var/www/html/drupal/sites/all/themes/flat_bootstrap_theme &&\
-	cd /var/www/html/drupal/sites/all/themes/flat_bootstrap_theme/ &&\
+RUN cp -r /var/www/html/$DRUPAL_PROJECT/sites/all/themes/bootstrap/starterkits/cdn  /var/www/html/$DRUPAL_PROJECT/sites/all/themes/flat_bootstrap_theme &&\
+	cd /var/www/html/$DRUPAL_PROJECT/sites/all/themes/flat_bootstrap_theme/ &&\
 	mv cdn.starterkit flat_bootstrap_theme.info &&\
     echo ";; FLAT settings" >> flat_bootstrap_theme.info &&\
 	echo "settings[bootstrap_cdn_jsdelivr_theme] = 'flatly'" >> flat_bootstrap_theme.info &&\
     echo "settings[bootstrap_fluid_container] = 1" >> flat_bootstrap_theme.info
-ADD islandora/islandora-default.tpl.php /var/www/html/drupal/sites/all/themes/flat_bootstrap_theme/templates/islandora-default.tpl.php
-ADD islandora/template.php /var/www/html/drupal/sites/all/themes/flat_bootstrap_theme/template.php
+ADD islandora/islandora-default.tpl.php /var/www/html/$DRUPAL_PROJECT/sites/all/themes/flat_bootstrap_theme/templates/islandora-default.tpl.php
+ADD islandora/template.php /var/www/html/$DRUPAL_PROJECT/sites/all/themes/flat_bootstrap_theme/template.php
 
-RUN cd /var/www/html/drupal/ &&\
-	export PGPASSWORD=fedora &&\
+RUN export PGPASSWORD=fedora &&\
 	/etc/init.d/postgresql start &&\
 	/var/www/fedora/tomcat/bin/startup.sh &&\
 	bash -c "timeout 60 grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 sleep 10 &&\
+	cd /var/www/html/$DRUPAL_PROJECT/ &&\
 	/var/www/composer/vendor/drush/drush/drush vset islandora_base_url https://localhost:8443/fedora &&\
 	/var/www/composer/vendor/drush/drush/drush en islandora -y &&\
 	/var/www/composer/vendor/drush/drush/drush en islandora_basic_collection -y &&\
@@ -205,6 +206,16 @@ sleep 10 &&\
 	bash -c "timeout 60 grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 	/etc/init.d/postgresql stop
     
+# security patch for islandora
+RUN cd /tmp/islandora &&\
+	git clone https://github.com/Islandora-Labs/islandora_patches.git &&\
+	cd islandora_patches &&\
+	mv disable_dl_clip /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/ &&\
+	mv disable_print_endpoint  /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/ &&\
+	cd /var/www/html/$DRUPAL_PROJECT/ &&\
+	/var/www/composer/vendor/drush/drush/drush en disable_dl_clip -y &&\
+	/var/www/composer/vendor/drush/drush/drush en disable_print_endpoint -y
+
 # add the generated certificate for localhost
 ADD cert/InstallCert.jar /tmp/InstallCert.jar
 ADD cert/InstallCert.sh /tmp/InstallCert.sh
@@ -219,7 +230,7 @@ sleep 10 &&\
 	bash -c "timeout 60 grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 	/etc/init.d/postgresql stop
 
-##Download proai
+# proai
 RUN mkdir /tmp/proai &&\
 	cd /tmp/proai &&\
 	wget http://downloads.sourceforge.net/project/fedora-commons/services/3.4/oaiprovider-1.2.2.zip &&\
@@ -267,7 +278,7 @@ ADD flat/scripts/* /app/flat/
 RUN chmod +x /app/flat/*.sh
 
 RUN mkdir -p /app/flat/policies
-ADD flat/policies/default-policy.xml /app/flat/policies/default-policy.xml
+ADD flat/policies/default-resource-policy.xml /app/flat/policies/default-resource-policy.xml
 
 RUN mkdir -p /app/flat/icons
 ADD flat/icons /app/flat/icons

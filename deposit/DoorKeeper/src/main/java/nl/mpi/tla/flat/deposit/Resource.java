@@ -19,8 +19,9 @@ package nl.mpi.tla.flat.deposit;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.Date;
-import static nl.mpi.tla.flat.deposit.util.Global.ASOF;
+import nl.mpi.tla.flat.deposit.util.Global;
 import org.w3c.dom.Node;
 
 /**
@@ -61,6 +62,10 @@ public class Resource {
         return this.file;
     }
     
+    public Path getPath() {
+        return this.file.toPath();
+    }
+    
     public void setMime(String mime) {
         this.mime = mime;
     }
@@ -70,7 +75,9 @@ public class Resource {
     }
     
     public String getMime() {
-        return this.mime;
+        if (hasMime())
+            return this.mime;
+        return "application/octet-stream";
     }
     
     // PID
@@ -129,7 +136,7 @@ public class Resource {
         if (this.fid==null)
             throw new DepositException("Resource["+this.uri+"] has no Fedora Commons PID yet!");
         try {
-            this.fid = new URI(this.fid.toString()+"@"+ASOF.format(date)+"Z");
+            this.fid = new URI(this.fid.toString()+"@"+Global.asOfDateTime(date));
         } catch (URISyntaxException ex) {
            throw new DepositException(ex);
         }
