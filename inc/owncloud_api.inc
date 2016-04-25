@@ -109,7 +109,7 @@ class OwnCloud {
             if(is_link($link_name)) {
                 drupal_unlink($link_name);
             } else {
-                exit("$link_name exists but not symbolic link\n");
+                drupal_set_message(t("$link_name exists but not symbolic link\n", array()), 'error');
             }
             $occ_command = 'php ' . $this->root_dir . '/occ  files:scan --path="/'. $this->user_name . '/files"';
             shell_exec ( $occ_command );

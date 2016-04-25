@@ -14,9 +14,10 @@ function flat_deposit_set_paths()
         variable_del('flat_deposit_paths');
     }
     variable_set('flat_deposit_paths', array(
-            'freeze' => '/app/flat/backend',
+            'freeze' => '/app/flat/backend/',
             'temp' => "/app/flat/deposit/",
-            'bag'=> "/app/flat/deposit/bags/")
+            'bag'=> "/app/flat/deposit/bags/",
+            'webserver'=> "www-data",)
     );
 
     return TRUE;
