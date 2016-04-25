@@ -9,7 +9,7 @@ $new_profile = array(
  'filesize' => 0,
  'quota' => "2",
  'tuquota' => "10",
- 'extensions' => "*",
+ 'extensions' => '*',
  'dimensions' => "1200x1200",
  'filenum' => "0",
  'directories' => array(
@@ -68,9 +68,9 @@ $new_profile = array(
 );
 
 #$profiles['2'] = $new_profile;
-$profiles['1'] ['quota'] = "2";
-$profiles['1'] ['tuquota'] = "10";
-$profiles['1'] ['extensions'] = "cmdi";
+$profiles['1'] ['quota'] = "2000";
+$profiles['1'] ['tuquota'] = "2000";
+$profiles['1'] ['extensions'] = "*";
 $profiles['1'] ['directories'] ['0'] = array(
   'name' => "php: return 'users/'.\$user->name;",
    'subnav' => 1,

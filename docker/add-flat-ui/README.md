@@ -7,6 +7,9 @@ This docker file depends on the FLAT base image.
 ## Provides ##
  * apache xdebug library
  * root account for ssh-login
+ * owncloud server
+ * drupal modules (IMCE, wysiwyg, ckeditor)
+ * Web based GUI for ingesting user data
 
 ## Building the image ##
 ```sh
@@ -80,5 +83,18 @@ In order to see the data on the fedora server, we need to change a parameter in 
 vim /var/www/fedora/server/config/fedora.fcfg
 # change value of ENFORCE MODE to permit all requests: <param name="ENFORCE-MODE" value="permit-all-requests"/>
 ```
+
+In order to ingest data without doorkeeper plugin, the sudoer file (visudo) needs to be adapted. Please add following code.
+
+```ssh
+sudo /usr/sbin/visudo
+www-data        ALL=(ALL) ALL
+www-data        ALL=(ALL) NOPASSWD: ALL
+
+
+```
+Also the rights of the deposit folder need to be adapted in order to write on them as www-data as well as the rights for this user to call /usr/local/bin/bagit-4.9.0/bin/bag
+
+
 
 ## References ##

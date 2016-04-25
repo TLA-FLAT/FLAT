@@ -75,13 +75,36 @@ RUN /etc/init.d/postgresql start &&\
 	cd /var/www/owncloud &&\
     	sudo -u www-data php occ maintenance:install --database "pgsql" --database-name "owncloud" --database-user "fedora" --database-pass "fedora" --admin-user "admin" --admin-pass "admin"
 
+COPY owncloud/addTrusted.php /tmp/addTrusted.php
+RUN mv /var/www/owncloud/config/config.php /var/www/owncloud/config/config.backup &&\
+    printf "<?php\n\$CONFIG = $(php /tmp/addTrusted.php) ;" >/var/www/owncloud/config/config.php &&\
+    chown www-data:www-data /var/www/owncloud/config/config.php
+
+
 COPY owncloud/changeRights.sh /tmp/changeRights.sh
 RUN /tmp/changeRights.sh
 
-COPY owncloud/addTrusted.php /tmp/addTrusted.php
 
-RUN mv /var/www/owncloud/config/config.php /var/www/owncloud/config/config.backup &&\
-    printf "<?php\n\$CONFIG = $(php /tmp/addTrusted.php) ;" >/var/www/owncloud/config/config.php
+#Add bagit to image
+RUN cd /app/flat &&\
+	git clone https://github.com/LibraryOfCongress/bagit-java.git bagit &&\
+	cd bagit &&\
+	git checkout bagit-4.9.0 &&\
+	mvn -Dmaven.test.skip=true clean install &&\
+	cp target/bagit-4.9.0-bin.zip /usr/local/bin/ &&\
+	cd /usr/local/bin/ &&\
+	unzip bagit-4.9.0-bin.zip &&\
+	PATH=/usr/local/bin/bagit-4.9.0/bin:$PATH &&\
+	chmod 777 /usr/local/bin/bagit-4.9.0/bin/bag &&\
+	apt-get -y install zip unzip
+
+
+#Add folders and scripts for backend ingest
+RUN mkdir -p /app/flat/backend &&\
+    chown www-data:www-data /app/flat/backend
+
+COPY shell/*.sh /app/flat/
+
 
 #Clean up when done.
 RUN apt-get clean &&\
