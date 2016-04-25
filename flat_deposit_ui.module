@@ -179,8 +179,8 @@ function flat_deposit_ui_admin_form($node, &$form_state)
     $form['paths']['webserver'] = array (
         '#type' => 'textfield',
         '#title' => 'Webserver',
-        '#description' => t('Name of the webserver (e.g. www-data'),
-        '#default_value' => BAG_DIR,
+        '#description' => t('Name of the webserver (e.g. www-data)'),
+        '#default_value' => WEB_SERVER,
         '#required' => TRUE,);
 
     $form['modules'] = array(
