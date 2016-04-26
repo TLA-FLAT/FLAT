@@ -11,7 +11,7 @@ bag_dir=$3
 fi
 
 #bag_dir="/app/flat/deposit/bags"
-user_bag_dir="$bag_dir"/${user}_temp"
+user_bag_dir="$bag_dir/${user}_temp"
 
 
 nFiles=$(find "$user_bag_dir/$project" -type f ! -name 'bag-info.txt' ! -name 'bagit.txt' ! -name '*manifest-md5.txt' | wc -l)
