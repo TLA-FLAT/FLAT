@@ -1,15 +1,17 @@
 #!/bin/bash
-if [ $# -ne 2 ];then
+if [ $# -ne 3 ];then
   echo "Not enough parameters specified"
   echo "Please provide user acronym and project name"
   exit 1
 else
   user=$1
   project=$2
+bag_dir=$3
+
 fi
 
-bag_dir="/app/flat/deposit/bags"
-user_bag_dir="/app/flat/deposit/${user}_temp"
+#bag_dir="/app/flat/deposit/bags"
+user_bag_dir="$bag_dir"/${user}_temp"
 
 
 nFiles=$(find "$user_bag_dir/$project" -type f ! -name 'bag-info.txt' ! -name 'bagit.txt' ! -name '*manifest-md5.txt' | wc -l)
@@ -35,6 +37,7 @@ if [ $(echo $bag_id | wc -c) -gt 0 ];then
   mess="Successfully created bag for project $project."
   mess2="The_Bag_ID_is: $bag_id"
   exit_code=0
+  chmod -R 777 $bag_dir/$bag_id
 else
   mess="error creating bag for project $project"
   exit_code=1
