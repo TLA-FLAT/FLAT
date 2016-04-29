@@ -160,7 +160,7 @@ RUN mkdir -p /tmp/islandora &&\
 	wget "https://github.com/Islandora/islandora_solution_pack_compound/archive/7.x-1.6.zip" &&\
 	mv 7.x-1.6.zip islandora_solution_pack_compound-7.x-1.6.zip &&\
 	unzip islandora_solution_pack_compound-7.x-1.6.zip -d /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/ &&\
-    sed -i 's|function islandora_compound_object_islandora_compoundCModel_islandora_view_object|function islandora_compound_object_islandora_compoundCModel_islandora_view_object_DISABLED_BY_FLAT|g' /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/islandora_solution_pack_compound-7.x-1.6/islandora_compound_object.modules
+    sed -i 's|function islandora_compound_object_islandora_compoundCModel_islandora_view_object|function islandora_compound_object_islandora_compoundCModel_islandora_view_object_DISABLED_BY_FLAT|g' /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/islandora_solution_pack_compound-7.x-1.6/islandora_compound_object.module
 	
 RUN mkdir -p /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/islandora_solution_pack_cmdi
 ADD flat/islandora_solution_pack_cmdi /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/islandora_solution_pack_cmdi
@@ -207,14 +207,22 @@ sleep 10 &&\
 	/etc/init.d/postgresql stop
     
 # security patch for islandora
-RUN cd /tmp/islandora &&\
+RUN export PGPASSWORD=fedora &&\
+	/etc/init.d/postgresql start &&\
+	/var/www/fedora/tomcat/bin/startup.sh &&\
+	bash -c "timeout 60 grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
+sleep 10 &&\
+	cd /tmp/islandora &&\
 	git clone https://github.com/Islandora-Labs/islandora_patches.git &&\
 	cd islandora_patches &&\
 	mv disable_dl_clip /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/ &&\
 	mv disable_print_endpoint  /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/ &&\
 	cd /var/www/html/$DRUPAL_PROJECT/ &&\
 	/var/www/composer/vendor/drush/drush/drush en disable_dl_clip -y &&\
-	/var/www/composer/vendor/drush/drush/drush en disable_print_endpoint -y
+	/var/www/composer/vendor/drush/drush/drush en disable_print_endpoint -y &&\
+	/var/www/fedora/tomcat/bin/shutdown.sh &&\
+	bash -c "timeout 60 grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
+	/etc/init.d/postgresql stop
 
 # add the generated certificate for localhost
 ADD cert/InstallCert.jar /tmp/InstallCert.jar
