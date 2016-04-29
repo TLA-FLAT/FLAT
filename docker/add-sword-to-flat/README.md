@@ -13,12 +13,12 @@ The following accounts are created:
 
 ## Building the image ##
 ```sh
-docker build -t flat-with-sword .
+docker build -t flat ./add-sword-to-flat
 ```
 
 ## Running the image ##
 ```sh
-docker run -p 80:80 -p 8443:8443 -p 8080 -v ~/my-resources:/lat -t -i flat-with-sword
+docker run -p 80:80 -p 8443:8443 -p 8080:8080 -v ~/my-resources:/lat -t -i flat
 ```
 
 A test SIP bag is included:

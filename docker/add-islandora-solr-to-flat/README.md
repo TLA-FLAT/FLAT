@@ -9,12 +9,12 @@ This docker file depends on the FLAT base image.
 
 ## Building the image ##
 ```sh
-docker build -t flat-with-solr .
+docker build -t flat ./add-islandora-solr-to-flat
 ```
 
 ## Running the image ##
 ```sh
-docker run -p 80:80 -p 8443:8443 -p 8080 -v ~/my-resources:/lat -t -i flat-with-solr
+docker run -p 80:80 -p 8443:8443 -p 8080:8080 -v ~/my-resources:/lat -t -i flat
 ```
 
 ## Additional configuration ##

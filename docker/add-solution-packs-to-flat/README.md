@@ -1,5 +1,5 @@
-Add solution packs to FLAT
-==========================
+Add solution packs to FLAT (*experimental*)
+===========================================
 
 ## Requirements ##
 This docker file depends on the FLAT base image.
@@ -9,12 +9,12 @@ This docker file depends on the FLAT base image.
 
 ## Building the image ##
 ```sh
-docker build -t flat-with-solution-packs .
+docker build -t flat ./add-solution-packs-to-flat
 ```
 
 ## Running the image ##
 ```sh
-docker run -p 80:80 -p 8443:8443 -p 8080:8080 -t -i flat-with-solution-packs
+docker run -p 80:80 -p 8443:8443 -p 8080:8080 -t -i flat
 ```
 
 ## Additional configuration ##
@@ -24,6 +24,8 @@ The derivatives defined and needed by the solution packs can be created using th
 - [do-5-derivatives.sh](flat/scripts/do-5-derivatives.sh): trigger the creation of derivatives for the CMD records
 
 ## Notes ##
+
+This module is not used and tested a lot yet and should be considered a proof of concept.
 
 TODO: add support for more solution packs like video and PDF.
 

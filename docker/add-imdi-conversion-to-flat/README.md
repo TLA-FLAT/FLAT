@@ -13,14 +13,14 @@ This docker file depends on the FLAT base image.
 1. Start your docker environment
 2. Run: 
 ```sh
-docker build -t flat-with-imdi-conversion .
+docker build -t flat ./add-imdi-conversion-to-flat
 ```
 
 ## Running the image ##
 1. Start your docker environment
 2. Run
 ```sh 
-docker run -p 80:80 -p 8443:8443 -v ~/my-resources:/lat -t -i flat-with-imdi-conversion
+docker run -p 80:80 -p 8443:8443 -p 8080:8080 -v ~/my-resources:/lat -t -i flat
 ```
 
 ## Additional configuration ##

@@ -11,7 +11,7 @@ Quick installation link: https://docs.docker.com/installation/#installation
 
 On OSX you can find our your docker IP via the "docker-machine ip default" command. On unix machines you can use localhost.
 
- * Islandora, accessible via: http://IP/drupal
+ * Islandora, accessible via: http://IP/flat
  * Fedora Commons, accessible via: https://IP:8443/fedora/admin
  * Proai, accessible via: http://IP/oaiprovider
 
@@ -32,7 +32,7 @@ docker build -t flat .
 1. Start your docker environment
 2. Run
 ```sh 
-docker run -p 80:80 -p 8443:8443 -v ~/my-resources:/lat -t -i flat
+docker run -p 80:80 -p 8443:8443 -p 8080:8080 -v ~/my-resources:/lat -t -i flat
 ```
 
 This will start your docker container with the following properties:

@@ -1,5 +1,5 @@
-Add Shibboleth to FLAT
-======================
+Add Shibboleth to FLAT (*experimental*)
+=======================================
 
 ## Requirements ##
 This docker file depends on the FLAT base image.
@@ -7,16 +7,15 @@ This docker file depends on the FLAT base image.
 ## Provides ##
  * Shibboleth Apache setup
  * Shibboleth Drupal module, exposed via the Islandora Drupal interface
-sAdmin:fgsAdmin
 
 ## Building the image ##
 ```sh
-docker build -t flat-with-shibboleth .
+docker build -t flat ./add-shibboleth-to-flat
 ```
 
 ## Running the image ##
 ```sh
-docker run -p 80:80 -p 8443:8443 -p 8080:8080 -i -t flat-with-shibboleth
+docker run -p 80:80 -p 8443:8443 -p 8080:8080 -i -t flat
 ```
 
 ## Additional configuration ##
@@ -24,6 +23,9 @@ docker run -p 80:80 -p 8443:8443 -p 8080:8080 -i -t flat-with-shibboleth
 Further configuration in /etc/shibboleth will be needed to turn the server into a valid SP and connect it to one or more IdPs
 
 ## Notes ##
+
+Configuring a Shibboleth Service Provider is very specific to a setup, so no generic Dockerfile can capture it.
+This module should thus be seen as hints on which Drupal module to install and some basic configuration.
 
 TODO: bundle the block configuration of the drupal module in Islandora in a Drupal feature module.
 
