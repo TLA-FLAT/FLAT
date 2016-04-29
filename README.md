@@ -56,6 +56,7 @@ CMDI records can vary a lot. This introductionary example uses CMDIfied IMDI as 
 The following commands show how to build a setup that supports CMDIfied IMDI with the FLAT base plus facetted search:
 
 ```sh
+cd docker
 #start with the FLAT base
 docker build --rm=true -t flat-base flat/
 #run a flat-base container, and type exit when the prompt appears
@@ -110,6 +111,7 @@ Now visit FLAT in your browser: http://192.168.99.100/flat.
 If you have native CMD records you need both less and more. You won't need the IMDI conversion and the configuration for CMDIfied IMDI search.
 
 ```sh
+cd docker
 #start with the FLAT base
 docker build --rm=true -t flat-base flat/
 #run a flat-base container, and type exit when the prompt appears
@@ -128,7 +130,7 @@ docker build --rm=true -t flat add-islandora-solr-to-flat/
 ```
 
 However, you'll need an XSLT that provides a mapping from your CMD records to some basic Dublin Core elements, i.e., at least ```dc:title``` and preferably ```dc:description```.
-You can take [the one for CMDIfied IMDI](./add-imdi-conversion-to-flat/flat/scripts/cmd2dc.xsl) as inspiration.
+You can take [the one for CMDIfied IMDI](./docker/add-imdi-conversion-to-flat/flat/scripts/cmd2dc.xsl) as inspiration.
 It can be mounted at the right place in the docker image:
 
 ```sh
