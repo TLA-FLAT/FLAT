@@ -51,7 +51,7 @@ CMD is a very flexible metadata format and there is no generic mapping to Dublin
 
 Inside the container the /app/flat directory contains various scripts to convert and import metadata into the FLAT repository:
 
-- [do-1-fox.sh](flat/scripts/do-1-fox.sh): converts the CMD records found into /app/flat/cmd into FOX files, which will be stored in /app/flat/fox.
+- [do-1-fox.sh](flat/scripts/do-1-fox.sh): converts the CMD records found into `/app/flat/cmd` into FOX files, which will be stored in `/app/flat/fox`.
 
 - [do-2-import.sh](flat/scripts/do-2-import.sh): imports the FOX files into Fedora Commons.
 

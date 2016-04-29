@@ -29,7 +29,7 @@ docker run -p 80:80 -p 8443:8443 -p 8080:8080 -v ~/my-resources:/lat -t -i flat
 
 Inside the container the /app/flat directory contains various scripts to convert and import metadata into the FLAT repository:
 
-- [do-0-convert.sh](flat/scripts/do-0-convert.sh): converts all IMDI metdata files found in /app/flat/src into CMD records, which will be stored in /app/flat/cmd.
+- [do-0-convert.sh](flat/scripts/do-0-convert.sh): converts all IMDI metdata files found in `/app/flat/src` into CMD records, which will be stored in `/app/flat/cmd`.
 
 ## Notes ##
 
