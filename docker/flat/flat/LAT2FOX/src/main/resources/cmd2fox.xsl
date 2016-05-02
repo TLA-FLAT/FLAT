@@ -556,7 +556,16 @@
 					<xsl:variable name="resFOX" select="concat($fox-base, '/', replace($resID, '[^a-zA-Z0-9]', '_'), '.xml')"/>
 					<!--<xsl:message>DBG: resourceProxy[<xsl:value-of select="$resURI"/>][<xsl:value-of select="$resFOX"/>][<xsl:value-of select="$resPID"/>][<xsl:value-of select="$resID"/>]</xsl:message>-->
 					<!-- take the filepart of the localURI as the resource title -->
-					<xsl:variable name="resTitle" select="replace($resURI, '.*/', '')"/>
+					<xsl:variable name="resTitle">
+						<xsl:choose>
+							<xsl:when test="normalize-space(@lat:label)!=''">
+								<xsl:sequence select="normalize-space(@lat:label)"/>
+							</xsl:when>
+							<xsl:otherwise>
+								<xsl:sequence select="replace($resURI, '.*/', '')"/>
+							</xsl:otherwise>
+						</xsl:choose>
+					</xsl:variable>
 					<!--<xsl:message>DBG: creating FOX[<xsl:value-of select="$resFOX"/>]?[<xsl:value-of select="not(doc-available($resFOX))"/>]</xsl:message>-->
 					<xsl:variable name="resMIME" select="cmd:getMIME($res/cmd:ResourceType/@mimetype,$resURI)"/>
 					<xsl:variable name="createFOX" as="xs:boolean">
