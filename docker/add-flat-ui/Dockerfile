@@ -23,8 +23,8 @@ RUN echo "export VISIBLE=now" >> /etc/profile
 
 # Add deposit module to installation
 RUN git clone https://github.com/TheLanguageArchive/FLAT.git /tmp/FLAT &&\
-mkdir /var/www/html/drupal/sites/all/modules/custom/flat_deposit_ui
-COPY /tmp/FLAT/deposit_ui /var/www/html/drupal/sites/all/modules/custom/flat_deposit_ui
+	mkdir /var/www/html/drupal/sites/all/modules/custom/flat_deposit_ui &&\
+	cp -R /tmp/FLAT/deposit_ui/* /var/www/html/drupal/sites/all/modules/custom/flat_deposit_ui
 
 # add WYSIWYG editor
 RUN cd /var/www/html/drupal/sites/all/libraries/ &&\
