@@ -6,7 +6,7 @@ maintainable archive setup for language resources with
 and [Islandora](http://islandora.ca/). It should meet the technical requirements
 for a [CLARIN B centre](http://hdl.handle.net/1839/00-DOCS.CLARIN.EU-77), the [Data Seal of Approval](http://datasealofapproval.org/) and those from the
 organizations, [Max Planck Institute for Psycholinguistic](http://www.mpi.nl/) and
-the [Meertens Institute](http://www.meertens.knaw.nl/), that cooperate in [The Language Archive](http://tla.mpi.nl/). 
+the [Meertens Institute](http://www.meertens.knaw.nl/), that cooperate in [The Language Archive](http://tla.mpi.nl/).
 
 Currently the setup of this project consists of a series of docker setups:
 
@@ -14,24 +14,24 @@ Currently the setup of this project consists of a series of docker setups:
    1. installs Fedora Commons and Islandora
    2. provides tools and scripts to import CMD records into Fedora
    3. adds support for rendering of CMD records in Islandora
-   
+
  2. A [FLAT Islandora SOLR image](docker/add-islandora-solr-to-flat) builds on the base image and
    1. installs Islandora's SOLR modules
 
  3. A [FLAT search image](docker/add-gsearch-to-flat) builds on the base image and the Islandora SOLR image
    1. installs generic search for Fedora Commons
    2. provides tools and scripts to configure the index proces for a specific set of CMD records and profiles
-   
+
  4. A [FLAT SWORD image](docker/add-sword-to-flat) builds on the base image and
    1. installs a SWORD v2 API to receive bags
-   
+
  5. An *experimental* [FLAT deposit UI](docker/add-flat-ui) builds on the base image and the SWORD image
    1. installs a module that provides an UI for users to deposit data
-   
+
  6. An *experimental* [FLAT Shibbolet image](docker/add-shibboleth-to-flat) builds on the base image and
    1. installs Shibboleth
    2. installs Drupal's Shibboleth modules
-   
+
  7. An *experimental* [FLAT solution packs image](docker/add-solution-packs-to-flat) builds on the base image and
    1. installs Islandora solution packs
    2. provides scripts to trigger the addition of derived datastreams like thumbnails
@@ -42,7 +42,7 @@ Additionally there are two docker setups specific for IMDI and CMDIfied IMDI:
 
  7. A [FLAT IMDI conversion image](docker/add-imdi-conversion-to-flat) builds on the base image and
    1. provides tools and scripts to convert from IMDI to CMDI
-   
+
  8. A [FLAT IMDI search image](docker/add-imdi-gsearch-to-flat) builds on the search image and
    1. provides the mapping to configure the index proces for CMDIfied IMDI records and profiles
 
@@ -104,7 +104,7 @@ ln -s /lat /app/flat/src
 ./do-4-index.sh
 ```
 
-Now visit FLAT in your browser: http://192.168.99.100/flat. 
+Now visit FLAT in your browser: http://192.168.99.100/flat.
 
 ##Configuration for your CMDI##
 
@@ -155,3 +155,7 @@ ln -s /lat /app/flat/cmd
 
 ___
 FLAT was once upon a time known as EasyLAT, so occassionally documentation and code might still use that name.
+=======
+
+# FLAT_UI
+FLAT data repository user interface
