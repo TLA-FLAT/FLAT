@@ -18,7 +18,7 @@ if ($GLOBALS['user']->uid){
     define('USER_FREEZE_DIR', FREEZE_DIR . USER);
     define('USER_DRUPAL_DATA_DIR', 'public://users/' . USER );
 }
-
+/**/
 /**
  * Implements hook_help().
  */
@@ -44,21 +44,9 @@ function flat_deposit_ui_permission()
             'title' => t('Administration of the deposit module'),
             'description' => t('All administrative tasks'),
             'restrict access' => TRUE),
-        'workspace' => array(
-            'title' => t('workspace'),
-            'description' => t('Upload data to the FLAT deposit')),
-        'view' => array(
-            'title' => t('view'),
-            'description' => t('View files uploaded to the FLAT deposit')),
-        'bundle' => array(
-            'title' => t('bundle'),
-            'description' => t('Manage file bundle uploaded to the FLAT deposit')),
-        'collection' => array(
-            'title' => t('Collection'),
-            'description' => t('Manage files collections uploaded to the FLAT deposit')),
-        'commit' => array(
-            'title' => t('commit'),
-            'description' => t('Commit changes to FLAT deposit')));
+        'use deposit module' => array(
+            'title' => t('Usage of the deposit module'),
+            'description' => t('Upload data to the FLAT deposit')));
 }
 
 
@@ -99,7 +87,7 @@ function flat_deposit_ui_menu()
         'type' => MENU_LOCAL_TASK,
         'page callback' => 'drupal_get_form',
         'page arguments' => array('flat_deposit_ui_workspace_form'),
-        'access arguments' => array('workspace'));
+        'access arguments' => array('use deposit module'));
 
     // Page for ingested data
     $items['view'] = array(
@@ -107,7 +95,7 @@ function flat_deposit_ui_menu()
         'description' => 'Notification of data ingested to server',
         'type' => MENU_LOCAL_TASK,
         'page callback' => 'flat_deposit_ui_view_ingested_files',
-        'access arguments' => array('view'));
+        'access arguments' => array('use deposit module'));
 
     // Page for manage bundles
     $items['managebundles'] = array(
@@ -116,7 +104,7 @@ function flat_deposit_ui_menu()
         'page callback' => 'flat_deposit_ui_manage_bundles',
         'page arguments' => array(
             'content' => 'Under construction'),
-        'access arguments' => array('bundle'));
+        'access arguments' => array('use deposit module'));
 
     // Page for manage collections
     $items['managecollections'] = array(
@@ -125,7 +113,7 @@ function flat_deposit_ui_menu()
         'page callback' => 'flat_deposit_ui_view_collections',
         'page arguments' => array(
             'content' => 'Under construction'),
-        'access arguments' => array('collection'));
+        'access arguments' => array('use deposit module'));
 
     // Page for commiting changes
     $items['commitchanges'] = array(
@@ -133,7 +121,7 @@ function flat_deposit_ui_menu()
         'type' => MENU_LOCAL_TASK,
         'page callback' => 'drupal_get_form',
         'page arguments' => array('flat_deposit_ui_commit_form'),
-        'access arguments' => array('commit'));
+        'access arguments' => array('use deposit module'));
 
     return $items;
 };
@@ -409,6 +397,17 @@ function flat_deposit_ui_workspace_form($form, &$form_state)
         '#value' => t('Upload or browse data'),
         '#submit' => array('flat_deposit_ui_workspace_upload_submit'),);
 
+    $form['field_3'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Other tasks'),
+        );
+
+    $form['field_3']['sync'] = array(
+        '#type' => 'submit',
+        '#value' => t('Sync owncloud'),
+        '#description' => t('Owncloud needs to be synced with this workspace if data (other than metadata) is uploaded using the workspace explorer'),
+        '#submit' => array('flat_deposit_ui_workspace_sync_submit'),);
+
     // Check for integrity with owncloud in case this features is selected
     $oc = new OwnCloud();
     if ($oc->ok){
@@ -481,6 +480,16 @@ function flat_deposit_ui_workspace_upload_submit(&$form, &$form_state)
 
 }
 
+
+function flat_deposit_ui_workspace_sync_submit(&$form, &$form_state)
+{
+    $oc = new OwnCloud();
+    $oc->UpdateUserFiles();
+#    $oc->CreateLinkAndSync($target, $project);
+    drupal_set_message(t('Owncloud has been synced'));
+
+
+}
 
 /**
  * Gets a list of all data ingested since last login
@@ -975,7 +984,7 @@ function flat_deposit_ui_commit_form_ingest_submit ($form, &$form_state)
             exec($command, $output, $return_var);
 
             //Zip all unhidden files and make bag in bag directory
-            $command = "/app/flat/prepare_for_doorkeeper_mini.sh " . USER . " $project";
+            $command = "/app/flat/prepare_for_doorkeeper_mini.sh " . USER . " $project " . BAG_DIR . " " . $user_temp_dir;
             exec($command, $output_prep, $return_var);
             $nFiles = str_split($output_prep['0'], 18)[1] ;
 
@@ -987,7 +996,7 @@ function flat_deposit_ui_commit_form_ingest_submit ($form, &$form_state)
 
             # Ingest validated bag
             if (file_exists($bag_dir . '/' . $bag_id)){
-                $command = "/app/flat/ingest_one.sh 2>&1 " . USER . " " . $bag_id;
+                $command = "/app/flat/ingest_one.sh 2>&1 " . USER . " " . $bag_id . " " . BAG_DIR;
                 exec($command, $output_ingest, $return_var);
             }
 
@@ -1022,6 +1031,7 @@ function flat_deposit_ui_commit_form_ingest_submit ($form, &$form_state)
                 file_unmanaged_delete_recursive($user_temp_dir . '/' . $project);
                 if (file_exists(BAG_DIR . '/' . $bag_id)){file_unmanaged_delete_recursive(BAG_DIR . '/' . $bag_id);}
                 if (file_exists($user_temp_dir . '/' . $project . '.zip')){file_unmanaged_delete_recursive($user_temp_dir . '/' . $project . '.zip');}
+                if (file_exists($source)){file_unmanaged_delete_recursive($source);}
 
                 #Update drupal database
                 clear_db_user_projects(USER);
@@ -1030,7 +1040,8 @@ function flat_deposit_ui_commit_form_ingest_submit ($form, &$form_state)
                 array_map('unlink', glob($user_temp_dir . "/" . $project . "/*.txt"));
                 $moved = rename ($destination, $source);
                 if (file_exists($user_temp_dir . '/' . $project . '.zip')){file_unmanaged_delete_recursive($user_temp_dir . '/' . $project . '.zip');}
-                if (file_exists(BAG_DIR . '/' . $bag_id)){file_unmanaged_delete_recursive(BAG_DIR . '/' . $bag_id);}
+                if (file_exists(BAG_DIR . '/' . $bag_id) && $bag_id){file_unmanaged_delete_recursive(BAG_DIR . '/' . $bag_id);}
+                if (file_exists(BAG_DIR . '/' . $bag_id && $bag_id)){unlink(BAG_DIR . '/' . $bag_id);}
                 drupal_set_message(t('Ingest failed for project ' . $project . ' .' . $message , array()), 'error');
                 watchdog('Fedora ingest', t('Couldn\'t create bag'), array(), WATCHDOG_ERROR);}
 

@@ -51,6 +51,7 @@ function flat_deposit_set_owncloud(){
     variable_set('owncloud_settings', array(
         'admin_name' => 'admin',
         'admin_pass' => 'admin',
+        'host' => $_SERVER['HTTP_HOST'],
         'root_dir'=> '/var/www/owncloud/'));
 
 
