@@ -84,7 +84,7 @@ vim /var/www/fedora/server/config/fedora.fcfg
 # change value of ENFORCE MODE to permit all requests: <param name="ENFORCE-MODE" value="permit-all-requests"/>
 ```
 
-In order to ingest data without doorkeeper plugin, the sudoer file (visudo) needs to be adapted. Please add following code.
+In order to ingest data without doorkeeper plugin, the sudoer file (visudo) needs to be adapted. Please copy/paste the code from the shell/sudoer.ini file using visudo
 
 ```ssh
 sudo /usr/sbin/visudo
