@@ -14,9 +14,10 @@ function flat_deposit_set_paths()
         variable_del('flat_deposit_paths');
     }
     variable_set('flat_deposit_paths', array(
-            'freeze' => '/app/flat/backend',
+            'freeze' => '/app/flat/backend/',
             'temp' => "/app/flat/deposit/",
-            'bag'=> "/app/flat/deposit/bags/")
+            'bag'=> "/app/flat/deposit/bags/",
+            'webserver'=> "www-data",)
     );
 
     return TRUE;
@@ -50,6 +51,7 @@ function flat_deposit_set_owncloud(){
     variable_set('owncloud_settings', array(
         'admin_name' => 'admin',
         'admin_pass' => 'admin',
+        'host' => $_SERVER['HTTP_HOST'],
         'root_dir'=> '/var/www/owncloud/'));
 
 
