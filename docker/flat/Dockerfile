@@ -27,7 +27,8 @@ RUN set -x; \
     tar -zxvf jdk-$java_version-linux-x64.tar.gz -C /opt &&\
     rm jdk-$java_version-linux-x64.tar.gz
 
-ENV JAVA_HOME /opt/jdk1.8.0_72
+RUN unlink /usr/bin/java
+RUN ln -s /opt/jdk1.8.0_72/bin/java /usr/bin/java
 ENV PATH $JAVA_HOME/bin:$PATH
 
 #
