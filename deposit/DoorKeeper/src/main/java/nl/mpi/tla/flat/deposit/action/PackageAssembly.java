@@ -39,7 +39,7 @@ public class PackageAssembly extends AbstractAction {
     @Override
     public boolean perform(Context context) throws DepositException {
         try {
-            File dir = new File(getParameter("dir","./resources"));
+            File dir = new File(getParameter("dir","./data"));
             if (!dir.exists())
                  FileUtils.forceMkdir(dir);
             int downloads = 0;
