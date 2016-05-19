@@ -1,5 +1,5 @@
-Add flat User interface
-======================
+Add FLAT deposit User interface  (*experimental*)
+=================================================
 
 ## Requirements ##
 This docker file depends on the FLAT base image.

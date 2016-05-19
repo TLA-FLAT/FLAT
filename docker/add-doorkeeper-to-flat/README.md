@@ -1,5 +1,5 @@
-Add the DoorKeeper to FLAT
-==========================
+Add the DoorKeeper to FLAT (*experimental*)
+===========================================
 
 ## Requirements ##
 This docker file depends on the FLAT base image.
