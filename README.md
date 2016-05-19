@@ -25,14 +25,18 @@ Currently the setup of this project consists of a series of docker setups:
  4. A [FLAT SWORD image](docker/add-sword-to-flat) builds on the base image and
    1. installs a SWORD v2 API to receive bags
    
- 5. An *experimental* [FLAT deposit UI](docker/add-flat-ui) builds on the base image and the SWORD image
+ 5. Am *experimental* [FLAT DoorKeeper image](docker/add-doorkeeper-to-flat) builds on the base image and
+   1. installs the DoorKeeper, which guards the repository and checks new or updated resources and metadata
+   2. installs the DoorKeeper API to process bags
+
+ 6. An *experimental* [FLAT deposit UI](docker/add-flat-ui) builds on the base image and the SWORD image
    1. installs a module that provides an UI for users to deposit data
    
- 6. An *experimental* [FLAT Shibbolet image](docker/add-shibboleth-to-flat) builds on the base image and
+ 7. An *experimental* [FLAT Shibbolet image](docker/add-shibboleth-to-flat) builds on the base image and
    1. installs Shibboleth
    2. installs Drupal's Shibboleth modules
    
- 7. An *experimental* [FLAT solution packs image](docker/add-solution-packs-to-flat) builds on the base image and
+ 8. An *experimental* [FLAT solution packs image](docker/add-solution-packs-to-flat) builds on the base image and
    1. installs Islandora solution packs
    2. provides scripts to trigger the addition of derived datastreams like thumbnails
 
