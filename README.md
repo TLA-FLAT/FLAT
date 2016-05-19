@@ -6,7 +6,7 @@ maintainable archive setup for language resources with
 and [Islandora](http://islandora.ca/). It should meet the technical requirements
 for a [CLARIN B centre](http://hdl.handle.net/1839/00-DOCS.CLARIN.EU-77), the [Data Seal of Approval](http://datasealofapproval.org/) and those from the
 organizations, [Max Planck Institute for Psycholinguistic](http://www.mpi.nl/) and
-the [Meertens Institute](http://www.meertens.knaw.nl/), that cooperate in [The Language Archive](http://tla.mpi.nl/). 
+the [Meertens Institute](http://www.meertens.knaw.nl/), that cooperate in [The Language Archive](http://tla.mpi.nl/).
 
 Currently the setup of this project consists of a series of docker setups:
 
@@ -14,14 +14,14 @@ Currently the setup of this project consists of a series of docker setups:
    1. installs Fedora Commons and Islandora
    2. provides tools and scripts to import CMD records into Fedora
    3. adds support for rendering of CMD records in Islandora
-   
+
  2. A [FLAT Islandora SOLR image](docker/add-islandora-solr-to-flat) builds on the base image and
    1. installs Islandora's SOLR modules
 
  3. A [FLAT search image](docker/add-gsearch-to-flat) builds on the base image and the Islandora SOLR image
    1. installs generic search for Fedora Commons
    2. provides tools and scripts to configure the index proces for a specific set of CMD records and profiles
-   
+
  4. A [FLAT SWORD image](docker/add-sword-to-flat) builds on the base image and
    1. installs a SWORD v2 API to receive bags
    
@@ -29,7 +29,7 @@ Currently the setup of this project consists of a series of docker setups:
    1. installs the DoorKeeper, which guards the repository and checks new or updated resources and metadata
    2. installs the DoorKeeper API to process bags
 
- 6. An *experimental* [FLAT deposit UI](docker/add-flat-ui) builds on the base image and the SWORD image
+ 6. An *experimental* [FLAT deposit UI image](docker/add-deposit-ui-to-flat) builds on the base image and the SWORD image
    1. installs a module that provides an UI for users to deposit data
    
  7. An *experimental* [FLAT Shibbolet image](docker/add-shibboleth-to-flat) builds on the base image and
@@ -46,7 +46,7 @@ Additionally there are two docker setups specific for IMDI and CMDIfied IMDI:
 
  7. A [FLAT IMDI conversion image](docker/add-imdi-conversion-to-flat) builds on the base image and
    1. provides tools and scripts to convert from IMDI to CMDI
-   
+
  8. A [FLAT IMDI search image](docker/add-imdi-gsearch-to-flat) builds on the search image and
    1. provides the mapping to configure the index proces for CMDIfied IMDI records and profiles
 
@@ -108,7 +108,7 @@ ln -s /lat /app/flat/src
 ./do-4-index.sh
 ```
 
-Now visit FLAT in your browser: http://192.168.99.100/flat. 
+Now visit FLAT in your browser: http://192.168.99.100/flat.
 
 ##Configuration for your CMDI##
 
@@ -156,6 +156,10 @@ ln -s /lat /app/flat/cmd
 #index the records
 ./do-4-index.sh
 ```
+
+## Publications ##
+
+* M. Windhouwer, M. Kemps-Snijders, P. Trilsbeek, A. Moreira, B. van der Veen, G. Silva, D. von Rhein. [FLAT: constructing a CLARIN compatible home for language resources](http://www.lrec-conf.org/proceedings/lrec2016/summaries/476.html). In _Proceedings of the Tenth International Conference on Language Resources and Evaluation_ ([LREC 2016](http://lrec2016.lrec-conf.org/en/)), European Language Resources Association ([ELRA](http://www.elra.info/)), Portorož, Slovenia, May 23 - 28, 2016. ([Local updated version](documents/2016-LREC-FLAT.pdf))
 
 ___
 FLAT was once upon a time known as EasyLAT, so occassionally documentation and code might still use that name.

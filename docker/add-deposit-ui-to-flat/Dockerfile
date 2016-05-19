@@ -22,7 +22,7 @@ ENV NOTVISIBLE "in users profile"
 RUN echo "export VISIBLE=now" >> /etc/profile
 
 # Add deposit module to installation
-RUN git clone https://github.com/danrhe/flat_deposit_ui.git /var/www/html/drupal/sites/all/modules/custom/flat_deposit_ui
+ADD deposit_ui /var/www/html/drupal/sites/all/modules/custom/flat_deposit_ui
 
 # add WYSIWYG editor
 RUN cd /var/www/html/drupal/sites/all/libraries/ &&\
@@ -106,10 +106,16 @@ RUN mkdir -p /app/flat/backend &&\
 COPY shell/*.sh /app/flat/
 
 
+#Add test dataset to repository
+COPY Testset /app/flat/Testset
+RUN chown -R www-data:www-data /app/flat/Testset
+
+
 #Clean up when done.
 RUN apt-get clean &&\
   rm -rf /tmp/* /var/tmp/*
 
 # Comment this line of code if you don't have a local installation of the deposit UI that is mounted as /var/www/html/drupal/sites/all/modules/custom/flat_deposit_ui
 RUN rm -rf /var/www/html/drupal/sites/all/modules/custom/flat_deposit_ui
+
 

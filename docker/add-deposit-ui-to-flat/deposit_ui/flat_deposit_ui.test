@@ -1,0 +1,27 @@
+<?php
+/**
+ * @file
+ * Tests for the flat_deposit_ui module
+ */
+class FirstTestCase extends DrupalWebTestCase {
+// Methods will go here.
+    public function setUp() {
+        parent::setUp('flat_deposit_ui');
+    }
+
+    public function getInfo() {
+        return array(
+            'name' => 'FLAT deposit UI module block functionality',
+            'description' => 'Test blocks in the FLAT deposit UI module.',
+            'group' => 'FLAT deposit UI',
+        );
+    }
+
+    public function testBlockGenerate() {
+        $info = module_invoke('flat_deposit_ui', 'menu_block_generate');
+        $this->assertEqual(1, count($info),
+            t('Module generates render array.'));
+        $this->assertTrue(isset($info['link_view']),
+            t('Link in block exists.'));
+    }
+}
