@@ -3,6 +3,8 @@ MAINTAINER  Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 
 # Set correct environment variables.
 ENV HOME /root
+ENV DRUPAL_PROJECT=flat
+ENV TOMCAT_TIMEOUT=60
 
 # Regenerate SSH host keys. baseimage-docker does not contain any, so you
 # have to do that yourself. You may also comment out this instruction; the
@@ -93,11 +95,11 @@ RUN chmod 0755 /tmp/wait.sh &&\
 	/etc/init.d/postgresql start &&\
 	/var/www/fedora/tomcat/bin/startup.sh &&\
 	/tmp/wait.sh &&\
-	bash -c "timeout 60 grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
+	bash -c "timeout $TOMCAT_TIMEOUT grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 # apparantly the shutdown port is not directly available after startup
 sleep 60 &&\
 	/var/www/fedora/tomcat/bin/shutdown.sh &&\
-	bash -c "timeout 60 grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
+	bash -c "timeout $TOMCAT_TIMEOUT grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 	/etc/init.d/postgresql stop
 RUN rm -v /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/deny-purge-*
 ADD fedora/permit-anything-to-localhost.xml /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/permit-anything-to-localhost.xml
@@ -120,7 +122,6 @@ RUN mkdir -p /var/www/composer &&\
 ENV COMPOSER_HOME=/var/www/composer
 RUN $COMPOSER_HOME/composer global require drush/drush:7.*
 
-ENV DRUPAL_PROJECT=flat
 RUN cd /var/www/html &&\
 	/var/www/composer/vendor/drush/drush/drush -v dl drupal --drupal-project-rename=$DRUPAL_PROJECT
 ENV PGPASSWORD=fedora
@@ -186,7 +187,7 @@ ADD islandora/template.php /var/www/html/$DRUPAL_PROJECT/sites/all/themes/flat_b
 RUN export PGPASSWORD=fedora &&\
 	/etc/init.d/postgresql start &&\
 	/var/www/fedora/tomcat/bin/startup.sh &&\
-	bash -c "timeout 60 grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
+	bash -c "timeout $TOMCAT_TIMEOUT grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 sleep 10 &&\
 	cd /var/www/html/$DRUPAL_PROJECT/ &&\
 	/var/www/composer/vendor/drush/drush/drush vset islandora_base_url https://localhost:8443/fedora &&\
@@ -203,14 +204,14 @@ sleep 10 &&\
 	/var/www/composer/vendor/drush/drush/drush en flat_bootstrap_theme -y &&\
 	/var/www/composer/vendor/drush/drush/drush vset theme_default flat_bootstrap_theme &&\
 	/var/www/fedora/tomcat/bin/shutdown.sh &&\
-	bash -c "timeout 60 grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
+	bash -c "timeout $TOMCAT_TIMEOUT grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 	/etc/init.d/postgresql stop
     
 # security patch for islandora
 RUN export PGPASSWORD=fedora &&\
 	/etc/init.d/postgresql start &&\
 	/var/www/fedora/tomcat/bin/startup.sh &&\
-	bash -c "timeout 60 grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
+	bash -c "timeout $TOMCAT_TIMEOUT grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 sleep 10 &&\
 	cd /tmp/islandora &&\
 	git clone https://github.com/Islandora-Labs/islandora_patches.git &&\
@@ -221,7 +222,7 @@ sleep 10 &&\
 	/var/www/composer/vendor/drush/drush/drush en disable_dl_clip -y &&\
 	/var/www/composer/vendor/drush/drush/drush en disable_print_endpoint -y &&\
 	/var/www/fedora/tomcat/bin/shutdown.sh &&\
-	bash -c "timeout 60 grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
+	bash -c "timeout $TOMCAT_TIMEOUT grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 	/etc/init.d/postgresql stop
 
 # add the generated certificate for localhost
@@ -231,11 +232,11 @@ RUN chmod +x /tmp/InstallCert.sh &&\
 	cd /opt &&\
 	/etc/init.d/postgresql start &&\
 	/var/www/fedora/tomcat/bin/startup.sh &&\
-	bash -c "timeout 60 grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
+	bash -c "timeout $TOMCAT_TIMEOUT grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 sleep 10 &&\
 	/tmp/InstallCert.sh &&\
 	/var/www/fedora/tomcat/bin/shutdown.sh &&\
-	bash -c "timeout 60 grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
+	bash -c "timeout $TOMCAT_TIMEOUT grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 	/etc/init.d/postgresql stop
 
 # proai
