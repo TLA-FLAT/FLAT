@@ -36,6 +36,7 @@ import static nl.mpi.tla.flat.deposit.util.Global.NAMESPACES;
 import nl.mpi.tla.flat.deposit.util.Saxon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -47,6 +48,7 @@ import org.w3c.dom.Node;
 public class SIP {
     
     private static final Logger logger = LoggerFactory.getLogger(SIP.class.getName());
+    protected Marker marker = null;
     
     public static String CMD_NS = "http://www.clarin.eu/cmd/";
     public static String LAT_NS = "http://lat.mpi.nl/";

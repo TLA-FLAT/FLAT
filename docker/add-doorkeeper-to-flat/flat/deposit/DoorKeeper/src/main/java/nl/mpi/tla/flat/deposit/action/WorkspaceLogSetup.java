@@ -22,11 +22,15 @@ import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.util.StatusPrinter;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.util.UUID;
 import nl.mpi.tla.flat.deposit.Context;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  *
@@ -38,6 +42,9 @@ public class WorkspaceLogSetup extends AbstractAction {
     
     @Override
     public boolean perform(Context context) {
+        if (MDC.get("sip")==null)
+            MDC.put("sip","SIP_"+UUID.randomUUID());
+
         try {
             File dir = new File(getParameter("dir","./logs"));
             if (!dir.exists())
@@ -50,19 +57,53 @@ public class WorkspaceLogSetup extends AbstractAction {
                 PrintWriter out = new PrintWriter(logback);
                 out.print(
                     "<configuration>\n" +
-                    "	<appender name=\"FILE\" class=\"ch.qos.logback.core.FileAppender\">\n" +
-                    "		<file>" + dir + "/logfile.log</file>\n" +
+                    "	<appender name=\"DEVEL\" class=\"ch.qos.logback.core.FileAppender\">\n" +
+                    "		<file>" + dir + "/devel.log</file>\n" +
                     "		<append>true</append>\n" +
-                    "		<encoder>\n" +
-                    "			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} : %msg%n</pattern>\n" +
-                    "		</encoder>\n" +
+                    "           <filter class=\"ch.qos.logback.core.filter.EvaluatorFilter\">\n" +
+                    "                   <evaluator>\n" +
+                    "                           <expression>return (mdc.get(\"sip\") != null &amp;&amp; ((String)mdc.get(\"sip\")).equals(\""+ MDC.get("sip") +"\"));</expression>\n" +
+                    "                   </evaluator>\n" +
+                    "                   <OnMismatch>DENY</OnMismatch>\n" +
+                    "                   <OnMatch>ACCEPT</OnMatch>\n" +
+                    "           </filter>\n" +
+                    "           <encoder>\n" +
+                    "                    <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} : %msg%n</pattern>\n" +
+                    "           </encoder>" +
                     "	</appender>\n" +
-                    "	<root level=\"debug\">\n" +
-                    "		<appender-ref ref=\"FILE\" />\n" +
-                    "	</root>\n" +
+                    "	<appender name=\"USER\" class=\"ch.qos.logback.core.FileAppender\">\n" +
+                    "		<file>" + dir + "/user-log-events.xml</file>\n" +
+                    "		<append>true</append>\n" +
+                    "           <filter class=\"ch.qos.logback.core.filter.EvaluatorFilter\">\n" +
+                    "                   <evaluator>\n" +
+                    "                           <expression>return (level >= INFO &amp;&amp; mdc.get(\"sip\") != null &amp;&amp; ((String)mdc.get(\"sip\")).equals(\""+ MDC.get("sip") +"\"));</expression>\n" +
+                    "                   </evaluator>\n" +
+                    "                   <OnMismatch>DENY</OnMismatch>\n" +
+                    "                   <OnMatch>ACCEPT</OnMatch>\n" +
+                    "           </filter>\n" +
+                    "           <encoder class=\"ch.qos.logback.core.encoder.LayoutWrappingEncoder\">\n" +
+                    "                   <layout class=\"ch.qos.logback.classic.log4j.XMLLayout\"/>\n" +
+                    "           </encoder>" +
+                    "	</appender>\n" +
+                    "   <logger name=\"nl.mpi.tla.flat.deposit\" level=\"DEBUG\">" +
+                    "		<appender-ref ref=\"USER\" />\n" +
+                    "		<appender-ref ref=\"DEVEL\" />\n" +
+                    "	</logger>\n" +
                     "</configuration>"
                 );
                 out.close();
+                // create {$work}/logs/user-log.xml
+                out = new PrintWriter(dir.toPath().resolve("./user-log.xml").toFile());
+                out.print(
+                        "<?xml version=\"1.0\" ?>\n" +
+                        "<!DOCTYPE log4j:eventSet PUBLIC \"-//APACHE//DTD LOG4J 1.2//EN\" \"log4j.dtd\" [<!ENTITY data SYSTEM \"user-log-events.xml\">]>\n" +
+                        "<log4j:eventSet version=\"1.2\" xmlns:log4j=\"http://jakarta.apache.org/log4j/\">\n" +
+                        "    &data;\n" +
+                        "</log4j:eventSet>"
+                );
+                out.close();
+                // copy log4j.dtd to {$work}/logs/
+                Files.copy(CreateFOX.class.getResourceAsStream("/WorkspaceLog/log4j.dtd"), dir.toPath().resolve("./log4j.dtd"));
             }
             
             Logger logger = LoggerFactory.getLogger(nl.mpi.tla.flat.deposit.Flow.class);
@@ -76,7 +117,7 @@ public class WorkspaceLogSetup extends AbstractAction {
             }
             StatusPrinter.printInCaseOfErrorsOrWarnings(logctxt);
             logger.info("\"Welcome to FLAT!\"\n" +
-                "\"Relax,\" said the door keeper,\n" +
+                "\"Relax,\" said the DoorKeeper,\n" +
                 "\"We are programmed to receive.\n" +
                 "You can check-out any time you like,\n" +
                 "But you can never leave!\""

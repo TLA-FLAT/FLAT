@@ -43,7 +43,6 @@ import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmAtomicValue;
 import net.sf.saxon.s9api.XdmDestination;
-import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XsltTransformer;
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
@@ -68,7 +67,6 @@ public class EasyBag extends AbstractAction {
             Path fox = Paths.get(this.getParameter("foxes"));
             Path tmp = Paths.get(this.getParameter("bags"));
             Path bag = Files.createTempDirectory(tmp, "easy-bag-");
-            logger.debug("Easy bag["+bag+"]");
             
             // copy the resources
             for (Resource res:sip.getResources()) {
@@ -178,9 +176,12 @@ public class EasyBag extends AbstractAction {
                 }
             });
             
+            logger.info("Created Easy bag["+bag+"]");
+
         } catch(Exception e) {
             throw new DepositException("Creation of the Easy bag failed!",e);
         }
+
         return true;
     }
     

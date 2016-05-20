@@ -39,14 +39,14 @@ public class HandleCreation extends AbstractAction {
         String dsid = context.getSIP().getFID().getRawFragment().replaceAll("@.*","");
         String asof = context.getSIP().getFID().getRawFragment().replaceAll(".*@","");
         
-        logger.info(" create handle["+context.getSIP().getPID()+"] -> URI["+fedora+"/objects/"+fid+"/datastreams/"+dsid+"/content?asOfDateTime="+asof+"]");
+        logger.info("Create handle["+context.getSIP().getPID()+"] -> URI["+fedora+"/objects/"+fid+"/datastreams/"+dsid+"/content?asOfDateTime="+asof+"]");
         
         for (Resource res:context.getSIP().getResources()) {
             String rfid = res.getFID().toString().replaceAll("#.*","");
             String rdsid = res.getFID().getRawFragment().replaceAll("@.*","");
             String rasof = res.getFID().getRawFragment().replaceAll(".*@","");
 
-            logger.info(" create handle["+res.getPID()+"] -> URI["+fedora+"/objects/"+rfid+"/datastreams/"+rdsid+"/content?asOfDateTime="+rasof+"]");
+            logger.info("Create handle["+res.getPID()+"] -> URI["+fedora+"/objects/"+rfid+"/datastreams/"+rdsid+"/content?asOfDateTime="+rasof+"]");
         }
         
         return true;

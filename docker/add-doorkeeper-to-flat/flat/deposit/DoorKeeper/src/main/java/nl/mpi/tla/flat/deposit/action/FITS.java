@@ -19,7 +19,6 @@ package nl.mpi.tla.flat.deposit.action;
 import java.io.File;
 import java.net.URL;
 import java.util.Set;
-import java.util.logging.Level;
 import net.sf.saxon.s9api.XdmNode;
 
 import org.slf4j.Logger;
@@ -47,8 +46,9 @@ public class FITS extends AbstractAction {
     	
     	//TODO What default to use?
     	String fitsService = getParameter("fitsService");
-        if (!fitsService.endsWith("/"))
+        if (!fitsService.endsWith("/")) {
             fitsService += "/";
+        }
     	String mimetypesFileLocation = getParameter("mimetypes");
     	
     	FITSHandler fitsHandler = null;
@@ -67,7 +67,7 @@ public class FITS extends AbstractAction {
             if(currentResource.hasFile()) {
                 File currentFile = currentResource.getFile();
     			
-                XdmNode result = null;
+                XdmNode result;
                 try {
                     result = fitsHandler.performFitsCheck(currentFile);
                 } catch (Exception e) {
@@ -89,8 +89,8 @@ public class FITS extends AbstractAction {
                     logger.error("File '{}' has a mimetype which is NOT ALLOWED in this repository: '{}'", currentFile, mimetype);
                     allAcceptable = false;
                 } else {
-                    logger.debug("File '{}' has a mimetype which is ALLOWED in this repository: '{}'", currentFile, mimetype);
-                    if(currentResource.hasMime()) {
+                    logger.info("File '{}' has a mimetype which is ALLOWED in this repository: '{}'", currentFile, mimetype);
+                    if(currentResource.hasMime() && !currentResource.getMime().equals(mimetype)) {
                         logger.warn("Resource mimetype changed from '{}' to '{}'", currentResource.getMime(), mimetype);
                     }
                     logger.debug("Setting resource mimetype to '{}'", mimetype);

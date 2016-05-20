@@ -74,7 +74,7 @@ public class Persist extends AbstractAction {
     		
     		PersistencePolicyMatcher policyMatcher = newPersistencePolicyMatcher(policies);
     		PersistencePolicy matchedPolicy = policyMatcher.matchPersistencePolicy(res);
-    		logger.info("Matched policy for resource '" + res.getFile().getName() + "': " + matchedPolicy);
+    		logger.debug("Matched policy for resource '" + res.getFile().getName() + "': " + matchedPolicy);
     		File newResourceDir = matchedPolicy.getTarget();
     		File newResourceFile = new File(newResourceDir, res.getFile().getName());
 
@@ -87,12 +87,12 @@ public class Persist extends AbstractAction {
 				throw new DepositException(message, ex);
 				
 			}
-    		logger.info("Moved resource location. From " + res.getFile() + " to " + newResourceFile);
+    		logger.info("Moved resource from " + res.getFile() + " to " + newResourceFile);
     		res.setFile(newResourceFile);
     	}
     	
     	sip.save();
-    	logger.info("Saved SIP with new locations set");
+    	logger.debug("Saved SIP with new locations set");
     	
     	return true;
     }

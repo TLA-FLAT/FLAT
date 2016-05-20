@@ -27,6 +27,7 @@ import nl.mpi.tla.flat.deposit.context.ImportPropertiesInterface;
 import nl.mpi.tla.flat.deposit.util.Saxon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
 
 /**
  *
@@ -37,6 +38,7 @@ public class Context {
     private static final Logger logger = LoggerFactory.getLogger(Context.class.getName());
     
     protected Logger actionLogger = logger;
+    protected Marker marker = null;
     
     protected Map<String,XdmValue> props = new LinkedHashMap<>();
     

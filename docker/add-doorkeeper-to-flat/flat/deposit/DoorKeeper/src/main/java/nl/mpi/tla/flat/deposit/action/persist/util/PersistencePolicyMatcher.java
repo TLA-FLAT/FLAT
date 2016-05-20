@@ -33,20 +33,20 @@ public class PersistencePolicyMatcher {
 	 */
 	public PersistencePolicy matchPersistencePolicy(Resource resource) throws DepositException {
 		
-		logger.info("Trying to find policy for resource '{}'", resource.getFile().getName());
+		logger.debug("Trying to find policy for resource '{}'", resource.getFile().getName());
 		for(PersistencePolicy policy : policies.getAllPolicies()) {
 			if("mimetype".equals(policy.getProperty())) {
 				Pattern p = Pattern.compile(policy.getRegex());
 				Matcher m = p.matcher(resource.getMime());
 				if(m.matches()) {
-					logger.info("Found matching policy for mimetype '{}'", resource.getMime());
+					logger.debug("Found matching policy for mimetype '{}'", resource.getMime());
 					return policy;
 				}
 			} else {
 				throw new UnsupportedOperationException("Only mimetype matching supported at the moment for the persistence policy");
 			}
 		}
-		logger.info("A matching policy was not found; using default policy");
+		logger.debug("A matching policy was not found; using default policy");
 		return policies.getDefaultPolicy();
 	}
 }

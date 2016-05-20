@@ -16,17 +16,10 @@
  */
 package nl.mpi.tla.flat.deposit.action;
 
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.joran.JoranConfigurator;
-import ch.qos.logback.core.joran.spi.JoranException;
-import ch.qos.logback.core.util.StatusPrinter;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
 import nl.mpi.tla.flat.deposit.Context;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  *
@@ -38,6 +31,7 @@ public class WorkspaceLogCleanup extends AbstractAction {
     
     @Override
     public boolean perform(Context context) {
+        MDC.remove("sip");
         return true;
     }
     

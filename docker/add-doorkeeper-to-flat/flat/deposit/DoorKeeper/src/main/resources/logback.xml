@@ -1,14 +1,21 @@
-<configuration>
+<configuration scan-="true">
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-    <!-- encoders are assigned the type
-         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>INFO</level>
+    </filter>
     <encoder>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %marker{20} : %msg%n</pattern>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %X{sip} : %msg%n</pattern>
     </encoder>
   </appender>
+  
+  <logger name="nl.mpi.tla.flat.deposit" level="INFO">
+    <appender-ref ref="STDOUT" />
+  </logger>
 
-  <root level="debug">
+  <!--
+  <root level="OFF">
     <appender-ref ref="STDOUT" />
   </root>
+  -->
 </configuration>

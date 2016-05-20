@@ -22,8 +22,6 @@ import com.yourmediashelf.fedora.client.FedoraCredentials;
 import com.yourmediashelf.fedora.client.response.IngestResponse;
 import com.yourmediashelf.fedora.client.response.GetDatastreamResponse;
 import java.io.File;
-import java.net.URI;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
@@ -51,17 +49,17 @@ public class Deposit extends AbstractAction {
         });
         try {
             SIP sip = context.getSIP();
-            logger.info("Fedora Commons["+this.getParameter("fedoraServer")+"]["+this.getParameter("fedoraUser")+":"+this.getParameter("fedoraPassword")+"]");
+            logger.debug("Fedora Commons["+this.getParameter("fedoraServer")+"]["+this.getParameter("fedoraUser")+":"+this.getParameter("fedoraPassword")+"]");
             FedoraCredentials credentials = new FedoraCredentials(this.getParameter("fedoraServer"), this.getParameter("fedoraUser"), this.getParameter("fedoraPassword"));
             FedoraClient fedora = new FedoraClient(credentials);
-            fedora.debug(true);
+            //fedora.debug(true);
             //FedoraRequest.setDefaultClient(fedora);
-            logger.info("Fedore Commons repository["+fedora.describeRepository().xml(true).execute(fedora)+"]");
+            logger.debug("Fedore Commons repository["+fedora.describeRepository().xml(true).execute(fedora)+"]");
             
             Collection<File> foxs = FileUtils.listFiles(new File(this.getParameter("dir", "./fox")),new String[] {"xml"},true);
-            logger.info("Loading ["+foxs.size()+"] FOX files from dir["+this.getParameter("dir", "./fox")+"]");
+            logger.debug("Loading ["+foxs.size()+"] FOX files from dir["+this.getParameter("dir", "./fox")+"]");
             for (File fox:foxs) {
-                logger.info("FOX["+fox+"]");
+                logger.debug("FOX["+fox+"]");
                 IngestResponse iResponse = ingest().format("info:fedora/fedora-system:FOXML-1.1").content(fox).ignoreMime(true).execute(fedora);
                 logger.info("Created FedoraObject["+iResponse.getPid()+"]["+iResponse.getLocation()+"]");
             }

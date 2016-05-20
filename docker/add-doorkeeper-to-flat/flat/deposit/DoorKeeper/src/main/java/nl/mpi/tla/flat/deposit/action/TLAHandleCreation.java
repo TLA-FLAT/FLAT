@@ -18,7 +18,6 @@ public class TLAHandleCreation extends AbstractAction {
 
 	private static final Logger logger = LoggerFactory.getLogger(TLAHandleCreation.class);
 	
-
 	@Override
 	public boolean perform(Context context) throws DepositException {
 		
@@ -47,7 +46,7 @@ public class TLAHandleCreation extends AbstractAction {
         File sipBase = context.getSIP().getBase();
         URI sipPid = context.getSIP().getPID();
         
-        logger.info(" creating handle[" + sipPid + "] -> URI[" + sipHandleTarget + "]");
+        logger.info("Creating handle[" + sipPid + "] -> URI[" + sipHandleTarget + "]");
         
         try {
 			handleManager.assignHandle(sipBase, sipPid, sipHandleTarget);
@@ -67,7 +66,7 @@ public class TLAHandleCreation extends AbstractAction {
             try {
             	URI resPid = res.getPID();
             	
-            	logger.info(" creating handle[" + resPid + "] -> URI[" + resHandleTarget + "]");
+            	logger.info("Creating handle[" + resPid + "] -> URI[" + resHandleTarget + "]");
             
 				handleManager.assignHandle(resFile, resPid, resHandleTarget);
 			} catch (HandleException | IOException ex) {

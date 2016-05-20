@@ -16,11 +16,7 @@
  */
 package nl.mpi.tla.flat.deposit.action;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import net.sf.saxon.s9api.XdmValue;
 import nl.mpi.tla.flat.deposit.Context;
-import nl.mpi.tla.flat.deposit.SIP;
 
 /**
  *
