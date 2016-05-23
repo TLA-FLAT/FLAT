@@ -39,10 +39,12 @@
         <action name="validate metadata" class="nl.mpi.tla.flat.deposit.action.Validate">
             <parameter name="rules" value="{$param-base}/policies/rules.sch"/>
         </action>
+<!--
         <action name="validate resources" class="nl.mpi.tla.flat.deposit.action.FITS">
         	<parameter name="fitsService" value="{$fitsService}"/>
         	<parameter name="mimetypes" value="{$param-base}/policies/fits-mimetypes.xml"/>
         </action>
+-->
         <!--
         <action name="quality assessment" class="nl.mpi.tla.flat.deposit.action.QualityAssessment"/>
         <action name="manual evaluation" class="nl.mpi.tla.flat.deposit.action.Evaluate"/>
@@ -69,7 +71,7 @@
         -->
         <action class="nl.mpi.tla.flat.deposit.action.CreateFOX">
             <parameter name="cmd2dc" value="{$param-base}/policies/cmd2dc.xsl"/>
-            <parameter name="cmd2fox" value="{$param-base}/../../../../../docker/flat/flat/LAT2FOX/src/main/resources/cmd2fox.xsl"/>
+            <parameter name="cmd2fox" value="{$param-base}/../../../../../../../flat/flat/LAT2FOX/src/main/resources/cmd2fox.xsl"/>
             <parameter name="dir" value="{$work}/fox"/>
             <parameter name="relations" value="{$param-base}/dummies/relations.xml"/>
         </action>

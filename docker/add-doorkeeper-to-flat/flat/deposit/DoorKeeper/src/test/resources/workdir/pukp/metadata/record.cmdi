@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CMD xmlns="http://www.clarin.eu/cmd/"
+     xmlns:lat="http://lat.mpi.nl/"
      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
      CMDVersion="1.1"
      xsi:schemaLocation="http://www.clarin.eu/cmd/ http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1345561703683/xsd">
@@ -11,8 +12,8 @@
    <Resources>
       <ResourceProxyList>
          <ResourceProxy id="res_96b85e9a-d303-429a-a73a-47b602768ee4">
-            <ResourceType mimetype="">Resource</ResourceType>
-            <ResourceRef>https://archive.org/download/GreenHornetComics1/Green_Hornet_001.pdf</ResourceRef>
+            <ResourceType mimetype="application/pdf">Resource</ResourceType>
+            <ResourceRef lat:localURI="../data/comic.pdf">https://archive.org/download/GreenHornetComics1/Green_Hornet_001.pdf</ResourceRef>
          </ResourceProxy>
       </ResourceProxyList>
       <JournalFileProxyList/>

@@ -206,7 +206,7 @@ public class SIP {
                 }
                 if (res.hasFile()) {
                     Element rr = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(node), "cmd:ResourceRef", null, NAMESPACES));
-                    rr.setAttributeNS(LAT_NS,"lat:localURI",base.getParentFile().toPath().normalize().relativize(res.getFile().toPath().normalize()).toString());
+                    rr.setAttribute("lat:localURI",base.getParentFile().toPath().normalize().relativize(res.getFile().toPath().normalize()).toString());
                 }
                 if (res.hasPID()) {
                     Element rr = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(node), "cmd:ResourceRef", null, NAMESPACES));
@@ -214,7 +214,7 @@ public class SIP {
                 }
                 if (res.hasFID()) {
                     Element rr = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(node), "cmd:ResourceRef", null, NAMESPACES));
-                    rr.setAttributeNS(LAT_NS,"lat:flatURI",res.getFID().toString());
+                    rr.setAttribute("lat:flatURI",res.getFID().toString());
                 }
             }                    
         } catch(Exception e) {
@@ -227,6 +227,10 @@ public class SIP {
     public void load(File spec) throws DepositException {
         try {
             this.rec = Saxon.buildDOM(spec);
+
+            Element cmd = (Element)Saxon.unwrapNode((XdmNode)Saxon.xpath(Saxon.wrapNode(this.rec), "/cmd:CMD", null, NAMESPACES));
+            cmd.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:lat", LAT_NS);
+            
             String self = Saxon.xpath2string(Saxon.wrapNode(this.rec), "/cmd:CMD/cmd:Header/cmd:MdSelfLink", null, NAMESPACES);
             if (!self.trim().equals("")) {
                 try {
@@ -279,7 +283,7 @@ public class SIP {
                     self = (Element)Saxon.unwrapNode((XdmNode)_self);
                 }
                 if (this.hasFID()) {
-                    self.setAttributeNS(LAT_NS,"lat:flatURI",this.getFID().toString());
+                    self.setAttribute("lat:flatURI",this.getFID().toString());
                 }
             }   
             // save changes to the resource list
