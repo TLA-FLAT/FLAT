@@ -62,6 +62,7 @@ RUN	cd /var/www/fedora/tomcat/webapps/fedoragsearch/FgsConfig/ &&\
 ADD solr/solr.xml /var/www/fedora/tomcat/conf/Catalina/localhost/solr.xml
 ADD solr/schema.xml $FEDORA_HOME/solr/collection1/conf/schema.xml
 ADD solr/schema.xml $FEDORA_HOME/tomcat/webapps/fedoragsearch/WEB-INF/classes/fgsconfigFinal/index/FgsIndex/conf/flat-solr-schema.xml
+ADD solr/solrcore.properties $FEDORA_HOME/solr/collection1/conf/solrcore.properties
 
 #
 # Discovery Garden: dgi_gsearch_extensions

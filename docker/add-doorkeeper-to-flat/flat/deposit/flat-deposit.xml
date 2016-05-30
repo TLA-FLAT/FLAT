@@ -21,6 +21,9 @@
         <property name="fedoraUser" value="fedoraAdmin"/>
         <property name="fedoraPassword" value="fedora"/>
         <property name="fedoraServer" value="https://localhost:8443/fedora"/>
+        <property name="gsearchUser" value="fgsAdmin"/>
+        <property name="gsearchPassword" value="fgsAdmin"/>
+        <property name="gsearchServer" value="http://localhost:8080/fedoragsearch"/>
     </config>
     <init>
         <action id="logSetup" name="log" class="nl.mpi.tla.flat.deposit.action.WorkspaceLogSetup">
@@ -109,8 +112,12 @@
         	<parameter name="handleAdminPassword" value="{$tlaHandleAdminPassword}"/>
         </action>
         -->
+        <action class="nl.mpi.tla.flat.deposit.action.Index">
+            <parameter name="gsearchServer" value="{$gsearchServer}"/>
+            <parameter name="gsearchUser" value="{$gsearchUser}"/>
+            <parameter name="gsearchPassword" value="{$gsearchPassword}"/>
+        </action>
         <!--
-        <action class="nl.mpi.tla.flat.deposit.action.Index"/>
         <action class="nl.mpi.tla.flat.deposit.action.WorkspaceCleanup"/>
         -->        
     </main>

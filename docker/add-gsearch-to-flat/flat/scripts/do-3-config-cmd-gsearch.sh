@@ -12,9 +12,4 @@ cp lat-gsearch-transformer.xsl \
 cp lat-gsearch-schema.xml \
     $FEDORA_HOME/solr/collection1/conf/schema.xml
     
-/var/www/fedora/tomcat/bin/tomcat-fedora.sh stop &&\
-bash -c "timeout 60 grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-sleep 10 &&\
-/var/www/fedora/tomcat/bin/tomcat-fedora.sh start &&\
-bash -c "timeout 60 grep -q 'Server startup complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-sleep 10
+wget -O do-solr-reload.html  "http://localhost:8080/solr/admin/cores?action=RELOAD&core=collection1"
