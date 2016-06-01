@@ -13,6 +13,7 @@ RUN cd /tmp &&\
     cd /tmp/easy-deposit &&\
     # checkout version 1.0.2 (has no tag)
     git checkout 64378e6be6ff83994fd675eb61a6ea332b39ff67 &&\
+    sed -i 's|https://easy.dans.knaw.nl/maven/|http://maven.dans.knaw.nl/|g' pom.xml &&\
     sed -i 's|DANS-EASY|FLAT|g' src/main/scala/nl/knaw/dans/api/sword2/StatementManagerImpl.scala &&\
     sed -i 's|DANS Default Data Collection|FLAT Deposit Bag Collection|g' src/main/scala/nl/knaw/dans/api/sword2/ServiceDocumentManagerImpl.scala
 
