@@ -256,6 +256,129 @@ function flat_deposit_ui_schema() {
             ),
         ),
     );
+    $schema['flat_deposit_ui_upload_log'] = array(
+        'description' => 'Logging of all uploading activity.',
+        'fields' => array(
+            'user_id'  => array(
+                'type' => 'varchar',
+                'length' => 63,
+                'not null' => TRUE,
+                'description' => 'User ID'
+            ),
+            'bundle' => array(
+                'type' => 'varchar',
+                'length' => 63,
+                'not null' => FALSE,
+                'description' => 'Persistent ID of bundle.'
+            ),
+            'pid_bundle' => array(
+                'type' => 'varchar',
+                'length' => 63,
+                'not null' => FALSE,
+                'description' => 'Bundle name.'
+            ),
+            'collection' => array(
+                'type' => 'varchar',
+                'length' => 127,
+                'not null' => FALSE,
+                'description' => 'Name of the project / corpus.'
+            ),
+            'status' => array(
+                'type' => 'varchar',
+                'length' => 63,
+                'not null' => TRUE,
+                'description' => 'Name given to the upload.'
+            ),
+            'bag_id' => array(
+                'type' => 'varchar',
+                'length' => 63,
+                'not null' => FALSE,
+                'description' => 'Bag ID.'
+            ),
+            'exceptions' => array(
+                'type' => 'varchar',
+                'length' => 127,
+                'not null' => FALSE,
+                'default' => '',
+                'description' => 'Exceptions.'
+            ),
+            'freeze_time' => array(
+                'type' => 'int',
+                'length' => 20,
+                'not null' => FALSE,
+                'description' => 'Data is located at freeze directory'
+            ),
+            'nfiles' => array(
+                'type' => 'int',
+                'length' => 20,
+                'not null' => FALSE,
+#                'default' => 0,
+                'description' => 'Count of zipped files in freeze directory'
+            ),
+            'baginplace' => array(
+                'type' => 'int',
+                'pgsql_type' => 'boolean',
+                'not null' => FALSE,
+ #               'default' => 0,
+                    'description' => 'Bag has been created for data'
+                ),
+            'zipped' => array(
+                'type' => 'int',
+                'pgsql_type' => 'boolean',
+                'not null' => FALSE,
+  #              'default' => 0,
+                'description' => 'Bag has been created for data'
+            ),
+            'bagged' => array(
+                'type' => 'int',
+                'pgsql_type' => 'boolean',
+                'not null' => FALSE,
+   #             'default' => 0,
+                'description' => 'Bag has been created for data'
+            ),
+            'foxml' => array(
+                'type' => 'int',
+                'pgsql_type' => 'boolean',
+                'not null' => FALSE,
+    #            'default' => 0,
+                'description' => 'FOXML has been created for data'
+            ),
+            'bag_ingested' => array(
+                'type' => 'int',
+                'pgsql_type' => 'boolean',
+                'not null' => FALSE,
+     #           'default' => 0,
+                'description' => 'Bag has been ingested'
+            ),
+            'data_purged' => array(
+                'type' => 'int',
+                'pgsql_type' => 'boolean',
+                'not null' => FALSE,
+      #          'default' => 0,
+                'description' => 'Uploaded data has been purged'
+            ),
+            'owner_added' => array(
+                'type' => 'int',
+                'pgsql_type' => 'boolean',
+                'not null' => FALSE,
+       #         'default' => 0,
+                'description' => 'Notification has been unchecked'
+            ),
+            'date_bundle_ingest' => array(
+                'type' => 'int',
+                'not null' => FALSE,
+                'description' => 'Date at which bundle was ingested'
+            ),
+            'note_unchecked' => array(
+                'type' => 'int',
+                'not null' => FALSE,
+                'description' => 'Indicate whether status info should be shown'
+            ),
+        ),
+        'unique keys' => array(
+            'ukey' => array('user_id', 'bundle', 'collection'),
+        ),
+    );
 
     return $schema;
 }
