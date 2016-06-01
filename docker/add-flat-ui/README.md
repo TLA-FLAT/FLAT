@@ -11,7 +11,7 @@ This docker file depends on the FLAT base image.
  * drupal modules (IMCE, wysiwyg, ckeditor)
  * Web based GUI for ingesting user data
 
-## Preparation) ##
+## Preparation ##
 ```sh
 cd <Where to place FLAT>
 
