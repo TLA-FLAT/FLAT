@@ -3,9 +3,21 @@
  * @file
  * Custom user interface for the FLAT data repository
  */
+
+
+/*
+ *  Load Dependencies
+ */
 require_once ('fedora_queries.php');
-require_once ('drupal_queries.php');
-module_load_include('inc', 'flat_deposit_ui', 'inc/owncloud_api');
+// require_once ('drupal_queries.php');
+// require_once ('misc.php');
+
+
+module_load_include('inc', 'flat_deposit_ui', 'Helpers/owncloud_api');
+
+/*
+ * Variable and constant definitions
+ */
 
 if ($GLOBALS['user']->uid){
     define('USER', $GLOBALS['user']->name);
@@ -18,11 +30,14 @@ if ($GLOBALS['user']->uid){
     define('USER_FREEZE_DIR', FREEZE_DIR . USER);
     define('USER_DRUPAL_DATA_DIR', 'public://users/' . USER );
 }
-/**/
+
 /**
  * Implements hook_help().
+ * @param $path
+ * @return string
  */
-function flat_deposit_ui_help($path, $arg){
+
+function flat_deposit_ui_help($path, $args){
     switch ($path){
         case 'admin/help#flat_deposit_ui':{
             $ret_val = '<h3>' . t('About') . '</h3>';
@@ -318,7 +333,6 @@ function flat_deposit_ui_block_view($delta = '')
 // Implements flat deposit main menu block
 function flat_deposit_ui_menu_block_generate(){
     // Build a render array.
-    global $user;
 
     $output = array(
         'link_workspace' => array(
@@ -347,12 +361,12 @@ function flat_deposit_ui_menu_block_generate(){
             '#markup' => '<a href="/drupal/commitchanges" title="Commit changes"><img title="Commit changes" alt="Commit changes" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Commit.png"/></a><br/>',
             '#suffix' => '<a href="/drupal/commitchanges">Commit changes</a><br/></div>'),
     );
-
     return $output;
 }
 
 
 /**
+ * Implements hook_form
  * @return string to be displayed on the page
  */
 function flat_deposit_ui_workspace_form($form, &$form_state)
@@ -368,21 +382,26 @@ function flat_deposit_ui_workspace_form($form, &$form_state)
     // Define the workspace form
     $form['field_1'] = array(
         '#type' => 'fieldset',
-        '#title' => t('Create bundles'));
+        '#title' => t('Create bundles'),
+        '#description' => t('Here you can create new bundles. Keep in mind that new bundles need to have unique names.'));
 
-    $form ['field_1'] ['init_name'] = array(
+    $form ['field_1'] ['bundle_name'] = array(
         '#type' => 'textfield',
-        '#title' => 'Name of bundle');
+        '#title' => t('Name of bundle'));
+
+    $form ['field_1'] ['collection_name'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Belongs to collection'));
 
     $form ['field_1']['init_submit'] = array(
         '#type' => 'submit',
         '#value' => t('Click to create new workspace bundle'),
-        '#submit' => array('flat_deposit_ui_workspace_project_init_submit'),
-        '#validate' => array('flat_deposit_ui_workspace_project_init_validate'));
+        '#submit' => array('flat_deposit_ui_workspace_bundle_init_submit'),
+        '#validate' => array('flat_deposit_ui_workspace_bundle_init_validate'));
 
 
-    $open_projects = array_diff(scandir(USER_DRUPAL_DATA_DIR), array('..', '.'));
-    $list_open_projects = theme('item_list', array('items' => $open_projects,
+    $open_bundles = array_diff(scandir(USER_DRUPAL_DATA_DIR), array('..', '.'));
+    $list_open_bundles = theme('item_list', array('items' => $open_bundles,
                                                     'title' => '',
                                                     'type' => 'ul',
                                                     'attributes' => array()));
@@ -390,7 +409,7 @@ function flat_deposit_ui_workspace_form($form, &$form_state)
     $form['field_2'] = array(
         '#type' => 'fieldset',
         '#title' => t('Open bundles'),
-        '#description' => $list_open_projects );
+        '#description' => $list_open_bundles );
 
     $form['field_2']['upload_submit'] = array(
         '#type' => 'submit',
@@ -415,40 +434,43 @@ function flat_deposit_ui_workspace_form($form, &$form_state)
     }
 }
 
-function flat_deposit_ui_workspace_project_init_validate(&$form, &$form_state)
+/**
+ * Workspace form which allows to create new projects or browse data in file explorer
+ * @param $form
+ * @param $form_state
+ */
+
+function flat_deposit_ui_workspace_bundle_init_validate(&$form, &$form_state)
 {
-    $project_name = $form_state['values']['init_name'];
+    $bundle_name = $form_state['values']['bundle_name'];
+
     $message = FALSE;
 
-    $form_state['project_name'] =  $project_name;
-    $form_state['full_directory_path'] = USER_DRUPAL_DATA_DIR . '/' .  $project_name;
+    $form_state['full_directory_path'] = USER_DRUPAL_DATA_DIR . '/' .  $bundle_name;
 
     //Check that the input values are of the proper format
-    if (!preg_match('/^[a-zA-Z0-9\_]{2,20}+$/', $project_name)) {
-        $message = 'Allowed are all letters, numbers and underscores (max length 20)';}
-    //Check that project is not already existing
-    elseif (file_exists($form_state['full_directory_path'])){
-        $message = "Project already exists";}
-    //Check that prject name is distinctive from existing projects
+    if (!preg_match('/^[a-zA-Z0-9\_]{2,40}+$/', $bundle_name)) {
+        $message = 'Allowed are all letters, numbers and underscores (max length 40)';}
+
+    //Check that bundle name is distinctive from existing bundles
     else{
         $dirs = scandir(USER_DRUPAL_DATA_DIR);
         if (file_exists(USER_FREEZE_DIR)){ $dirs = array_merge($dirs, array_diff(scandir(USER_FREEZE_DIR), array('..', '.')));}
 
         foreach ($dirs as $dir){
-            if (strtolower($dir)==strtolower($project_name)){$message = "Project with very similar project name exists";}
+            if (strtolower($dir)==strtolower($bundle_name)){$message = "Bundle with same or very similar bundle name exists";}
         };
     };
     //redirect to form in case error message is created
-    if ($message) {form_set_error ('init_name', $message);}
+    if ($message) {form_set_error ('bundle_name', $message);}
 }
 
 /**
- * $workspace_project_init_form_submit
- * create new local folders on click; to get absolute path of local path type drupal_realpath("public://")
+ * creates a new local folders on click
  */
-function flat_deposit_ui_workspace_project_init_submit(&$form, &$form_state)
+function flat_deposit_ui_workspace_bundle_init_submit(&$form, &$form_state)
 {
-    drupal_set_message(t('Creating new project folders'));
+    drupal_set_message(t('Creating new upload folders'));
 
     $target = $form_state['full_directory_path'];
     drupal_mkdir($target);
@@ -459,8 +481,37 @@ function flat_deposit_ui_workspace_project_init_submit(&$form, &$form_state)
 
     //create symbolic link in owncloud user directory and refresh to see new directory
     $oc = new OwnCloud();
-    $project = $form_state['project_name'];
-    $oc->CreateLinkAndSync($target, $project);
+    $bundle = $form_state['values']['bundle_name'];
+    $oc->CreateLinkAndSync($target, $bundle);
+
+    $collection = $form_state['values']['collection_name'];
+
+    //Make entry on database (if not exists)
+    module_load_include('inc', 'flat_deposit_ui' , '/inc/config');
+    $config = get_initial_bundle_profile();
+    $config['user_id'] = USER;
+    $config['bundle'] = $bundle;
+    $config['collection'] = $collection;
+    $config['status'] = 'open';
+
+    $result = db_select('flat_deposit_ui_upload_log', 'bundle')
+        ->fields('bundle', array('bundle'))
+        ->condition('user_id', USER)
+        ->condition('bundle', $bundle)
+        ->condition('collection', $collection)
+        ->execute()
+        ->rowCount();
+
+    if ($result) {
+        db_update('flat_deposit_ui_upload_log')
+            ->fields(array('status' => 'open'))
+            ->condition('user_id', USER)
+            ->condition('bundle', $bundle)
+            ->condition('collection', $collection)
+            ->execute();
+    } else {
+        drupal_write_record('flat_deposit_ui_upload_log', $config);
+    }
 }
 
 #
@@ -476,8 +527,6 @@ function flat_deposit_ui_workspace_upload_submit(&$form, &$form_state)
     $options['absolute'] = TRUE;
 
     $form_state ['redirect'] = 'user/' . $GLOBALS['user']->uid  . '/imce';
-
-
 }
 
 
@@ -485,20 +534,19 @@ function flat_deposit_ui_workspace_sync_submit(&$form, &$form_state)
 {
     $oc = new OwnCloud();
     $oc->UpdateUserFiles();
-#    $oc->CreateLinkAndSync($target, $project);
     drupal_set_message(t('Owncloud has been synced'));
 
 
 }
 
 /**
- * Gets a list of all data ingested since last login
+ * Gets a list of all data ingested
  */
 function flat_deposit_ui_view_ingested_files() {
 
     $tuque = islandora_get_tuque_connection();
 
-    $query = create_query_all_owned_files($GLOBALS['user']->name);
+    $query = create_query_all_owned_files(USER);
 
     $results = $tuque->repository->ri->sparqlQuery($query);
 
@@ -543,7 +591,7 @@ function flat_deposit_ui_view_ingested_files() {
 
 
 /**
- * Gets a list of all data ingested since last login
+ * Gets a list of all data ingested
  */
 function flat_deposit_ui_view_collections()
 {
@@ -594,7 +642,7 @@ function flat_deposit_ui_view_collections()
 }
 
 /**
- * Gets a list of all data ingested since last login
+ * Gets a list of all data ingested
  */
 function flat_deposit_ui_manage_bundles()
 {
@@ -649,109 +697,158 @@ function flat_deposit_ui_manage_bundles()
 
 
 /**
- * function that presents all data found in the users directory and allows for data freeze and further ingest
+ * Presents all user entries that are found in the log table and allows to further process them
  */
-function flat_deposit_ui_commit_form($form_state, $cleanup=false)
+function flat_deposit_ui_commit_form($form, $form_state)
 {
-    // get all project folders exclusive . and ..
-    $project_folders = array_diff(scandir(USER_DRUPAL_DATA_DIR), array('..', '.'));
-    if (file_exists(USER_FREEZE_DIR)){
-        $project_folders = array_merge($project_folders, array_diff(scandir(USER_FREEZE_DIR), array('..', '.')));
-    }
+    $results = db_select('flat_deposit_ui_upload_log','p')
+        ->fields('p',array('user_id', 'bundle', 'collection', 'status', 'exceptions', 'date_bundle_ingest'))
+        ->condition('user_id', 'admin')
+        ->orderBy('collection')
+        ->orderBy('bundle')
+        ->execute();
 
-    // Cleanup
-    if ($cleanup) {clear_db_user_projects(USER);};
+    $open_bundles = array();
+    $frozen_bundles = array();
+    $archived_bundles = array();
+    $other_bundles = array();
 
-    // Update drupal database
-    foreach ($project_folders as $project) {
-        $is_frozen = file_exists(USER_FREEZE_DIR . '/' . $project);
-
-        if (!check_entry_exists(USER, $project)) {
-            insert_db_user_projects(USER, $project, $is_frozen);
+    // make array of open / frozen bundles in order to use these in a form
+    foreach ($results as $entry) {
+        $array_entry = json_decode(json_encode($entry), true);
+        if ($array_entry['status'] == 'open' && file_exists(USER_DRUPAL_DATA_DIR . '/' . $array_entry['bundle'])) {
+            $open_bundles [] = $array_entry;
+        } elseif ($array_entry['status'] == 'archived' ) {
+            $archived_bundles [] = $array_entry;
+        } elseif (file_exists(USER_FREEZE_DIR . '/' . $array_entry['bundle'])) {
+            $frozen_bundles [] = $array_entry;
         } else {
-            update_db_user_projects(USER, $project, $is_frozen);
+            $other_bundles [] = $array_entry;
         }
     }
 
-    // make array of open / frozen projects in order to use these in a form
-    $open_projects = array();
-    $frozen_projects = array();
-    foreach (select_db_user_all_projects(USER) as $project) {
-        if ($project->is_frozen) {
-            array_push($frozen_projects, $project->pname);
-        } else {
-            array_push($open_projects, $project->pname);
-        }
-    }
 
-    // Fedora commons database actions
-    $tuque = islandora_get_tuque_connection();
-    $api_a = $tuque->repository->api->a;
-    $condition = "ownerId=" . USER;
-    $results = $api_a->findObjects('query',$condition);
-
-    $datasets = [];
-    foreach ($results['results'] as $result) {
-        $pid = $result['pid'];
-        if (preg_match('/_CMD/', $pid)) array_push($datasets, $result['title'][0]);
-    }
-
-    #make form with three fields : 1) open projects, 2) frozen projects 3) additional (admin) tasks
-
+    // make form with three fields : 1) open bundles, 2) frozen bundles 3) additional (admin) tasks
     $form = array();
-    # open projects#
-    $form['field_1'] = array(
+
+    //   open bundles field
+    $form['open_bundles'] = array(
         '#type' => 'fieldset',
-        '#title' => t('Open projects'),);
+        '#title' => t('Open bundles'),);
 
-    # key and value of each checkbox will be the same
-    $form['field_1']['freezable_projects'] = array(
-        '#type' => 'checkboxes',
-        '#options' => drupal_map_assoc($open_projects),);
+    $header = array(
+        'collection' => t('Collection Name'),
+        'bundle' => t('Bundle Name'),
+        'status' => t('Status'),
+        'exceptions' => t('Exception'),
+    );
+    $options = array();
 
-    $form['field_1']['actions']['freeze'] = array(
+    foreach ($open_bundles as $key => $bundle) {
+        $options[$key] = array(
+            'collection' => $bundle['collection'],
+            'bundle' => $bundle['bundle'],
+            'status' => $bundle['status'],
+            'exceptions' => $bundle['exceptions'],
+        );
+    }
+
+    $form['open_bundles']['table_open_bundles'] = array (
+        '#type' => 'tableselect',
+        '#header' => $header,
+        '#options' => $options,
+    );
+
+    $form['open_bundles']['actions']['freeze'] = array(
         '#type' => 'submit',
-        '#value' => t('Freeze project'),
+        '#value' => t('Freeze bundle'),
         '#submit' => array('flat_deposit_ui_commit_form_freeze_submit'),
         '#validate' => array('flat_deposit_ui_commit_form_freeze_validate'),);
 
-    $form['field_1']['actions']['delete'] = array(
+    $form['open_bundles']['actions']['delete'] = array(
         '#type' => 'submit',
-        '#value' => t('Delete project'),
+        '#value' => t('Delete bundle'),
         '#submit' => array('flat_deposit_ui_commit_form_delete_submit'));
 
-    # frozen projects#
-    $form['field_2'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('Projects ready to ingest'),);
 
-    $form['field_2']['frozen_projects'] = array(
-        '#type' => 'checkboxes',
-        '#options' => drupal_map_assoc($frozen_projects),);
+    $form['open_bundles'] ['data_open_bundles']= array(
+        '#type' => 'value',
+        '#value' => $open_bundles);
+
+    // frozen bundles#
+    $form['frozen_bundles'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Bundles ready to be archived'),);
+
+    $header = array(
+        'collection' => t('Collection Name'),
+        'bundle' => t('Bundle Name'),
+        'status' => t('Status'),
+        'exceptions' => t('Exception'),
+    );
+    $options = array();
+
+    foreach ($frozen_bundles as $key => $bundle) {
+        $options[$key] = array(
+            'collection' => $bundle['collection'],
+            'bundle' => $bundle['bundle'],
+            'status' => $bundle['status'],
+            'exceptions' => $bundle['exceptions'],
+        );
+    }
+
+    $form['frozen_bundles']['table_frozen_bundles'] = array (
+        '#type' => 'tableselect',
+        '#header' => $header,
+        '#options' => $options,
+    );
 
     // Allow actions for frozen data: ingest or open up for changes
-    $form['field_2']['actions']['unfreeze'] = array(
+    $form['frozen_bundles']['actions']['unfreeze'] = array(
         '#type' => 'submit',
-        '#value' => t('Unfreeze project'),
+        '#value' => t('Unfreeze bundle'),
         '#submit' => array('flat_deposit_ui_commit_form_unfreeze_submit'),
         '#validate' => array('flat_deposit_ui_commit_form_unfreeze_validate'),);
 
-    $form['field_2']['actions']['ingest'] = array(
+    $form['frozen_bundles']['actions']['ingest'] = array(
         '#type' => 'submit',
         '#value' => t('Upload project to database'),
-        '#submit' => array('flat_deposit_ui_commit_form_ingest_submit'),
-        '#validate' => array('flat_deposit_ui_commit_form_ingest_validate'),);
+        '#submit' => array('flat_deposit_ui_commit_form_ingest_serve_submit'),
+        '#validate' => array('flat_deposit_ui_commit_form_ingest_serve_validate'),);
+
+    $form['frozen_bundles']['data_frozen_bundles'] = array(
+        '#type' => 'value',
+        '#value' => $frozen_bundles);
 
     # Ingested #
-    $form['field_3'] = array(
+    $form['archived_bundles'] = array(
         '#type' => 'fieldset',
-        '#title' => t('Projects on database'),
+        '#title' => t('Bundles on database'),
     );
 
-    $form['field_3']['fedora_projects'] = array(
-        '#type' => 'checkboxes',
-        '#options' => drupal_map_assoc(array_unique($datasets)),
+    $header = array(
+        'collection' => t('Collection Name'),
+        'bundle' => t('Bundle Name'),
+        'status' => t('Status'),
+        'date' => t('Bundle archived on'),
     );
+
+    foreach ($archived_bundles as $key => $bundle) {
+        $options[$key] = array(
+            'collection' => $bundle['collection'],
+            'bundle' => $bundle['bundle'],
+            'status' => $bundle['status'],
+            'date' => format_date($bundle['date_bundle_ingest'])
+        );
+    }
+
+    $form['archived_bundles']['table_archived_bundles'] = array (
+        '#type' => 'tableselect',
+        '#header' => $header,
+        '#options' => $options,
+    );
+
+
 
     # other #
     $form['other'] = array(
@@ -759,38 +856,41 @@ function flat_deposit_ui_commit_form($form_state, $cleanup=false)
         '#title' => t('Other tasks'),
     );
     // Add extra buttons for other tasks
-    $form['other']['buttons']['cleanup'] = array(
+    $form['other']['buttons']['refresh'] = array(
         '#type' => 'submit',
-        '#value' => 'Refresh projects',
-        '#submit' => array('flat_deposit_ui_commit_form_cleanup_DB_submit'),
+        '#value' => 'Refresh archived bundles',
+        '#description' => 'Reinventarize bundles in archive',
+        '#submit' => array('flat_deposit_ui_commit_form_refresh_archived_submit'),
     );
+
 
     return $form;
 }
 
-function flat_deposit_ui_commit_form_cleanup_DB_submit ($form, &$form_state)
-{
-    flat_deposit_ui_commit_form($form, $form_state, $cleanup=true);
-}
 
+/**
+ * Performs general checks as accessibility of the user freeze directory by the webserver, and bundle-wise sanity checks
+ * @param $form
+ * @param $form_state
+ * @return mixed
+ */
 function flat_deposit_ui_commit_form_freeze_validate (&$form, &$form_state)
 {
-    $message = FALSE;
 
-    // Check if backend directory exists
+    // Check if freeze directory exists
     if (!file_exists(FREEZE_DIR)) {
         form_set_error ('freeze_error', "No freeze directory exists. Please contact administator");
         return $form;
     }
 
-    // Check if backend is owned by www-data and writable
+    // Check if freeze directory is owned by web-Server and writable
     $owner = posix_getpwuid(fileowner(FREEZE_DIR));
     if ($owner['name'] != WEB_SERVER) {
         form_set_error ('freeze_error', "Freeze directory is not writable by application. Please contact administator");
         return $form;
     }
 
-    // Check if user backend directory exists
+    // Check if user backend directory exists or can be created
     if (!file_exists(USER_FREEZE_DIR)) {
         $created = drupal_mkdir(USER_FREEZE_DIR, NULL, true);
         if (!$created) {
@@ -799,28 +899,50 @@ function flat_deposit_ui_commit_form_freeze_validate (&$form, &$form_state)
         }
     }
 
-    // Check for each checked checkbox
-    foreach ($form_state['values']['freezable_projects'] as $key => $project) {
-        if ($project){
-            // if upload contains at least one cmdi file
-            if (count(glob(drupal_realpath(USER_DRUPAL_DATA_DIR . '/'. $project . '/metadata/*.cmdi')))== 0) {
-                    form_set_error('freeze_error', "No meta data available for upload bundle. Please provide .cmdi file(s)");
-                    return $form;
+    // Sanity checks for each checked checkbox
+    foreach ($form_state['values']['table_open_bundles'] as $key => $checked) {
+        if (!is_int($checked)) {
+
+            // extract bundle name from form data
+            $bundle = $form_state['values']['data_open_bundles'][$key]['bundle'];
+            $frozen_bundle_dir = FREEZE_DIR . '/' . USER . '/' . $bundle;
+
+            // Check if bundle directory on backend already exists
+            if (file_exists($frozen_bundle_dir)) {
+                form_set_error ('freeze_error', 'A bundle with the name ' . $bundle . ' has already been frozen.');
+                return $form;
             }
-            // if project directory on backend already exists
-            $frozen_project_dir = FREEZE_DIR . '/' . USER . '/' . $project ;
-            if (file_exists($frozen_project_dir)) {
-                if (!$message) $message = "";
-                $message .= 'A projects with the name ' . $project . ' has already been frozen.';
+
+            // Check if upload contains at least one cmdi file
+            if (count(glob(drupal_realpath(USER_DRUPAL_DATA_DIR . '/' . $bundle . '/metadata/*.cmdi'))) == 0) {
+                form_set_error('freeze_error', "No meta data available for upload bundle. Please provide a .cmdi file");
+                return $form;
             }
+
+            // Checks on cmdi file
+            $cmdi = glob(drupal_realpath(USER_DRUPAL_DATA_DIR) . '/' . $bundle . '/metadata/*cmdi')[0];
+
+            $finfo = new finfo(FILEINFO_MIME, "/usr/share/misc/magic");
+            $mime = $finfo->file($cmdi);
+
+
+            // Is cmdi a valid xml file?
+            if (!strpos($mime, "/plain")) {
+                form_set_error('freeze_error', "cmdi file is no valid xml file");
+                return $form;}
+
+            if (!simplexml_load_file($cmdi)) {
+                form_set_error('freeze_error', "cmdi file is no valid xml file");
+                return $form;}
+
+            // Check if bundle name match up with bundle name as found in cmdi-file
+            $content = json_decode(json_encode((array)simplexml_load_file($cmdi)), TRUE);
+            if ($content['Components']['lat-session']['Name'] != $bundle){
+                form_set_error('freeze_error', "cmdi file and bundle directory don't match. Please rename bundle");
+                return $form;}
+
         }
     }
-
-    //redirect to form in case error message is created
-    if ($message) {
-        form_set_error ('freeze_error', $message);
-    }
-
     return $form;
 }
 
@@ -828,17 +950,33 @@ function flat_deposit_ui_commit_form_freeze_validate (&$form, &$form_state)
 
 function flat_deposit_ui_commit_form_freeze_submit ($form, &$form_state)
 {
-    foreach ($form_state['values']['freezable_projects'] as $key => $project) {
-        if ($project){
-            $source = drupal_realpath(USER_DRUPAL_DATA_DIR . '/' . $project);
-            $destination = USER_FREEZE_DIR . '/' . $project;
+    foreach ($form_state['values']['table_open_bundles'] as $key => $checked) {
+        if (!is_int($checked)) {
+
+            // extract bundle name from form data
+            $bundle = $form_state['values']['data_open_bundles'][$key]['bundle'];
+            $collection = $form_state['values']['data_open_bundles'][$key]['collection'];
+            $source = drupal_realpath(USER_DRUPAL_DATA_DIR . '/' . $bundle);
+            $destination = USER_FREEZE_DIR . '/' . $bundle;
             $moved = rename($source, $destination);
 
             if ($moved) {
+                // update database entry
+                db_update('flat_deposit_ui_upload_log')
+                    ->fields(array(
+                        'freeze_time' => (int) $_SERVER['REQUEST_TIME'],
+                        'exceptions' => '',
+                        'status' => 'awaiting'))
+                    ->condition('user_id', USER)
+                    ->condition('bundle', $bundle)
+                    ->condition('bundle', $collection)
+                    ->condition('status', 'open')
+                    ->execute();
+
                 //remove symbolic link in owncloud user directory
                 $oc = new OwnCloud();
-                $oc->DeleteLinkAndSync($project);
-                drupal_set_message(t('Project ' . $project . ' is frozen'));
+                $oc->DeleteLinkAndSync($bundle);
+                drupal_set_message(t('Project ' . $bundle . ' is frozen'));
             }
         }
     }
@@ -846,18 +984,42 @@ function flat_deposit_ui_commit_form_freeze_submit ($form, &$form_state)
 
 function flat_deposit_ui_commit_form_delete_submit($form, &$form_state)
 {
-    foreach ($form_state['values']['freezable_projects'] as $key => $project) {
-        if ($project){
-            $source = USER_DRUPAL_DATA_DIR . '/' . $project;
+    foreach ($form_state['values']['table_open_bundles'] as $key => $checked) {
+        if (!is_int($checked)) {
+
+            // extract bundle name from form data
+            $bundle = $form_state['values']['data_open_bundles'][$key]['bundle'];
+            $collection = $form_state['values']['data_open_bundles'][$key]['collection'];
+            $source = USER_DRUPAL_DATA_DIR . '/' . $bundle;
             $del = file_unmanaged_delete_recursive($source);
 
             //#unlink owncloud symlink
             $oc = new OwnCloud();
-            $oc->DeleteLinkAndSync($project);
+            $oc->DeleteLinkAndSync($bundle);
 
-            if ($del){
-                drupal_set_message(t('Project ' . $project . ' has been deleted'));
+            // Remove entry from flat_deposit_ui_upload_log
+
+            $results = db_delete('flat_deposit_ui_upload_log')
+                ->condition('user_id', USER)
+                ->condition('bundle', $bundle)
+                ->condition('collection', $collection)
+                ->condition('status', 'open')
+                ->execute();
+
+
+            if ($del) {
+                $message = t('Bundle ' . $bundle . ' has been deleted.');
+            } else {
+                $message = t('Bundle ' . $bundle . ' has not been deleted.');
             }
+
+            if ($results) {
+                $message .= t(' Database has been updated');
+            } else {
+                $message .= t(' Note: Database has not been updated');
+            }
+            drupal_set_message($message);
+
         }
     }
 }
@@ -878,18 +1040,22 @@ function flat_deposit_ui_commit_form_unfreeze_validate (&$form, &$form_state)
     // Check if backend is owned by www-data and writable
     $owner = posix_getpwuid(fileowner(USER_DRUPAL_DATA_DIR));
     if ($owner['name'] != WEB_SERVER) {
-        form_set_error ('unfreeze_error', "User Drupal data directory is not writable by application. Please contact administator");
+        form_set_error ('unfreeze_error', "User Drupal data directory is not writable by application. Please contact administrator");
         return $form;
     }
 
-    // Check if drupal datam project directory already exists
+    // Check if drupal data bundle directory already exists
     // for each checked box
-    foreach ($form_state['values']['frozen_projects'] as $key => $value) {
-        if ($value){
-            $open_project_dir = USER_DRUPAL_DATA_DIR . '/' . $value ;
-            if (file_exists($open_project_dir)) {
+    foreach ($form_state['values']['table_open_bundles'] as $key => $checked) {
+        if (!is_int($checked)) {
+
+            // extract bundle name from form data
+            $bundle = $form_state['values']['data_open_bundles'][$key]['bundle'];
+
+            $open_bundle_dir = USER_DRUPAL_DATA_DIR . '/' . $bundle ;
+            if (file_exists($open_bundle_dir)) {
                 if (!$message) $message = "";
-                $message .= 'A projects with the name ' . $value . ' has already been frozen.';}
+                $message .= 'A bundle with the name ' . $bundle . ' has already been frozen.';}
         }
     }
 
@@ -904,148 +1070,198 @@ function flat_deposit_ui_commit_form_unfreeze_validate (&$form, &$form_state)
 
 function flat_deposit_ui_commit_form_unfreeze_submit ($form, &$form_state)
 {
-    foreach ($form_state['values']['frozen_projects'] as $key => $project) {
-        if ($project){
-            $source = USER_FREEZE_DIR . '/' . $project;
-            $destination = drupal_realpath(USER_DRUPAL_DATA_DIR . '/' . $project);
+    foreach ($form_state['values']['table_frozen_bundles'] as $key => $checked) {
+        if (!is_int($checked)) {
+
+            // extract bundle name from form data
+            $bundle = $form_state['values']['data_frozen_bundles'][$key]['bundle'];
+            $collection = $form_state['values']['data_frozen_bundles'][$key]['collection'];
+            $source = USER_FREEZE_DIR . '/' . $bundle;
+            $destination = drupal_realpath(USER_DRUPAL_DATA_DIR . '/' . $bundle);
             $moved = rename($source, $destination);
 
 
             if ($moved) {
+                // update database entry
+                db_update('flat_deposit_ui_upload_log')
+                    ->fields(array(
+                        'status' => 'open',
+                        'freeze_time' => 0))
+                    ->condition('user_id', USER)
+                    ->condition('bundle', $bundle)
+                    ->condition('collection', $collection)
+                    ->execute();
+
+
                 //add symbolic link to owncloud user directory
                 $oc = new OwnCloud();
-                $oc->CreateLinkAndSync($destination, $project);
+                $oc->CreateLinkAndSync($destination, $bundle);
 
-                drupal_set_message(t('Project ' . $project . ' is open and can be changed'));
+                drupal_set_message(t('Bundle ' . $bundle . ' is open and can be changed'));
             }
         }
     }
 }
 
 
+/**
+ * Doesn't do anything at the moment. Extend with further validation if needed
+ * @param drupal form $form
+ * @param drupal form state $form_state
+ * @return form
+ */
 
-
-function flat_deposit_ui_commit_form_ingest_validate (&$form, &$form_state)
+function flat_deposit_ui_commit_form_ingest_serve_validate (&$form, &$form_state)
 {
 
-    $message = FALSE;
+    foreach ($form_state['values']['table_frozen_bundles'] as $key => $checked) {
+        if (!is_int($checked)) {
 
-    $user_temp_dir = TEMP_DIR . USER . "_temp";
+            // extract bundle name from form data
+            $bundle = $form_state['values']['data_frozen_bundles'][$key]['bundle'];
+            $collection = $form_state['values']['data_frozen_bundles'][$key]['collection'];
 
-    #Check access TEMP_DIR
-    if (!is_writable( TEMP_DIR)) {$message = 'Temporary directory is not writable';}
+            $result = db_select('flat_deposit_ui_upload_log', 'bundle')
+                ->fields('bundle', array('bundle'))
+                ->condition('user_id', USER)
+                ->condition('bundle', $bundle)
+                ->condition('collection', $collection)
+                ->condition('status', 'awaiting')
+                ->execute()
+                ->rowCount();
+            if (!$result){
+                $message = 'Incorrect status. Bundle is either already in process or needs revision';
+                form_set_error ('ingest_error', t($message));
+            }
 
-    foreach ($form_state['values']['frozen_projects'] as $key => $project) {
-        if ($project) {
-            $dirs = array_filter(glob(BAG_DIR . '/*/'. $project, GLOB_ONLYDIR));
-            if ($dirs) {$message = 'Bag directory with same name (' . $project . ') exist';}
         }
     }
-
-    //redirect to form in case error message is created
-    if ($message) {
-        form_set_error ('ingest_error', $message);
-        watchdog('Fedora ingest', t($message), array(), WATCHDOG_ERROR);}
 
     return $form;
 }
 
 
+/**
+ * Updates upload_log table and triggers a service that ingests specified bundles into the archive
+ *
+ * @param $form
+ * @param $form_state
+ *
+ */
 
-
-function flat_deposit_ui_commit_form_ingest_submit ($form, &$form_state)
+function flat_deposit_ui_commit_form_ingest_serve_submit ($form, &$form_state)
 {
 
-    $user_temp_dir = TEMP_DIR . USER . "_temp";
-    $bag_dir = BAG_DIR;
+    foreach ($form_state['values']['table_frozen_bundles'] as $key => $checked) {
+        if (!is_int($checked)) {
 
-    foreach ($form_state['values']['frozen_projects'] as $key => $project) {
-
-        $message = "";
-        if ($project) {
-
-            #Create temp project dir
-            drupal_mkdir($user_temp_dir . '/' . $project, NULL, TRUE);
-            
-            #move data dir to temp directory
-            $source = USER_FREEZE_DIR . '/' . $project;
-            $destination = $user_temp_dir . '/' . $project;
-            $moved = rename ($source . '/data', $destination . '/data');
-
-            #make bag with data at right location
-            $command = '/usr/local/bin/bagit-4.9.0/bin/bag baginplace ' . $user_temp_dir . '/' . $project;
-            exec($command, $output, $return_var);
-
-            #move metadata dir to temp directory
-            $moved = rename ($source . '/metadata', $destination . '/metadata');
-
-            #make bag with data at right location
-            $command = '/usr/local/bin/bagit-4.9.0/bin/bag update ' . $user_temp_dir . '/' . $project;
-            exec($command, $output, $return_var);
-
-            //Zip all unhidden files and make bag in bag directory
-            $command = "/app/flat/prepare_for_doorkeeper_mini.sh " . USER . " $project " . BAG_DIR . " " . $user_temp_dir;
-            exec($command, $output_prep, $return_var);
-            $nFiles = str_split($output_prep['0'], 18)[1] ;
-
-            $temp = preg_grep("/The_Bag_ID_is:/", $output_prep);
-            if ($temp) {
-                $bag_id = str_replace("The_Bag_ID_is: ", "", array_values($temp)[0]);
-            } else {$bag_id = FALSE;}
+            // extract bundle name from form data
+            $bundle = $form_state['values']['data_frozen_bundles'][$key]['bundle'];
+            $collection = $form_state['values']['data_frozen_bundles'][$key]['collection'];
+            db_update('flat_deposit_ui_upload_log')
+                ->fields(array('status' => 'awaiting'))
+                ->condition('user_id', USER)
+                ->condition('bundle', $bundle)
+                ->condition('collection', $collection)
+                ->execute();
 
 
-            # Ingest validated bag
-            if (file_exists($bag_dir . '/' . $bag_id)){
-                $command = "/app/flat/ingest_one.sh 2>&1 " . USER . " " . $bag_id . " " . BAG_DIR;
-                exec($command, $output_ingest, $return_var);
+            $data_to_post = array();
+            #$data_to_post['module_path'] = httprl_build_url_self(drupal_get_path('module', 'flat_deposit_ui')); //doesn't work at the moment but should be used
+            $data_to_post['module_path'] = '/var/www/html/drupal/sites/all/modules/custom/flat_deposit_ui/';
+            $data_to_post['app_path'] = '/app/flat/';
+            $data_to_post['freeze_dir'] = FREEZE_DIR;
+            $data_to_post['bag_dir'] = BAG_DIR;
+            $data_to_post['web-server'] = WEB_SERVER;
+            $data_to_post['bag_exe'] = '/usr/local/bin/bagit-4.9.0/bin/bag';
+            $data_to_post['fedora_home'] = '/var/www/fedora';
+            $data_to_post['user_id'] = USER;
+            $data_to_post['bundle'] = $bundle;
+            $data_to_post['collection'] = $collection;
+
+            $options = array(
+                'method' => 'POST',
+                'data' => $data_to_post,
+                'blocking' => FALSE,
+                'headers' => array(
+                    // Set the Host header to self.
+                    'Host' => $_SERVER['HTTP_HOST'],),
+            );
+
+            $url = httprl_build_url_self(drupal_get_path('module', 'flat_deposit_ui') . "/Helpers/Ingest_service.php");
+
+            httprl_request($url, $options);
+
+            // Execute request.
+            $request = httprl_send_request();
+
+
+
+/*
+            $url_debug = 'http://192.168.99.100/drupal/' . drupal_get_path('module', 'flat_deposit_ui') . "/Helpers/Ingest_service.php";
+            $ch = curl_init();
+            curl_setopt_array($ch, array(
+
+                CURLOPT_URL => $url_debug,
+                CURLOPT_COOKIE => "XDEBUG_SESSION=PHPSTORM",
+                CURLOPT_POST => sizeof($data_to_post),
+                CURLOPT_POSTFIELDS => $data_to_post));
+
+            $result = curl_exec($ch);
+
+            if($errno = curl_errno($ch)) {
+                $error_message = curl_strerror($errno);
+                echo "cURL error ({$errno}):\n {$error_message}";
             }
 
-            # Finish
-            $temp = preg_grep("/nIngested:/", $output_ingest );
-            if ($temp) {
-                $nIngested = str_split(array_values($temp)[0], 11)[1];
-            } else {$nIngested = FALSE;
-            if ($return_var ==1) $message = $output_ingest[0];}
+            curl_close($ch);
+*/
 
-
-            if ($nIngested == $nFiles && ($nIngested) && ($nFiles)){
-                #Change ownership ingested files
-                $tuque = islandora_get_tuque_connection();
-                $api_a = $tuque->repository->api->a;
-                $api_m = $tuque->repository->api->m;
-                $condition="ownerId=";
-
-                $changeOwner = preg_grep("/ingest succeeded for:/", $output_ingest );
-                foreach ($changeOwner as $f){
-                    $pid = str_replace("ingest succeeded for: ", "", $f);
-                    $pid = str_replace(".xml", "", $pid);
-                    $pid = str_replace("lat_", "lat:", $pid);
-                    $commit = $api_m->modifyObject($pid, array('ownerId' => USER, 'logMessage' => 'Commit changes' . $project ));
-                    #$commit = $api_m->purgeObject($pid, array('ownerId' => $user_name, 'logMessage' => 'Commit changes Purge' . $value ));
-                }
-
-                #$results =  $api_a->findObjects('query',$condition);
-                drupal_set_message('Project ' . $project . ' ingested!');
-
-                #Delete frozen data
-                file_unmanaged_delete_recursive($user_temp_dir . '/' . $project);
-                if (file_exists(BAG_DIR . '/' . $bag_id)){file_unmanaged_delete_recursive(BAG_DIR . '/' . $bag_id);}
-                if (file_exists($user_temp_dir . '/' . $project . '.zip')){file_unmanaged_delete_recursive($user_temp_dir . '/' . $project . '.zip');}
-                if (file_exists($source)){file_unmanaged_delete_recursive($source);}
-
-                #Update drupal database
-                clear_db_user_projects(USER);
-
-            } else {
-                array_map('unlink', glob($user_temp_dir . "/" . $project . "/*.txt"));
-                $moved = rename ($destination, $source);
-                if (file_exists($user_temp_dir . '/' . $project . '.zip')){file_unmanaged_delete_recursive($user_temp_dir . '/' . $project . '.zip');}
-                if (file_exists(BAG_DIR . '/' . $bag_id) && $bag_id){file_unmanaged_delete_recursive(BAG_DIR . '/' . $bag_id);}
-                if (file_exists(BAG_DIR . '/' . $bag_id && $bag_id)){unlink(BAG_DIR . '/' . $bag_id);}
-                drupal_set_message(t('Ingest failed for project ' . $project . ' .' . $message , array()), 'error');
-                watchdog('Fedora ingest', t('Couldn\'t create bag'), array(), WATCHDOG_ERROR);}
 
 
         }
     }
 }
+
+
+/**
+ * Removes user entries with status 'archived' from drupals' flat_deposit_ui_upload_log table and fills it with data from fedora commons
+ * @param $form
+ * @param $form_state
+ */
+function flat_deposit_ui_commit_form_refresh_archived_submit($form, &$form_state)
+{
+    // deletes entries
+    $del = db_delete('flat_deposit_ui_upload_log')
+        ->condition('user_id', USER)
+        ->condition('status', 'archived')
+        ->execute();
+
+    // Fedora commons database actions
+    $tuque = islandora_get_tuque_connection();
+    $api_a = $tuque->repository->api->a;
+    $condition = "ownerId=" . USER;
+    $results = $api_a->findObjects('query',$condition);
+
+    module_load_include('inc', 'flat_deposit_ui' , '/inc/config');
+
+    foreach ($results['results'] as $result) {
+        $pid = $result['pid'];
+        if (preg_match('/_CMD/', $pid)) {
+            //Make entry on database
+            $pid_data = $api_a->getObjectProfile($pid);
+            $config = get_initial_bundle_profile();
+            $config['user_id'] = USER;
+            $config['bundle'] = $pid_data['objLabel'];
+            $config['collection'] = 'Sandbox';
+            $config['status'] = 'archived';
+            $config['date_bundle_ingest'] = strtotime($pid_data['objCreateDate']);
+
+            drupal_write_record('flat_deposit_ui_upload_log', $config);
+
+        }
+    }
+
+
+}
+
