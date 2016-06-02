@@ -34,7 +34,7 @@ public class CLIParameters implements ImportPropertiesInterface {
     static final Map<String,XdmValue> params = new HashMap();
     
     static public void addParameter(String name,String value) {
-        XdmValue val = new XdmAtomicValue(value);
+        XdmValue val = new XdmAtomicValue(value.replaceAll("\\{", "{{").replaceAll("\\}","}}"));
         if (params.containsKey(name))
             params.put(name,params.get(name).append(val));
         else

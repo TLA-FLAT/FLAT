@@ -88,6 +88,10 @@ public class Context {
         return (new XdmAtomicValue(def));
     }
     
+    public void setProperty(String name,XdmValue val) {
+        props.put(name, val);
+    }
+    
     // SIP
     
     public boolean hasSIP() {
@@ -152,7 +156,7 @@ public class Context {
                 XdmValue vals = map.get(name);
                 XdmValue nvals = null;
                 for(XdmItem val:vals) {
-                    String avt = Saxon.avt(val.toString(),val,props);
+                    String avt = Saxon.avt(val.toString(),val,props,false);
                     if (!val.toString().equals(avt))
                         closure = false;
                     if (nvals==null)
@@ -164,6 +168,18 @@ public class Context {
                 this.logger.debug("closure["+c+"] "+type+"["+name+"]["+map.get(name)+"]");
             }
         } while(!closure);
+        for (String name:map.keySet()) {
+            XdmValue vals = map.get(name);
+            XdmValue nvals = null;
+            for(XdmItem val:vals) {
+                String v = val.toString().replaceAll("\\{\\{","{").replaceAll("\\}\\}","}");
+                if (nvals==null)
+                    nvals = new XdmAtomicValue(v);
+                else
+                    nvals.append(new XdmAtomicValue(v));
+            }
+            map.put(name,nvals);
+        }
     }
     
 }

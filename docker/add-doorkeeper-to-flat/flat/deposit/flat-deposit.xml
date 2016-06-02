@@ -4,6 +4,8 @@
         <import class="nl.mpi.tla.flat.deposit.context.Environment" prefix="env-"/>
         <import class="nl.mpi.tla.flat.deposit.context.SystemProperties" prefix="sys-"/>
         <import class="nl.mpi.tla.flat.deposit.context.CLIParameters" prefix="param-"/>
+        <property name="param-base" value="/app/flat/deposit"/>
+        <property name="param-user" value="pukp"/>
         <property name="fitsService" value="http://localhost:8080/fits/" uniq="true"/>
         <property name="work" value="{$param-base}/workdir/{$param-user}" uniq="true"/>
         <property name="bags" value="{$param-base}/bags" uniq="true"/>

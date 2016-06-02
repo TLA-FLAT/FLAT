@@ -36,7 +36,7 @@ public class SystemProperties implements ImportPropertiesInterface {
         String pre = (prefix==null?"":prefix);
         Properties sprops = System.getProperties();
         for (Object name : sprops.keySet()) {
-            props.put(pre+name.toString(),new XdmAtomicValue(sprops.get(name).toString()));
+            props.put(pre+name.toString(),new XdmAtomicValue(sprops.get(name).toString().replaceAll("\\{", "{{").replaceAll("\\}","}}")));
         }
     }
     

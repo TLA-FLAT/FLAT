@@ -35,7 +35,7 @@ public class Environment implements ImportPropertiesInterface {
         String pre = (prefix==null?"":prefix);
         Map<String, String> env = System.getenv();
         for (String name : env.keySet()) {
-            props.put(pre+name,new XdmAtomicValue(env.get(name)));
+            props.put(pre+name,new XdmAtomicValue(env.get(name).replaceAll("\\{", "{{").replaceAll("\\}","}}")));
         }
     }
     
