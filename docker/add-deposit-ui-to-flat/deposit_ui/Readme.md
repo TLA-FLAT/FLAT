@@ -34,7 +34,8 @@ If you want to use owncloud, you need to configure this app. You definitely need
 
 Also, the deposit folder needs to be accessible by the php server (e.g. www-data)
 
-## Notes and knwon issues##
+## Notes and known issues##
+Make sure that the java links to the correct library (check flat/Dockerfile).
 
 The UI expects that FOXML object names start with lat. If this is violated the Ingest service will complain
 
