@@ -27,12 +27,13 @@ vim /var/www/fedora/server/config/fedora.fcfg
 
 
 ## When not using docker ##
-All configurations are specified in the inc/config.inc file. If you don't use docker, you definitely need to adapt this file to your needs. As, most likely, problems might particularly relate to the ingest function, also consult the Helpers/Ingest_service.php and Helpers/Fedora_REST_API.inc 
+All configurations are specified in the inc/config.inc file. If you don't use docker, you definitely need to adapt this file to your needs. As, most likely, problems might particularly relate to the ingest function, also consult the Helpers/Ingest_service.php and Helpers/Fedora_REST_API.inc.
+Make sure that you create a freeze directory which is accessible by your web-server
+
 
 ### Owncloud ###
 If you want to use owncloud, you need to configure this app. You definitely need to change the permission of your owncloud installation. If you also want to be able open the owncloud web gui, you need to add the url of your server to the trusted domanins (see owncloud/addTrusted.php).
 
-Also, the deposit folder needs to be accessible by the php server (e.g. www-data)
 
 ## Notes and known issues##
 Make sure that the java links to the correct library (check flat/Dockerfile).
