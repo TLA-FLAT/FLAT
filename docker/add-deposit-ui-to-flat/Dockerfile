@@ -47,6 +47,8 @@ RUN cd /var/www/html/drupal/ &&\
     /var/www/composer/vendor/drush/drush/drush en imce -y  &&\
     /var/www/composer/vendor/drush/drush/drush dl imce_wysiwyg -y  &&\
     /var/www/composer/vendor/drush/drush/drush en imce_wysiwyg -y   &&\
+    /var/www/composer/vendor/drush/drush/drush dl httprl -y  &&\
+    /var/www/composer/vendor/drush/drush/drush en httprl -y  &&\
     /var/www/composer/vendor/drush/drush/drush en flat_deposit_ui -y
 
 # add module configuration
