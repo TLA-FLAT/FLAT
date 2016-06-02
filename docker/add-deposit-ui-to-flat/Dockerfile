@@ -103,11 +103,9 @@ RUN cd /app/flat &&\
 	apt-get -y install zip unzip
 
 
-#Add folders and scripts for backend ingest
+#Add accessible freeze directory to server
 RUN mkdir -p /app/flat/backend &&\
     chown www-data:www-data /app/flat/backend
-
-COPY shell/*.sh /app/flat/
 
 
 #Add test dataset to repository
