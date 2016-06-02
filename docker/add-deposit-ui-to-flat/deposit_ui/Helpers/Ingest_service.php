@@ -219,7 +219,8 @@ class Ingestor
     public function changeOwnership($Ingests){
 
         // create object that can do ReST requests
-        $rest_fedora = new FedoraRESTAPI();
+        $accessFedora = get_configuration_fedora();
+        $rest_fedora = new FedoraRESTAPI($accessFedora);
 
         // Change ownership of ingested files
         foreach ($Ingests as $f) {
@@ -272,13 +273,13 @@ class Ingestor
 #file_get_contents($file);
 #file_put_contents($file, 'Script 2 has slept enough and awakes at ' . date ('D, d M Y H:i:s') . "\n", FILE_APPEND | LOCK_EX);
 
-
-$conn_string = "host=$host port=$port dbname=$dbname user=$user password=$pw";
+$conf = get_drupal_database_settings();
+$conn_string = "host=" . $conf['host'] . " port=" . $conf['port'] ." dbname=" . $conf['dbname'] . " user=" . $conf['user'] .  " password=" . $conf['pw'] ;
 $db = pg_connect($conn_string) or die('Could not connect: ' . pg_last_error());;
 
 
 // Performing SQL query to pick up all information of one specific bundle
-$query = sprintf('SELECT * FROM flat_deposit_ui_upload_log WHERE user_id = \'%s\' AND bundle = \'%s\' and collection = \'%s\' AND status = \'awaiting\' AND exceptions = \'\'',$user_id, $bundle, $collection);
+$query = sprintf('SELECT * FROM flat_deposit_ui_upload_log WHERE user_id = \'%s\' AND bundle = \'%s\' and collection = \'%s\'',$user_id, $bundle, $collection);
 $results = pg_query($db, $query) or die('Query failed: ' . pg_last_error());
 
 
@@ -327,7 +328,7 @@ pg_free_result($results);
 pg_close($db);
 
 
-#file_put_contents($file, "Done\n", FILE_APPEND | LOCK_EX);
+
 
 
 

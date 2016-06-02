@@ -9,7 +9,7 @@
  */
 function flat_deposit_ui_install(){
 
-    module_load_include('inc', 'flat_deposit_ui', 'inc/flat_deposit_ui_core_settings');
+    module_load_include('inc', 'flat_deposit_ui', 'inc/config');
 
     flat_deposit_set_paths();
     flat_deposit_set_modules();
