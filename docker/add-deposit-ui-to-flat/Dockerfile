@@ -45,6 +45,8 @@ RUN cd /var/www/html/drupal/ &&\
     /var/www/composer/vendor/drush/drush/drush en imce -y  &&\
     /var/www/composer/vendor/drush/drush/drush dl imce_wysiwyg -y  &&\
     /var/www/composer/vendor/drush/drush/drush en imce_wysiwyg -y   &&\
+    /var/www/composer/vendor/drush/drush/drush dl httprl -y  &&\
+    /var/www/composer/vendor/drush/drush/drush en httprl -y  &&\
     /var/www/composer/vendor/drush/drush/drush en flat_deposit_ui -y
 
 # add module configuration
@@ -99,12 +101,9 @@ RUN cd /app/flat &&\
 	apt-get -y install zip unzip
 
 
-#Add folders and scripts for backend ingest
+#Add accessible freeze directory to server
 RUN mkdir -p /app/flat/backend &&\
     chown www-data:www-data /app/flat/backend
-
-#COPY shell/*.sh /app/flat/
-
 
 #Add test dataset to repository
 COPY Testset /app/flat/Testset

@@ -165,25 +165,11 @@ function flat_deposit_ui_admin_form($node, &$form_state)
         '#default_value' => FREEZE_DIR,
         '#required' => TRUE,);
 
-    $form['paths']['temp'] = array (
-        '#type' => 'textfield',
-        '#title' => 'Temporary',
-        '#description' => t('Absolute path of the location where the user data will temporarily be stored for ingestion'),
-        '#default_value' => TEMP_DIR,
-        '#required' => TRUE,);
-
     $form['paths']['bags'] = array (
         '#type' => 'textfield',
         '#title' => 'Bags',
         '#description' => t('Absolute path of the location where Fedora can needs to search for complete SIP\'s that will be ingested'),
         '#default_value' => BAG_DIR,
-        '#required' => TRUE,);
-
-    $form['paths']['webserver'] = array (
-        '#type' => 'textfield',
-        '#title' => 'Webserver',
-        '#description' => t('Name of the webserver (e.g. www-data)'),
-        '#default_value' => WEB_SERVER,
         '#required' => TRUE,);
 
     $form['modules'] = array(
@@ -212,9 +198,7 @@ function flat_deposit_ui_admin_form_submit ($form, &$form_state)
 {
     variable_set('flat_deposit_paths', array(
         'freeze' => $form_state['values']['freeze'],
-        'temp' => $form_state['values']['temp'],
-        'bag'=> $form_state['values']['bags'],
-        'webserver'=> $form_state['values']['webserver']));
+        'bag'=> $form_state['values']['bags']));
 
     variable_set('flat_deposit_modules', array(
         'owncloud' =>$form_state['values']['owncloud']));
@@ -223,7 +207,7 @@ function flat_deposit_ui_admin_form_submit ($form, &$form_state)
 }
 
 function flat_deposit_ui_admin_form_reset_submit ($form, &$form_state){
-    module_load_include('inc', 'flat_deposit_ui', 'inc/flat_deposit_ui_core_settings');
+    module_load_include('inc', 'flat_deposit_ui', 'inc/config');
     flat_deposit_set_paths();
     flat_deposit_set_modules();
     flat_deposit_set_owncloud();
@@ -255,7 +239,7 @@ function flat_deposit_ui_owncloud_form($node, &$form_state)
         '#required' => TRUE,);
 
     $form['settings']['admin_pass'] = array (
-        '#type' => 'textfield',
+        '#type' => 'password',
         '#title' => 'Owncloud admin password',
         '#description' => t('The owncloud admin user password'),
         '#default_value' => variable_get('owncloud_settings',array())['admin_pass'],
@@ -292,7 +276,7 @@ function flat_deposit_ui_owncloud_form_submit ($form, &$form_state)
 }
 
 function flat_deposit_ui_owncloud_form_reset_submit ($form, &$form_state){
-    module_load_include('inc', 'flat_deposit_ui', 'inc/flat_deposit_ui_core_settings');
+    module_load_include('inc', 'flat_deposit_ui', 'inc/config');
     flat_deposit_set_owncloud();
     drupal_set_message(t('Owncloud settings have been reset to default'));
 }
@@ -703,7 +687,7 @@ function flat_deposit_ui_commit_form($form, $form_state)
 {
     $results = db_select('flat_deposit_ui_upload_log','p')
         ->fields('p',array('user_id', 'bundle', 'collection', 'status', 'exceptions', 'date_bundle_ingest'))
-        ->condition('user_id', 'admin')
+        ->condition('user_id', USER)
         ->orderBy('collection')
         ->orderBy('bundle')
         ->execute();
@@ -715,15 +699,15 @@ function flat_deposit_ui_commit_form($form, $form_state)
 
     // make array of open / frozen bundles in order to use these in a form
     foreach ($results as $entry) {
-        $array_entry = json_decode(json_encode($entry), true);
-        if ($array_entry['status'] == 'open' && file_exists(USER_DRUPAL_DATA_DIR . '/' . $array_entry['bundle'])) {
-            $open_bundles [] = $array_entry;
-        } elseif ($array_entry['status'] == 'archived' ) {
-            $archived_bundles [] = $array_entry;
-        } elseif (file_exists(USER_FREEZE_DIR . '/' . $array_entry['bundle'])) {
-            $frozen_bundles [] = $array_entry;
+        $entry_as_array = json_decode(json_encode($entry), true);
+        if ($entry_as_array['status'] == 'open' && file_exists(USER_DRUPAL_DATA_DIR . '/' . $entry_as_array['bundle'])) {
+            $open_bundles [] = $entry_as_array;
+        } elseif ($entry_as_array['status'] == 'archived' ) {
+            $archived_bundles [] = $entry_as_array;
+        } elseif (file_exists(USER_FREEZE_DIR . '/' . $entry_as_array['bundle'])) {
+            $frozen_bundles [] = $entry_as_array;
         } else {
-            $other_bundles [] = $array_entry;
+            $other_bundles [] = $entry_as_array;
         }
     }
 
@@ -742,10 +726,10 @@ function flat_deposit_ui_commit_form($form, $form_state)
         'status' => t('Status'),
         'exceptions' => t('Exception'),
     );
-    $options = array();
 
+    $open = array();
     foreach ($open_bundles as $key => $bundle) {
-        $options[$key] = array(
+        $open[$key] = array(
             'collection' => $bundle['collection'],
             'bundle' => $bundle['bundle'],
             'status' => $bundle['status'],
@@ -756,7 +740,7 @@ function flat_deposit_ui_commit_form($form, $form_state)
     $form['open_bundles']['table_open_bundles'] = array (
         '#type' => 'tableselect',
         '#header' => $header,
-        '#options' => $options,
+        '#options' => $open,
     );
 
     $form['open_bundles']['actions']['freeze'] = array(
@@ -775,7 +759,7 @@ function flat_deposit_ui_commit_form($form, $form_state)
         '#type' => 'value',
         '#value' => $open_bundles);
 
-    // frozen bundles#
+    // frozen bundles field
     $form['frozen_bundles'] = array(
         '#type' => 'fieldset',
         '#title' => t('Bundles ready to be archived'),);
@@ -786,10 +770,10 @@ function flat_deposit_ui_commit_form($form, $form_state)
         'status' => t('Status'),
         'exceptions' => t('Exception'),
     );
-    $options = array();
 
+    $frozen = array();
     foreach ($frozen_bundles as $key => $bundle) {
-        $options[$key] = array(
+        $frozen[$key] = array(
             'collection' => $bundle['collection'],
             'bundle' => $bundle['bundle'],
             'status' => $bundle['status'],
@@ -800,7 +784,7 @@ function flat_deposit_ui_commit_form($form, $form_state)
     $form['frozen_bundles']['table_frozen_bundles'] = array (
         '#type' => 'tableselect',
         '#header' => $header,
-        '#options' => $options,
+        '#options' => $frozen,
     );
 
     // Allow actions for frozen data: ingest or open up for changes
@@ -816,11 +800,20 @@ function flat_deposit_ui_commit_form($form, $form_state)
         '#submit' => array('flat_deposit_ui_commit_form_ingest_serve_submit'),
         '#validate' => array('flat_deposit_ui_commit_form_ingest_serve_validate'),);
 
+    // if at least one entry contains the status 'failed' an admin may enter a debug mode
+    $failed = array_search('failed', array_column($frozen_bundles,'status'));
+    if (is_int($failed) && user_access('admin deposit module')){
+        $form['frozen_bundles']['actions']['ingest_debug'] = array(
+            '#type' => 'submit',
+            '#value' => t('Upload project (debug)'),
+            '#submit' => array('flat_deposit_ui_commit_form_ingest_serve_submit'));
+        }
+
     $form['frozen_bundles']['data_frozen_bundles'] = array(
         '#type' => 'value',
         '#value' => $frozen_bundles);
 
-    # Ingested #
+    # Archived bundles field
     $form['archived_bundles'] = array(
         '#type' => 'fieldset',
         '#title' => t('Bundles on database'),
@@ -833,8 +826,9 @@ function flat_deposit_ui_commit_form($form, $form_state)
         'date' => t('Bundle archived on'),
     );
 
+    $archived = array();
     foreach ($archived_bundles as $key => $bundle) {
-        $options[$key] = array(
+        $archived[$key] = array(
             'collection' => $bundle['collection'],
             'bundle' => $bundle['bundle'],
             'status' => $bundle['status'],
@@ -845,9 +839,8 @@ function flat_deposit_ui_commit_form($form, $form_state)
     $form['archived_bundles']['table_archived_bundles'] = array (
         '#type' => 'tableselect',
         '#header' => $header,
-        '#options' => $options,
+        '#options' => $archived,
     );
-
 
 
     # other #
@@ -969,7 +962,7 @@ function flat_deposit_ui_commit_form_freeze_submit ($form, &$form_state)
                         'status' => 'awaiting'))
                     ->condition('user_id', USER)
                     ->condition('bundle', $bundle)
-                    ->condition('bundle', $collection)
+                    ->condition('collection', $collection)
                     ->condition('status', 'open')
                     ->execute();
 
@@ -1029,8 +1022,6 @@ function flat_deposit_ui_commit_form_delete_submit($form, &$form_state)
 function flat_deposit_ui_commit_form_unfreeze_validate (&$form, &$form_state)
 {
 
-    $message = FALSE;
-
     // Check if user drupal data directory exists
     if (!file_exists(USER_DRUPAL_DATA_DIR)) {
         form_set_error ('unfreeze_error', "User Drupal data directory does not exist. Please contact administator");
@@ -1046,22 +1037,37 @@ function flat_deposit_ui_commit_form_unfreeze_validate (&$form, &$form_state)
 
     // Check if drupal data bundle directory already exists
     // for each checked box
-    foreach ($form_state['values']['table_open_bundles'] as $key => $checked) {
+    foreach ($form_state['values']['table_frozen_bundles'] as $key => $checked) {
         if (!is_int($checked)) {
 
             // extract bundle name from form data
-            $bundle = $form_state['values']['data_open_bundles'][$key]['bundle'];
+            $bundle = $form_state['values']['data_frozen_bundles'][$key]['bundle'];
+            $collection = $form_state['values']['data_frozen_bundles'][$key]['collection'];
 
             $open_bundle_dir = USER_DRUPAL_DATA_DIR . '/' . $bundle ;
-            if (file_exists($open_bundle_dir)) {
-                if (!$message) $message = "";
-                $message .= 'A bundle with the name ' . $bundle . ' has already been frozen.';}
-        }
-    }
 
-    //redirect to form in case error message is created
-    if ($message) {
-        form_set_error ('unfreeze_error', $message);
+            // check if new open directory has been created in the mean time
+            if (file_exists($open_bundle_dir)) {
+                form_set_error ('unfreeze_error', 'A bundle with the name ' . $bundle . ' has already been frozen.');
+                return $form;
+            }
+
+            $db_or = db_or();
+            $db_or->condition('bundle.status', 'being processed' , '=');
+            $db_or->condition('bundle.status', 'archived' , '=');
+
+            $result = db_select('flat_deposit_ui_upload_log', 'bundle')
+                ->fields('bundle', array('bundle'))
+                ->condition('user_id', USER)
+                ->condition('bundle', $bundle)
+                ->condition('collection', $collection)
+                ->condition($db_or)
+                ->execute()
+                ->rowCount();
+            if ($result){
+                form_set_error ('ingest_error', t('Bundle is already in process and cannot be unfrozen'));
+            }
+        }
     }
 
     return $form;
@@ -1105,7 +1111,8 @@ function flat_deposit_ui_commit_form_unfreeze_submit ($form, &$form_state)
 
 
 /**
- * Doesn't do anything at the moment. Extend with further validation if needed
+ * Checks if bundle is already processed or erroneous
+ *
  * @param drupal form $form
  * @param drupal form state $form_state
  * @return form
@@ -1142,7 +1149,7 @@ function flat_deposit_ui_commit_form_ingest_serve_validate (&$form, &$form_state
 
 
 /**
- * Updates upload_log table and triggers a service that ingests specified bundles into the archive
+ * Triggers a service that ingests specified bundles into the archive
  *
  * @param $form
  * @param $form_state
@@ -1158,27 +1165,20 @@ function flat_deposit_ui_commit_form_ingest_serve_submit ($form, &$form_state)
             // extract bundle name from form data
             $bundle = $form_state['values']['data_frozen_bundles'][$key]['bundle'];
             $collection = $form_state['values']['data_frozen_bundles'][$key]['collection'];
-            db_update('flat_deposit_ui_upload_log')
-                ->fields(array('status' => 'awaiting'))
-                ->condition('user_id', USER)
-                ->condition('bundle', $bundle)
-                ->condition('collection', $collection)
-                ->execute();
 
-
-            $data_to_post = array();
-            #$data_to_post['module_path'] = httprl_build_url_self(drupal_get_path('module', 'flat_deposit_ui')); //doesn't work at the moment but should be used
-            $data_to_post['module_path'] = '/var/www/html/drupal/sites/all/modules/custom/flat_deposit_ui/';
-            $data_to_post['app_path'] = '/app/flat/';
+            // create array containing data needed by the ingest service
+            module_load_include('inc','flat_deposit_ui','inc/config');
+            $data_to_post = ingest_service_configuration();
             $data_to_post['freeze_dir'] = FREEZE_DIR;
             $data_to_post['bag_dir'] = BAG_DIR;
             $data_to_post['web-server'] = WEB_SERVER;
-            $data_to_post['bag_exe'] = '/usr/local/bin/bagit-4.9.0/bin/bag';
-            $data_to_post['fedora_home'] = '/var/www/fedora';
             $data_to_post['user_id'] = USER;
+            $data_to_post['module_path'] = drupal_realpath(drupal_get_path('module','flat_deposit_ui'));
+            #$data_to_post['module_path'] = httprl_build_url_self(drupal_get_path('module', 'flat_deposit_ui')); //doesn't work at the moment but should be used
             $data_to_post['bundle'] = $bundle;
             $data_to_post['collection'] = $collection;
 
+            // background service http request settings
             $options = array(
                 'method' => 'POST',
                 'data' => $data_to_post,
@@ -1190,35 +1190,36 @@ function flat_deposit_ui_commit_form_ingest_serve_submit ($form, &$form_state)
 
             $url = httprl_build_url_self(drupal_get_path('module', 'flat_deposit_ui') . "/Helpers/Ingest_service.php");
 
-            httprl_request($url, $options);
 
-            // Execute request.
-            $request = httprl_send_request();
+            // normal mode
+            if ($form_state['values']['op'] == "Upload project to database") {
+                httprl_request($url, $options);
 
-
-
-/*
-            $url_debug = 'http://192.168.99.100/drupal/' . drupal_get_path('module', 'flat_deposit_ui') . "/Helpers/Ingest_service.php";
-            $ch = curl_init();
-            curl_setopt_array($ch, array(
-
-                CURLOPT_URL => $url_debug,
-                CURLOPT_COOKIE => "XDEBUG_SESSION=PHPSTORM",
-                CURLOPT_POST => sizeof($data_to_post),
-                CURLOPT_POSTFIELDS => $data_to_post));
-
-            $result = curl_exec($ch);
-
-            if($errno = curl_errno($ch)) {
-                $error_message = curl_strerror($errno);
-                echo "cURL error ({$errno}):\n {$error_message}";
+                // Execute request.
+                httprl_send_request();
             }
 
-            curl_close($ch);
-*/
+            // Debug mode
+            if ($form_state['values']['op'] == "Upload project (debug)") {
 
 
+                $url_debug = 'http://' . $_SERVER['SERVER_NAME'] . '/drupal/' . drupal_get_path('module', 'flat_deposit_ui') . "/Helpers/Ingest_service.php";
+                $ch = curl_init();
+                curl_setopt_array($ch, array(
 
+                    CURLOPT_URL => $url_debug,
+                    CURLOPT_COOKIE => "XDEBUG_SESSION=PHPSTORM",
+                    CURLOPT_POST => sizeof($data_to_post),
+                    CURLOPT_POSTFIELDS => $data_to_post));
+
+                $result = curl_exec($ch);
+
+                if($errno = curl_errno($ch)) {
+                    $error_message = curl_strerror($errno);
+                    echo "cURL error ({$errno}):\n {$error_message}";
+                }
+                curl_close($ch);
+            }
         }
     }
 }
@@ -1253,6 +1254,7 @@ function flat_deposit_ui_commit_form_refresh_archived_submit($form, &$form_state
             $config = get_initial_bundle_profile();
             $config['user_id'] = USER;
             $config['bundle'] = $pid_data['objLabel'];
+            $config['pid_bundle'] = $pid;
             $config['collection'] = 'Sandbox';
             $config['status'] = 'archived';
             $config['date_bundle_ingest'] = strtotime($pid_data['objCreateDate']);
