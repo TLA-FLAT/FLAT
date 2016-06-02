@@ -1,7 +1,7 @@
 <?php
 
 
-function clear_db_user_projects($user){
+function clear_db_user_bundles($user){
     $results = db_delete('flat_deposit_ui_project_info')
         ->condition('user_id', $user)
         ->execute();
@@ -71,3 +71,5 @@ function update_db_user_projects($user, $project, $is_frozen)
         ->condition('pname', $project)
         ->execute();
 }
+
+

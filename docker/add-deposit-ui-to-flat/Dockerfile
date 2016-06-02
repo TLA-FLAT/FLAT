@@ -103,7 +103,7 @@ RUN cd /app/flat &&\
 RUN mkdir -p /app/flat/backend &&\
     chown www-data:www-data /app/flat/backend
 
-COPY shell/*.sh /app/flat/
+#COPY shell/*.sh /app/flat/
 
 
 #Add test dataset to repository
