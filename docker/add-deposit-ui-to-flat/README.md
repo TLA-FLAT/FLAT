@@ -29,7 +29,7 @@ docker build --rm=true -t flat-base flat/
 ## Building the flat_deposit_ui image (minimal) (i.e. without gsearch,SOLR and solution packs) ##
 ```sh
 docker build --rm=true -t flat add-sword-to-flat/
-docker build --rm=true -t flat add-flat-ui/
+docker build --rm=true -t flat add-deposit-ui-to-flat/
 ```
 
 ## Building the image (full) ##
@@ -60,7 +60,7 @@ docker build --rm=true -t flat-with-sps add-solution-packs-to-flat/
 docker build --rm=true -t flat-with-sps add-sword-to-flat/
 
 #new image for deposit UI
-docker build --rm=true -t flat_dvr add-flat-ui/
+docker build --rm=true -t flat add-deposit-ui-to-flat/
 
 #cleanup
 docker rm flat-base-con
