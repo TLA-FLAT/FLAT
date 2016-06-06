@@ -62,10 +62,10 @@ RUN /etc/init.d/postgresql start &&\
 	/etc/init.d/postgresql stop
 
 # add owncloud to version
-RUN wget -nv https://download.owncloud.org/download/repositories/8.2/xUbuntu_14.04/Release.key -O Release.key &&\
+RUN wget -nv https://download.owncloud.org/download/repositories/8.2/Ubuntu_14.04/Release.key -O Release.key &&\
 	apt-key add - < Release.key
 
-RUN sh -c "echo 'deb http://download.owncloud.org/download/repositories/8.2/xUbuntu_14.04/ /' >> /etc/apt/sources.list.d/owncloud.list" &&\
+RUN sh -c "echo 'deb http://download.owncloud.org/download/repositories/8.2/Ubuntu_14.04/ /' >> /etc/apt/sources.list.d/owncloud.list" &&\
 	apt-get update &&\
 	apt-get install -y owncloud
 
@@ -78,10 +78,10 @@ RUN /etc/init.d/postgresql start &&\
     	sudo -u www-data php occ maintenance:install --database "pgsql" --database-name "owncloud" --database-user "fedora" --database-pass "fedora" --admin-user "admin" --admin-pass "admin"
 
 COPY owncloud/addTrusted.php /tmp/addTrusted.php
+
 RUN mv /var/www/owncloud/config/config.php /var/www/owncloud/config/config.backup &&\
     printf "<?php\n\$CONFIG = $(php /tmp/addTrusted.php) ;" >/var/www/owncloud/config/config.php &&\
     chown www-data:www-data /var/www/owncloud/config/config.php
-
 
 COPY owncloud/changeRights.sh /tmp/changeRights.sh
 RUN /tmp/changeRights.sh
