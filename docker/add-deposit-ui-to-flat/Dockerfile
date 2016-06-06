@@ -62,10 +62,10 @@ RUN /etc/init.d/postgresql start &&\
 	/etc/init.d/postgresql stop
 
 # add owncloud to version
-RUN wget -nv https://download.owncloud.org/download/repositories/stable/xUbuntu_14.04/Release.key -O Release.key &&\
+RUN wget -nv https://download.owncloud.org/download/repositories/8.2/xUbuntu_14.04/Release.key -O Release.key &&\
 	apt-key add - < Release.key
 
-RUN sh -c "echo 'deb http://download.owncloud.org/download/repositories/9.0/xUbuntu_14.04/ /' >> /etc/apt/sources.list.d/owncloud.list" &&\
+RUN sh -c "echo 'deb http://download.owncloud.org/download/repositories/8.2/xUbuntu_14.04/ /' >> /etc/apt/sources.list.d/owncloud.list" &&\
 	apt-get update &&\
 	apt-get install -y owncloud
 
