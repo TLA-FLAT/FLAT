@@ -28,7 +28,7 @@ docker build --rm=true -t flat-base flat/
 
 ## Building the flat_deposit_ui image (minimal) (i.e. without gsearch,SOLR and solution packs) ##
 ```sh
-docker build --rm=true -t flat add-sword-to-flat/
+docker build --rm=true -t flat-with-sword add-sword-to-flat/
 docker build --rm=true -t flat add-deposit-ui-to-flat/
 ```
 
@@ -55,9 +55,9 @@ docker build --rm=true -t flat add-gsearch-to-flat/
 docker build --rm=true -t flat add-islandora-solr-to-flat/
 docker build --rm=true -t flat add-imdi-gsearch-to-flat/
 
-# add solution packs and sword (for safety make new image)
-docker build --rm=true -t flat-with-sps add-solution-packs-to-flat/
-docker build --rm=true -t flat-with-sps add-sword-to-flat/
+# add solution packs and sword (in order to allow running updated dockerfiles without redoing the whole procedure make new image)
+docker build --rm=true -t flat add-solution-packs-to-flat/
+docker build --rm=true -t flat-with-sword add-sword-to-flat/
 
 #new image for deposit UI
 docker build --rm=true -t flat add-deposit-ui-to-flat/

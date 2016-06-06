@@ -1,4 +1,4 @@
-FROM        flat-with-sps
+FROM        flat-with-sword
 MAINTAINER	Daniel von Rhein <daniel.vonrhein@mpi.nl>
 
 #Build xdebug library
