@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Environment implements ImportPropertiesInterface {
     
-    private static final Logger logger = (Logger) LoggerFactory.getLogger(CLIParameters.class.getName());
+    private static final Logger logger = (Logger) LoggerFactory.getLogger(Environment.class.getName());
     
     @Override
     public void importProperties(String prefix,Map<String, XdmValue> props) {

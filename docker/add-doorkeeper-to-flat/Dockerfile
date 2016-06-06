@@ -47,11 +47,11 @@ RUN cd /tmp/ServiceFLAT &&\
     cd /var/www/fedora/tomcat/webapps/flat &&\
     unzip ../flat.war
     
-RUN mkdir -p /app/flat/deposit/bags
+RUN mkdir -p /app/flat/deposit/easy
 ADD flat/deposit/flat-deposit.xml /app/flat/deposit/flat-deposit.xml
 ADD flat/deposit/policies /app/flat/deposit/policies
 ADD flat/deposit/dummies /app/flat/deposit/dummies
-ADD flat/deposit/workdir /app/flat/deposit/workdir
+ADD flat/deposit/bags /app/flat/deposit/bags
 RUN mkdir -p /app/flat/deposit/transforms &&\
     cd /app/flat/deposit/transforms &&\
     jar xf /app/flat/lib/lat2fox.jar cmd2fox.xsl

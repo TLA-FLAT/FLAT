@@ -34,7 +34,8 @@ public class Global {
     static {
         NAMESPACES.put("cmd", CMD_NS);
         NAMESPACES.put("lat", LAT_NS);
-        NAMESPACES.put("fits", "http://hul.harvard.edu/ois/xml/ns/fits/fits_output");        
+        NAMESPACES.put("fits", "http://hul.harvard.edu/ois/xml/ns/fits/fits_output");
+        NAMESPACES.put("flat", "java:nl.mpi.tla.flat");
     };
     
     static public String asOfDateTime(Date date) {

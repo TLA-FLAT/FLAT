@@ -24,6 +24,7 @@ import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmValue;
 import nl.mpi.tla.flat.deposit.context.ImportPropertiesInterface;
+import nl.mpi.tla.flat.deposit.util.Global;
 import nl.mpi.tla.flat.deposit.util.Saxon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,8 @@ public class Context {
     
     protected SIP sip = null;
         
-    public Context(XdmNode spec)  throws DepositException {
+    public Context(XdmNode spec,Map<String,XdmValue> params)  throws DepositException {
+        props.putAll(params);
         loadProperties(spec);
     }
     
@@ -127,7 +129,7 @@ public class Context {
                 }
             }
             if (Saxon.hasAttribute(param,"value")) {
-                String avt = Saxon.avt(Saxon.xpath2string(param,"@value"),param,props);
+                String avt = Saxon.avt(Saxon.xpath2string(param,"@value"),param,props,Global.NAMESPACES);
                 XdmValue val = new XdmAtomicValue(avt);
                 if (map.containsKey(name))
                     map.put(name,map.get(name).append(val));
@@ -135,7 +137,7 @@ public class Context {
                     map.put(name,val);
             } else if (Saxon.hasAttribute(param,"xpath")) {
                 try {
-                    XdmValue val = Saxon.xpath(param,Saxon.xpath2string(param,"@xpath"),props);
+                    XdmValue val = Saxon.xpath(param,Saxon.xpath2string(param,"@xpath"),props,Global.NAMESPACES);
                     if (map.containsKey(name))
                         map.put(name,map.get(name).append(val));
                     else
@@ -156,7 +158,7 @@ public class Context {
                 XdmValue vals = map.get(name);
                 XdmValue nvals = null;
                 for(XdmItem val:vals) {
-                    String avt = Saxon.avt(val.toString(),val,props,false);
+                    String avt = Saxon.avt(val.toString(),val,props,Global.NAMESPACES,false);
                     if (!val.toString().equals(avt))
                         closure = false;
                     if (nvals==null)

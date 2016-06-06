@@ -17,10 +17,13 @@
 package nl.mpi.tla.flat.deposit;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import nl.mpi.tla.flat.deposit.context.CLIParameters;
+import net.sf.saxon.s9api.XdmAtomicValue;
+import net.sf.saxon.s9api.XdmValue;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -33,8 +36,20 @@ public class DoorKeeper {
     private static void showHelp() {
         System.err.println("INF: doorkeeper <workflow FILE> (<param>=<value>)*");
     }
+    
+    static public void addParameter(Map<String,XdmValue> params,String name,String value) {
+        XdmValue val = new XdmAtomicValue(value.replaceAll("\\{", "{{").replaceAll("\\}","}}"));
+        if (params.containsKey(name))
+            params.put(name,params.get(name).append(val));
+        else
+            params.put(name,val);
+        logger.debug("parameter["+name+"]["+params.get(name)+"]");
+    }
 
     public static void main(String[] args) {
+
+        Map<String,XdmValue> params = new HashMap();
+    
         OptionParser parser = new OptionParser();
         OptionSet options = parser.parse(args);
 
@@ -60,7 +75,7 @@ public class DoorKeeper {
         for (int i=1;i<arg.size();i++) {
             String pv = (String)arg.get(i);
             if (pv.contains("=")) {
-                CLIParameters.addParameter(pv.split("=")[0], pv.split("=")[1]);
+                addParameter(params,pv.split("=")[0], pv.split("=")[1]);
             } else {
                 logger.error("workflow["+pv+"] isn't a valid <param>=<value>!");
                 showHelp();
@@ -69,7 +84,7 @@ public class DoorKeeper {
         }
         
         try {
-            Flow flw = new Flow(wf);
+            Flow flw = new Flow(wf,params);
             flw.run();
         } catch (Exception ex) {
             logger.error("FATAL:",ex);

@@ -2,6 +2,13 @@ package nl.mpi.tla.flat.deposit.util;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Optional;
+import java.util.function.BiPredicate;
+import java.util.stream.Stream;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.value.SequenceType;
 import net.sf.saxon.value.StringValue;
@@ -22,6 +29,7 @@ import net.sf.saxon.s9api.XdmAtomicValue;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.tree.NamespaceNode;
 import net.sf.saxon.tree.iter.AxisIterator;
+import net.sf.saxon.value.EmptySequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +52,7 @@ public final class SaxonExtensionFunctions {
         config.registerExtensionFunction(new FileExistsDefinition());
         config.registerExtensionFunction(new CheckURLDefinition());
         config.registerExtensionFunction(new EvaluateDefinition());
+        config.registerExtensionFunction(new FindBagBaseDefinition());
     }
 
     // -----------------------------------------------------------------------
@@ -208,6 +217,78 @@ public final class SaxonExtensionFunctions {
                         seq = xps.evaluate().getUnderlyingValue();
                     } catch(SaxonApiException e) {
                         logger.error("sx:evaluate failed!",e);
+                    }
+                    return seq;
+                }
+            };
+        }
+    }
+    
+    // -----------------------------------------------------------------------
+    // flt:findBagBase
+    // -----------------------------------------------------------------------
+
+    public static final class FindBagBaseDefinition
+                        extends ExtensionFunctionDefinition {
+        public StructuredQName getFunctionQName() {
+            return new StructuredQName("flat",
+                                       "java:nl.mpi.tla.flat",
+                                       "findBagBase");
+        }
+
+        public int getMinimumNumberOfArguments() {
+            return 1;
+        }
+
+        public int getMaximumNumberOfArguments() {
+            return 1;
+        }
+
+        public SequenceType[] getArgumentTypes() {
+            return new SequenceType[] { SequenceType.SINGLE_STRING };
+        }
+
+        public SequenceType getResultType(SequenceType[] suppliedArgTypes) {
+            return SequenceType.OPTIONAL_STRING;
+        }
+        
+        public boolean dependsOnFocus() {
+           return false;
+        }
+        
+        protected Optional<Path> findBagBase(Path bag) {
+            try (Stream<Path> stream = Files.find(bag,Integer.MAX_VALUE, new BiPredicate<Path, BasicFileAttributes>() {
+                @Override
+                public boolean test(Path path, BasicFileAttributes attr) {
+                    return path.toString().endsWith(System.getProperty("file.separator")+"metadata"+System.getProperty("file.separator")+"record.cmdi");
+                }
+            })) {
+                return stream.findFirst();
+            } catch (Exception e) {
+                logger.error("flat:findBagBase failed!",e);
+            }
+            return null;
+        }
+
+        public ExtensionFunctionCall makeCallExpression() {
+            return new ExtensionFunctionCall() {
+                @Override
+                public Sequence call(XPathContext context, Sequence[] arguments) throws XPathException {
+                    Sequence seq = EmptySequence.getInstance();
+                    try {
+                        String dir = arguments[0].head().getStringValue();
+                        Path p = Paths.get(dir);
+                        if (Files.isDirectory(p)) {
+                            // look for: bag/???/metadata/record.cmdi
+                            Optional<Path> r = findBagBase(p);
+                            if (r!= null && r.isPresent()) {
+                                p = r.get();
+                                p = p.getParent().getParent();
+                                seq = new XdmAtomicValue(p.toString()).getUnderlyingValue();
+                            }
+                        }
+                    } catch(Exception e) {
+                        logger.error("flat:findBagBase failed!",e);
                     }
                     return seq;
                 }

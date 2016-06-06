@@ -306,10 +306,18 @@ public class Saxon {
     static protected Pattern AVTPattern = Pattern.compile("\\{+.*?\\}+");
 
     static public String avt(String avt,XdmItem ctxt,Map<String,XdmValue> vars) throws SaxonApiException {
-        return avt(avt,ctxt,vars,true);
+        return avt(avt,ctxt,vars,null,true);
     }
 
+    static public String avt(String avt,XdmItem ctxt,Map<String,XdmValue> vars,Map<String,String> nss) throws SaxonApiException {
+        return avt(avt,ctxt,vars,nss,true);
+    }
+    
     static public String avt(String avt,XdmItem ctxt,Map<String,XdmValue> vars,boolean unescape) throws SaxonApiException {
+        return avt(avt,ctxt,vars,null,unescape);
+    }
+
+    static public String avt(String avt,XdmItem ctxt,Map<String,XdmValue> vars,Map<String,String> nss,boolean unescape) throws SaxonApiException {
         String res = "";
         Matcher AVTMatcher = AVTPattern.matcher(avt);
         int start = 0;
@@ -324,7 +332,7 @@ public class Saxon {
                     res += grp;
             } else {
                 try {
-                    res += Saxon.xpath2string(ctxt,grp.substring(1,grp.length()-1),vars);
+                    res += Saxon.xpath2string(ctxt,grp.substring(1,grp.length()-1),vars,nss);
                 } catch(SaxonApiException e) {
                     logger.error("avt["+avt+"] failed: "+e);
                     throw e;

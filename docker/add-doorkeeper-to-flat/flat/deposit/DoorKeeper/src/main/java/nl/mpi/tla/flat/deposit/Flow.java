@@ -18,21 +18,18 @@ package nl.mpi.tla.flat.deposit;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.DirectoryIteratorException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -69,21 +66,32 @@ public class Flow {
     protected List<ActionInterface> finalActions = noActions;
 
     public Flow(File spec) throws DepositException {
-        this(new StreamSource(spec),spec);
+        this(spec,new HashMap<String,XdmValue>());
+    }
+    
+    public Flow(File spec,Map<String,XdmValue> params) throws DepositException {
+        this(new StreamSource(spec),spec,params);
     }
     
     public Flow(Source spec) throws DepositException {
-        this(spec,null);
+        this(spec,new HashMap<String,XdmValue>());
+    }
+    public Flow(Source spec,Map<String,XdmValue> params) throws DepositException {
+        this(spec,null,params);
     }
 
     public Flow(Source spec,File base) throws DepositException {
+        this(spec,base,new HashMap<String,XdmValue>());
+    }
+
+    public Flow(Source spec,File base,Map<String,XdmValue> params) throws DepositException {
         this.base = base;
         try {
             this.spec = Saxon.buildDocument(spec);
         } catch(SaxonApiException e) {
             throw new DepositException(e);
         }
-        this.context = new Context(this.spec);
+        this.context = new Context(this.spec,params);
         loadFlow();
     }
     
