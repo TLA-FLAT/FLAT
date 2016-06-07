@@ -22,15 +22,13 @@ RUN apt-get update &&\
 # Install Java 1.8
 #
 RUN set -x; \
-    java_version=8u72; \
+    java_version=8u91; \
     wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" \
-    http://download.oracle.com/otn-pub/java/jdk/$java_version-b15/jdk-$java_version-linux-x64.tar.gz &&\
-    echo "54cde24fc0596f0f05b5d0d8f329053d  jdk-$java_version-linux-x64.tar.gz" | md5sum -c - &&\
+    http://download.oracle.com/otn-pub/java/jdk/$java_version-b14/jdk-$java_version-linux-x64.tar.gz &&\
+    echo "3f3d7d0cd70bfe0feab382ed4b0e45c0  jdk-$java_version-linux-x64.tar.gz" | md5sum -c - &&\
     tar -zxvf jdk-$java_version-linux-x64.tar.gz -C /opt &&\
     rm jdk-$java_version-linux-x64.tar.gz
-
-RUN unlink /usr/bin/java
-RUN ln -s /opt/jdk1.8.0_72/bin/java /usr/bin/java
+ENV JAVA_HOME /opt/jdk1.8.0_91
 ENV PATH $JAVA_HOME/bin:$PATH
 
 #

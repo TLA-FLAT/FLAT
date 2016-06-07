@@ -19,6 +19,7 @@ package nl.mpi.tla.flat.deposit.action;
 import com.yourmediashelf.fedora.client.FedoraClient;
 import static com.yourmediashelf.fedora.client.FedoraClient.*;
 import com.yourmediashelf.fedora.client.FedoraCredentials;
+import com.yourmediashelf.fedora.client.request.FedoraRequest;
 import com.yourmediashelf.fedora.client.response.IngestResponse;
 import com.yourmediashelf.fedora.client.response.GetDatastreamResponse;
 import java.io.File;
@@ -50,26 +51,28 @@ public class Deposit extends AbstractAction {
         try {
             SIP sip = context.getSIP();
             logger.debug("Fedora Commons["+this.getParameter("fedoraServer")+"]["+this.getParameter("fedoraUser")+":"+this.getParameter("fedoraPassword")+"]");
-            FedoraCredentials credentials = new FedoraCredentials(this.getParameter("fedoraServer"), this.getParameter("fedoraUser"), this.getParameter("fedoraPassword"));
-            FedoraClient fedora = new FedoraClient(credentials);
-            //fedora.debug(true);
-            //FedoraRequest.setDefaultClient(fedora);
-            logger.debug("Fedore Commons repository["+fedora.describeRepository().xml(true).execute(fedora)+"]");
+            if (!FedoraRequest.isDefaultClientSet()) {
+                FedoraCredentials credentials = new FedoraCredentials(this.getParameter("fedoraServer"), this.getParameter("fedoraUser"), this.getParameter("fedoraPassword"));
+                FedoraClient fedora = new FedoraClient(credentials);
+                fedora.debug(true);
+                FedoraRequest.setDefaultClient(fedora);
+            }
+            logger.debug("Fedore Commons repository["+FedoraClient.describeRepository().xml(true).execute()+"]");
             
             Collection<File> foxs = FileUtils.listFiles(new File(this.getParameter("dir", "./fox")),new String[] {"xml"},true);
             logger.debug("Loading ["+foxs.size()+"] FOX files from dir["+this.getParameter("dir", "./fox")+"]");
             for (File fox:foxs) {
                 logger.debug("FOX["+fox+"]");
-                IngestResponse iResponse = ingest().format("info:fedora/fedora-system:FOXML-1.1").content(fox).ignoreMime(true).execute(fedora);
+                IngestResponse iResponse = ingest().format("info:fedora/fedora-system:FOXML-1.1").content(fox).ignoreMime(true).execute();
                 logger.info("Created FedoraObject["+iResponse.getPid()+"]["+iResponse.getLocation()+"]");
             }
             for (Resource res:sip.getResources()) {
-                GetDatastreamResponse dsResponse = getDatastream(res.getFID().toString(),"OBJ").execute(fedora);
+                GetDatastreamResponse dsResponse = getDatastream(res.getFID().toString(),"OBJ").execute();
                 res.setFIDStream("OBJ");
                 res.setFIDasOfTimeDate(dsResponse.getLastModifiedDate());
             }
             
-            GetDatastreamResponse dsResponse = getDatastream(sip.getFID().toString(),"CMD").execute(fedora);
+            GetDatastreamResponse dsResponse = getDatastream(sip.getFID().toString(),"CMD").execute();
             sip.setFIDStream("CMD");
             sip.setFIDasOfTimeDate(dsResponse.getLastModifiedDate());
 

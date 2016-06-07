@@ -61,7 +61,7 @@ public class Index extends AbstractAction {
                 }
             });
             
-            URL call = new URL(gsearchEndpoint,"rest?operation=updateIndex&action=fromPid&value="+URLEncoder.encode(sip.getFID().toString(), "UTF-8"));
+            URL call = new URL(gsearchEndpoint,"rest?operation=updateIndex&action=fromPid&value="+URLEncoder.encode(sip.getFID().toString().replaceAll("#.*",""), "UTF-8"));
 
             InputStream response = call.openStream();
             try (Scanner scanner = new Scanner(response)) {
@@ -70,7 +70,7 @@ public class Index extends AbstractAction {
             }
             
             for (Resource res:sip.getResources()) {
-                call = new URL(gsearchEndpoint,"rest?operation=updateIndex&action=fromPid&value="+URLEncoder.encode(res.getFID().toString(), "UTF-8"));
+                call = new URL(gsearchEndpoint,"rest?operation=updateIndex&action=fromPid&value="+URLEncoder.encode(res.getFID().toString().replaceAll("#.*",""), "UTF-8"));
 
                 response = call.openStream();
                 try (Scanner scanner = new Scanner(response)) {

@@ -47,6 +47,8 @@ import org.slf4j.LoggerFactory;
  */
 public class Flow {
     
+    protected Boolean status = null;
+    
     private File base = null;
     
     private static final Logger logger = LoggerFactory.getLogger(Flow.class.getName());
@@ -200,6 +202,10 @@ public class Flow {
         return this.context;
     }
     
+    public Boolean getStatus() {
+        return this.status;
+    }
+    
     public boolean run() throws DepositException {
         boolean next = initFlow();
         if (next) {
@@ -207,10 +213,12 @@ public class Flow {
                 next = mainFlow();
             } catch (Exception e) {
                 exceptionFlow(e);
+                next= false;
             } finally {
                 finalFlow();
             }
         }
+        status = new Boolean(next);
         return next;
     }
     

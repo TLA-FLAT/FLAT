@@ -52,12 +52,18 @@ public class PackageAssembly extends AbstractAction {
                         logger.info("Previously download["+res.getFile()+"] of Resource["+res.getURI()+"] isn't available anymore!");
                 }
                 URI uri = res.getURI();
-                if (uri.toString().startsWith(dir.toString())) {
+                if (uri.toString().startsWith(dir.getAbsoluteFile().toURI().toString())) {
                     // the file is already in the workdir resources directory
-                    res.setFile(new File(uri.toString()));
+                    res.setFile(new File(uri.getSchemeSpecificPart()));
                 } else if (uri.toString().startsWith("hdl:"+getParameter("prefix","foo")+"/") || uri.toString().startsWith("http://hdl.handle.net/"+getParameter("prefix","foo")+"/")) {
                     // it has already a local handle
                     // TODO: what to do? resolve to its local location, and check?
+                } else if (uri.getScheme().equals("file")) {
+                    // TODO: limit to specific locations
+                    File src  = new File(uri.getSchemeSpecificPart());
+                    File copy = new File(dir+"/"+UUID.randomUUID().toString()+"."+src.toString().replace(".*(\\.|$)",""));
+                    FileUtils.copyFile(src,copy);
+                    res.setFile(copy);
                 } else {
                     // download the content into a local file 
                     String ext = FilenameUtils.getExtension(uri.getPath());
