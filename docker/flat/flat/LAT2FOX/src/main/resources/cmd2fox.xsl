@@ -757,6 +757,15 @@
 														<xsl:when test="starts-with($resMIME,'audio/')">
 															<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp-audioCModel"/>
 														</xsl:when>
+														<xsl:when test="starts-with($resMIME,'video/')">
+															<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_videoCModel"/>
+														</xsl:when>
+														<xsl:when test="starts-with($resMIME,'image/')">
+															<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_basic_image"/>
+														</xsl:when>
+														<xsl:when test="starts-with($resMIME,'application/pdf')">
+															<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_pdf"/>
+														</xsl:when>
 													</xsl:choose>
 												</rdf:Description>
 											</rdf:RDF>
@@ -790,7 +799,7 @@
 										</foxml:contentLocation>
 									</foxml:datastreamVersion>
 								</foxml:datastream>
-								<!-- add specific content models for specific MIME types -->
+								<!-- add specific thumbnail icons for specific MIME types -->
 								<foxml:datastream ID="TN" STATE="A" CONTROL_GROUP="E">
 									<foxml:datastreamVersion ID="TN.0" LABEL="icon.png" MIMETYPE="image/png">
 										<xsl:choose>
@@ -805,6 +814,15 @@
 											</xsl:when>
 											<xsl:when test="starts-with($resMIME,'video/')">
 												<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/video.png"/>
+											</xsl:when>
+											<xsl:when test="starts-with($resMIME,'application/pdf')">
+												<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/pdf.png"/>
+											</xsl:when>
+											<xsl:when test="starts-with($resMIME,'application/zip')">
+												<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/zip.png"/>
+											</xsl:when>
+											<xsl:when test="starts-with($resMIME,'application/x-gzip')">
+												<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/zip.png"/>
 											</xsl:when>
 											<xsl:otherwise>
 												<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/other.png"/>
