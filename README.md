@@ -1,11 +1,11 @@
 ![FLAT logo](docker/flat/drupal/flat-logo.png) FLAT
 ===================================================
-The FLAT project is currently an investigation into an easy and
+The FLAT project aims to develop an easy to use and
 maintainable archive setup for language resources with
 [Component Metadata](http://www.clarin.eu/cmdi/). Its based on [Fedora Commons](http://fedora-commons.org/)
 and [Islandora](http://islandora.ca/). It should meet the technical requirements
 for a [CLARIN B centre](http://hdl.handle.net/1839/00-DOCS.CLARIN.EU-77), the [Data Seal of Approval](http://datasealofapproval.org/) and those from the
-organizations, [Max Planck Institute for Psycholinguistic](http://www.mpi.nl/) and
+organizations, the [Max Planck Institute for Psycholinguistics](http://www.mpi.nl/) and
 the [Meertens Institute](http://www.meertens.knaw.nl/), that cooperate in [The Language Archive](http://tla.mpi.nl/).
 
 Currently the setup of this project consists of a series of docker setups:
