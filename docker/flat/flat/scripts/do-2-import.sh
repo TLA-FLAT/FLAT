@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# disable OAI polling
+su -c "psql proai -c \"UPDATE rcAdmin SET pollingEnabled = 0;\"" postgres
+
 export FEDORA_HOME="/var/www/fedora"
 
 echo "START: `date --rfc-3339=seconds`"
@@ -10,6 +13,8 @@ for DIR in `find /app/flat/fox/ -type d | sed '1d'`; do
   if [ -f STOP ]; then
 	echo "FORCED STOP: `date --rfc-3339=seconds`"
 	rm STOP
+    # enable OAI polling
+    su -c "psql proai -c \"UPDATE rcAdmin SET pollingEnabled = 1;\"" postgres
 	exit 1
   fi
   if [ -f SLEEP ]; then
@@ -36,3 +41,6 @@ for DIR in `find /app/flat/fox/ -type d | sed '1d'`; do
   echo "END DIR: $DIR,$RES,$CNT,$BEGIN,`date --rfc-3339=seconds`,`expr $E - $B`"
 done
 echo "STOP: `date --rfc-3339=seconds`"
+
+# enable OAI polling
+su -c "psql proai -c \"UPDATE rcAdmin SET pollingEnabled = 1;\"" postgres

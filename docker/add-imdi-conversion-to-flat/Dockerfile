@@ -17,14 +17,9 @@ RUN chmod +x /app/flat/*.sh
 
 ADD proai/proai.properties /var/www/fedora/tomcat/webapps/oaiprovider/WEB-INF/classes/proai.properties
 
+ADD flat/lib/xercesImpl-patched-2.11.0.jar /tmp/xercesImpl-patched-2.11.0.jar
 RUN cd /tmp &&\
-    git clone -b development https://github.com/TheLanguageArchive/MetadataTranslator.git MetadataTranslator &&\
-    cd /tmp/MetadataTranslator &&\
-    mvn clean install
-    
-RUN cd /tmp &&\
-    wget https://nexus.clarin.eu/content/repositories/clarin-snapshot/eu/clarin/cmdi/cmdi-validator-core/0.0.6-SNAPSHOT/cmdi-validator-core-0.0.6-20160203.101033-2.jar &&\
-    mvn install:install-file -Dfile=cmdi-validator-core-0.0.6-20160203.101033-2.jar -DgroupId=eu.clarin.cmdi -DartifactId=cmdi-validator-core -Dversion=0.0.6-SNAPSHOT -Dpackaging=jar
+    mvn install:install-file -Dfile=xercesImpl-patched-2.11.0.jar -DgroupId=xerces -DartifactId=xercesImpl-patched -Dversion=2.11.0 -Dpackaging=jar
  
 RUN cd /tmp &&\
     git clone https://github.com/TheLanguageArchive/ISLE2CLARIN.git ISLE2CLARIN &&\
