@@ -49,8 +49,13 @@ If you want to use owncloud, you need to configure this app. You definitely need
 
 
 ## Notes and known issues##
-Make sure that the java links to the correct library (check flat/Dockerfile).
+Make sure that the java links to the correct library (check Dockerfile of flat master branch): 
 
+```ssh
+unlink /usr/bin/java;
+ln -s /opt/jdk1.8.0_72/bin/java /usr/bin/java.
+PATH=$JAVA_HOME:$PATH
+```
 
 The UI expects that FOXML object names start with lat. If this is violated the Ingest service will complain
 
