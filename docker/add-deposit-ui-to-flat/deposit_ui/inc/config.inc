@@ -91,6 +91,23 @@ function flat_deposit_set_modules()
     return TRUE;
 }
 
+function flat_deposit_set_names()
+{
+    $flat_deposit_names = variable_get('flat_deposit_names', array());
+
+    //already installed
+    if (!empty($flat_deposit_names[0])) {
+        variable_del('flat_deposit_names');
+    }
+    variable_set('flat_deposit_names', array(
+            'apache_user' => 'www-data'
+        )
+    );
+
+    return TRUE;
+}
+
+
 function flat_deposit_set_owncloud(){
 
     $owncloud_settings = variable_get('owncloud_settings', array());

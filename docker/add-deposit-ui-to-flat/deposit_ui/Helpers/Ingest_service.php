@@ -17,13 +17,13 @@ require_once ($_POST['module_path'] . '/Helpers/Fedora_REST_API.inc');
 $user_id=$_POST['user_id'];
 $bundle=$_POST['bundle'];
 $collection=$_POST['collection'];
-
+define('DEPOSIT_UI_PATH', $_POST['module_path']);
 define('SWORD_SCRIPT', $_POST['app_path'] . "/do-sword-upload.sh");
 define('CMD2DC', $_POST['app_path'] . '/cmd2dc.xsl');
 define('LAT2FOX', $_POST['app_path'] . '/lib/lat2fox.jar');
 define('FREEZE_DIR', $_POST['freeze_dir']);
 define('BAG_DIR', $_POST['bag_dir']);
-define('WEB_SERVER', $_POST['web-server']);
+define('APACHE_USER', $_POST['apache_user']);
 define('BAG_EXE', $_POST['bag_exe']);
 define('FEDORA_HOME', $_POST['fedora_home']);
 putenv ('FEDORA_HOME=' . FEDORA_HOME);
@@ -114,7 +114,7 @@ class Ingestor
      */
     public function zipBag()
     {
-        $command = "/lat/scripts/zip_sip.sh " . $this->entry['user_id'] . " " . $this->entry["bundle"] . " " . BAG_DIR . " " . $this->backend_bundle_dir;
+        $command = DEPOSIT_UI_PATH . "/Helpers/scripts/zip_sip.sh " . $this->entry['user_id'] . " " . $this->entry["bundle"] . " " . BAG_DIR . " " . $this->backend_bundle_dir;
         exec($command, $output_prep, $return);
         if ($return) {
             throw new IngestServiceException ('Error creating zip file');
@@ -185,7 +185,7 @@ class Ingestor
         $command_b = FEDORA_HOME . "/client/bin/fedora-batch-ingest.sh " . BAG_DIR . "/" . $this->entry['bag_id'] . '/fox ' . BAG_DIR . "/" . $this->entry['bag_id'] . "/log xml info:fedora/fedora-system:FOXML-1.1 localhost:8443 fedoraAdmin fedora https fedora";
         exec($command_b, $output_ingest, $return);
         if ($return) {
-            throw new IngestServiceException ('Failed to ingest bundle');
+            throw new IngestServiceException ('Failed to ingest bundle ');
         } else {
             // compare number of ingested files with number of frozen files
             $Ingests = preg_grep("/ingest succeeded for:/", $output_ingest );
