@@ -259,7 +259,25 @@ function flat_deposit_ui_schema() {
             ),
         ),
     );
-    $schema['flat_deposit_ui_upload_log'] = array(
+    $schema['flat_collections'] = array(
+        'description' => 'All collections stored in FLAT.',
+        'fields' => array(
+            'collection_name'  => array(
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => TRUE,
+                'description' => 'Name of the collection'
+            ),
+            'owner' => array(
+                'type' => 'varchar',
+                'length' => 63,
+                'not null' => FALSE,
+                'description' => 'Member of the collection.'
+            ),
+        )
+    );
+
+            $schema['flat_deposit_ui_upload_log'] = array(
         'description' => 'Logging of all uploading activity.',
         'fields' => array(
             'user_id'  => array(
