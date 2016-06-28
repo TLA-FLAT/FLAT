@@ -143,6 +143,8 @@ class CMDI_Handler
     function processFormData($form_data){
 
         $clean_data = array();
+        $clean_data['Name'] = $form_data['field_1']['Name'];
+        $clean_data['Title'] = $form_data['field_1']['Title'];
 
         if ($form_data['field_1']['Date']) {
             $month = (strlen($form_data['field_1']['Date']['month']) == 1 ) ? $form_data['field_1']['Date']['month'] : '0'.$form_data['field_1']['Date']['month'];
@@ -151,7 +153,7 @@ class CMDI_Handler
         else $date = NULL;
 
         $clean_data['Date'] = $date;
-
+        $clean_data['Date'] = $date;
         // add all template specific fields to the xml
         foreach ($form_data['form_fields_template'] as $field){
             if ($field != "field_1"){

@@ -80,6 +80,7 @@ class CMDI_templates
             case 'experiment':
                 $fields['field_1'] = array('#title' => t(strtoupper($this->Template_Name) . ' Template'),'#type' => 'fieldset', '#collapsible' => TRUE, '#collapsed' => FALSE, '#tree' => TRUE);
                 $fields['field_1']['Name'] = array('#title' => t('Name'),'#type' => 'textfield','#default_value'=>$filled_in_fields['field_1']['Name']);
+                $fields['field_1']['Title'] = array('#title' => t('Title'), '#type' => 'textfield','#default_value'=>$filled_in_fields['field_1']['Title']);
                 $fields['field_1']['Date'] = array('#title' => t('Date'), '#type' => 'date','#default_value'=>$filled_in_fields['field_1']['Date']);
                 $fields['Experiment'] = array('#title' => t('Experiment'),'#type' => 'fieldset', '#collapsible' => TRUE, '#collapsed' => FALSE, '#tree' => TRUE);
                 $fields['Experiment']['Title'] = array('#title' => t('Title'), '#type' => 'textfield', '#default_value'=>$filled_in_fields['Experiment']['Title']);

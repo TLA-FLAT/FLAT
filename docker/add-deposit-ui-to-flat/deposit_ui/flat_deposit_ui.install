@@ -268,7 +268,7 @@ function flat_deposit_ui_schema() {
                 'not null' => TRUE,
                 'description' => 'Name of the collection'
             ),
-            'owner' => array(
+            'member' => array(
                 'type' => 'varchar',
                 'length' => 63,
                 'not null' => FALSE,
