@@ -160,7 +160,7 @@ class Ingestor
      * @throws IngestServiceException
      */
     public function changeRightsBagDir(){
-        $command = "sudo chown -R " . APACHE_USER . ":" . APACHE_USER  . " " . BAG_DIR . "/" . $this->entry['bag_id'];
+        $command = "sudo chown " . APACHE_USER . ":" . APACHE_USER  . " " . BAG_DIR . "/" . $this->entry['bag_id'];
         exec($command, $output_chmod, $return);
         if ($return) {
             $message = 'Unable to adapt rights of bag directory';
@@ -176,7 +176,7 @@ class Ingestor
      */
     public function createFOXML(){
 
-        $command = "java -Xmx4096m -jar " . LAT2FOX . " -d=" . CMD2DC . ' ' . BAG_DIR . '/' . $this->entry['bag_id'];
+        $command = "java -Xmx4096m -jar " . LAT2FOX . " -d=" . CMD2DC . ' -h -z ' . BAG_DIR . '/' . $this->entry['bag_id'];
         exec($command, $output_fox, $return);
         if ($return) {
             $message = 'Error creating foxml files';
