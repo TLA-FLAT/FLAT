@@ -204,7 +204,7 @@ class Ingestor
                 if (!file_exists($this->backend_bundle_dir)) $this->entry['data_purged'] = 1;
 
             } else {
-                throw new IngestServiceException ('Ingest of bundle only partially succeeded');
+                throw new IngestServiceException ('Ingest of bundle only partially succeeded. Check file naming in CMDI file or existing FOXML objects with same PID');
             }
         }
 

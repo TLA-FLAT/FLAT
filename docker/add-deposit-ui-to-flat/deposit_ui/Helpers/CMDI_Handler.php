@@ -143,8 +143,6 @@ class CMDI_Handler
     function processFormData($form_data){
 
         $clean_data = array();
-        $clean_data['Name'] = $form_data['field_1']['Name'];
-        $clean_data['Title'] = $form_data['field_1']['Title'];
 
         if ($form_data['field_1']['Date']) {
             $month = (strlen($form_data['field_1']['Date']['month']) == 1 ) ? $form_data['field_1']['Date']['month'] : '0'.$form_data['field_1']['Date']['month'];
@@ -279,10 +277,10 @@ function generate_drupal_form($form, $template){
 }
 
 
-function get_example_md ($bundle){
-    switch ($bundle) {
+function get_example_md ($template){
+    switch ($template) {
 
-        case 'DvR_Sandbox':
+        case 'session':
             $md = array(
                 'field_1' => array(
                     'Name' => 'DvR_Sandbox',
@@ -315,10 +313,41 @@ function get_example_md ($bundle){
                         'Description' => 'FLAT Test set')
                 )
             );
-
+        case 'experiment':
+            $md = array(
+                'field_1' =>
+                    array (
+                        'Name' => 'Twisting Tongues',
+                        'Date' =>
+                            array (
+                                'month' => '6',
+                                'day' => '27',
+                                'year' => '2016',
+                            ),
+                    ),
+                'Experiment' =>
+                    array (
+                        'Title' => 'EEG study on bilingual idiomatic expressions  ',
+                        'Notebook_Name' => '',
+                        'Contact' =>
+                            array (
+                                'User_Name' => 'Daniel Tobias',
+                                'Tel_number' => '+3164482903',
+                                'Email' => 'Daniel@mpi.nl',
+                            ),
+                        'descriptions' =>
+                            array (
+                                'Description' => '',
+                            ),
+                        'conclusions' =>
+                            array (
+                                'Conclusion' => '',
+                            ),
+                    ),
+            );
     }
-
     return $md;
+
 }
 
 function get_example_handle ($bundle)

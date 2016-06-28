@@ -59,9 +59,9 @@ class CMDI_templates
 
             case 'minimal':
                 $fields['field_1'] = array('#title' => t(strtoupper($this->Template_Name) . ' Template'),'#type' => 'fieldset', '#collapsible' => TRUE, '#collapsed' => FALSE, '#tree' => TRUE);
-                $fields['field_1']['Name'] = array('#title' => t('Name'),'#type' => 'textfield');
-                $fields['field_1']['Title'] = array('#title' => t('Title'), '#type' => 'textfield');
-                $fields['field_1']['Date'] = array('#title' => t('Date'), '#type' => 'date');
+                $fields['field_1']['Name'] = array('#title' => t('Name'),'#type' => 'textfield','#default_value'=>$filled_in_fields['field_1']['Name']);
+                $fields['field_1']['Title'] = array('#title' => t('Title'), '#type' => 'textfield','#default_value'=>$filled_in_fields['field_1']['Title']);
+                $fields['field_1']['Date'] = array('#title' => t('Date'), '#type' => 'date','#default_value'=>$filled_in_fields['field_1']['Date']);
                 $fields['Project'] = array('#title' => t('Project'),'#type' => 'fieldset', '#collapsible' => TRUE, '#collapsed' => FALSE, '#tree' => TRUE);
                 $fields['Project']['Name'] = array('#title' => t('Name'), '#type' => 'textfield');
                 $fields['Project']['Title'] = array('#title' => t('Title'), '#type' => 'textfield');
@@ -79,19 +79,19 @@ class CMDI_templates
 
             case 'experiment':
                 $fields['field_1'] = array('#title' => t(strtoupper($this->Template_Name) . ' Template'),'#type' => 'fieldset', '#collapsible' => TRUE, '#collapsed' => FALSE, '#tree' => TRUE);
-                $fields['field_1']['Name'] = array('#title' => t('Name'),'#type' => 'textfield');
-                $fields['field_1']['Title'] = array('#title' => t('Title'), '#type' => 'textfield');
-                $fields['field_1']['Date'] = array('#title' => t('Date'), '#type' => 'date');
-                $fields['Project'] = array('#title' => t('Project'),'#type' => 'fieldset', '#collapsible' => TRUE, '#collapsed' => FALSE, '#tree' => TRUE);
-                $fields['Project']['Name'] = array('#title' => t('Name'), '#type' => 'textfield');
-                $fields['Project']['Title'] = array('#title' => t('Title'), '#type' => 'textfield');
-                $fields['Project']['Id'] = array('#title' => t('Id'), '#type' => 'textfield');
-                $fields['Project']['Contact'] = array('#title' => t('Contact'),'#type' => 'fieldset', '#collapsible' => TRUE, '#collapsed' => FALSE, '#tree' => TRUE);
-                $fields['Project']['Contact']['Name'] = array('#title' => t('Name'), '#type' => 'textfield');
-                $fields['Project']['Contact']['Email'] = array('#title' => t('Email'), '#type' => 'textfield');
-                $fields['Project']['Contact']['Organisation'] = array('#title' => t('Organisation'), '#type' => 'textfield');
-                $fields['Project']['descriptions'] = array('#title' => t('descriptions'),'#type' => 'fieldset', '#collapsible' => TRUE, '#collapsed' => FALSE, '#tree' => TRUE);
-                $fields['Project']['descriptions'] ['Description'] = array('#title' => t('descriptions'),'#type' => 'textfield', '#default_value'=>$filled_in_fields['Project']['descriptions']['Description']);
+                $fields['field_1']['Name'] = array('#title' => t('Name'),'#type' => 'textfield','#default_value'=>$filled_in_fields['field_1']['Name']);
+                $fields['field_1']['Date'] = array('#title' => t('Date'), '#type' => 'date','#default_value'=>$filled_in_fields['field_1']['Date']);
+                $fields['Experiment'] = array('#title' => t('Experiment'),'#type' => 'fieldset', '#collapsible' => TRUE, '#collapsed' => FALSE, '#tree' => TRUE);
+                $fields['Experiment']['Title'] = array('#title' => t('Title'), '#type' => 'textfield', '#default_value'=>$filled_in_fields['Experiment']['Title']);
+                $fields['Experiment']['Notebook_Name'] = array('#title' => t('Notebook Name'), '#type' => 'textfield', '#default_value'=>$filled_in_fields['Experiment']['Notebook_Name']);
+                $fields['Experiment']['Contact'] = array('#title' => t('Contact'),'#type' => 'fieldset', '#collapsible' => TRUE, '#collapsed' => FALSE, '#tree' => TRUE);
+                $fields['Experiment']['Contact']['User_Name'] = array('#title' => t('User Full Name'), '#type' => 'textfield', '#default_value'=>$filled_in_fields['Experiment']['Contact']['User_Name']);
+                $fields['Experiment']['Contact']['Tel_number'] = array('#title' => t('Phone Number'), '#type' => 'textfield', '#default_value'=>$filled_in_fields['Experiment']['Contact']['Tel_number']);
+                $fields['Experiment']['Contact']['Email'] = array('#title' => t('Email'), '#type' => 'textfield', '#default_value'=>$filled_in_fields['Experiment']['Contact']['Email']);
+                $fields['Experiment']['descriptions'] = array('#title' => t('descriptions'),'#type' => 'fieldset', '#collapsible' => TRUE, '#collapsed' => FALSE, '#tree' => TRUE);
+                $fields['Experiment']['descriptions'] ['Description'] = array('#title' => t('descriptions'),'#type' => 'textfield', '#default_value'=>$filled_in_fields['Experiment']['descriptions']['Description']);
+                $fields['Experiment']['conclusions'] = array('#title' => t('Experiment description'),'#type' => 'fieldset', '#collapsible' => TRUE, '#collapsed' => FALSE, '#tree' => TRUE);
+                $fields['Experiment']['conclusions'] ['Conclusion'] = array('#title' => t('Conclusion'),'#type' => 'textfield', '#default_value'=>$filled_in_fields['Experiment']['conclusions']['Conclusion']);
                 $this->fields = $fields;
                 break;
 

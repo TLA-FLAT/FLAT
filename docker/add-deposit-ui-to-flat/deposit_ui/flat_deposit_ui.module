@@ -297,7 +297,7 @@ function flat_deposit_ui_cmdi_create_form($form, &$form_state,$extra){
 
 
 
-    $md2 = get_example_md($bundle);
+    //$md = get_example_md($template); #uncomment to get example data
 
     
 
