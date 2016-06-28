@@ -31,10 +31,14 @@ function get_drupal_database_settings(){
  */
 function get_configuration_fedora(){
     return array(
-        'host_ip' => 'https://192.168.99.100',
+        'host_name' => 'localhost',
+        'host_ip' => '192.168.99.100',
         'port' => 8443,
+        'scheme' => 'https',
         'user' => 'fedoraAdmin',
-        'password' => 'fedora'
+        'password' => 'fedora',
+        'context' => 'fedora',
+
     );
 }
 

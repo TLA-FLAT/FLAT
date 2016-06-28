@@ -194,7 +194,12 @@ class Ingestor
      */
 
     public function batchIngest(){
-        $command_b = FEDORA_HOME . "/client/bin/fedora-batch-ingest.sh " . BAG_DIR . "/" . $this->entry['bag_id'] . '/fox ' . BAG_DIR . "/" . $this->entry['bag_id'] . "/log xml info:fedora/fedora-system:FOXML-1.1 localhost:8443 fedoraAdmin fedora https fedora";
+        $fedora_config = get_configuration_fedora();
+        $command_b = FEDORA_HOME . "/client/bin/fedora-batch-ingest.sh " .
+            BAG_DIR . "/" . $this->entry['bag_id'] . '/fox ' .
+            BAG_DIR . "/" . $this->entry['bag_id'] . "/log xml info:fedora/fedora-system:FOXML-1.1 " .
+            $fedora_config['host_name'] . ':' . $fedora_config['port'] . " "  .
+            $fedora_config['user'] . " "  . $fedora_config['password'] . " "  . $fedora_config['scheme'] . " "  . $fedora_config['context'] ;
         exec($command_b, $output_ingest, $return);
         if ($return) {
             $message = 'Failed to ingest bundle ';

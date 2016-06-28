@@ -1271,8 +1271,8 @@ function flat_deposit_ui_commit_form_freeze_validate (&$form, &$form_state)
             }
 
             // Check if upload contains at least one cmdi file
-            if (count(glob(drupal_realpath(USER_DRUPAL_DATA_DIR . '/' . $bundle . '/metadata/*.cmdi'))) == 0) {
-                form_set_error('freeze_error', "No meta data available for upload bundle. Please provide a .cmdi file");
+            if (count(glob(drupal_realpath(USER_DRUPAL_DATA_DIR . '/' . $bundle . '/metadata/*.cmdi'))) != 1) {
+                form_set_error('freeze_error', "No or too many meta data files available for upload bundle. Please provide exactly one .cmdi file");
                 return $form;
             }
 
