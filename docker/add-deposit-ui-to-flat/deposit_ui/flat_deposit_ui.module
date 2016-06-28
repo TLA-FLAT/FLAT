@@ -1585,7 +1585,7 @@ function flat_deposit_ui_commit_form_ingest_serve_submit ($form, &$form_state)
         }
     }
 
-    drupal_set_message('Trying to ingest');
+    drupal_set_message('Frozen bundles are being archived');
 }
 
 
