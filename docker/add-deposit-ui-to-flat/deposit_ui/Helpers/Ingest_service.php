@@ -160,7 +160,7 @@ class Ingestor
      * @throws IngestServiceException
      */
     public function changeRightsBagDir(){
-        $command = "sudo chmod -R 777 " . BAG_DIR . "/" . $this->entry['bag_id'];
+        $command = "sudo chown -R " . APACHE_USER . ":" . APACHE_USER  . " " . BAG_DIR . "/" . $this->entry['bag_id'];
         exec($command, $output_chmod, $return);
         if ($return) {
             $message = 'Unable to adapt rights of bag directory';
