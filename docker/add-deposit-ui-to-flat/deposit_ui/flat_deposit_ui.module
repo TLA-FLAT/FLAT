@@ -4,7 +4,6 @@
  * Custom user interface for the FLAT data repository
  */
 
-
 /*
  *  Load Dependencies
  */
@@ -1538,7 +1537,6 @@ function flat_deposit_ui_commit_form_ingest_serve_submit ($form, &$form_state)
             $data_to_post['apache_user'] = APACHE_USER;
             $data_to_post['user_id'] = USER;
             $data_to_post['module_path'] = drupal_realpath(drupal_get_path('module','flat_deposit_ui'));
-            #$data_to_post['module_path'] = httprl_build_url_self(drupal_get_path('module', 'flat_deposit_ui')); //doesn't work at the moment but should be used
             $data_to_post['bundle'] = $bundle;
             $data_to_post['collection'] = $collection;
 

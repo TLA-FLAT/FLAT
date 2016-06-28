@@ -46,12 +46,21 @@ function get_configuration_fedora(){
 function ingest_service_configuration()
 {
     return array(
-        # where to find "/do-sword-upload.sh" '/cmd2dc.xsl' and '/lib/lat2fox.jar'
-        'app_path' => '/app/flat/',
         # the bagit executable
         'bag_exe' => '/usr/local/bin/bagit-4.9.0/bin/bag',
         # FEDORA HOME
-        'fedora_home' => '/var/www/fedora');
+        'fedora_home' => '/var/www/fedora',
+        # Should errors be logged
+        'log_errors' => TRUE,
+        # directory to log errors)
+        'error_log_file' => '/app/flat/backend/Ingest_service_error.log',
+        # sword upload script
+        'sword_script' => "/app/flat/do-sword-upload.sh",
+        #CMDI 2 DC transformation
+        'cmd2dc' => '/app/flat/cmd2dc.xsl',
+        #Lat2 fox java lib
+        'lat2fox' => '/app/flat/lib/lat2fox.jar');
+
 }
 
 
