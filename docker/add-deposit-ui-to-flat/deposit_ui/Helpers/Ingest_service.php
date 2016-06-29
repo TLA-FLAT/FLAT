@@ -233,8 +233,8 @@ class Ingestor
 
 
     /**
-     *
-     * @param array $Ingests
+     * Call to change ownership of fedora objects using the Fedora REST api.
+     * @param array $Ingests output from the batch ingest script.
      * @throws IngestServiceException
      */
     public function changeOwnership($Ingests){
@@ -248,9 +248,10 @@ class Ingestor
             $pid = str_replace("ingest succeeded for: ", "", $f);
             $pid = str_replace(".xml", "", $pid);
             $pid = str_replace("lat_", "lat:", $pid);
+            if (substr($pid,-3) == "CMD") {
+                $pid = str_replace("_CMD", "", $pid);}
             $data = array(
-                'ownerId' => $this->entry['user_id']
-            );
+                'ownerId' => $this->entry['user_id']);
 
             $result = $rest_fedora->modifyObject($pid, $data);
             if (!$result) {

@@ -1034,6 +1034,7 @@ function flat_deposit_ui_commit_form($form, $form_state)
         } elseif (file_exists(USER_FREEZE_DIR . '/' . $entry_as_array['bundle'])) {
             $frozen_bundles [] = $entry_as_array;
         } else {
+            $entry_as_array['exceptions'] .= '; No files found in data directory';
             $other_bundles [] = $entry_as_array;
         }
     }
@@ -1176,6 +1177,34 @@ function flat_deposit_ui_commit_form($form, $form_state)
         '#options' => $archived,
     );
 
+    if ($other_bundles){
+        // other bundles field
+        $form['other_bundles'] = array(
+            '#type' => 'fieldset',
+            '#title' => t('Bundles needing attention'),);
+
+        $other = array();
+        foreach ($other_bundles as $key => $bundle) {
+            $other[$key] = array(
+                'collection' => $bundle['collection'],
+                'bundle' => $bundle['bundle'],
+                'status' => $bundle['status'],
+                'exceptions' => $bundle['exceptions'],
+            );
+        }
+        $header = array(
+            'collection' => t('Collection Name'),
+            'bundle' => t('Bundle Name'),
+            'status' => t('Status'),
+            'exceptions' => t('Exception'),
+        );
+
+        $form['other_bundles']['table_other_bundles'] = array (
+            '#type' => 'tableselect',
+            '#header' => $header,
+            '#options' => $other,
+        );
+    }
 
     # other #
     $form['other'] = array(
