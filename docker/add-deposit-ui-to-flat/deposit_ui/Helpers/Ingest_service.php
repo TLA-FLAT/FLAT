@@ -10,24 +10,24 @@
 require_once ($_POST['module_path'] . '/inc/config.inc');
 require_once ($_POST['module_path'] . '/Helpers/Fedora_REST_API.inc');
 
-
 /*
  * Variable and constant definitions
  */
 $user_id=$_POST['user_id'];
 $bundle=$_POST['bundle'];
 $collection=$_POST['collection'];
-
-define('SWORD_SCRIPT', $_POST['app_path'] . "/do-sword-upload.sh");
-define('CMD2DC', $_POST['app_path'] . '/cmd2dc.xsl');
-define('LAT2FOX', $_POST['app_path'] . '/lib/lat2fox.jar');
+define('DEPOSIT_UI_PATH', $_POST['module_path']);
+define('SWORD_SCRIPT', $_POST['sword_script']);
+define('CMD2DC', $_POST['cmd2dc']);
+define('LAT2FOX', $_POST['lat2fox']);
 define('FREEZE_DIR', $_POST['freeze_dir']);
 define('BAG_DIR', $_POST['bag_dir']);
-define('WEB_SERVER', $_POST['web-server']);
+define('APACHE_USER', $_POST['apache_user']);
 define('BAG_EXE', $_POST['bag_exe']);
 define('FEDORA_HOME', $_POST['fedora_home']);
 putenv ('FEDORA_HOME=' . FEDORA_HOME);
-
+define('LOG_ERRORS', $_POST['log_errors']);
+define('ERROR_LOG_FILE', $_POST['error_log_file']);
 
 /*
  * function and object definitions
@@ -95,12 +95,16 @@ class Ingestor
         $command = BAG_EXE . ' baginplace ' . $this->backend_bundle_dir;
         exec($command, $output, $return);
         if ($return) {
-            throw new IngestServiceException ('Error making bag');
+            $message = 'Error making bag';
+            if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$output) ."\n", $message_type = 3 , ERROR_LOG_FILE );
+            throw new IngestServiceException ($message);
         }
         $command = BAG_EXE . ' update ' . $this->backend_bundle_dir;
         exec($command, $output, $return);
         if ($return) {
-            throw new IngestServiceException ('Error updating bag info');
+            $message = 'Error updating bag info';
+            if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$output) ."\n", $message_type = 3 , ERROR_LOG_FILE );
+            throw new IngestServiceException ($message);
         } else {
             $this->entry['baginplace'] = 1;
         }
@@ -114,10 +118,12 @@ class Ingestor
      */
     public function zipBag()
     {
-        $command = "/lat/scripts/zip_sip.sh " . $this->entry['user_id'] . " " . $this->entry["bundle"] . " " . BAG_DIR . " " . $this->backend_bundle_dir;
+        $command = DEPOSIT_UI_PATH . "/Helpers/scripts/zip_sip.sh " . $this->entry['user_id'] . " " . $this->entry["bundle"] . " " . BAG_DIR . " " . $this->backend_bundle_dir;
         exec($command, $output_prep, $return);
         if ($return) {
-            throw new IngestServiceException ('Error creating zip file');
+            $message = 'Error creating zip file';
+            if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$output_prep) ."\n", $message_type = 3 , ERROR_LOG_FILE );
+            throw new IngestServiceException ($message);
         } else {
             $this->entry['zipped'] = 1;
             $this->entry['nfiles'] = intval(str_split($output_prep['0'], 18)[1]);
@@ -139,7 +145,9 @@ class Ingestor
         // sleep because sword is slow
         sleep (15);
         if (!$bag_id || !file_exists(BAG_DIR . '/' . $bag_id)) {
-            throw new IngestServiceException ('Error creating bag. Check bag log (deposit/sword/tmp/' . $bag_id . '/deposit.properties)');
+            $message = 'Error creating bag. Check bag log (deposit/sword/tmp/' . $bag_id . '/deposit.properties)';
+            if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$output_bag) ."\n", $message_type = 3 , ERROR_LOG_FILE );
+            throw new IngestServiceException ($message);
         } else {
             $this->entry['bagged'] = 1;
             $this->entry['bag_id'] = $bag_id;
@@ -152,10 +160,12 @@ class Ingestor
      * @throws IngestServiceException
      */
     public function changeRightsBagDir(){
-        $command = "sudo chmod -R 777 " . BAG_DIR . "/" . $this->entry['bag_id'];
+        $command = "sudo chown " . APACHE_USER . ":" . APACHE_USER  . " " . BAG_DIR . "/" . $this->entry['bag_id'];
         exec($command, $output_chmod, $return);
         if ($return) {
-            throw new IngestServiceException ('Unable to adapt rights of bag directory');
+            $message = 'Unable to adapt rights of bag directory';
+            if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$output_chmod) ."\n", $message_type = 3 , ERROR_LOG_FILE );
+            throw new IngestServiceException ($message);
         }
     }
 
@@ -166,10 +176,12 @@ class Ingestor
      */
     public function createFOXML(){
 
-        $command = "java -Xmx4096m -jar " . LAT2FOX . " -d=" . CMD2DC . ' ' . BAG_DIR . '/' . $this->entry['bag_id'];
+        $command = "java -Xmx4096m -jar " . LAT2FOX . " -d=" . CMD2DC . ' -h -z ' . BAG_DIR . '/' . $this->entry['bag_id'];
         exec($command, $output_fox, $return);
         if ($return) {
-            throw new IngestServiceException ('Error creating foxml files');
+            $message = 'Error creating foxml files';
+            if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$output_fox) ."\n", $message_type = 3 , ERROR_LOG_FILE );
+            throw new IngestServiceException ($message);
         } else {
             $this->entry['foxml'] = 1;
         }
@@ -182,10 +194,17 @@ class Ingestor
      */
 
     public function batchIngest(){
-        $command_b = FEDORA_HOME . "/client/bin/fedora-batch-ingest.sh " . BAG_DIR . "/" . $this->entry['bag_id'] . '/fox ' . BAG_DIR . "/" . $this->entry['bag_id'] . "/log xml info:fedora/fedora-system:FOXML-1.1 localhost:8443 fedoraAdmin fedora https fedora";
+        $fedora_config = get_configuration_fedora();
+        $command_b = FEDORA_HOME . "/client/bin/fedora-batch-ingest.sh " .
+            BAG_DIR . "/" . $this->entry['bag_id'] . '/fox ' .
+            BAG_DIR . "/" . $this->entry['bag_id'] . "/log xml info:fedora/fedora-system:FOXML-1.1 " .
+            $fedora_config['host_name'] . ':' . $fedora_config['port'] . " "  .
+            $fedora_config['user'] . " "  . $fedora_config['password'] . " "  . $fedora_config['scheme'] . " "  . $fedora_config['context'] ;
         exec($command_b, $output_ingest, $return);
         if ($return) {
-            throw new IngestServiceException ('Failed to ingest bundle');
+            $message = 'Failed to ingest bundle ';
+            if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$output_ingest) ."\n", $message_type = 3 , ERROR_LOG_FILE );
+            throw new IngestServiceException ($message);
         } else {
             // compare number of ingested files with number of frozen files
             $Ingests = preg_grep("/ingest succeeded for:/", $output_ingest );
@@ -204,7 +223,9 @@ class Ingestor
                 if (!file_exists($this->backend_bundle_dir)) $this->entry['data_purged'] = 1;
 
             } else {
-                throw new IngestServiceException ('Ingest of bundle only partially succeeded');
+                $message = 'Ingest of bundle only partially succeeded. Check file naming in CMDI file or existing FOXML objects with same PID';
+                if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$Ingests) ."\n", $message_type = 3 , ERROR_LOG_FILE );
+                throw new IngestServiceException ($message);
             }
         }
 
@@ -212,8 +233,8 @@ class Ingestor
 
 
     /**
-     *
-     * @param array $Ingests
+     * Call to change ownership of fedora objects using the Fedora REST api.
+     * @param array $Ingests output from the batch ingest script.
      * @throws IngestServiceException
      */
     public function changeOwnership($Ingests){
@@ -227,13 +248,16 @@ class Ingestor
             $pid = str_replace("ingest succeeded for: ", "", $f);
             $pid = str_replace(".xml", "", $pid);
             $pid = str_replace("lat_", "lat:", $pid);
+            if (substr($pid,-3) == "CMD") {
+                $pid = str_replace("_CMD", "", $pid);}
             $data = array(
-                'ownerId' => $this->entry['user_id']
-            );
+                'ownerId' => $this->entry['user_id']);
 
             $result = $rest_fedora->modifyObject($pid, $data);
             if (!$result) {
-                throw new IngestServiceException ('Couldn\'t change ownership of files');
+                $message = 'Couldn\'t change ownership of files';
+                if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\n", $message_type = 3 , ERROR_LOG_FILE );
+                throw new IngestServiceException ($message);
             } else {
                 $pid_data = $rest_fedora->getObjectData($pid);
                 $this->entry['date_bundle_ingest'] = strtotime($pid_data['objCreateDate']);
@@ -245,7 +269,7 @@ class Ingestor
     }
 
     /**
-     * @param database connection handle $db
+     * @param $db database connection handle
      */
     public function updateDatabase ($db){
         $conditions= array(

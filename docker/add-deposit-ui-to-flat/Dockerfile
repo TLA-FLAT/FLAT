@@ -1,4 +1,4 @@
-FROM        flat-with-sps
+FROM        flat-with-sword
 MAINTAINER	Daniel von Rhein <daniel.vonrhein@mpi.nl>
 
 #Build xdebug library
@@ -22,9 +22,7 @@ ENV NOTVISIBLE "in users profile"
 RUN echo "export VISIBLE=now" >> /etc/profile
 
 # Add deposit module to installation
-RUN git clone https://github.com/TheLanguageArchive/FLAT.git /tmp/FLAT &&\
-	mkdir /var/www/html/drupal/sites/all/modules/custom/flat_deposit_ui &&\
-	cp -R /tmp/FLAT/deposit_ui/* /var/www/html/drupal/sites/all/modules/custom/flat_deposit_ui
+ADD deposit_ui /var/www/html/drupal/sites/all/modules/custom/flat_deposit_ui
 
 # add WYSIWYG editor
 RUN cd /var/www/html/drupal/sites/all/libraries/ &&\
@@ -64,10 +62,10 @@ RUN /etc/init.d/postgresql start &&\
 	/etc/init.d/postgresql stop
 
 # add owncloud to version
-RUN wget -nv https://download.owncloud.org/download/repositories/stable/xUbuntu_14.04/Release.key -O Release.key &&\
+RUN wget -nv https://download.owncloud.org/download/repositories/8.2/Ubuntu_14.04/Release.key -O Release.key &&\
 	apt-key add - < Release.key
 
-RUN sh -c "echo 'deb http://download.owncloud.org/download/repositories/stable/xUbuntu_14.04/ /' >> /etc/apt/sources.list.d/owncloud.list" &&\
+RUN sh -c "echo 'deb http://download.owncloud.org/download/repositories/8.2/Ubuntu_14.04/ /' >> /etc/apt/sources.list.d/owncloud.list" &&\
 	apt-get update &&\
 	apt-get install -y owncloud
 
@@ -80,10 +78,10 @@ RUN /etc/init.d/postgresql start &&\
     	sudo -u www-data php occ maintenance:install --database "pgsql" --database-name "owncloud" --database-user "fedora" --database-pass "fedora" --admin-user "admin" --admin-pass "admin"
 
 COPY owncloud/addTrusted.php /tmp/addTrusted.php
+
 RUN mv /var/www/owncloud/config/config.php /var/www/owncloud/config/config.backup &&\
     printf "<?php\n\$CONFIG = $(php /tmp/addTrusted.php) ;" >/var/www/owncloud/config/config.php &&\
     chown www-data:www-data /var/www/owncloud/config/config.php
-
 
 COPY owncloud/changeRights.sh /tmp/changeRights.sh
 RUN /tmp/changeRights.sh
@@ -106,7 +104,6 @@ RUN cd /app/flat &&\
 #Add accessible freeze directory to server
 RUN mkdir -p /app/flat/backend &&\
     chown www-data:www-data /app/flat/backend
-
 
 #Add test dataset to repository
 COPY Testset /app/flat/Testset

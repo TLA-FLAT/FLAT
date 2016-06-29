@@ -1,5 +1,8 @@
-Add flat User interface
-======================
+Add FLAT deposit User interface  (*experimental*)
+=================================================
+
+## Preface ##
+This documentation describes the procedure to create a docker container including all necessary files to run the deposit UI. Additional configuration has to be done, which is described in the deposit_ui subfolder.
 
 ## Requirements ##
 This docker file depends on the FLAT base image.
@@ -25,8 +28,8 @@ docker build --rm=true -t flat-base flat/
 
 ## Building the flat_deposit_ui image (minimal) (i.e. without gsearch,SOLR and solution packs) ##
 ```sh
-docker build --rm=true -t flat add-sword-to-flat/
-docker build --rm=true -t flat add-flat-ui/
+docker build --rm=true -t flat-with-sword add-sword-to-flat/
+docker build --rm=true -t flat add-deposit-ui-to-flat/
 ```
 
 ## Building the image (full) ##
@@ -52,12 +55,12 @@ docker build --rm=true -t flat add-gsearch-to-flat/
 docker build --rm=true -t flat add-islandora-solr-to-flat/
 docker build --rm=true -t flat add-imdi-gsearch-to-flat/
 
-# add solution packs and sword (for safety make new image)
-docker build --rm=true -t flat-with-sps add-solution-packs-to-flat/
-docker build --rm=true -t flat-with-sps add-sword-to-flat/
+# add solution packs and sword (in order to allow running updated dockerfiles without redoing the whole procedure make new image)
+docker build --rm=true -t flat add-solution-packs-to-flat/
+docker build --rm=true -t flat-with-sword add-sword-to-flat/
 
 #new image for deposit UI
-docker build --rm=true -t flat_dvr add-flat-ui/
+docker build --rm=true -t flat add-deposit-ui-to-flat/
 
 #cleanup
 docker rm flat-base-con
@@ -69,36 +72,6 @@ rm flat-base.tar
 ```sh
 docker run -p 80:80 -p 8443:8443 -p 8080:8080 --name <Container> -i -t <name FLAT base image>
 ```
-
-## Additional configuration ##
-In order to ingest data without doorkeeper plugin, the sudoer file (visudo) needs to be adapted. Please copy/paste the code from the shell/sudoer.ini file using visudo
-
-```ssh
-sudo /usr/sbin/visudo
-:%d #deletes the whole content
-
-```
-Also, the deposit folder needs to be accessible by the php server (e.g. www-data)
-
-The ingest service which picks up data bags from the freeze directory is at the moment a cronjob (crontab) which may run every 45 minutes. This service needs to be installed manually 
-
-In order to ssh to the ssh server on a running container, you need to run following command (optional)
-```ssh
-/usr/sbin/sshd 
-```
-
-In order to see the data on the fedora server, we need to change a parameter in our native fedora config file (optional) 
-
-```ssh
-vim /var/www/fedora/server/config/fedora.fcfg
-# change value of ENFORCE MODE to permit all requests: <param name="ENFORCE-MODE" value="permit-all-requests"/>
-```
-
-
-
-## Notes ##
-
-The UI expects that FOXML object names start with lat. If this is violated the Ingest service will complain
 
 
 

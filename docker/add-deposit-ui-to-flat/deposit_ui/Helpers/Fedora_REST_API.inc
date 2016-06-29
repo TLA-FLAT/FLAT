@@ -18,7 +18,7 @@ class FedoraRESTAPI{
     public function __construct($config)
     {
         $this->config = $config;
-        $this->base_url = $this->config['host_ip'] . "/fedora/objects/";
+        $this->base_url = $this->config['scheme'] . '://' . $this->config['host_ip'] . '/' . $this->config['context'] . "/objects/";
         $this->status = False;
     }
 

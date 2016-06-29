@@ -22,7 +22,7 @@ function query_owned_collections($user)
                 fm:label ?label;
                 fm:createdDate ?created;
                 fm:ownerId ?owner;
-                fm:hasModel <info:fedora/islandora:sp_cmdiCModel>;
+                fm:hasModel <info:fedora/islandora:compoundCModel>;
                 fm:ownerId '" . $user . "'
             }
             ORDER BY DESC(?created)";
