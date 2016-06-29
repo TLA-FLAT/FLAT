@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CMD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xmlns="http://www.clarin.eu/cmd/"
+     xmlns:cmd="http://www.clarin.eu/cmd/"
+     xmlns:imdi="http://www.mpi.nl/IMDI/Schema/IMDI"
+     xmlns:lat="http://lat.mpi.nl/"
+     xmlns:iso="http://www.iso.org/"
+     xmlns:sil="http://www.sil.org/"
+     xmlns:xs="http://www.w3.org/2001/XMLSchema"
+     xmlns:functx="http://www.functx.com"
+     CMDVersion="1.1"
+     xsi:schemaLocation="http://www.clarin.eu/cmd/ http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1407745712035/xsd">
+   <Header>
+      <MdCreator>Editor - Profile:local/SESSION.Profile.xml</MdCreator>
+      <MdCreationDate>2016-02-11</MdCreationDate>
+      <MdSelfLink>hdl:1839/00-0000-0000-0415-4A87-5</MdSelfLink>
+      <MdProfile>clarin.eu:cr1:p_1407745712035</MdProfile>
+   </Header>
+   <Resources>
+      <ResourceProxyList>
+         <ResourceProxy id="d111111">
+            <ResourceType mimetype="audio/x-mpeg3">Resource</ResourceType>
+            <ResourceRef lat:localURI="../data/Media/Test.mp3">hdl:1839/00-0000-0000-0215-4A87-5</ResourceRef>
+         </ResourceProxy>
+         <ResourceProxy id="d111112">
+            <ResourceType mimetype="application/pdf">Resource</ResourceType>
+            <ResourceRef lat:localURI="../data/Media//Test.pdf">hdl:1839/00-0000-0000-0315-4A87-5</ResourceRef>
+         </ResourceProxy>
+         <ResourceProxy id="landingpage">
+            <ResourceType>LandingPage</ResourceType>
+            <ResourceRef>hdl:1839/00-0000-0000-0415-4A87-5</ResourceRef>
+         </ResourceProxy>
+      </ResourceProxyList>
+      <JournalFileProxyList/>
+      <ResourceRelationList/>
+   </Resources>
+   <Components>
+      <lat-session>
+         <Name>DvR_Sandbox</Name>
+         <Title>DvR_Sandbox</Title>
+         <Date>2016-02</Date>
+         <descriptions>
+            <Description xml:lang="eng">The is a testdataset and Daniels favorite dog is called James.</Description>
+         </descriptions>
+         <Location>
+            <Continent>Europe</Continent>
+            <Country>The Netherlands</Country>
+            <Region>House of Language</Region>
+            <Address>Wundtlaan, Nijmegen</Address>
+         </Location>
+      </lat-session>
+   </Components>
+</CMD>

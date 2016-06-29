@@ -1,0 +1,9 @@
+<Identify>
+          <repositoryName>FLAT Repository</repositoryName>
+          <baseURL>http://flat.example.com/oaiprovider</baseURL>
+          <protocolVersion>2.0</protocolVersion>
+          <adminEmail>flat-admin@example.com</adminEmail>
+          <earliestDatestamp>1971-01-01T12:00:00Z</earliestDatestamp>
+          <deletedRecord>transient</deletedRecord>
+          <granularity>YYYY-MM-DDThh:mm:ssZ</granularity>
+</Identify>

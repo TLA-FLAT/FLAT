@@ -1,0 +1,95 @@
+<?php
+/**
+ * @file
+ * CMDI solution pack for Islandora to add viewer for displaying metadata.
+ */
+
+/**
+ * Implements hook_theme().
+ *
+ */
+
+function islandora_cmdi_theme($existing, $type, $theme, $path) {
+  return array(
+    'islandora_cmdi_display' => array(
+      'file' => 'theme/theme.inc',
+      'template' => 'theme/islandora-cmdi-display-template',
+      // We can add PIDs to the end of this pattern in our preprocess function
+      // and templates will be able to have have a pid appended to the
+      // template name to overide a template on a per object basis.
+      // An example template might be named:
+      // "islandora-cmdi-display-template--islandora-27.tpl.php".
+      'pattern' => 'islandora_cmdi_display_template__',
+      'variables' => array(
+        'islandora_object' => NULL,
+        'print' => NULL,
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_islandora_required_objects().
+ */
+function islandora_cmdi_islandora_required_objects(IslandoraTuque $connection) {
+  $module_path = drupal_get_path('module', 'islandora_cmdi');
+  // CMDI Content Model.
+  $cmdi_content_model = $connection->repository->constructObject('islandora:sp_cmdiCModel');
+  $cmdi_content_model->owner = 'fedoraAdmin';
+  $cmdi_content_model->label = 'Islandora CMDI Content Model';
+  $cmdi_content_model->models = 'fedora-system:ContentModel-3.0';
+  // CMDI Datastream.
+  $datastream = $cmdi_content_model->constructDatastream('DS-COMPOSITE-MODEL', 'X');
+  $datastream->label = 'DS-COMPOSITE-MODEL';
+  $datastream->mimetype = 'application/xml';
+  $datastream->setContentFromFile("$module_path/xml/islandora_cmdi_content_model.xml", FALSE);
+  $cmdi_content_model->ingestDatastream($datastream);
+  return array(
+    'islandora_cmdi' => array(
+      'title' => 'Islandora CMDI',
+      'objects' => array(
+        $cmdi_content_model
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_islandora_metadata_display_info().
+ */
+function islandora_cmdi_islandora_metadata_display_info() {
+  return array(
+    'cmdi' => array(
+      'label' => t('CMDI metadata'),
+      'description' => t('Renderer for Component Metadata'),
+      'metadata callback' => 'cmdi_metadata_display_callback',
+      'description callback' => 'cmdi_metadata_description_callback',
+    ),
+  );
+}
+
+/**
+ * Metadata display callback for rendering metadata from cmdi.
+ *
+ * @param AbstractObject $object
+ *   An AbstractObject representing an object within Fedora.
+ * @param bool $print
+ *   Whether this is for printing purposes.
+ *
+ * @return string
+ *   Markup representing the metadata display pulled from cmdi.
+ */
+function cmdi_metadata_display_callback(AbstractObject $object, $print = FALSE) {
+  if (in_array('islandora:sp_cmdiCModel', $object->models)) {
+    $markup = array(
+      '#theme' => 'islandora_cmdi_display',
+      '#islandora_object' => $object,
+    );
+    // drupal_render() is prefered above calling theme() directly!
+    return drupal_render($markup);
+  }
+}
+
+function cmdi_metadata_description_callback(AbstractObject $object, $print = FALSE) {
+  return FALSE;
+}

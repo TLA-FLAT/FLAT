@@ -1,0 +1,13 @@
+name = FLAT
+description = FLAT drupal setup
+core = 7.x
+package = Features
+version = 7.x-1.0-alpha
+project = flat
+dependencies[] = fe_block
+dependencies[] = islandora_compound_object
+features[fe_block_boxes][] = flat
+features[fe_block_settings][] = block-flat
+features[fe_block_settings][] = islandora_compound_object-compound_navigation
+features[fe_block_settings][] = system-powered-by
+features[features_api][] = api:2

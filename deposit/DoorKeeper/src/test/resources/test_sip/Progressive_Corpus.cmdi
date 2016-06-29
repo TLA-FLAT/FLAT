@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?><CMD xmlns="http://www.clarin.eu/cmd/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" CMDVersion="1.1" xsi:schemaLocation="http://www.clarin.eu/cmd/ http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1407745712064/xsd ">
+   <Header><MdCreator>guisil</MdCreator><MdCreationDate>2016-01-13+01:00</MdCreationDate><MdSelfLink>hdl:11142/DD52217D-395E-4ECC-BC97-27439D325215</MdSelfLink><MdProfile>clarin.eu:cr1:p_1407745712064</MdProfile></Header>
+   <Resources>
+      <ResourceProxyList><ResourceProxy id="res_d5d7a62d-27a9-4aad-929d-bfe6bf8fa068"><ResourceType>Metadata</ResourceType><ResourceRef xmlns:lat="http://lat.mpi.nl/" lat:localURI="../TestSubNode/ProgressiveCorpus/Metadata/ProgressiveSession.cmdi">hdl:11142/D975FEBA-1BD8-4A94-8BD0-B066658768EE</ResourceRef></ResourceProxy></ResourceProxyList>
+      <JournalFileProxyList/>
+      <ResourceRelationList/>
+   </Resources>
+   <Components>
+      <lat-corpus>
+         <Name>ProgressiveCorpus</Name>
+         <Title>Progressive Corpus</Title>
+         <descriptions>
+            <Description xml:lang="eng">progressive</Description>
+         </descriptions>
+         <CorpusLink ref="res_d5d7a62d-27a9-4aad-929d-bfe6bf8fa068">
+            <Name>progressive</Name>
+         </CorpusLink>
+      </lat-corpus>
+   </Components>
+</CMD>

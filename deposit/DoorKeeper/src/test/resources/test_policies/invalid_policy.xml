@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence-policies>
+	<persistence-policy property="mimetype" regex="^.+/pdf$" target="pdf"/
+	<persistence-policy property="mimetype" regex="^text/.+$" target="text"/>
+	<default-persistence-policy target="default"/>
+</persistence-policies>

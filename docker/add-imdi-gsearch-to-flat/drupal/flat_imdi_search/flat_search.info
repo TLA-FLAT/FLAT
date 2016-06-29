@@ -1,0 +1,12 @@
+name = FLAT search
+description = FLAT search drupal setup
+core = 7.x
+package = Features
+version = 7.x-1.0-alpha
+dependencies[] = fe_block
+dependencies[] = islandora_solr
+dependencies[] = search
+features[fe_block_settings][] = islandora_solr-basic_facets
+features[fe_block_settings][] = islandora_solr-simple
+features[fe_block_settings][] = search-form
+features[features_api][] = api:2

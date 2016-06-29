@@ -1,0 +1,78 @@
+/*
+    Document   : islandora_basic_collection.theme
+    Created on : May 23, 2012, 11:23:56 AM
+    Description: The cmdi page is a simple flexible layout page
+    that breaks down to two columns when 2 sidebars are visible
+*/
+
+.islandora-cmdi-content {
+  background-color: #F2F2F2;
+  border: 1px solid #ddd;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  padding: 15px;
+  float: left;
+  width: auto;
+  max-width: 100%;
+}
+
+.islandora-cmdi-content img {
+  margin: 0;
+  display: block;
+}
+
+.islandora-cmdi-metadata {
+  display: block;
+  clear: both;
+}
+
+/* This is kept for legacy reasons */
+dl.islandora-cmdi-fields {
+  width:100%;
+}
+
+dl.islandora-metadata-fields {
+  width:100%;
+}
+
+.islandora-cmdi-metadata dt {
+  font-weight: normal;
+  text-align: right;
+  font-weight: bold;
+  padding-right: 0;
+}
+
+.islandora-cmdi-metadata dd {
+  padding-left: 40px;
+}
+
+
+.islandora-cmdi-metadata dt,
+.islandora-cmdi-metadata dd {
+  border-top:1px solid #e5e5e5;
+}
+
+.islandora-cmdi-metadata dt.first,
+.islandora-cmdi-metadata dd.first {
+  border-top:0;
+}
+
+body.two-sidebars .islandora-cmdi-sidebar {
+    clear: both;
+    width: 100%;
+}
+
+@media all and (min-width: 768px) {
+
+  body.no-sidebars .islandora-cmdi-sidebar {
+    padding-left: 20px;
+  }
+
+  body.no-sidebars .islandora-cmdi-sidebar {
+    float: right; /* LTR */
+    width: 35%;
+    clear: none;
+  }
+
+}

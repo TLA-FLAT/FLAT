@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<mapping-table xmlns:cmd="http://www.clarin.eu/cmd/">
+
+  <namespaces>
+    <namespace ns="cmd" uri="http://www.clarin.eu/cmd/"/>
+  </namespaces>
+
+  <mappings>
+
+    <field name="Language" type="string">
+      <cmd:facet>language</cmd:facet>
+      <cmd:facet>languageCode</cmd:facet>
+      <cmd:facet>languages</cmd:facet>
+    </field>
+
+    <field name="Format" type="string">
+      <cmd:facet>format</cmd:facet>
+    </field>
+
+    <field name="Collection" type="string">
+      <cmd:facet>collection</cmd:facet>
+    </field>
+
+    <field name="Country" type="string">
+      <cmd:facet>country</cmd:facet>
+    </field>
+
+    <field name="Name">
+      <cmd:facet>name</cmd:facet>
+    </field>
+
+    <field name="Description">
+      <cmd:facet>description</cmd:facet>
+    </field>
+
+    <field name="Subject">
+      <cmd:facet>subject</cmd:facet>
+    </field>
+
+    <field name="fulltext">
+      <cmd:facet>text</cmd:facet>
+    </field>
+
+    <field name="ResourceClass" type="string">
+      <cmd:facet>resourceClass</cmd:facet>
+    </field>
+
+    <field name="Organisation" type="string">
+      <cmd:facet>organisation</cmd:facet>
+    </field>
+
+    <field name="Date" type="string">
+      <cmd:facet>date</cmd:facet>
+    </field>
+
+  </mappings>
+</mapping-table>
