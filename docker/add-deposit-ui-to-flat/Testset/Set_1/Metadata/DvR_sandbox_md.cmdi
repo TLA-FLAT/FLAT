@@ -20,11 +20,11 @@
       <ResourceProxyList>
          <ResourceProxy id="d111111">
             <ResourceType mimetype="audio/x-mpeg3">Resource</ResourceType>
-            <ResourceRef lat:localURI="../data/Media/Test.mp3">hdl:1839/00-0000-0000-0215-4A87-5</ResourceRef>
+            <ResourceRef lat:localURI="../data/Media/DvR_Sandbox_music.mp3">hdl:1839/00-0000-0000-0215-4A87-5</ResourceRef>
          </ResourceProxy>
          <ResourceProxy id="d111112">
             <ResourceType mimetype="application/pdf">Resource</ResourceType>
-            <ResourceRef lat:localURI="../data/Media//Test.pdf">hdl:1839/00-0000-0000-0315-4A87-5</ResourceRef>
+            <ResourceRef lat:localURI="../data/Media//DvR_Sandbox_text.pdf">hdl:1839/00-0000-0000-0315-4A87-5</ResourceRef>
          </ResourceProxy>
          <ResourceProxy id="landingpage">
             <ResourceType>LandingPage</ResourceType>

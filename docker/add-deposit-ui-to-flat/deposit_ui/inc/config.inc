@@ -67,7 +67,36 @@ function ingest_service_configuration()
 
 }
 
+function get_handle_configuration()
+{
+    return array(
+        # Whether or not to use a handle server; If false, locally unique IDs will be generated instead
+        'test_mode' => TRUE,
+        'prefix' => 'hdl:'
 
+    );
+
+}
+
+
+function get_metadata_configuration()
+{
+    return array(
+        'site_name' => 'MPI',
+        'MdProfile' => 'clarin.eu:cr1:p_1407745712035',
+        'prefix' => 'lat',
+        'ext' => '.cmdi'
+    );
+
+}
+
+
+function get_solr_configuration()
+{
+    return array(
+    );
+
+}
 /*
 DEFAULT SETTINGS OF THE FLAT_DEPOSIT_UI MODULE AND FUNCTIONS TO SET THESE
 */

@@ -141,13 +141,13 @@ function flat_deposit_ui_menu()
     $items['cmdi/select/%/%'] = array(
         'type' => MENU_CALLBACK,
         'page callback' => 'drupal_get_form',
-        'page arguments' => array('flat_deposit_ui_cmdi_select_form',1,2,3),
+        'page arguments' => array('flat_deposit_ui_cmdi_select_form',2,3),
         'access arguments' => array('use deposit module'));
 
 
 
     // Register form implementations
-    $items['cmdi/create/%/%/%'] = array(
+    $items['cmd/%/%/%/%'] = array(
         'type' => MENU_CALLBACK,
         'page callback' => 'drupal_get_form',
         'page arguments' => array('flat_deposit_ui_cmdi_create_form',1,2,3,4),
@@ -160,8 +160,8 @@ function flat_deposit_ui_menu()
 
 function flat_deposit_ui_cmdi_select_form($form, &$form_state){
 
-    $bundle = $form_state['build_info']['args'][1];
-    $collection = $form_state['build_info']['args'][2];
+    $bundle = $form_state['build_info']['args'][0];
+    $collection = $form_state['build_info']['args'][1];
 
     $form = array();
 
@@ -228,7 +228,6 @@ function flat_deposit_ui_cmdi_select_form($form, &$form_state){
             'bundle' => $bundle,
             'collection' =>$collection));
 
-
     $form['submit'] = array (
         '#type' => 'submit',
         '#value' => t('Select'),
@@ -259,15 +258,16 @@ function flat_deposit_ui_cmdi_select_form_validate($form, &$form_state){
 function flat_deposit_ui_cmdi_select_form_submit($form, &$form_state){
     $bundle = $form_state['values']['data_cmdi_select']['bundle'];
     $collection = $form_state['values']['data_cmdi_select']['collection'];
-
     $template = $form_state['values']['cmdi_select'];
+
+    $action = ($form_state['build_info']['args'][2] == 'createandfreeze') ? $form_state['build_info']['args'][2] : 'createcmdi';
 
     if (isset($form_state['values']['select_data_file'])){
         $md = '/' . $form_state['values']['select_data_file'];
     } else {
         $md = "";
     }
-    $form_state ['redirect'] = 'cmdi/create/' . $template . '/' . $bundle . '/' . $collection . $md;
+    $form_state ['redirect'] = 'cmd/' . $action . '/' . $template . '/' . $bundle . '/' . $collection . $md;
 
 }
 
@@ -397,15 +397,20 @@ function flat_deposit_ui_cmdi_create_form_validate($form, &$form_state){
 
 }
 
+/**
+ * On submission the form is optionally saved as template
+ *
+ */
 function flat_deposit_ui_cmdi_create_form_submit($form, &$form_state){
     $template = $form_state['values']['data_template']['template'];
     $bundle = $form_state['values']['data_template']['bundle'];
     $collection = $form_state['values']['data_template']['collection'];
+    $action = $form_state['build_info']['args'][0];
 
     $data = array();
     foreach ($form_state['values']['form_fields_template'] as $field) {$data[$field] = $form_state['values'][$field];}
 
-    // Save data as template if checked
+    // Save data as template (if checked)
     if ($form_state['values']['save_template']) {
         $template_dir = USER_DRUPAL_DATA_DIR . '/Templates';
         $template_name = $form_state['values']['template_name'];
@@ -414,30 +419,32 @@ function flat_deposit_ui_cmdi_create_form_submit($form, &$form_state){
 
     }
 
-    
-    
+    // generate CMDI xml and save to disc
     module_load_include('php','flat_deposit_ui','Helpers/CMDI_Handler');
     $cmd = new CMDI_Handler($bundle, $template);
+
+    # prepare xml
     $cmd->getXML();
+    $cmd->resources = $cmd->searchDir(USER_DRUPAL_DATA_DIR . '/' .$bundle);
+    $cmd->handles = $cmd->getHandles();
 
-    $cmd->getHandle();
+    # fill/change xml object
     $cmd->changeHeader();
-
-    // ToDo : At the moment, handles need to be known before ingest. Therefore, we only can create meta data for existing test data sets.
-    // ToDo: Implement Handle assignment and CMDI alteration (adding resources) as action during ingest, maybe part of dporkeeper
-    $cmd->addIngestFileInfoToXml();
-
-    
-    $cmd->processFormData($form_state['values']);
-    
+    $cmd->addResourcesToXml();
+    $cmd->processFormData($form_state['values']); 
     $cmd->addComponentInfoToXml();
 
-    //saving generated xml file;
+
     $result = $cmd->xml->asXML($cmd->export_file);
 
     $form_state['redirect'] ='commitchanges';
     drupal_set_message(t('Created metadata file from template ' . $template));
 
+
+    // freeze directory in case this option is chosen
+    if ($action == 'createandfreeze') {
+        flat_deposit_ui_freeze_bundle($bundle,$collection);
+    }
 }
 
 
@@ -1070,13 +1077,6 @@ function flat_deposit_ui_commit_form($form, $form_state)
         '#header' => $header,
         '#options' => $open,
     );
-    $form['open_bundles']['actions']['create_MD'] = array(
-        '#type' => 'submit',
-        '#value' => t('Create metadata file'),
-        '#description' => t('Every bundle needs a cmdi meta data file '),
-        '#submit' => array('flat_deposit_ui_commit_form_cmdi_select_submit'),
-        );
-
 
     $form['open_bundles']['actions']['freeze'] = array(
         '#type' => 'submit',
@@ -1088,8 +1088,14 @@ function flat_deposit_ui_commit_form($form, $form_state)
         '#type' => 'submit',
         '#value' => t('Delete bundle'),
         '#submit' => array('flat_deposit_ui_commit_form_delete_submit'));
-
-
+/**
+    $form['open_bundles']['actions']['create_MD'] = array(
+        '#type' => 'submit',
+        '#value' => t('Create metadata file'),
+        '#description' => t('Every bundle needs a cmdi meta data file '),
+        '#submit' => array('flat_deposit_ui_commit_form_cmdi_select_submit'),
+    );
+**/
     $form['open_bundles'] ['data_open_bundles']= array(
         '#type' => 'value',
         '#value' => $open_bundles);
@@ -1219,6 +1225,9 @@ function flat_deposit_ui_commit_form($form, $form_state)
         '#submit' => array('flat_deposit_ui_commit_form_refresh_archived_submit'),
     );
 
+    $form['other']['data'] = array(
+        '#type' => 'value',
+        '#value' => array('hasCMDI' => FALSE));
 
 
     return $form;
@@ -1299,32 +1308,24 @@ function flat_deposit_ui_commit_form_freeze_validate (&$form, &$form_state)
                 return $form;
             }
 
-            // Check if upload contains at least one cmdi file
-            if (count(glob(drupal_realpath(USER_DRUPAL_DATA_DIR . '/' . $bundle . '/metadata/*.cmdi'))) != 1) {
-                form_set_error('freeze_error', "No or too many meta data files available for upload bundle. Please provide exactly one .cmdi file");
-                return $form;
+            // In case upload folder contains one cmdi file, check if file a valid xml file?
+            if (count(glob(drupal_realpath(USER_DRUPAL_DATA_DIR . '/' . $bundle . '/metadata/*.cmdi'))) == 1) {
+
+                $form_state['values']['data']['hasCMDI'] = TRUE;
+                $cmdi = glob(drupal_realpath(USER_DRUPAL_DATA_DIR) . '/' . $bundle . '/metadata/*cmdi')[0];
+
+                $finfo = new finfo(FILEINFO_MIME, "/etc/magic");
+                $mime = $finfo->file($cmdi);
+
+                if (!strpos($mime, "/plain")) {
+                    form_set_error('freeze_error', "cmdi file is no valid xml file");
+                    return $form;}
+
+                if (!simplexml_load_file($cmdi)) {
+                    form_set_error('freeze_error', "cmdi file is no valid xml file");
+                    return $form;}
+
             }
-
-            // Checks on cmdi file
-            $cmdi = glob(drupal_realpath(USER_DRUPAL_DATA_DIR) . '/' . $bundle . '/metadata/*cmdi')[0];
-
-            $finfo = new finfo(FILEINFO_MIME, "/etc/magic");
-            $mime = $finfo->file($cmdi);
-
-            // Is cmdi a valid xml file?
-            if (!strpos($mime, "/plain")) {
-                form_set_error('freeze_error', "cmdi file is no valid xml file");
-                return $form;}
-
-            if (!simplexml_load_file($cmdi)) {
-                form_set_error('freeze_error', "cmdi file is no valid xml file");
-                return $form;}
-
-            // Check if bundle name match up with bundle name as found in cmdi-file
-            $content = json_decode(json_encode((array)simplexml_load_file($cmdi)), TRUE);
-            if ($content['Components']['lat-session']['Name'] != $bundle){
-                form_set_error('freeze_error', "cmdi file and bundle directory don't match. Please rename bundle");
-                return $form;}
 
         }
     }
@@ -1332,36 +1333,23 @@ function flat_deposit_ui_commit_form_freeze_validate (&$form, &$form_state)
 }
 
 
-
+/**
+ * In case open bundles have been checked, are valid for freeze and contain a meta datafile these bundles will be moved to the freeze directory.
+ * Otherwise redirect to cmdi form creation
+ *
+ */
 function flat_deposit_ui_commit_form_freeze_submit ($form, &$form_state)
 {
     foreach ($form_state['values']['table_open_bundles'] as $key => $checked) {
         if (!is_int($checked)) {
-
             // extract bundle name from form data
             $bundle = $form_state['values']['data_open_bundles'][$key]['bundle'];
             $collection = $form_state['values']['data_open_bundles'][$key]['collection'];
-            $source = drupal_realpath(USER_DRUPAL_DATA_DIR . '/' . $bundle);
-            $destination = USER_FREEZE_DIR . '/' . $bundle;
-            $moved = rename($source, $destination);
 
-            if ($moved) {
-                // update database entry
-                db_update('flat_deposit_ui_upload_log')
-                    ->fields(array(
-                        'freeze_time' => (int) $_SERVER['REQUEST_TIME'],
-                        'exceptions' => '',
-                        'status' => 'awaiting'))
-                    ->condition('user_id', USER)
-                    ->condition('bundle', $bundle)
-                    ->condition('collection', $collection)
-                    ->condition('status', 'open')
-                    ->execute();
-
-                //remove symbolic link in owncloud user directory
-                $oc = new OwnCloud();
-                $oc->DeleteLinkAndSync($bundle);
-                drupal_set_message(t('Project ' . $bundle . ' is valid and can be archived'));
+            if($form_state['values']['data']['hasCMDI']){
+                flat_deposit_ui_freeze_bundle($bundle,$collection);
+            } else {
+                $form_state['redirect'] = 'cmdi/select/'. $bundle .'/'. $collection . '/createandfreeze' ;
             }
         }
     }
@@ -1660,3 +1648,28 @@ function flat_deposit_ui_commit_form_refresh_archived_submit($form, &$form_state
 
 }
 
+
+function flat_deposit_ui_freeze_bundle($bundle, $collection){
+    $source = drupal_realpath(USER_DRUPAL_DATA_DIR . '/' . $bundle);
+    $destination = USER_FREEZE_DIR . '/' . $bundle;
+    $moved = rename($source, $destination);
+
+    if ($moved) {
+        // update database entry
+        db_update('flat_deposit_ui_upload_log')
+            ->fields(array(
+                'freeze_time' => (int)$_SERVER['REQUEST_TIME'],
+                'exceptions' => '',
+                'status' => 'awaiting'))
+            ->condition('user_id', USER)
+            ->condition('bundle', $bundle)
+            ->condition('collection', $collection)
+            ->condition('status', 'open')
+            ->execute();
+
+        //remove symbolic link in owncloud user directory
+        $oc = new OwnCloud();
+        $oc->DeleteLinkAndSync($bundle);
+        drupal_set_message(t('Project ' . $bundle . ' is valid and can be archived'));
+    }
+}
