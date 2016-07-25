@@ -1,0 +1,35 @@
+<?php
+/**
+ * @file
+ * Primarily Drupal hooks and global API functions setup the example.
+ *
+ * This is the main module file for the view_actions example.
+ * It implements :
+ *  hook_views_api() : register this module with views api and set path
+ *
+ *
+ */
+
+/**
+ * Implements hook_views_api().
+ * register with views api
+ * declare the path where to find the view include files
+ *
+ */
+
+function flat_views_views_api() {
+
+  $views_registration = array (
+    'api' => '3.0',
+    'path' => drupal_get_path('module', 'flat_views') . '/views',
+  );
+
+
+  return $views_registration;
+}
+
+
+
+
+
+
