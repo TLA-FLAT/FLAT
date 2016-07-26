@@ -7,7 +7,8 @@
 /**
  * Implements hook_install().
  */
-function flat_deposit_ui_install(){
+function flat_deposit_ui_install()
+{
 
     module_load_include('inc', 'flat_deposit_ui', 'inc/config');
 
@@ -18,268 +19,176 @@ function flat_deposit_ui_install(){
 
     $t = get_t();
 
-
-
-
-    //Content type definition
-    //type is the id of the content type, name the human-readable name and description detailed info about content type; title_label is the header above the created content type
+    // content type definition
     $content_type = array(
-        'type' => 'custom_content_type_1',
-        'name' => $t('Content type example 1'),
-        'description' => $t('Use this content type as an template for new custom content types'),
-        'title_label' => $t('Label 1'),
-        'base' => 'node_content',
-        'custom' => TRUE,
+        'type' => 'flat_bundle',
+        'name' => $t('FLAT Upload bundle'),
+        'description' => $t('A bundle of one or more data files upload entity'),
+        'title_label' => $t('Name of the upload bundle'),
+        'base' => 'node_content', #declare to be able to use content type hooks
+        'custom' => TRUE
     );
 
-    // Set remaining definiton with defaults.
+    // Set remaining definitions with defaults
     $node_type = node_type_set_defaults($content_type);
 
-    // Save the content type.
     node_type_save($node_type);
 
-    // Add additional field to body
-    node_add_body_field($node_type, $t('Description'));
+    #node_add_body_field($node_type, 'Description');
 
-    // Create fields
-    $fields =  array();
+    $fields = array();
 
-    $fields['flat_field_int_1'] = array(
-        'field_name' => 'flat_field_int_1',
-        'type' => 'number_integer',
-        //optional
+    $fields['upload_collection'] = array(
+        'field_name' => 'upload_collection',
+        'type' => 'list_text',
+        'cardinality' => 1,
+        'settings' => array(),
+            'locked' => TRUE
+    );
+    #$check_field_type = field_info_field_types('list_text');
+    $fields['upload_status'] = array(
+        'field_name' => 'upload_status',
+        'type' => 'list_text',
         'cardinality' => 1,
         'settings' => array(
-            'max_length' => '5',
-        )
+            'allowed_values' => array(
+                'open' => 'open',
+                'awaiting' => 'awaiting',
+                'archived' => 'archived',
+                'failed' => 'failed'
+            )
+        ),
+        'locked' => TRUE
     );
 
-    $fields['flat_field_text_1'] = array(
-        'field_name' => 'flat_field_text_1',
+    $fields['upload_exception'] = array(
+        'field_name' => 'upload_exception',
         'type' => 'text',
+        'cardinality' => 1,
         'settings' => array(
-            'max_length' => '60',
-        )
+            'max_length' => 255)
     );
-
-
+    $fields['upload_exception'] = array(
+        'field_name' => 'upload_exception',
+        'type' => 'text',
+        'cardinality' => 1,
+        'settings' => array(
+            'max_length' => 255)
+    );
+    
+    $fields['upload_cmdi'] = array(
+        'field_name' => 'upload_cmdi',
+        'type' => 'list_boolean',
+        'cardinality' => 1,
+        'settings' => array()
+    );
+    
     foreach ($fields as $field) {
         field_create_field($field);
-    }
+}
 
 
-    //create Field instances
-    $instances  = array ();
+    $instances = array();
 
-    $instances['flat_field_int_1'] = array(
-        'field_name' => 'flat_field_int_1',
-        'label' => $t('Integer number 1'),
-        'description' => $t('Describe contents'),
+    $instances['upload_collection'] = array(
+        'field_name' => 'upload_collection',
+        'label' => $t('Name of the collection'
+        ),
+        'description' => $t('The collection to which the upload bundle belongs'),
         'widget' => array(
-            'type' => 'text_textfield',
+            'type' => 'option_buttons'
         ),
         'required' => TRUE,
-        'settings' => array(
-            'text_processing' => 0,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            )
+        ));
+
+    $instances['upload_status'] = array(
+        'field_name' => 'upload_status',
+        'label' => $t('Status of the upload'
+        ),
+        'description' => $t('Is the bundle open, awaiting or archived'),
+        'widget' => array(
+            'type' => 'option_buttons'
+        ),
+        'required' => TRUE,
+        'default_value' => array(
+            0 => array('value'=> 'open')),
+        'settings' => array('text_processing' => 0),
+        'no_ui' => TRUE,
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            )
         )
     );
 
-    $instances['flat_field_text_1'] = array(
-        'field_name' => 'flat_field_text_1',
-        'label' => $t('Text field 1'),
-        'description' => $t('Describes text contents'),
+    $instances['upload_exception'] = array(
+        'field_name' => 'upload_exception',
+        'label' => $t('Exception'
+        ),
+        'description' => $t('Did any errors occur during upload'),
         'widget' => array(
-            'type' => 'text_textfield',
+            'type' => 'text_textfield'
         ),
-        'settings' => array(
-            'text_processing' => 1,
-        ),
+        'required' => FALSE,
+        'settings' => array('text_processing' => 0),
         'display' => array(
             'default' => array(
+                'type' => 'hidden',
+                'label' => 'inline',
+            ),
+            'error' => array(
                 'label' => 'inline',
             ),
         )
     );
-
-
-    foreach ($instances as $instance) {
-        $instance ['entity_type'] = 'node';
-        $instance ['bundle'] = 'custom_content_type_1';
+    $instances['upload_cmdi'] = array(
+        'field_name' => 'upload_cmdi',
+        'label' => $t('Meta data'
+        ),
+        'description' => $t('Is there a file describing the upload bundle'),
+        'widget' => array(
+            'type' => 'options_buttons'
+        ),
+        'required' => FALSE,
+        'default_value' => array(
+            0 => array('value'=> "0")),
+        'settings' => array(
+            'text_processing' => 0,
+            'display_label' => 1),
+        'display' => array(
+            'default' => array(
+                'type' => 'hidden',
+                'label' => 'inline',
+            )
+        )
+    );
+    foreach ($instances as $instance){
+        $instance['entity_type'] = 'node';
+        $instance['bundle'] = 'flat_bundle';
         field_create_instance($instance);
     }
-
-    //Gives user feedback
-    drupal_set_message($t('Deposit UI installed'));
-
-
-
 }
 
-/**
- * Implements hook_uninstall().
- */
-function flat_deposit_ui_uninstall(){
-    $t = get_t();
-
-    //Get all node IDs with flat_deposit_ui content type
-    $sql_query = 'SELECT nid ';
-    $sql_query .= 'FROM {node} ';
-    $sql_query .= 'WHERE {node}.type = :type ';
-    $result = db_query($sql_query,array(':type' => 'custom_content_type_1'));
-
-    $nids = array();
-    foreach ($result as $row) {
-        $nids[] = $row->nid;
-    }
-
-    // Delete all flat_deposite_nodes
-    node_delete_multiple($nids);
-    drupal_set_message($t('Nodes containing Custom content types have been removed'));
-
-    //Inform user about removal
-    drupal_set_message($t('Deposit UI uninstalled'));
-
-    //Remove all fields and field instances
-    foreach (field_info_instance('node', 'custom_content_type_1') as $field_name => $instance) {
-        field_delete_instance($instance);
-    }
-
-    //Inform about removal field and field instances
-    drupal_set_message($t('Custom field and field instances have been removed'));
-
-    // Delete custom content type
-    node_type_delete('custom_content_type_1');
-    drupal_set_message($t('Custom content type has been removed'));
-
-    //Clean up deleted fields
-    field_purge_batch(1000);
-
-    // clean up global variables
-    variable_del('flat_deposit_paths');
-    variable_del('flat_deposit_modules');
-    variable_del('flat_deposit_names');
-    variable_del('owncloud_settings');
-
-}
 
 /**
  * Implements hook_schema().
  */
 function flat_deposit_ui_schema() {
 
-    $schema['flat_deposit_ui_files_info'] = array(
-        'description' => 'Inventory of user files on the fedora backend.',
-        'fields' => array(
-            'pid'  => array(
-                'type' => 'varchar',
-                'length' => 255,
-                'not null' => TRUE,
-                'description' => 'File ID'
-            ),
-            'filename' => array(
-                'type' => 'varchar',
-                'length' => 255,
-                'not null' => FALSE,
-                'default' => '',
-                'description' => 'File_name.'
-            ),
-            'name' => array(
-                'type' => 'varchar',
-                'length' => 255,
-                'not null' => FALSE,
-                'default' => '',
-                'description' => 'Name of the file owner.'
-            ),
-            'dateIngested' => array(
-                'type' => 'int',
-                'length' => 12,
-                'not null' => FALSE,
-                'description' => 'Date when file is ingested.'
-            ),
-        ),
-        'primary key' => array('pid'),
-
-        'indexes' => array(
-            'filename'    => array('filename'),
-            'name' => array('name')
-        ),
-    );
-
-    $schema['flat_deposit_ui_project_info'] = array(
-        'description' => 'Inventory of user projects.',
-        'fields' => array(
-            'user_id'  => array(
-                'type' => 'varchar',
-                'length' => 255,
-                'not null' => TRUE,
-                'description' => 'User ID'
-            ),
-            'pname' => array(
-                'type' => 'varchar',
-                'length' => 255,
-                'not null' => TRUE,
-                'description' => 'Project name.'
-            ),
-            'is_frozen' => array(
-                'type' => 'int',
-                'pgsql_type' => 'boolean',
-                'not null' => FALSE,
-                'description' => 'Freezing status of the project'
-            ),
-            'freeze_date' => array(
-                'type' => 'int',
-                'length' => 10,
-                'not null' => FALSE,
-                'description' => 'Freeze date of the project'
-            ),
-            'is_ingested' => array(
-                'type' => 'int',
-                'pgsql_type' => 'boolean',
-                'not null' => FALSE,
-                'description' => 'Ingest status of the project'
-            ),
-            'ingest_date' => array(
-                'type' => 'int',
-                'length' => 10,
-                'not null' => FALSE,
-                'description' => 'Ingest date of the project'
-            ),
-            'field_str' => array(
-                'type' => 'varchar',
-                'length' => 255,
-                'not null' => FALSE,
-                'default' => '',
-                'description' => 'Temp string field'
-            ),
-            'field_int' => array(
-                'type' => 'int',
-                'length' => 2,
-                'not null' => FALSE,
-                'description' => 'Temp int field'
-            ),
-        ),
-    );
-    $schema['flat_collections'] = array(
-        'description' => 'All collections stored in FLAT.',
-        'fields' => array(
-            'collection_name'  => array(
-                'type' => 'varchar',
-                'length' => 255,
-                'not null' => TRUE,
-                'description' => 'Name of the collection'
-            ),
-            'member' => array(
-                'type' => 'varchar',
-                'length' => 63,
-                'not null' => FALSE,
-                'description' => 'Member of the collection.'
-            ),
-        )
-    );
-
-            $schema['flat_deposit_ui_upload_log'] = array(
+    $schema['flat_deposit_ui_upload'] = array(
         'description' => 'Logging of all uploading activity.',
         'fields' => array(
+            'uid'  => array(
+                'type' => 'serial',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+                'description' => 'ID of the upload instance'
+            ),
             'user_id'  => array(
                 'type' => 'varchar',
                 'length' => 63,
@@ -340,49 +249,49 @@ function flat_deposit_ui_schema() {
                 'type' => 'int',
                 'pgsql_type' => 'boolean',
                 'not null' => FALSE,
- #               'default' => 0,
-                    'description' => 'Bag has been created for data'
-                ),
+                #               'default' => 0,
+                'description' => 'Bag has been created for data'
+            ),
             'zipped' => array(
                 'type' => 'int',
                 'pgsql_type' => 'boolean',
                 'not null' => FALSE,
-  #              'default' => 0,
+                #              'default' => 0,
                 'description' => 'Bag has been created for data'
             ),
             'bagged' => array(
                 'type' => 'int',
                 'pgsql_type' => 'boolean',
                 'not null' => FALSE,
-   #             'default' => 0,
+                #             'default' => 0,
                 'description' => 'Bag has been created for data'
             ),
             'foxml' => array(
                 'type' => 'int',
                 'pgsql_type' => 'boolean',
                 'not null' => FALSE,
-    #            'default' => 0,
+                #            'default' => 0,
                 'description' => 'FOXML has been created for data'
             ),
             'bag_ingested' => array(
                 'type' => 'int',
                 'pgsql_type' => 'boolean',
                 'not null' => FALSE,
-     #           'default' => 0,
+                #           'default' => 0,
                 'description' => 'Bag has been ingested'
             ),
             'data_purged' => array(
                 'type' => 'int',
                 'pgsql_type' => 'boolean',
                 'not null' => FALSE,
-      #          'default' => 0,
+                #          'default' => 0,
                 'description' => 'Uploaded data has been purged'
             ),
             'owner_added' => array(
                 'type' => 'int',
                 'pgsql_type' => 'boolean',
                 'not null' => FALSE,
-       #         'default' => 0,
+                #         'default' => 0,
                 'description' => 'Notification has been unchecked'
             ),
             'date_bundle_ingest' => array(
@@ -395,11 +304,120 @@ function flat_deposit_ui_schema() {
                 'not null' => FALSE,
                 'description' => 'Indicate whether status info should be shown'
             ),
+            'language' => array(
+                'description' => 'language of the displayed entity',
+                'length' => 12,
+                'type' => 'varchar',
+                'not null' => TRUE,
+                'default' => ''
+            ),
         ),
+
         'unique keys' => array(
             'ukey' => array('user_id', 'bundle', 'collection'),
         ),
+        'primary key' => array('uid'),
+        'indexes' => array(
+            'language' => array('language'),)
+
     );
+
+    // Table keeping track of existing collections
+    $schema['flat_deposit_ui_collection'] = array(
+        'description' => 'Collection-member relation in FLAT.',
+        'fields' => array(
+            'collection_id'  => array(
+                'type' => 'serial',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+                'description' => 'Unique ID of each member collection relation'
+            ),
+            'collection_name'  => array(
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => TRUE,
+                'description' => 'Name of the collection'
+            ),
+            'member' => array(
+                'type' => 'varchar',
+                'length' => 63,
+                'not null' => TRUE,
+                'description' => 'Member of the collection.'
+            ),
+            'label'  => array(
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => TRUE,
+                'description' => 'label of the relation'
+            ),
+            'language' => array(
+                'description' => 'language of the displayed entity',
+                'length' => 12,
+                'type' => 'varchar',
+                'not null' => TRUE,
+                'default' => ''
+            ),
+            'date_created' => array(
+                'description' => 'Date when entry was created',
+                'type' => 'int',
+                'not null' => TRUE,
+            ),
+        ),
+
+        'primary key' => array('collection_id'),
+        'indexes' => array(
+            'language' => array('language'),)
+    );
+
 
     return $schema;
 }
+
+
+/**
+ * Implements hook_uninstall().
+ */
+function flat_deposit_ui_uninstall(){
+    $t = get_t();
+
+    // clean up global variables
+    variable_del('flat_deposit_paths');
+    variable_del('flat_deposit_modules');
+    variable_del('flat_deposit_names');
+    variable_del('owncloud_settings');
+
+
+    // Delete all flat_upload content type nodes
+    $nids = db_select('node','n')
+        ->fields('n', array('nid'))
+        ->condition('type', array('flat_collection_name', 'flat_member', 'flat_bundle'), 'IN')
+        ->execute()
+        ->fetchCol();
+
+    if (!empty ($nids)){
+        node_delete_multiple($nids);
+        drupal_set_message($t('Nodes containing Custom content types have been removed'));
+    }
+
+
+    //Remove all custom content type fields and field instances and clean up entries in field_config / field_config_instance tables
+    field_attach_delete_bundle('node','flat_bundle');
+
+    db_delete('field_config_instance')
+        ->condition('deleted', 1)
+        ->execute();
+
+    field_purge_batch(1000);
+
+    drupal_set_message($t('Custom field and field instances have been removed'));
+
+
+    // Delete custom content type
+    node_type_delete('flat_upload');
+    drupal_set_message($t('Custom content type has been removed'));
+
+
+    //Round up uninstall
+    drupal_set_message($t('Deposit UI uninstalled'));
+}
+

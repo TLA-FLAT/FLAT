@@ -2,32 +2,37 @@
 /**
  * @file
  * Custom user interface for the FLAT data repository
- */
-
-/*
- *  Load Dependencies
- */
-require_once ('fedora_queries.php');
-// require_once ('drupal_queries.php');
-// require_once ('misc.php');
+*/
 
 
-module_load_include('inc', 'flat_deposit_ui', 'Helpers/owncloud_api');
+if (module_exists('flat_deposit_ui')){
+    if ($GLOBALS['user']->uid){
 
-/*
- * Variable and constant definitions
- */
+        //Variable and constant definitions
 
-if ($GLOBALS['user']->uid){
-    define('USER', $GLOBALS['user']->name);
 
-    define('FREEZE_DIR', variable_get('flat_deposit_paths',array())['freeze']);
-    define('BAG_DIR', variable_get('flat_deposit_paths',array())['bag']);
+        define('USER', $GLOBALS['user']->name);
 
-    define('USER_FREEZE_DIR', FREEZE_DIR . USER);
-    define('USER_DRUPAL_DATA_DIR', 'public://users/' . USER );
-    define('APACHE_USER', variable_get('flat_deposit_names',array())['apache_user']);
-}
+        define('FREEZE_DIR', variable_get('flat_deposit_paths',array())['freeze']);
+        define('BAG_DIR', variable_get('flat_deposit_paths',array())['bag']);
+
+        define('USER_FREEZE_DIR', FREEZE_DIR . USER);
+        define('USER_DRUPAL_DATA_DIR', 'public://users/' . USER );
+        define('APACHE_USER', variable_get('flat_deposit_names',array())['apache_user']);
+
+
+//         Load Dependencies
+
+        require_once ('fedora_queries.php');
+        require_once ('drupal_queries.php');
+        // require_once ('misc.php');
+
+
+        module_load_include('inc', 'flat_deposit_ui', 'Helpers/owncloud_api');
+
+    }}
+
+
 
 /**
  * Implements hook_help().
@@ -44,8 +49,8 @@ function flat_deposit_ui_help($path, $args){
             break;
         }
     }
-
 }
+
 
 /**
  * Implements hook_permission().
@@ -62,6 +67,13 @@ function flat_deposit_ui_permission()
             'description' => t('Upload data to the FLAT deposit')));
 }
 
+function flat_deposit_ui_enable(){
+
+    user_role_change_permissions(DRUPAL_AUTHENTICATED_RID, array('use deposit module' => TRUE));
+
+}
+
+
 
 /**
  * Implements hook_menu().
@@ -72,7 +84,64 @@ function flat_deposit_ui_menu()
 
     $items = array();
 
-    // Admin configuration group
+
+
+    $items['node/%node/commit'] = array(
+        'title' => 'Commit',
+        'description' => 'Commit changes to upload',
+        'page callback' => 'drupal_get_form', // the function to be called when link is clicked
+        'page arguments' => array('flat_bundle_commit_form', 1), // arguments for the callback function 'profile_use_page': nid
+        'access arguments' => array('view own profile'), // permission
+        'type' => MENU_LOCAL_TASK,
+    );
+
+
+// CMDI template selection form
+    $items['node/%node/cmdi_select'] = array(
+        'type' => MENU_CALLBACK,
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('flat_deposit_ui_cmdi_select_form',1),
+        'access arguments' => array('use deposit module'));
+
+
+
+
+    // Register for the URL that mymodule_myentity_uri() returns.
+    // The placeholder %entity_object in the URL is handled by the Entity
+    // API function entity_object_load().
+    $items['upload/%entity_object'] = array(
+        // entity_object_load() needs to know what the entity type is.
+        'load arguments' => array('upload'),
+
+        // Use a callback for the page title, not a static title.
+        'title callback' => 'flat_deposit_ui_upload_page_title',
+        'title arguments' => array(1),
+
+        // Callback to display the entity.
+        'page callback' => 'entity_ui_entity_page_view',
+        'page arguments' => array(1),
+
+        // Access callback.
+        'access arguments' => $access,
+    );
+
+    $items['collection/%entity_object'] = array(
+        // entity_object_load() needs to know what the entity type is.
+        'load arguments' => array('collection'),
+
+        // Use a callback for the page title, not a static title.
+        'title callback' => 'flat_deposit_ui_collection_page_title',
+        'title arguments' => array(1),
+
+        // Callback to display the entity.
+        'page callback' => 'entity_ui_entity_page_view',
+        'page arguments' => array(1),
+
+        // Access callback.
+        'access arguments' => $access,
+    );
+
+// Admin configuration group
     $items['admin/config/flat_deposit_ui'] = array(
         'title' => 'FLAT deposit UI',
         'description' => 'Administer FLAT deposit user interface',
@@ -123,10 +192,15 @@ function flat_deposit_ui_menu()
     $items['managecollections'] = array(
         'title' => 'Manage Collections',
         'type' => MENU_LOCAL_TASK,
-        'page callback' => 'flat_deposit_ui_view_collections',
-        'page arguments' => array(
-            'content' => 'Under construction'),
-        'access arguments' => array('use deposit module'));
+        'access arguments' => array('admin deposit module'));
+
+
+    $items['managecollections/manage'] = array(
+        'title' => 'Add Collections',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('flat_deposit_ui_add_collections_form'),
+        'access arguments' => array('admin deposit module'));
 
     // Page for commiting changes
     $items['commitchanges'] = array(
@@ -137,12 +211,6 @@ function flat_deposit_ui_menu()
         'access arguments' => array('use deposit module'));
 
 
-    // CMDI template selection form
-    $items['cmdi/select/%/%'] = array(
-        'type' => MENU_CALLBACK,
-        'page callback' => 'drupal_get_form',
-        'page arguments' => array('flat_deposit_ui_cmdi_select_form',2,3),
-        'access arguments' => array('use deposit module'));
 
 
 
@@ -158,294 +226,294 @@ function flat_deposit_ui_menu()
 };
 
 
-function flat_deposit_ui_cmdi_select_form($form, &$form_state){
 
-    $bundle = $form_state['build_info']['args'][0];
-    $collection = $form_state['build_info']['args'][1];
-
-    $form = array();
-
-    $form['select_template_fieldset'] = array(
-        '#title' => t('Form Template Selection'),
-        '#type' => 'fieldset',
-        '#prefix' => '<div id="select-div">',
-        '#suffix' => '</div>',
-    );
-
-    $form['select_template_fieldset']['cmdi_select'] = [
-        '#type' => 'select',
-        '#title' => t('Please select meta data template'),
-        '#options' => [
-            'session' => t('session'),
-            'experiment' => t('experiment'),
-            'minimal' => t('minimal'),
-        ],
-    ];
-
-    $form['select_template_fieldset']['checkbox_ajax_trigger'] = array(
-        '#title' => t('Fill template with saved meta data'),
-        '#type' => 'checkbox',
-        '#ajax' => array(
-            'callback' => 'flat_deposit_ui_cmdi_select_ajax_callback',
-            'wrapper' => 'select-div',
-            'method' => 'replace',
-            'effect' => 'fade',
-        ),
-    );
-
-// The select_data_file field is only shown when checkbox_ajax_trigger is checked
-    $checked = isset($form_state['values']['checkbox_ajax_trigger']) ? $form_state['values']['checkbox_ajax_trigger'] : 0 ;
-    if ($checked) {
-
-
-        // Search for available tempalte data files in a certain data directory (e.g. Templates). // In case data files are
-        // a checkbox is added allowing to fill
-        $template_dir = USER_DRUPAL_DATA_DIR . '/Templates/';
-        $listing = array_diff(scandir($template_dir), array('..', '.'));
-        $templates = [];
-        $i = 0;
-
-        #foreach ($listing as $f) {$templates[(string)$i] = substr($f, 0, -4);$i++;} #make list of de-suffixed names
-        foreach ($listing as $f) {
-            $sub = substr($f, 0, -4);
-            $templates[$sub] = $sub;
-        } #make list of de-suffixed names
-
-        $form['select_template_fieldset']['select_data_file'] = array(
-            '#type' => 'select',
-            '#title' => t('Select a file containing meta data'),
-            '#options' => $templates);
-
-        if (!$templates) {
-            drupal_set_message('No saved meta data are available', 'warning');
-        }
-
-    }
-
-    $form ['data_cmdi_select']= array(
-        '#type' => 'value',
-        '#value' => array(
-            'bundle' => $bundle,
-            'collection' =>$collection));
-
-    $form['submit'] = array (
-        '#type' => 'submit',
-        '#value' => t('Select'),
-        '#submit' => array('flat_deposit_ui_cmdi_select_form_submit'),
-        '#validate' => array('flat_deposit_ui_cmdi_select_form_validate'));
-
-    return $form;
-}
-
-function flat_deposit_ui_cmdi_select_ajax_callback ($form, &$form_state)
-{
-
-    return $form['select_template_fieldset'];
-}
-
-
-function flat_deposit_ui_cmdi_select_form_validate($form, &$form_state){
-    $bundle = $form_state['values']['data_cmdi_select']['bundle'];
-    $template = $form_state['values']['cmdi_select'];
-
-    module_load_include('php','flat_deposit_ui','Helpers/CMDI_Handler');
-    $cmd = new CMDI_Handler($bundle, $template);
-
-    if ($cmd->projectCmdiFileExists()) form_set_error ('ingest_error', t('CMDI file already exists at target location'));
-    return $form;
-}
-
-function flat_deposit_ui_cmdi_select_form_submit($form, &$form_state){
-    $bundle = $form_state['values']['data_cmdi_select']['bundle'];
-    $collection = $form_state['values']['data_cmdi_select']['collection'];
-    $template = $form_state['values']['cmdi_select'];
-
-    $action = ($form_state['build_info']['args'][2] == 'createandfreeze') ? $form_state['build_info']['args'][2] : 'createcmdi';
-
-    if (isset($form_state['values']['select_data_file'])){
-        $md = '/' . $form_state['values']['select_data_file'];
-    } else {
-        $md = "";
-    }
-    $form_state ['redirect'] = 'cmd/' . $action . '/' . $template . '/' . $bundle . '/' . $collection . $md;
-
-}
-
+// BEGIN TEST
 
 /**
- * Template session form. Can be populated by saved meta data (md). This is done by filling form default_values with data from a saved php-array.
-
- * @param $extra string path variable extending the ordinary registered path which will be used as additional variable in functions' logic
- * @return array
+ * Helper function to dynamically enter the current user
+ * into the path of the 'Profile' link in the my_menu menu
  */
-function flat_deposit_ui_cmdi_create_form($form, &$form_state,$extra){
-    $bundle = $form_state['build_info']['args'][2];
-    $collection = $form_state['build_info']['args'][3];
-    $template = $form_state['build_info']['args'][1];
+function currentuser_to_arg($arg) {
 
-    // Validation of meta data file might be handy and could be included here
-    if (isset($form_state['build_info']['args'][4])) {
-       $file = $form_state['build_info']['args'][4];
-        $md = include USER_DRUPAL_DATA_DIR . '/Templates/'. $file . '.php';
+    return USER;
+}
 
-    } else {$md = NULL;
-    };
+/**
+ * The flat bundle commit page for freezing data bundles
+ *
+ * @param $nid
+ * The user id of the user whose profile page will be laoded
+ */
+function flat_bundle_commit_form($nid) {
 
-    module_load_include('php','flat_deposit_ui','Helpers/CMDI_Handler');
+    $form = array();
+    $form['actions']['freeze'] = array(
+        '#type' => 'submit',
+        '#value' => t('Verify bundle'),
+        '#submit' => array('flat_bundle_commit_form_freeze_submit'),
+        '#validate' => array('flat_bundle_commit_form_freeze_validate'),);
 
+    $form['actions']['unfreeze'] = array(
+        '#type' => 'submit',
+        '#value' => t('Unfreeze bundle'),
+        '#submit' => array('flat_bundle_commit_form_unfreeze_submit'));
 
+    return $form;
+}
 
-
-    //$md = get_example_md($template); #uncomment to get example data
-
-    
-
-    // remove md for unfilled form
-    $form = get_template_form($template, $bundle,$md);
-
-
-    //add names of form fields to form
-    $form['form_fields_template'] = array(
-        '#type' => 'value',
-        '#value' => array_keys($form));
-
-
-    // add data fields and submit-button to template form
-    $form ['data_template']= array(
-        '#type' => 'value',
-        '#value' => array('template' => $template,
-            'bundle' => $bundle,
-            'collection' =>$collection));
+/**
+ * The form for adding a new User
+ */
+function add_new_user_form() {
+    // Create a form here
+    #   return $form;
+}
 
 
-    $form['save_template'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Save input as template'),
-        '#ajax' => array(
-            'callback' => 'flat_deposit_ui_cmdi_save_form_ajax_callback',
-            'wrapper' => 'input_field',
-            'effect' => 'fade',
-        ),
+
+
+// END TEST
+
+
+
+
+
+
+
+
+function flat_deposit_ui_upload_page_title($entity){
+    return $entity->bundle;
+}
+
+function flat_deposit_ui_collection_page_title($entity){
+    return $entity->collection_name;
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function flat_deposit_ui_block_info()
+{
+    $blocks = array();
+
+    $blocks['flat_deposit_menu'] = array(
+        'info' => t('FLAT Deposit Main Menu'),
+        'status' => TRUE,
+        'region' => 'sidebar_second',
+        'visibility' => BLOCK_VISIBILITY_NOTLISTED,
+        'pages' => 'islandora/*',
+
     );
+    return $blocks;
+}
 
-    $form['input_field'] = array(
-        '#type' => 'markup',
-        '#prefix' => '<div id="input_field">',
-        '#suffix' => '</div>',
-    );
-
-    // Since checkboxes return TRUE or FALSE, we have to check that
-    // $form_state has been filled as well as what it contains.
-    if (!empty($form_state['values']['save_template']) && $form_state['values']['save_template']) {
-        $form['input_field']['template_name'] = array(
-            '#type' => 'textfield',
-            '#title' => t('Name of template'),
+/**
+ * Implements hook_block_view().
+ */
+function flat_deposit_ui_block_view($delta = '')
+{
+    if ($delta == 'flat_deposit_menu') {
+        return array(
+            'subject' => t('FLAT Deposit Main Menu'),
+            'content' => flat_deposit_ui_menu_block_generate(),
         );
 
     }
-    $form['submit'] = array (
+}
+
+
+// Implements flat deposit main menu block
+function flat_deposit_ui_menu_block_generate(){
+    // Build a render array.
+
+    $output = array(
+        'link_workspace' => array(
+            '#type' => 'markup',
+            '#prefix' => '<div>',
+            '#markup' => '<a href="/drupal/workspace" title="My Workspace"><img title="My Workspace" alt="My Workspace" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Upload.png"/></a><br/>',
+            '#suffix' => '<a href="/drupal/workspace">My Workspace</a><br/></div>'),
+        'link_view' => array(
+            '#type' => 'markup',
+            '#prefix' => '<div>',
+            '#markup' => '<a href="/drupal/view" title="View uploads"><img title="View uploads" alt="View uploads" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/View.png"/></a><br/>',
+            '#suffix' => '<a href="/drupal/view">View uploads</a><br/></div>'),
+        'link_manage_bundles' => array(
+            '#type' => 'markup',
+            '#prefix' => '<div>',
+            '#markup' => '<a href="/drupal/managebundles/" title="Manage bundles"><img title="Manage bundles" alt="Manage bundles" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Manage.png"/></a><br/>',
+            '#suffix' => '<a href="/drupal/managebundles">Manage bundles</a><br/></div>'),
+        'link_manage_collections' => array(
+            '#type' => 'markup',
+            '#prefix' => '<div>',
+            '#markup' => '<a href="/drupal/managecollections" title="Manage collections"><img title="Manage collections" alt="Manage collections" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Manage_coll.png"/></a><br/>',
+            '#suffix' => '<a href="/drupal/managecollections">Manage collections</a><br/></div>'),
+        'link_commit' => array(
+            '#type' => 'markup',
+            '#prefix' => '<div>',
+            '#markup' => '<a href="/drupal/commitchanges" title="Commit changes"><img title="Commit changes" alt="Commit changes" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Commit.png"/></a><br/>',
+            '#suffix' => '<a href="/drupal/commitchanges">Commit changes</a><br/></div>'),
+    );
+    return $output;
+}
+
+
+function flat_deposit_ui_entity_info() {
+    $entities = array();
+
+    $entities['upload'] = array(
+
+
+        'label' => t('Upload instance'),
+        'plural label' => t('Upload instances'),
+        'fieldable' => TRUE,
+
+
+        'base table' => 'flat_deposit_ui_upload',
+        'entity keys' => array(
+            'id' => 'uid',
+            'user' => 'user_id',
+            'bundle' => 'bundle',
+            'collection' => 'collection'
+        ),
+
+        'entity class' => 'Entity',
+        'controller class' => 'EntityAPIController',
+
+        'admin ui' => array(
+            'path' => 'admin/upload',
+        ),
+        'module' => 'flat_deposit_ui',
+        'access arguments' => array('admin deposit module'),
+
+        // For content-type entities only, define the callback that
+        // returns the URL for the entity.
+        'uri callback' => 'flat_deposit_ui_upload_uri',
+    );
+
+    $entities['collection'] = array(
+
+        // Define basic information.
+        'label' => t('Collection'),
+        'plural label' => t('Collections'),
+        'fieldable' => FALSE,
+
+        // Provide information about the database table.
+        'base table' => 'flat_deposit_ui_collection',
+        'entity keys' => array(
+            'id' => 'collection_id',
+            'label' => 'label',
+
+        ),
+
+        // Use classes from the Entity API module.
+        'entity class' => 'Entity',
+        'controller class' => 'EntityAPIController',
+
+        // Have Entity API set up an administrative UI.
+        'admin ui' => array(
+            'path' => 'admin/collections',
+        ),
+        'module' => 'flat_deposit_ui',
+        'access callback' => 'flat_deposit_ui_collection_access',
+
+        // For content-type entities only, define the callback that
+        // returns the URL for the entity.
+        'uri callback' => 'flat_deposit_ui_collection_uri',
+    );
+
+    return $entities;
+}
+
+
+function collection_form($form, $form_state, $entity){
+
+    $form = array();
+
+    $form['collection_name'] = array(
+        '#title' => t('Collection Name'),
+        '#type' => 'textfield',
+        '#default_value' => isset($entity->collection_name) ? $entity->collection_name : '',
+        '#required' => TRUE);
+
+    $form ['member'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Member Name'),
+        '#default_value' => isset($entity->member) ? $entity->member : '',
+        '#required' => TRUE);
+
+    $form['actions'] = array(
+        '#type' => 'actions');
+
+    $form['actions']['submit'] = array(
         '#type' => 'submit',
         '#value' => t('Save'),
-        '#submit' => array('flat_deposit_ui_cmdi_create_form_submit'),
-        '#validate' => array('flat_deposit_ui_cmdi_create_form_validate'));
+        '#submit' => array('collection_form_submit'),
+        '#weight' => 999,
+    );
+
+    // Let Field module handle the rest.
+    field_attach_form('collection', $entity, $form, $form_state);
 
     return $form;
 }
 
+function collection_form_submit($form, &$form_state){
 
-function flat_deposit_ui_cmdi_save_form_ajax_callback($form, $form_state)
-{
-    return $form['input_field'];
-}
+    #Add values for mandatory fields
+    $form_state['values']['label'] = $form_state['values']['collection_name'] . '_' . $form_state['values']['member'];
+    $form_state['values']['date_created'] = time();
 
+    $entity = entity_ui_form_submit_build_entity($form, $form_state);
+    $entity->save();
 
-function flat_deposit_ui_cmdi_create_form_validate($form, &$form_state){
+    // Redirect to the management page.
+    $form_state['redirect'] = 'managecollections';
 
-// Checks for saving the templates
-    if ($form_state['values']['save_template']){
-
-        // Can directory be created?
-        $template_dir = USER_DRUPAL_DATA_DIR . '/Templates';
-        if (!file_exists($template_dir)) { drupal_mkdir($template_dir);}
-
-        if (!file_exists($template_dir)) {
-            form_set_error ('cmdi_error', "Couldn't create directory for saving templates. Please contact administator");
-            return $form;
-        }
-
-        // Is template directory owned by apache_user and writable
-        $owner = posix_getpwuid(fileowner($template_dir));
-        if ($owner['name'] != APACHE_USER) {
-            form_set_error ('cmdi_error', "Template directory is not writable by application. Please contact administator");
-            return $form;
-        }
-
-        // Is template directory name a valid name ?
-        $template_name = $form_state['values']['template_name'];
-        if (!preg_match('/^[a-zA-Z0-9\_]{2,40}+$/', $template_name)) {
-            form_set_error ('cmdi_error', "The name of template directory may contain letters, numbers and underscores (max length 40 characters)");
-            return $form;
-        }
-        if (file_exists( $template_dir . '/' . $template_name . '.php')) {
-            form_set_error ('cmdi_error', "A template file with entered name already exists");
-            return $form;
-        }
-
-    }
-
-    return $form;
+    #drupal_set_message(sprintf("%s is now member of collection %s ", $member,$collection));
 
 }
+
+
+
+// For content-type entities, return the URI for an entity.
+function flat_deposit_ui_upload_uri($entity) {
+    return array(
+        'path' => 'upload/' . $entity->uid,
+    );
+}
+
+// For content-type entities, return the URI for an entity.
+function flat_deposit_ui_collection_uri($entity) {
+    return array(
+        'path' => 'collection/' . $entity->collection_id,
+    );
+}
+
 
 /**
- * On submission the form is optionally saved as template
+ * Access callback: Checks entity access.
  *
+ * From "Defining an Entity Type in Drupal 7", chapter 4.
+ *
+ * @param string $op
+ *   Operation to check: 'view', 'update', 'create', etc.
+ * @param object|null $entity
+ *   Object to check access on, or NULL to check for all entities.
+ * @param object|null $account
+ *   Account to check access permissions for. NULL means "current user".
+ *
+ * @return bool
+ *   TRUE to allow access; FALSE to deny access.
  */
-function flat_deposit_ui_cmdi_create_form_submit($form, &$form_state){
-    $template = $form_state['values']['data_template']['template'];
-    $bundle = $form_state['values']['data_template']['bundle'];
-    $collection = $form_state['values']['data_template']['collection'];
-    $action = $form_state['build_info']['args'][0];
-
-    $data = array();
-    foreach ($form_state['values']['form_fields_template'] as $field) {$data[$field] = $form_state['values'][$field];}
-
-    // Save data as template (if checked)
-    if ($form_state['values']['save_template']) {
-        $template_dir = USER_DRUPAL_DATA_DIR . '/Templates';
-        $template_name = $form_state['values']['template_name'];
-
-        file_put_contents( $template_dir . '/' . $template_name . '.php' , '<?php return '.var_export( $data, true ).";\n" );
-
+function flat_deposit_ui_collection_access($op, $entity, $account = NULL) {
+    if ($op == 'view') {
+        return user_access('view collection', $account);
     }
 
-    // generate CMDI xml and save to disc
-    module_load_include('php','flat_deposit_ui','Helpers/CMDI_Handler');
-    $cmd = new CMDI_Handler($bundle, $template);
-
-    # prepare xml
-    $cmd->getXML();
-    $cmd->resources = $cmd->searchDir(USER_DRUPAL_DATA_DIR . '/' .$bundle);
-    $cmd->handles = $cmd->getHandles();
-
-    # fill/change xml object
-    $cmd->changeHeader();
-    $cmd->addResourcesToXml();
-    $cmd->processFormData($form_state['values']); 
-    $cmd->addComponentInfoToXml();
-
-
-    $result = $cmd->xml->asXML($cmd->export_file);
-
-    $form_state['redirect'] ='commitchanges';
-    drupal_set_message(t('Created metadata file from template ' . $template));
-
-
-    // freeze directory in case this option is chosen
-    if ($action == 'createandfreeze') {
-        flat_deposit_ui_freeze_bundle($bundle,$collection);
-    }
+    // All other operations use the generic "administer" permission.
+    return user_access('administer collection', $account);
 }
+
 
 
 
@@ -596,72 +664,6 @@ function flat_deposit_ui_owncloud_form_reset_submit ($form, &$form_state){
 }
 
 
-/**
- * Implements hook_block_info().
- */
-function flat_deposit_ui_block_info()
-{
-    $blocks = array();
-
-    $blocks['flat_deposit_menu'] = array(
-        'info' => t('FLAT Deposit Main Menu'),
-        'status' => TRUE,
-        'region' => 'sidebar_second',
-        'visibility' => BLOCK_VISIBILITY_NOTLISTED,
-        'pages' => 'islandora/*',
-
-    );
-    return $blocks;
-}
-
-/**
- * Implements hook_block_view().
- */
-function flat_deposit_ui_block_view($delta = '')
-{
-    if ($delta == 'flat_deposit_menu') {
-        return array(
-            'subject' => t('FLAT Deposit Main Menu'),
-            'content' => flat_deposit_ui_menu_block_generate(),
-        );
-
-    }
-}
-
-// Implements flat deposit main menu block
-function flat_deposit_ui_menu_block_generate(){
-    // Build a render array.
-
-    $output = array(
-        'link_workspace' => array(
-            '#type' => 'markup',
-            '#prefix' => '<div>',
-            '#markup' => '<a href="/drupal/workspace" title="My Workspace"><img title="My Workspace" alt="My Workspace" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Upload.png"/></a><br/>',
-            '#suffix' => '<a href="/drupal/workspace">My Workspace</a><br/></div>'),
-        'link_view' => array(
-            '#type' => 'markup',
-            '#prefix' => '<div>',
-            '#markup' => '<a href="/drupal/view" title="View uploads"><img title="View uploads" alt="View uploads" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/View.png"/></a><br/>',
-            '#suffix' => '<a href="/drupal/view">View uploads</a><br/></div>'),
-        'link_manage_bundles' => array(
-            '#type' => 'markup',
-            '#prefix' => '<div>',
-            '#markup' => '<a href="/drupal/managebundles/" title="Manage bundles"><img title="Manage bundles" alt="Manage bundles" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Manage.png"/></a><br/>',
-            '#suffix' => '<a href="/drupal/managebundles">Manage bundles</a><br/></div>'),
-        'link_manage_collections' => array(
-            '#type' => 'markup',
-            '#prefix' => '<div>',
-            '#markup' => '<a href="/drupal/managecollections" title="Manage collections"><img title="Manage collections" alt="Manage collections" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Manage_coll.png"/></a><br/>',
-            '#suffix' => '<a href="/drupal/managecollections">Manage collections</a><br/></div>'),
-        'link_commit' => array(
-            '#type' => 'markup',
-            '#prefix' => '<div>',
-            '#markup' => '<a href="/drupal/commitchanges" title="Commit changes"><img title="Commit changes" alt="Commit changes" src="/drupal/'.drupal_get_path('module','flat_deposit_ui').'/Images/Commit.png"/></a><br/>',
-            '#suffix' => '<a href="/drupal/commitchanges">Commit changes</a><br/></div>'),
-    );
-    return $output;
-}
-
 
 /**
  * Implements hook_form
@@ -687,9 +689,21 @@ function flat_deposit_ui_workspace_form($form, &$form_state)
         '#type' => 'textfield',
         '#title' => t('Name of bundle'));
 
-    $form ['field_1'] ['collection_name'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Belongs to collection'));
+    $conditions = array('member'=> USER);
+    $results = dq_user_is_member_collections($conditions);
+
+    $collections = convert_database_data_to_array($results,'collection_name');
+
+    // for test purposes
+    if (empty($collections)){$collections=['Dummy collection'];}
+
+    $form ['field_1']['select_collection'] = [
+        '#type' => 'select',
+        '#title' => t('Please select collection'),
+        '#empty_value' => '',
+        '#default_value' => '',
+        '#options' => $collections,
+    ];
 
     $form ['field_1']['init_submit'] = array(
         '#type' => 'submit',
@@ -697,41 +711,21 @@ function flat_deposit_ui_workspace_form($form, &$form_state)
         '#submit' => array('flat_deposit_ui_workspace_bundle_init_submit'),
         '#validate' => array('flat_deposit_ui_workspace_bundle_init_validate'));
 
+    $fields = array('user_id', 'bundle', 'collection', 'status', 'exceptions', 'date_bundle_ingest');
+    $conditions = array('status'=> 'open');
+    $results = dq_user_bundle_data($fields, $conditions);
 
-    $results = db_select('flat_deposit_ui_upload_log','p')
-        ->fields('p',array('user_id', 'bundle', 'collection', 'status', 'exceptions', 'date_bundle_ingest'))
-        ->condition('user_id', USER)
-        ->condition('status', 'open')
-        ->orderBy('collection')
-        ->orderBy('bundle')
-        ->execute();
-
-    $open_bundles = array();
-
-    foreach ($results as $entry) {
-        $entry_as_array = json_decode(json_encode($entry), true);
-
-        $open_bundles [] = $entry_as_array['bundle'];
-    }
-
+    $open_bundles = convert_database_data_to_array($results,'bundle');
 
     $list_open_bundles = theme('item_list', array('items' => $open_bundles,
-                                                    'title' => '',
-                                                    'type' => 'ul',
-                                                    'attributes' => array()));
+        'title' => '',
+        'type' => 'ul',
+        'attributes' => array()));
 
     $form['field_2'] = array(
         '#type' => 'fieldset',
         '#title' => t('Open bundles'),
         '#description' => $list_open_bundles );
-
-
-
-
-
-/*
-
- */
 
     $form['field_2']['upload_submit'] = array(
         '#type' => 'submit',
@@ -741,7 +735,7 @@ function flat_deposit_ui_workspace_form($form, &$form_state)
     $form['field_3'] = array(
         '#type' => 'fieldset',
         '#title' => t('Other tasks'),
-        );
+    );
 
     $form['field_3']['sync'] = array(
         '#type' => 'submit',
@@ -751,7 +745,7 @@ function flat_deposit_ui_workspace_form($form, &$form_state)
 
     // Check for integrity with owncloud in case this features is selected
     $oc = new OwnCloud();
-    if ($oc->ok){
+    if ($oc->noErrors){
         return $form;
     }
 }
@@ -764,27 +758,7 @@ function flat_deposit_ui_workspace_form($form, &$form_state)
 
 function flat_deposit_ui_workspace_bundle_init_validate(&$form, &$form_state)
 {
-    $bundle_name = $form_state['values']['bundle_name'];
-
-    $message = FALSE;
-
-    $form_state['full_directory_path'] = USER_DRUPAL_DATA_DIR . '/' .  $bundle_name;
-
-    //Check that the input values are of the proper format
-    if (!preg_match('/^[a-zA-Z0-9\_]{2,40}+$/', $bundle_name)) {
-        $message = 'Allowed are all letters, numbers and underscores (max length 40)';}
-
-    //Check that bundle name is distinctive from existing bundles
-    else{
-        $dirs = scandir(USER_DRUPAL_DATA_DIR);
-        if (file_exists(USER_FREEZE_DIR)){ $dirs = array_merge($dirs, array_diff(scandir(USER_FREEZE_DIR), array('..', '.')));}
-
-        foreach ($dirs as $dir){
-            if (strtolower($dir)==strtolower($bundle_name)){$message = "Bundle with same or very similar bundle name exists";}
-        };
-    };
-    //redirect to form in case error message is created
-    if ($message) {form_set_error ('bundle_name', $message);}
+    form_set_error ('update', 'Can\'t create new bundle using this branch');
 }
 
 /**
@@ -792,48 +766,6 @@ function flat_deposit_ui_workspace_bundle_init_validate(&$form, &$form_state)
  */
 function flat_deposit_ui_workspace_bundle_init_submit(&$form, &$form_state)
 {
-    drupal_set_message(t('Creating new upload folders'));
-
-    $target = $form_state['full_directory_path'];
-    drupal_mkdir($target);
-    drupal_chmod($target, 0775);
-    drupal_mkdir($target . '/metadata');
-    drupal_mkdir($target . '/data');
-
-
-    //create symbolic link in owncloud user directory and refresh to see new directory
-    $oc = new OwnCloud();
-    $bundle = $form_state['values']['bundle_name'];
-    $oc->CreateLinkAndSync($target, $bundle);
-
-    $collection = $form_state['values']['collection_name'];
-
-    //Make entry on database (if not exists)
-    module_load_include('inc', 'flat_deposit_ui' , '/inc/config');
-    $config = get_initial_bundle_profile();
-    $config['user_id'] = USER;
-    $config['bundle'] = $bundle;
-    $config['collection'] = $collection;
-    $config['status'] = 'open';
-
-    $result = db_select('flat_deposit_ui_upload_log', 'bundle')
-        ->fields('bundle', array('bundle'))
-        ->condition('user_id', USER)
-        ->condition('bundle', $bundle)
-        ->condition('collection', $collection)
-        ->execute()
-        ->rowCount();
-
-    if ($result) {
-        db_update('flat_deposit_ui_upload_log')
-            ->fields(array('status' => 'open'))
-            ->condition('user_id', USER)
-            ->condition('bundle', $bundle)
-            ->condition('collection', $collection)
-            ->execute();
-    } else {
-        drupal_write_record('flat_deposit_ui_upload_log', $config);
-    }
 }
 
 #
@@ -911,58 +843,6 @@ function flat_deposit_ui_view_ingested_files() {
     return $output;
 }
 
-
-/**
- * Gets a list of all data ingested
- */
-function flat_deposit_ui_view_collections()
-{
-    $tuque = islandora_get_tuque_connection();
-
-    $query = query_owned_collections(USER);
-
-    $results = $tuque->repository->ri->sparqlQuery($query);
-
-    $rows = array();
-
-    foreach ($results as $result) {
-        $pid = $result['pid']['value'];
-        $label = $result['label']['value'];
-        $createdDate = $result['created']['value'];
-
-        $createdDate_formatted = format_date(strtotime($createdDate));
-
-        $tmp = array(
-            'theme' => 'link',
-            'text' => 'click here',
-            'path' => "islandora/object/$pid",
-            'options' => array(
-                'attributes' => array(),
-                'html' => FALSE
-            )
-        );
-        $link = theme_link($tmp);
-
-        $row = array($label, $createdDate_formatted, $link) ;
-        array_push($rows,$row);
-    }
-
-    // creating header array
-    $header = array( t('Name'), t('Date ingested'),t('Direct link'));
-    #islandora_object_load($object_id)
-    $output = array(
-        // Table, using the theme hook 'table'.
-        'notification' => array(
-            '#theme' => 'table',
-            '#caption' => t('Projects'),
-            '#header' => $header,
-            '#rows' => $rows,
-        ),
-    );
-
-    return $output;
-}
-
 /**
  * Gets a list of all data ingested
  */
@@ -1019,33 +899,29 @@ function flat_deposit_ui_manage_bundles()
  */
 function flat_deposit_ui_commit_form($form, $form_state)
 {
-    $results = db_select('flat_deposit_ui_upload_log','p')
-        ->fields('p',array('user_id', 'bundle', 'collection', 'status', 'exceptions', 'date_bundle_ingest'))
-        ->condition('user_id', USER)
-        ->orderBy('collection')
-        ->orderBy('bundle')
-        ->execute();
+    $fields = array('uid','user_id', 'bundle', 'collection', 'status', 'exceptions', 'date_bundle_ingest');
 
+    $results = dq_user_bundle_data($fields);
+    $results = convert_database_data_to_array($results);
+
+    // make array of open / frozen bundles in order to use these in a form
     $open_bundles = array();
     $frozen_bundles = array();
     $archived_bundles = array();
     $other_bundles = array();
 
-    // make array of open / frozen bundles in order to use these in a form
-    foreach ($results as $entry) {
-        $entry_as_array = json_decode(json_encode($entry), true);
-        if ($entry_as_array['status'] == 'open' && file_exists(USER_DRUPAL_DATA_DIR . '/' . $entry_as_array['bundle'])) {
-            $open_bundles [] = $entry_as_array;
-        } elseif ($entry_as_array['status'] == 'archived' ) {
-            $archived_bundles [] = $entry_as_array;
-        } elseif (file_exists(USER_FREEZE_DIR . '/' . $entry_as_array['bundle'])) {
-            $frozen_bundles [] = $entry_as_array;
+    foreach ($results as $row) {
+        if ($row['status'] == 'open' && file_exists(USER_DRUPAL_DATA_DIR . '/' . $row['bundle'])) {
+            $open_bundles [] = $row;
+        } elseif ($row['status'] == 'archived' ) {
+            $archived_bundles [] = $row;
+        } elseif (file_exists(USER_FREEZE_DIR . '/' . $row['bundle'])) {
+            $frozen_bundles [] = $row;
         } else {
-            $entry_as_array['exceptions'] .= '; No files found in data directory';
-            $other_bundles [] = $entry_as_array;
+            $row['exceptions'] .= '; No files found in data directory';
+            $other_bundles [] = $row;
         }
     }
-
 
     // make form with three fields : 1) open bundles, 2) frozen bundles 3) additional (admin) tasks
     $form = array();
@@ -1088,14 +964,14 @@ function flat_deposit_ui_commit_form($form, $form_state)
         '#type' => 'submit',
         '#value' => t('Delete bundle'),
         '#submit' => array('flat_deposit_ui_commit_form_delete_submit'));
-/**
+    /**
     $form['open_bundles']['actions']['create_MD'] = array(
-        '#type' => 'submit',
-        '#value' => t('Create metadata file'),
-        '#description' => t('Every bundle needs a cmdi meta data file '),
-        '#submit' => array('flat_deposit_ui_commit_form_cmdi_select_submit'),
+    '#type' => 'submit',
+    '#value' => t('Create metadata file'),
+    '#description' => t('Every bundle needs a cmdi meta data file '),
+    '#submit' => array('flat_deposit_ui_commit_form_cmdi_select_submit'),
     );
-**/
+     **/
     $form['open_bundles'] ['data_open_bundles']= array(
         '#type' => 'value',
         '#value' => $open_bundles);
@@ -1148,7 +1024,7 @@ function flat_deposit_ui_commit_form($form, $form_state)
             '#type' => 'submit',
             '#value' => t('Upload project (debug)'),
             '#submit' => array('flat_deposit_ui_commit_form_ingest_serve_submit'));
-        }
+    }
 
     $form['frozen_bundles']['data_frozen_bundles'] = array(
         '#type' => 'value',
@@ -1232,36 +1108,6 @@ function flat_deposit_ui_commit_form($form, $form_state)
 
     return $form;
 }
-
-/**
- * creates cmdi meta data file for bundle
- */
-function flat_deposit_ui_commit_form_cmdi_submit($form, &$form_state){
-    foreach ($form_state['values']['table_open_bundles'] as $key => $checked) {
-        if (!is_int($checked)) {
-
-            // extract bundle name from form data
-            $bundle = $form_state['values']['data_open_bundles'][$key]['bundle'];
-            $collection = $form_state['values']['data_open_bundles'][$key]['collection'];
-            $form_state['redirect'] = 'cmdi/'. $bundle . '/'. $collection . '/create';}
-        }
-}
-
-
-/**
- * creates cmdi meta data file for bundle
- */
-function flat_deposit_ui_commit_form_cmdi_select_submit($form, &$form_state){
-    foreach ($form_state['values']['table_open_bundles'] as $key => $checked) {
-        if (!is_int($checked)) {
-
-            // extract bundle name from form data
-            $bundle = $form_state['values']['data_open_bundles'][$key]['bundle'];
-            $collection = $form_state['values']['data_open_bundles'][$key]['collection'];
-            $form_state['redirect'] = 'cmdi/select/'. $bundle .'/'. $collection ;}
-    }
-}
-
 
 /**
  * Performs general checks as accessibility of the user freeze directory by the apache_user, and bundle-wise sanity checks
@@ -1355,14 +1201,50 @@ function flat_deposit_ui_commit_form_freeze_submit ($form, &$form_state)
     }
 }
 
-function flat_deposit_ui_commit_form_delete_submit($form, &$form_state)
-{
+
+/**
+ * creates cmdi meta data file for bundle
+ */
+function flat_deposit_ui_commit_form_cmdi_submit($form, &$form_state){
+    foreach ($form_state['values']['table_open_bundles'] as $key => $checked) {
+        if (!is_int($checked)) {
+
+            // extract bundle data from form data
+            $bundle = $form_state['values']['data_open_bundles'][$key]['bundle'];
+            $collection = $form_state['values']['data_open_bundles'][$key]['collection'];
+            $form_state['redirect'] = 'cmdi/'. $bundle . '/'. $collection . '/create';}
+    }
+}
+
+
+/**
+ * creates cmdi meta data file for bundle
+ */
+function flat_deposit_ui_commit_form_cmdi_select_submit($form, &$form_state){
     foreach ($form_state['values']['table_open_bundles'] as $key => $checked) {
         if (!is_int($checked)) {
 
             // extract bundle name from form data
             $bundle = $form_state['values']['data_open_bundles'][$key]['bundle'];
             $collection = $form_state['values']['data_open_bundles'][$key]['collection'];
+            $form_state['redirect'] = 'cmdi/select/'. $bundle .'/'. $collection ;}
+    }
+}
+
+
+
+
+function flat_deposit_ui_commit_form_delete_submit($form, &$form_state)
+{
+    foreach ($form_state['values']['table_open_bundles'] as $key => $checked) {
+        if (!is_int($checked)) {
+
+            // extract bundle name from form data
+            $uid = $form_state['values']['data_open_bundles'][$key]['uid'];
+            $bundle = $form_state['values']['data_open_bundles'][$key]['bundle'];
+            $collection = $form_state['values']['data_open_bundles'][$key]['collection'];
+
+
             $source = USER_DRUPAL_DATA_DIR . '/' . $bundle;
             $del = file_unmanaged_delete_recursive($source);
 
@@ -1370,14 +1252,9 @@ function flat_deposit_ui_commit_form_delete_submit($form, &$form_state)
             $oc = new OwnCloud();
             $oc->DeleteLinkAndSync($bundle);
 
-            // Remove entry from flat_deposit_ui_upload_log
+            // Remove entry from flat_deposit_ui_upload
 
-            $results = db_delete('flat_deposit_ui_upload_log')
-                ->condition('user_id', USER)
-                ->condition('bundle', $bundle)
-                ->condition('collection', $collection)
-                ->condition('status', 'open')
-                ->execute();
+            $results = dq_purge_bundle($uid);
 
 
             if ($del) {
@@ -1396,7 +1273,6 @@ function flat_deposit_ui_commit_form_delete_submit($form, &$form_state)
         }
     }
 }
-
 
 
 function flat_deposit_ui_commit_form_unfreeze_validate (&$form, &$form_state)
@@ -1421,6 +1297,7 @@ function flat_deposit_ui_commit_form_unfreeze_validate (&$form, &$form_state)
         if (!is_int($checked)) {
 
             // extract bundle name from form data
+            $uid = $form_state['values']['data_frozen_bundles'][$key]['uid'];
             $bundle = $form_state['values']['data_frozen_bundles'][$key]['bundle'];
             $collection = $form_state['values']['data_frozen_bundles'][$key]['collection'];
 
@@ -1436,8 +1313,9 @@ function flat_deposit_ui_commit_form_unfreeze_validate (&$form, &$form_state)
             $db_or->condition('bundle.status', 'being processed' , '=');
             $db_or->condition('bundle.status', 'archived' , '=');
 
-            $result = db_select('flat_deposit_ui_upload_log', 'bundle')
+            $result = db_select('flat_deposit_ui_upload', 'bundle')
                 ->fields('bundle', array('bundle'))
+                ->condition('uid',$uid)
                 ->condition('user_id', USER)
                 ->condition('bundle', $bundle)
                 ->condition('collection', $collection)
@@ -1460,6 +1338,7 @@ function flat_deposit_ui_commit_form_unfreeze_submit ($form, &$form_state)
         if (!is_int($checked)) {
 
             // extract bundle name from form data
+            $uid = $form_state['values']['data_frozen_bundles'][$key]['uid'];
             $bundle = $form_state['values']['data_frozen_bundles'][$key]['bundle'];
             $collection = $form_state['values']['data_frozen_bundles'][$key]['collection'];
             $source = USER_FREEZE_DIR . '/' . $bundle;
@@ -1469,15 +1348,9 @@ function flat_deposit_ui_commit_form_unfreeze_submit ($form, &$form_state)
 
             if ($moved) {
                 // update database entry
-                db_update('flat_deposit_ui_upload_log')
-                    ->fields(array(
-                        'status' => 'open',
-                        'freeze_time' => 0))
-                    ->condition('user_id', USER)
-                    ->condition('bundle', $bundle)
-                    ->condition('collection', $collection)
-                    ->execute();
-
+                $fields = array('freeze_time' => 0, 'status' => 'open');
+                $conditions = array('bundle' => $bundle, 'collection' => $collection);
+                dq_update_existing_user_bundle($fields, $conditions);
 
                 //add symbolic link to owncloud user directory
                 $oc = new OwnCloud();
@@ -1505,11 +1378,13 @@ function flat_deposit_ui_commit_form_ingest_serve_validate (&$form, &$form_state
         if (!is_int($checked)) {
 
             // extract bundle name from form data
+            $uid = $form_state['values']['data_frozen_bundles'][$key]['uid'];
             $bundle = $form_state['values']['data_frozen_bundles'][$key]['bundle'];
             $collection = $form_state['values']['data_frozen_bundles'][$key]['collection'];
 
-            $result = db_select('flat_deposit_ui_upload_log', 'bundle')
+            $result = db_select('flat_deposit_ui_upload', 'bundle')
                 ->fields('bundle', array('bundle'))
+                ->condition('uid',$uid)
                 ->condition('user_id', USER)
                 ->condition('bundle', $bundle)
                 ->condition('collection', $collection)
@@ -1607,14 +1482,14 @@ function flat_deposit_ui_commit_form_ingest_serve_submit ($form, &$form_state)
 
 
 /**
- * Removes user entries with status 'archived' from drupals' flat_deposit_ui_upload_log table and fills it with data from fedora commons
+ * Removes user entries with status 'archived' from drupals' flat_deposit_ui_upload table and fills it with data from fedora commons
  * @param $form
  * @param $form_state
  */
 function flat_deposit_ui_commit_form_refresh_archived_submit($form, &$form_state)
 {
     // deletes entries
-    $del = db_delete('flat_deposit_ui_upload_log')
+    $del = db_delete('flat_deposit_ui_upload')
         ->condition('user_id', USER)
         ->condition('status', 'archived')
         ->execute();
@@ -1640,7 +1515,7 @@ function flat_deposit_ui_commit_form_refresh_archived_submit($form, &$form_state
             $config['status'] = 'archived';
             $config['date_bundle_ingest'] = strtotime($pid_data['objCreateDate']);
 
-            drupal_write_record('flat_deposit_ui_upload_log', $config);
+            drupal_write_record('flat_deposit_ui_upload', $config);
 
         }
     }
@@ -1656,7 +1531,7 @@ function flat_deposit_ui_freeze_bundle($bundle, $collection){
 
     if ($moved) {
         // update database entry
-        db_update('flat_deposit_ui_upload_log')
+        db_update('flat_deposit_ui_upload')
             ->fields(array(
                 'freeze_time' => (int)$_SERVER['REQUEST_TIME'],
                 'exceptions' => '',
@@ -1672,4 +1547,840 @@ function flat_deposit_ui_freeze_bundle($bundle, $collection){
         $oc->DeleteLinkAndSync($bundle);
         drupal_set_message(t('Project ' . $bundle . ' is valid and can be archived'));
     }
+}
+
+
+
+function flat_deposit_ui_cmdi_select_form($form, &$form_state){
+
+    $node = $form_state['build_info']['args'][0];
+    $bundle = $node->title;
+    $collection = field_get_items('node', $node, 'upload_collection')[0]['value'];
+
+    $form = array();
+
+    $form['select_template_fieldset'] = array(
+        '#title' => t('Form Template Selection'),
+        '#type' => 'fieldset',
+        '#prefix' => '<div id="select-div">',
+        '#suffix' => '</div>',
+    );
+
+    $form['select_template_fieldset']['cmdi_select'] = [
+        '#type' => 'select',
+        '#title' => t('Please select meta data template'),
+        '#options' => [
+            'session' => t('session'),
+            'experiment' => t('experiment'),
+            'minimal' => t('minimal'),
+        ],
+    ];
+
+    $form['select_template_fieldset']['checkbox_ajax_trigger'] = array(
+        '#title' => t('Fill template with saved meta data'),
+        '#type' => 'checkbox',
+        '#ajax' => array(
+            'callback' => 'flat_deposit_ui_cmdi_select_ajax_callback',
+            'wrapper' => 'select-div',
+            'method' => 'replace',
+            'effect' => 'fade',
+        ),
+    );
+
+// The select_data_file field is only shown when checkbox_ajax_trigger is checked
+    $checked = isset($form_state['values']['checkbox_ajax_trigger']) ? $form_state['values']['checkbox_ajax_trigger'] : 0 ;
+    if ($checked) {
+
+
+        // Search for available tempalte data files in a certain data directory (e.g. Templates). // In case data files are
+        // a checkbox is added allowing to fill
+        $template_dir = USER_DRUPAL_DATA_DIR . '/Templates/';
+        $listing = array_diff(scandir($template_dir), array('..', '.'));
+        $templates = [];
+        $i = 0;
+
+        #foreach ($listing as $f) {$templates[(string)$i] = substr($f, 0, -4);$i++;} #make list of de-suffixed names
+        foreach ($listing as $f) {
+            $sub = substr($f, 0, -4);
+            $templates[$sub] = $sub;
+        } #make list of de-suffixed names
+
+        $form['select_template_fieldset']['select_data_file'] = array(
+            '#type' => 'select',
+            '#title' => t('Select a file containing meta data'),
+            '#options' => $templates);
+
+        if (!$templates) {
+            drupal_set_message('No saved meta data are available', 'warning');
+        }
+
+    }
+
+    $form ['data_cmdi_select']= array(
+        '#type' => 'value',
+        '#value' => array(
+            'bundle' => $bundle,
+            'collection' =>$collection));
+
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => t('Select'),
+        '#submit' => array('flat_deposit_ui_cmdi_select_form_submit'),
+        '#validate' => array('flat_deposit_ui_cmdi_select_form_validate'));
+
+    return $form;
+}
+
+function flat_deposit_ui_cmdi_select_ajax_callback ($form, &$form_state)
+{
+
+    return $form['select_template_fieldset'];
+}
+
+
+function flat_deposit_ui_cmdi_select_form_validate($form, &$form_state){
+    $bundle = $form_state['values']['data_cmdi_select']['bundle'];
+    $template = $form_state['values']['cmdi_select'];
+
+    module_load_include('php','flat_deposit_ui','Helpers/CMDI_Handler');
+    $cmd = new CMDI_Handler($bundle, $template);
+
+    if ($cmd->projectCmdiFileExists()) form_set_error ('ingest_error', t('CMDI file already exists at target location'));
+    return $form;
+}
+
+function flat_deposit_ui_cmdi_select_form_submit($form, &$form_state){
+    $bundle = $form_state['values']['data_cmdi_select']['bundle'];
+    $collection = $form_state['values']['data_cmdi_select']['collection'];
+    $template = $form_state['values']['cmdi_select'];
+
+    $action = ($form_state['build_info']['args'][2] == 'createandfreeze') ? $form_state['build_info']['args'][2] : 'createcmdi';
+
+    if (isset($form_state['values']['select_data_file'])){
+        $md = '/' . $form_state['values']['select_data_file'];
+    } else {
+        $md = "";
+    }
+    $form_state ['redirect'] = 'cmd/' . $action . '/' . $template . '/' . $bundle . '/' . $collection . $md;
+
+}
+
+
+/**
+ * Template session form. Can be populated by saved meta data (md). This is done by filling form default_values with data from a saved php-array.
+
+ * @param $extra string path variable extending the ordinary registered path which will be used as additional variable in functions' logic
+ * @return array
+ */
+function flat_deposit_ui_cmdi_create_form($form, &$form_state){
+    $template = $form_state['build_info']['args'][1];
+    $bundle = $form_state['build_info']['args'][2];
+    $collection = $form_state['build_info']['args'][3];
+
+
+    // Validation of meta data file might be handy and could be included here
+    if (isset($form_state['build_info']['args'][4])) {
+        $file = $form_state['build_info']['args'][4];
+        $md = include USER_DRUPAL_DATA_DIR . '/Templates/'. $file . '.php';
+
+    } else {$md = NULL;
+    };
+
+    module_load_include('php','flat_deposit_ui','Helpers/CMDI_Handler');
+
+
+
+
+    //$md = get_example_md($template); #uncomment to get example data
+
+
+
+    // remove md for unfilled form
+    $form = get_template_form($template, $bundle,$md);
+
+
+    //add names of form fields to form
+    $form['form_fields_template'] = array(
+        '#type' => 'value',
+        '#value' => array_keys($form));
+
+
+    // add data fields and submit-button to template form
+    $form ['data_template']= array(
+        '#type' => 'value',
+        '#value' => array('template' => $template,
+            'bundle' => $bundle,
+            'collection' =>$collection));
+
+
+    $form['save_template'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Save input as template'),
+        '#ajax' => array(
+            'callback' => 'flat_deposit_ui_cmdi_save_form_ajax_callback',
+            'wrapper' => 'input_field',
+            'effect' => 'fade',
+        ),
+    );
+
+    $form['input_field'] = array(
+        '#type' => 'markup',
+        '#prefix' => '<div id="input_field">',
+        '#suffix' => '</div>',
+    );
+
+    // Since checkboxes return TRUE or FALSE, we have to check that
+    // $form_state has been filled as well as what it contains.
+    if (!empty($form_state['values']['save_template']) && $form_state['values']['save_template']) {
+        $form['input_field']['template_name'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Name of template'),
+        );
+
+    }
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => t('Save'),
+        '#submit' => array('flat_deposit_ui_cmdi_create_form_submit'),
+        '#validate' => array('flat_deposit_ui_cmdi_create_form_validate'));
+
+    return $form;
+}
+
+
+function flat_deposit_ui_cmdi_save_form_ajax_callback($form, $form_state)
+{
+    return $form['input_field'];
+}
+
+
+function flat_deposit_ui_cmdi_create_form_validate($form, &$form_state){
+
+// Checks for saving the templates
+    if ($form_state['values']['save_template']){
+
+        // Can directory be created?
+        $template_dir = USER_DRUPAL_DATA_DIR . '/Templates';
+        if (!file_exists($template_dir)) { drupal_mkdir($template_dir);}
+
+        if (!file_exists($template_dir)) {
+            form_set_error ('cmdi_error', "Couldn't create directory for saving templates. Please contact administator");
+            return $form;
+        }
+
+        // Is template directory owned by apache_user and writable
+        $owner = posix_getpwuid(fileowner($template_dir));
+        if ($owner['name'] != APACHE_USER) {
+            form_set_error ('cmdi_error', "Template directory is not writable by application. Please contact administator");
+            return $form;
+        }
+
+        // Is template directory name a valid name ?
+        $template_name = $form_state['values']['template_name'];
+        if (!preg_match('/^[a-zA-Z0-9\_]{2,40}+$/', $template_name)) {
+            form_set_error ('cmdi_error', "The name of template directory may contain letters, numbers and underscores (max length 40 characters)");
+            return $form;
+        }
+        if (file_exists( $template_dir . '/' . $template_name . '.php')) {
+            form_set_error ('cmdi_error', "A template file with entered name already exists");
+            return $form;
+        }
+
+    }
+
+    return $form;
+
+}
+
+/**
+ * On submission the form is optionally saved as template
+ *
+ */
+function flat_deposit_ui_cmdi_create_form_submit($form, &$form_state){
+    $template = $form_state['values']['data_template']['template'];
+
+    $bundle = $form_state['values']['data_template']['bundle'];
+    $collection = $form_state['values']['data_template']['collection'];
+    $action = $form_state['build_info']['args'][0];
+
+    $data = array();
+    foreach ($form_state['values']['form_fields_template'] as $field) {$data[$field] = $form_state['values'][$field];}
+
+    // Save data as template (if checked)
+    if ($form_state['values']['save_template']) {
+        $template_dir = USER_DRUPAL_DATA_DIR . '/Templates';
+        $template_name = $form_state['values']['template_name'];
+
+        file_put_contents( $template_dir . '/' . $template_name . '.php' , '<?php return '.var_export( $data, true ).";\n" );
+
+    }
+
+    // generate CMDI xml and save to disc
+    module_load_include('php','flat_deposit_ui','Helpers/CMDI_Handler');
+    $cmd = new CMDI_Handler($bundle, $template);
+
+    # prepare xml
+    $cmd->getXML();
+    $cmd->resources = $cmd->searchDir(USER_DRUPAL_DATA_DIR . '/' .$bundle);
+    $cmd->handles = $cmd->getHandles();
+
+    # fill/change xml object
+    $cmd->changeHeader();
+    $cmd->addResourcesToXml();
+    $cmd->processFormData($form_state['values']);
+    $cmd->addComponentInfoToXml();
+
+
+    $result = $cmd->xml->asXML($cmd->export_file);
+
+    $form_state['redirect'] ='commitchanges';
+    drupal_set_message(t('Created metadata file from template ' . $template));
+
+
+    // freeze directory in case this option is chosen
+    if ($action == 'createandfreeze') {
+        flat_deposit_ui_freeze_bundle($bundle,$collection);
+    }
+}
+
+
+/**
+ * Converts database query data to array
+ * @param $db_data results from a database query
+ * @param array $filter string or array of strings indicating the columns to be returned
+ * @return array $data
+ */
+function convert_database_data_to_array($db_data, $filter=[]){
+
+    $data=array();
+    foreach ($db_data as $row) {
+        $data[]  = json_decode(json_encode($row), true);
+    }
+    if (!empty($filter)){
+        if (is_array($filter)){
+            $tmp = array();
+            foreach ($filter as $f){$tmp[$f]=array_column($data,$f);}
+            $data = $tmp;
+        } else {
+            $data = array_column($data,$filter);
+        }
+    }
+    return $data;
+}
+
+
+/**
+ * @param $uid unique identifiers of upload bundles
+ */
+function flat_deposit_ui_get_bundle_info($uids){
+
+    $fields = array('uid', 'user_id', 'bundle', 'collection', 'status', 'exceptions', 'date_bundle_ingest');
+    $conditions = array('uid' => $uids);
+
+    $results = dq_user_bundle_data($fields,$conditions);
+
+    return convert_database_data_to_array($results);
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * shows debug information for every form
+ */
+function flat_deposit_ui_form_alter(&$form, &$form_state, $form_id)
+{
+
+    // for debug info uncomment dpm
+    dpm ($form_id);
+    switch ($form_id){
+        case "flat_bundle_node_form":{
+
+            // Adapt general appearance
+            $form['upload_status']['und']['#disabled'] = TRUE;
+            hide($form['upload_exception']);
+            hide($form['upload_cmdi']);
+            hide($form['actions']['preview']);
+
+            // Add individual 'select' options to drop down menu
+            $conditions = array('member'=> USER);
+            $results = dq_user_is_member_collections($conditions);
+
+            $collections = convert_database_data_to_array($results,'collection_name');
+
+            if (empty($collections)){$collections=['Dummy collection'];} // test data
+
+            foreach ($collections as $index => $collection){
+                $form ['upload_collection']['und']['#options'][$collection] =  $collection;
+            }
+
+            // Add field to save values
+            $form['extra_values'] = array(
+                '#type' => 'value',
+                '#value' => array()
+            );
+
+            $node = $form_state['node'];
+
+
+
+            // For new bundles
+            // add validation
+            if (!isset($node->nid) || isset($node->is_new)) {
+                $form['#validate'][] = 'flat_bundle_add_node_form_validate';
+                $form['#submit'][] = 'flat_bundle_add_node_form_submit';
+            } else{
+                // for existing bundles:
+                // Add additional submit button to menu: (depending on status) freeze or unfreeze
+                $status = field_get_items('node', $node, 'upload_status')[0]['value'];
+                if ($status == 'open'){
+                    $form['actions']['freeze'] = array(
+                        '#type' => 'submit',
+                        '#value' => 'Freeze',
+                        '#name' => 'op',
+                        '#submit' => array('flat_bundle_freeze_node_form_submit'),
+                        '#validate' => array('flat_bundle_freeze_node_form_validate'),
+                        '#weight' => 1000
+                    );
+                } elseif ($status == 'awaiting') {
+                    $form['actions']['unfreeze'] = array(
+                        '#type' => 'submit',
+                        '#value' => 'Unfreeze',
+                        '#name' => 'op',
+                        '#submit' => array('flat_bundle_unfreeze_node_form_submit'),
+                        '#weight' => 1000
+                    );
+                }
+
+                // Customized edit form validation and submission
+                $form['#validate'][] = 'flat_bundle_edit_node_form_validate';
+                $form['#submit'][] = 'flat_bundle_edit_node_form_submit';
+
+                //Todo: add the possibility to change name collection /bundle
+                $form['upload_collection']['und']['#disabled'] = TRUE;
+                //when disabling a form field without default value, the associated field value is being removed from the node (might be a bug).
+                //As workaround, add the assigned field value as default value
+                $default_collection = field_get_items('node', $node, 'upload_collection')[0]['value'];
+                $form['upload_collection']['und']['#default_value'][] = $default_collection;
+                $form['title']['#disabled'] = TRUE;
+            }
+
+            break;
+
+        }
+        #case 'node_delete_confirm':{
+        #   $form['#submit'][] = 'flat_bundle_delete_submit';
+#        }
+    }
+
+}
+
+
+/**
+ * Implements hook_node_delete().
+ */
+function flat_deposit_ui_node_delete($node){
+
+    $bundle = $node->title;
+    $collection = field_get_items('node', $node, 'upload_collection')[0]['value'];
+    $bundle_directory = drupal_realpath(USER_DRUPAL_DATA_DIR . "/$collection/$bundle");
+    $collection_directory = drupal_realpath(USER_DRUPAL_DATA_DIR . "/$collection");
+
+    // Remove files and directories from USER data directory
+    if (file_exists($bundle_directory)){
+        recursiveRmDir($bundle_directory);
+        rmdir ($bundle_directory);}
+    if (file_exists($collection_directory) && is_dir_empty($collection_directory))rmdir ($collection_directory);
+
+    // remove owncloud link and directory
+    $oc = new OwnCloud();
+    if ($oc->error_message){drupal_set_message('owncloud',$oc->error_message);}
+    $oc->DeleteProjectSymlinkAndSync($collection, $bundle);
+    $oc->DeleteCollectionDirectoryAndSync($collection);
+
+}
+
+function flat_bundle_add_node_form_validate($form, &$form_state){
+    dpm ($form_state);
+    //Validate bundle name
+    // no special characters
+    $bundle_name = $form_state['values']['title'];
+    if (!preg_match('/^[a-zA-Z0-9\_]{2,40}+$/', $bundle_name)) {
+        $message = 'Allowed are all letters, numbers and underscores (max length 40)';
+        $field = 'upload_bundle';
+
+
+        form_set_error($field,$message);
+        return $form;
+    }
+
+
+    //Check that bundle name is distinctive from existing bundles
+    $collection = $form_state['values']['upload_collection']['und'][0]['value'];
+
+    if (file_exists(USER_DRUPAL_DATA_DIR . "/$collection")){
+        $dirs = scandir(USER_DRUPAL_DATA_DIR . "/$collection");
+        if (file_exists(USER_FREEZE_DIR . "/$collection")){ $dirs = array_merge($dirs, array_diff(scandir(USER_FREEZE_DIR . "/$collection"), array('..', '.')));}
+        foreach ($dirs as $dir){
+            if (strtolower($dir)==strtolower($bundle_name)){
+                $message = "Bundle with same or very similar bundle name exists in user data or freeze directory";
+                $field = 'bundle';
+                form_set_error($field,$message);
+                return $form;
+            }
+        };
+    }
+
+    // Check Owncloud availability and existence user account
+    $oc = new OwnCloud();
+    if ($oc->error_message){form_set_error('owncloud',$oc->error_message);}
+
+    // Add directory name to form_state
+    $form_state['values']['extra_values']['full_directory_path'] = USER_DRUPAL_DATA_DIR  . "/$collection/$bundle_name";
+
+    #form_set_error('','Testing');
+}
+
+
+function flat_bundle_add_node_form_submit($form, &$form_state){
+    $bundle = $form_state['values']['title'];
+    $collection = $form_state['values']['upload_collection']['und'][0]['value'];
+    if (!file_exists(USER_DRUPAL_DATA_DIR . "/$collection")) {
+        drupal_mkdir(USER_DRUPAL_DATA_DIR . "/$collection");
+        drupal_chmod(USER_DRUPAL_DATA_DIR . "/$collection", 0775);
+        drupal_set_message(t('Creating new collection folder'));
+    }
+    $target = $form_state['values']['extra_values']['full_directory_path'];
+    drupal_mkdir($target);
+    drupal_chmod($target, 0775);
+    drupal_mkdir($target . '/metadata');
+    drupal_mkdir($target . '/data');
+
+    //create symbolic link in owncloud user directory and refresh to see new directory
+    $oc = new OwnCloud();
+    $oc->CreateCollectionDirectoryAndSync($collection);
+    $oc->CreateProjectSymlinkAndSync(USER_DRUPAL_DATA_DIR , $collection, $bundle);
+
+}
+
+function flat_bundle_edit_node_form_validate($form, &$form_state){
+
+
+    // Add directory name to form_state
+    #$form_state['values']['extra_values']['full_directory_path'] = USER_DRUPAL_DATA_DIR  . "/$collection/$bundle_name";
+
+    #form_set_error('','Testing');
+}
+
+
+function flat_bundle_edit_node_form_submit($form, &$form_state){
+    $node = $form_state['node'];
+    drupal_set_message("done");
+
+}
+
+
+function flat_bundle_freeze_node_form_validate($form, &$form_state){
+
+    // extract bundle and collection from form data
+    $bundle = $form_state['values']['title'];
+    $collection = $form_state['values']['upload_collection']['und'][0]['value'];
+    $frozen_bundle_dir = FREEZE_DIR . '/' . USER . "$collection/$bundle";
+
+    // Check if freeze directory exists
+    if (!file_exists(FREEZE_DIR)) {
+        form_set_error ('freeze_error', "No freeze directory exists. Please contact administator");
+        return $form;
+    }
+
+    // Check if freeze directory is owned by apache_user and writable
+    $owner = posix_getpwuid(fileowner(FREEZE_DIR));
+    if ($owner['name'] != APACHE_USER) {
+        form_set_error ('freeze_error', "Freeze directory is not writable by application. Please contact administator");
+        return $form;
+    }
+
+    // Check if user backend directory exists or can be created
+    if (!file_exists(USER_FREEZE_DIR)) {
+        $created = drupal_mkdir(USER_FREEZE_DIR, NULL, true);
+        if (!$created) {
+            form_set_error('freeze_error', "Could not create user backend directory. Please contact administator");
+            return $form;
+        }
+    }
+
+    // Check if bundle directory on backend already exists
+    if (file_exists($frozen_bundle_dir)) {
+        form_set_error ('freeze_error', 'A bundle with the name ' . $bundle . ' has already been frozen.');
+        return $form;
+    }
+
+    // In case upload folder contains one cmdi file, check if file a valid xml file?
+    if (count(glob(drupal_realpath(USER_DRUPAL_DATA_DIR . "/$collection/$bundle/metadata/*.cmdi"))) == 1) {
+        $cmdi = glob(drupal_realpath(USER_DRUPAL_DATA_DIR) . "/$collection/$bundle/metadata/*.cmdi")[0];
+
+        $finfo = new finfo(FILEINFO_MIME, "/etc/magic");
+        $mime = $finfo->file($cmdi);
+
+        if (!strpos($mime, "/plain")) {
+            form_set_error('freeze_error', "cmdi file is no valid xml file");
+            return $form;
+        }
+
+        if (!simplexml_load_file($cmdi)) {
+            form_set_error('freeze_error', "cmdi file is no valid xml file");
+            return $form;
+        }
+
+        form_set_value($form['upload_cmdi'],array('und' => array(0 => array('value' => 1))), $form_state);
+    }
+
+    // Check Owncloud availability and existence user account
+    $oc = new OwnCloud();
+    if ($oc->error_message){form_set_error('owncloud',$oc->error_message);}
+}
+
+
+#if ($oc->noErrors){
+function flat_bundle_freeze_node_form_submit($form, &$form_state){
+    $has_cmdi = $form_state['values']['upload_cmdi']['und'][0]['value'];
+    $node = $form_state['node'];
+    if($has_cmdi){
+
+        flat_bundle_freeze_bundle($node);
+    } else {
+        $form_state['redirect'] = 'node/' . $node->nid .'/cmdi_select' ;
+    }
+
+}
+
+/**
+ * Executes the backend freeze of a bundle. Moves colection/bundle directory from drupal_data_user to backend
+ */
+function flat_bundle_freeze_bundle($node){
+
+    $bundle = $node->title;
+    $collection = field_get_items('node', $node, 'upload_collection')[0]['value'];
+    $collection_directory = drupal_realpath(USER_FREEZE_DIR) . "/$collection/";
+
+    $source = drupal_realpath(USER_DRUPAL_DATA_DIR) . "/$collection/$bundle";
+    $target = USER_FREEZE_DIR . "/$collection/$bundle";
+
+    if (!file_exists($collection_directory)){drupal_mkdir($collection_directory);}
+
+    $moved = rename($source, $target);
+
+    if ($moved) {
+        // change value of status fiel
+        $node_wrapper = entity_metadata_wrapper('node', $node);
+        $node_wrapper->upload_status->set('awaiting');
+        $node_wrapper->save();
+
+
+        //remove symbolic link in owncloud user directory
+        $oc = new OwnCloud();
+        $oc->DeleteProjectSymlinkAndSync($collection, $bundle);
+        $oc->DeleteCollectionDirectoryAndSync($collection);
+        drupal_set_message(t('Project ' . $bundle . ' is valid and can be archived'));
+    }
+}
+
+function flat_bundle_unfreeze_node_form_validate (&$form, &$form_state)
+{
+    // extract bundle name from form data
+    $bundle = $form_state['values']['title'];
+    $collection = $form_state['values']['upload_collection']['und'][0]['value'];
+
+    $target_directory = USER_DRUPAL_DATA_DIR . '/' . "$collection/$bundle";
+
+    // Check if user drupal data directory exists
+    if (!file_exists(USER_DRUPAL_DATA_DIR)) {
+        form_set_error('unfreeze_error', "User Drupal data directory does not exist. Please contact administator");
+        return $form;
+    }
+
+    // Check if drupal data directory is owned by www-data and writable
+    $owner = posix_getpwuid(fileowner(USER_DRUPAL_DATA_DIR));
+    if ($owner['name'] != APACHE_USER) {
+        form_set_error('unfreeze_error', "User Drupal data directory is not writable by application. Please contact administrator");
+        return $form;
+    }
+
+
+    // check if new open directory has been created in the mean time
+    if (file_exists($target_directory)) {
+        form_set_error('unfreeze_error', "A folder with the name $bundle exists at user data directory.");
+        return $form;
+    }
+    // Check Owncloud availability and existence user account
+    $oc = new OwnCloud();
+    if ($oc->error_message){form_set_error('owncloud',$oc->error_message);}
+
+}
+
+
+function flat_bundle_unfreeze_node_form_submit ($form, &$form_state)
+{
+    // extract bundle name from form data
+    $bundle = $form_state['values']['title'];
+    $collection = $form_state['values']['upload_collection']['und'][0]['value'];
+    $node = $form_state['node'];
+
+    $collection_directory = drupal_realpath(USER_FREEZE_DIR) . "/$collection/";
+    $target = drupal_realpath(USER_DRUPAL_DATA_DIR) . "/$collection/$bundle";
+    $source = USER_FREEZE_DIR . "/$collection/$bundle";
+
+    //
+    $moved = rename($source, $target);
+    if (is_dir_empty($collection_directory)){drupal_rmdir($collection_directory);}
+
+    if ($moved) {
+        // change value of status field
+        $node_wrapper = entity_metadata_wrapper('node', $node);
+        $node_wrapper->upload_status->set('open');
+        $node_wrapper->save();
+
+        //add symbolic link to owncloud user directory
+        $oc = new OwnCloud();
+        $oc->CreateCollectionDirectoryAndSync($collection);
+        $oc->CreateProjectSymlinkAndSync(USER_DRUPAL_DATA_DIR , $collection, $bundle);
+
+        drupal_set_message(t('Bundle ' . $bundle . ' is open and can be changed'));
+    }
+
+
+}
+
+
+/**
+ * Implements hook_feeds_importer_default().
+ */
+function flat_deposit_ui_feeds_importer_default()
+{
+
+    $export = array();
+
+    $feeds_importer = new stdClass();
+    $feeds_importer->disabled = FALSE; /* Edit this to true to make a default feeds_importer disabled initially */
+    $feeds_importer->api_version = 1;
+    $feeds_importer->id = 'example_uploads';
+    $feeds_importer->config = array(
+        'name' => 'Example_uploads',
+        'description' => 'CSV Import of example upload bundles',
+        'fetcher' => array(
+            'plugin_key' => 'FeedsFileFetcher',
+            'config' => array(
+                'allowed_extensions' => 'txt csv tsv xml opml',
+                'direct' => FALSE,
+                'directory' => 'public://feeds',
+                'allowed_schemes' => array(
+                    0 => 'public',
+                ),
+            ),
+        ),
+        'parser' => array(
+            'plugin_key' => 'FeedsCSVParser',
+            'config' => array(
+                'delimiter' => ',',
+                'encoding' => 'UTF-8',
+                'no_headers' => 0,
+            ),
+        ),
+        'processor' => array(
+            'plugin_key' => 'FeedsNodeProcessor',
+            'config' => array(
+                'expire' => '-1',
+                'author' => 0,
+                'authorize' => 1,
+                'mappings' => array(
+                    0 => array(
+                        'source' => 'bundle',
+                        'target' => 'title',
+                        'unique' => 1,
+                        'language' => 'und',
+                    ),
+                    1 => array(
+                        'source' => 'collection',
+                        'target' => 'upload_collection',
+                        'unique' => FALSE,
+                        'language' => 'und',
+                    ),
+                    2 => array(
+                        'source' => 'status',
+                        'target' => 'upload_status',
+                        'unique' => FALSE,
+                        'language' => 'und',
+                    ),
+                    3 => array(
+                        'source' => 'user',
+                        'target' => 'user_name',
+                        'unique' => FALSE,
+                    ),
+                ),
+                'insert_new' => '1',
+                'update_existing' => '0',
+                'update_non_existent' => 'skip',
+                'input_format' => 'plain_text',
+                'skip_hash_check' => 0,
+                'bundle' => 'flat_bundle',
+                'language' => 'und',
+            ),
+        ),
+        'content_type' => '',
+        'update' => 0,
+        'import_period' => '-1',
+        'expire_period' => 3600,
+        'import_on_create' => 1,
+        'process_in_background' => 0,
+    );
+
+    $export['example_uploads'] = $feeds_importer;
+
+    return $export;
+}
+
+/**
+ * Implements hook_ctools_plugin_api().
+ */
+function flat_deposit_ui_ctools_plugin_api($module = '', $api = ''){
+
+    if ($module == 'feeds' && $api == 'feeds_importer_default'){
+
+        return array("version" => 1);
+    }
+}
+
+
+/**
+ * Implements hook_node_view().
+ */
+function flat_deposit_ui_node_view($node, $view_mode, $langcode)
+{
+    $module = 'feeds';
+
+    if ($node->type == 'flat_bundle' && $view_mode == 'full'){
+//Todo: add that check for valid cmdi is added here
+
+        #$node->content["upload_status"] = field_view_field('node', $node, 'upload_status' );
+        #$node->content["upload_exception"] = field_view_field('node', $node, 'upload_exception' );
+        #dpm($node);
+        #dpm($node);
+    }
+}
+
+function recursiveRmDir($dir)
+{
+    $iterator = new RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS), \RecursiveIteratorIterator::CHILD_FIRST);
+    foreach ($iterator as $filename => $fileInfo) {
+        if ($fileInfo->isDir()) {
+            rmdir($filename);
+        } else {
+            unlink($filename);
+        }
+    }
+}
+
+
+function is_dir_empty($dir) {
+    if (!is_readable($dir)) return NULL;
+    return (count(scandir($dir)) == 2);
 }
