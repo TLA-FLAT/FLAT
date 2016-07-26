@@ -1,6 +1,68 @@
 <?php
 
+function dq_user_is_member_collections($conditions=[],$paged=FALSE){
 
+    $obj= db_select('flat_deposit_ui_collection','p')
+    ->fields('p',array('collection_name','member'))
+    ->orderBy('collection_name');
+
+    if (!empty($conditions)){
+        foreach ($conditions as $key => $val){$obj->condition($key,$val);}
+    }
+
+    if ($paged){
+        $obj = $obj->extend('PagerDefault')->limit($paged);
+    }
+    return $obj->execute();
+
+}
+
+function dq_user_bundle_data($fields,$conditions=[],$count=FALSE){
+    $obj= db_select('flat_deposit_ui_upload','p')
+
+        ->fields('p',$fields)
+        ->condition('user_id', USER)
+        ->orderBy('collection')
+        ->orderBy('bundle');
+
+    if (!empty($conditions)){
+        foreach ($conditions as $key => $val){
+            if (!is_array($val)){$obj->condition($key,$val);
+            } else {
+                $obj->condition($key,$val,'IN');
+            }
+        }
+    }
+
+    if ($count){return $obj->execute()
+        ->rowCount();
+    } else{
+        return  $obj->execute();
+    }
+
+}
+
+
+function dq_update_existing_user_bundle($fields, $conditions=[]){
+    $obj = db_update('flat_deposit_ui_upload')
+    ->fields($fields)
+    ->condition('user_id', USER);
+
+    if (!empty($conditions)){
+        foreach ($conditions as $key => $val){$obj->condition($key,$val);}
+    }
+
+
+    return $obj->execute();
+}
+
+function dq_purge_bundle($uid){
+    return db_delete('flat_deposit_ui_upload')
+    ->condition('uid', $uid)
+    ->execute();
+}
+
+/*
 function clear_db_user_bundles($user){
     $results = db_delete('flat_deposit_ui_project_info')
         ->condition('user_id', $user)
@@ -73,3 +135,4 @@ function update_db_user_projects($user, $project, $is_frozen)
 }
 
 
+*/

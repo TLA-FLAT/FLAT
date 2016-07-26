@@ -69,13 +69,22 @@ function ingest_service_configuration()
 
 function get_handle_configuration()
 {
-    return array(
-        # Whether or not to use a handle server; If false, locally unique IDs will be generated instead
-        'test_mode' => TRUE,
-        'prefix' => 'hdl:'
+    $site_configuration = drupal_realpath(drupal_get_path('module', 'flat_deposit_ui')) . '/inc/config_MPI.inc';
+    if (file_exists($site_configuration)){
+        require_once ($site_configuration);
+        return MPI_handle_configuration();
+    } else {
 
-    );
+        return array(
+            # Whether or not to use a handle server; If false, locally unique IDs will be generated instead
+            'test_mode' => TRUE,
+            'prefix' => 'hdl:',
+            'schema' => 'http',
+            'host_name' => 'hostname',
+            'port' => 8000,
 
+        );
+    }
 }
 
 
@@ -93,9 +102,19 @@ function get_metadata_configuration()
 
 function get_solr_configuration()
 {
+    $site_configuration = drupal_realpath(drupal_get_path('module', 'flat_deposit_ui')) . '/inc/config_MPI.inc';
+    if (file_exists($site_configuration)) {
+        require_once($site_configuration);
+        return MPI_solr_configuration();
+    } else{
     return array(
+        'schema' => 'https',
+        'host_name' => 'lux125.mpi.nl',
+        'port' => 8080,
+        'path' => 'solr',
+        'core' => 'collection1',
     );
-
+    }
 }
 /*
 DEFAULT SETTINGS OF THE FLAT_DEPOSIT_UI MODULE AND FUNCTIONS TO SET THESE

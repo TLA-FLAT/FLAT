@@ -62,11 +62,17 @@ class IngestServiceException extends Exception {}
 class Ingestor
 {
 
+    public $db_connection;
+
     public function __construct($data)
     {
+
         $this->entry = $data;
         $this->backend_bundle_dir = FREEZE_DIR . '/' . $this->entry['user_id'] . '/' . $this->entry['bundle'];
-        $this->ingests = array();
+        $this->pid = array();
+        $config = get_metadata_configuration();
+        $this->md_prefix = $config['prefix'];
+
     }
 
     public function reset_entry(){
@@ -159,11 +165,12 @@ class Ingestor
      *
      * @throws IngestServiceException
      */
-    public function changeRightsBagDir(){
-        $command = "sudo chown " . APACHE_USER . ":" . APACHE_USER  . " " . BAG_DIR . "/" . $this->entry['bag_id'];
+    public function chownDirectory($dir){
+        $user = APACHE_USER . ":" . APACHE_USER;
+        $command = sprintf("sudo chown -R %s %s",  $user , $dir);
         exec($command, $output_chmod, $return);
         if ($return) {
-            $message = 'Unable to adapt rights of bag directory';
+            $message = 'Unable to adapt rights of directory ' . $dir;
             if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$output_chmod) ."\n", $message_type = 3 , ERROR_LOG_FILE );
             throw new IngestServiceException ($message);
         }
@@ -188,7 +195,11 @@ class Ingestor
     }
 
     /**
-     * Batch_Ingest for whole bag /SIP
+     * Batch_Ingest for whole bag /SIP.
+     *
+     * After running the command line batch ingest script provided by fedora, output of the command is checked. In case return value is != 0,
+     * an exception is raised. Otherwise the number of ingested files is compared with the number of files as counted before ingest. In case of differences.
+     * another exception is raised.
      *
      * @throws IngestServiceException
      */
@@ -206,26 +217,26 @@ class Ingestor
             if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$output_ingest) ."\n", $message_type = 3 , ERROR_LOG_FILE );
             throw new IngestServiceException ($message);
         } else {
-            // compare number of ingested files with number of frozen files
+            // extract pid from command output
             $Ingests = preg_grep("/ingest succeeded for:/", $output_ingest );
-            if (count($Ingests) == $this->entry['nfiles']) {
-                $pid_bundle =preg_grep("/CMD.xml/", $Ingests );
-                $pid_bundle = str_replace("ingest succeeded for: ", "", $pid_bundle);
-                $pid_bundle = str_replace(".xml", "", $pid_bundle);
-                $pid_bundle = str_replace("lat_", "lat:", $pid_bundle);
-                $this->entry['pid_bundle'] = $pid_bundle[0];
-                $this->entry['bag_ingested'] = 1;
-                $this->ingests = $Ingests;
+            foreach ($Ingests as $f){
+                $pid = str_replace("ingest succeeded for: ", "", $f);
+                $pid = str_replace(".xml", "", $pid);
+                $pid = str_replace( $this->md_prefix . "_", $this->md_prefix . ":", $pid);
+                if (substr($pid,-3) == "CMD") {
+                    $pid = str_replace("_CMD", "", $pid);}
 
-                # delete original
-                recursiveRmDir($this->backend_bundle_dir);
-                rmdir ($this->backend_bundle_dir);
-                if (!file_exists($this->backend_bundle_dir)) $this->entry['data_purged'] = 1;
+                $this->pid[] = $pid;}
 
-            } else {
+            if (count($this->pid) != $this->entry['nfiles']) {
                 $message = 'Ingest of bundle only partially succeeded. Check file naming in CMDI file or existing FOXML objects with same PID';
-                if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$Ingests) ."\n", $message_type = 3 , ERROR_LOG_FILE );
+                if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$this->pid) ."\n", $message_type = 3 , ERROR_LOG_FILE );
                 throw new IngestServiceException ($message);
+            } else {
+                // extract the pid of bundle and write to database
+                $this->entry['pid_bundle'] = $this->pid[0];
+                $this->entry['bag_ingested'] = 1;
+
             }
         }
 
@@ -233,50 +244,64 @@ class Ingestor
 
 
     /**
-     * Call to change ownership of fedora objects using the Fedora REST api.
-     * @param array $Ingests output from the batch ingest script.
+     * Call to change ownerID of fedora objects using the Fedora REST api.
+     *
      * @throws IngestServiceException
      */
-    public function changeOwnership($Ingests){
+    public function changeOwnerId(){
 
         // create object that can do ReST requests
         $accessFedora = get_configuration_fedora();
         $rest_fedora = new FedoraRESTAPI($accessFedora);
 
-        // Change ownership of ingested files
-        foreach ($Ingests as $f) {
-            $pid = str_replace("ingest succeeded for: ", "", $f);
-            $pid = str_replace(".xml", "", $pid);
-            $pid = str_replace("lat_", "lat:", $pid);
-            if (substr($pid,-3) == "CMD") {
-                $pid = str_replace("_CMD", "", $pid);}
-            $data = array(
-                'ownerId' => $this->entry['user_id']);
 
+        // Change ownership of ingested files
+        $errors_occurred=0;
+        $data = array(
+            'ownerId' => $this->entry['user_id']);
+
+        foreach ($this->pid as $pid) {
             $result = $rest_fedora->modifyObject($pid, $data);
-            if (!$result) {
-                $message = 'Couldn\'t change ownership of files';
-                if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\n", $message_type = 3 , ERROR_LOG_FILE );
-                throw new IngestServiceException ($message);
-            } else {
-                $pid_data = $rest_fedora->getObjectData($pid);
-                $this->entry['date_bundle_ingest'] = strtotime($pid_data['objCreateDate']);
+
+            if (!$result) {$errors_occurred++;}
+        }
+
+        // rollback
+        if ($errors_occurred > 0){
+
+            foreach ($this->pid as $pid){
+                $rest_fedora->deleteObject($pid);
             }
 
+            $message = 'Couldn\'t change ownership of files';
+            if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\n", $message_type = 3 , ERROR_LOG_FILE );
+            throw new IngestServiceException ($message);
+
+        } else {
+            $pid_data = $rest_fedora->getObjectData($this->pid[0]);
+            $this->entry['date_bundle_ingest'] = strtotime($pid_data['objCreateDate']);
+            $this->entry['owner_added'] = 1;
+            $this->entry['status'] = 'archived';
         }
-        $this->entry['owner_added'] = 1;
-        $this->entry['status'] = 'archived';
     }
 
+public function deleteOriginal(){
+    if ($this->entry['status'] = 'archived'){
+        # delete original
+        recursiveRmDir($this->backend_bundle_dir);
+        rmdir ($this->backend_bundle_dir);
+        if (!file_exists($this->backend_bundle_dir)) $this->entry['data_purged'] = 1;
+    }
+}
     /**
      * @param $db database connection handle
      */
-    public function updateDatabase ($db){
+    public function updateDatabase (){
         $conditions= array(
             "user_id" => $this->entry['user_id'],
             "bundle" => $this->entry['bundle'],
         );
-        $res = pg_update($db, 'flat_deposit_ui_upload_log', $this->entry, $conditions);
+        $res = pg_update($this->db_connection, 'flat_deposit_ui_upload', $this->entry, $conditions);
         if (!$res) {
             echo ( "Database table has not been updated\n");
         }
@@ -289,21 +314,13 @@ class Ingestor
  * Script part run by every instance
  */
 
-/*
- * Uncomment this to create file where time of script execution is logged
- */
-
-#$file = "/app/flat/deposit/Ingest_service.log";
-#file_get_contents($file);
-#file_put_contents($file, 'Script 2 has slept enough and awakes at ' . date ('D, d M Y H:i:s') . "\n", FILE_APPEND | LOCK_EX);
-
 $conf = get_drupal_database_settings();
 $conn_string = "host=" . $conf['host'] . " port=" . $conf['port'] ." dbname=" . $conf['dbname'] . " user=" . $conf['user'] .  " password=" . $conf['pw'] ;
 $db = pg_connect($conn_string) or die('Could not connect: ' . pg_last_error());;
 
 
 // Performing SQL query to pick up all information of one specific bundle
-$query = sprintf('SELECT * FROM flat_deposit_ui_upload_log WHERE user_id = \'%s\' AND bundle = \'%s\' and collection = \'%s\'',$user_id, $bundle, $collection);
+$query = sprintf('SELECT * FROM flat_deposit_ui_upload WHERE user_id = \'%s\' AND bundle = \'%s\' and collection = \'%s\'',$user_id, $bundle, $collection);
 $results = pg_query($db, $query) or die('Query failed: ' . pg_last_error());
 
 
@@ -311,39 +328,42 @@ $results = pg_query($db, $query) or die('Query failed: ' . pg_last_error());
 while ($row = pg_fetch_array($results, null, PGSQL_ASSOC)) {
     try {
         $ingest = new Ingestor($row);
+        $ingest->db_connection = $db;
+        $ingest->reset_entry();
         $ingest->entry['status'] = 'being processed';
-        $ingest->updateDatabase($db);
+        $ingest->updateDatabase();
 
         $ingest->prepareBag();
         $ingest->zipBag();
 
         $ingest->doSword();
 
-        $ingest->changeRightsBagDir();
+        $ingest->chownDirectory(BAG_DIR . "/" . $ingest->entry['bag_id']);
         $ingest->createFOXML();
+        $ingest->chownDirectory(BAG_DIR . "/" . $ingest->entry['bag_id']);
         $ingest->batchIngest();
 
-        $ingest->changeOwnership($ingest->ingests);
+        $ingest->changeOwnerId();
+        $ingest->deleteOriginal();
 
-    } catch(IngestServiceException $e){
-        $ingest->reset_entry();
+    } catch (IngestServiceException $e) {
         $ingest->entry['status'] = 'failed';
         $ingest->entry['exceptions'] = $e->getMessage();
         print_r($ingest->entry['exceptions']);
 
     } finally {
+        $ingest->updateDatabase();
         // Cleanup: bagit files, zip file and bag
         array_map('unlink', glob($ingest->backend_bundle_dir . "/*.txt"));
         if (file_exists(FREEZE_DIR . '/' . $ingest->entry['user_id'] . '/' . $ingest->entry['bundle'] . ".zip")) unlink(FREEZE_DIR . '/' . $ingest->entry['user_id'] . '/' . $ingest->entry['bundle'] . ".zip");
-        if (file_exists(BAG_DIR . '/' . $ingest->entry['bag_id']) && $ingest->entry['bag_id']) {recursiveRmDir(BAG_DIR . '/' . $ingest->entry['bag_id']);
-            rmdir(BAG_DIR . '/' . $ingest->entry['bag_id']);}
-        // update entry on database
-        $ingest->updateDatabase($db);
-    }
-
+        if (file_exists(BAG_DIR . '/' . $ingest->entry['bag_id']) && $ingest->entry['bag_id']) {
+            recursiveRmDir(BAG_DIR . '/' . $ingest->entry['bag_id']);
+            rmdir(BAG_DIR . '/' . $ingest->entry['bag_id']);
+        }
 
     }
 
+}
 
 // Free resultset
 pg_free_result($results);

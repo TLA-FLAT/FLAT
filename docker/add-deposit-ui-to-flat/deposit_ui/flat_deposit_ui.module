@@ -23,8 +23,9 @@ if (module_exists('flat_deposit_ui')){
 
 //         Load Dependencies
 
-        require_once ('fedora_queries.php');
-        require_once ('drupal_queries.php');
+        module_load_include('php', 'flat_deposit_ui', 'fedora_queries');
+        module_load_include('php', 'flat_deposit_ui', 'drupal_queries');
+
         // require_once ('misc.php');
 
 
@@ -1903,9 +1904,11 @@ function flat_deposit_ui_form_alter(&$form, &$form_state, $form_id)
 
             // Add individual 'select' options to drop down menu
             $conditions = array('member'=> USER);
-            $results = dq_user_is_member_collections($conditions);
+            // $results = dq_user_is_member_collections($conditions);
 
-            $collections = convert_database_data_to_array($results,'collection_name');
+            //$collections = convert_database_data_to_array($results,'collection_name'); Todo check
+            $collections =[]; // test data
+
 
             if (empty($collections)){$collections=['Dummy collection'];} // test data
 
@@ -1993,7 +1996,7 @@ function flat_deposit_ui_node_delete($node){
 
     // remove owncloud link and directory
     $oc = new OwnCloud();
-    if ($oc->error_message){drupal_set_message('owncloud',$oc->error_message);}
+    if (!$oc->noErrors){drupal_set_message('owncloud',$oc->error_message);}
     $oc->DeleteProjectSymlinkAndSync($collection, $bundle);
     $oc->DeleteCollectionDirectoryAndSync($collection);
 
@@ -2032,7 +2035,7 @@ function flat_bundle_add_node_form_validate($form, &$form_state){
 
     // Check Owncloud availability and existence user account
     $oc = new OwnCloud();
-    if ($oc->error_message){form_set_error('owncloud',$oc->error_message);}
+    if (!$oc->noErrors){form_set_error('owncloud',$oc->error_message);}
 
     // Add directory name to form_state
     $form_state['values']['extra_values']['full_directory_path'] = USER_DRUPAL_DATA_DIR  . "/$collection/$bundle_name";
@@ -2136,7 +2139,7 @@ function flat_bundle_freeze_node_form_validate($form, &$form_state){
 
     // Check Owncloud availability and existence user account
     $oc = new OwnCloud();
-    if ($oc->error_message){form_set_error('owncloud',$oc->error_message);}
+    if (!$oc->noErrors){form_set_error('owncloud',$oc->error_message);}
 }
 
 
@@ -2213,7 +2216,7 @@ function flat_bundle_unfreeze_node_form_validate (&$form, &$form_state)
     }
     // Check Owncloud availability and existence user account
     $oc = new OwnCloud();
-    if ($oc->error_message){form_set_error('owncloud',$oc->error_message);}
+    if (!$oc->noErrors){form_set_error('owncloud',$oc->error_message);}
 
 }
 

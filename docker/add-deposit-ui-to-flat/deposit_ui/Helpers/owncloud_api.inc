@@ -22,10 +22,15 @@ class OwnCloud {
     */
     public $inUse;
 
-    /* Check variable indicating owncloud is functioning
+    /* Bool indicating that owncloud didn't produce errors
     *
     */
-    public $ok;
+    public $noErrors;
+
+    /* String containing a possible error message to be displayed in drupal
+     *
+     */
+    public $error_message;
 
     /* user name
     *
@@ -53,14 +58,7 @@ class OwnCloud {
         $this->inUse = variable_get('flat_deposit_modules',array())['owncloud'];
 
         // if owncloud is used check for existence account; else always true
-        if ($this->inUse){
-
-            $this->ok = self::owncloud_account_exists();
-        }
-        // otherwise check is always true
-        else {
-            $this->ok = True;
-        }
+        $this->noErrors = $this->inUse ? self::owncloud_account_exists() : TRUE;
     }
 
     public function owncloud_account_exists()
@@ -86,8 +84,7 @@ class OwnCloud {
         }
 
         catch (OwnCloudConnectionException $e) {
-            drupal_set_message(t('Check for owncloud account failed. Error message: %message', array('%message' => $e->getMessage())),'error');
-            watchdog('Owncloud account', t('Owncloud account not available'), array(), WATCHDOG_ERROR);
+            $this->error_message = $e->getMessage();
             return false;
     }
 
@@ -97,24 +94,65 @@ class OwnCloud {
 
     public function UpdateUserFiles()
     {
-        if ($this->inUse && $this->ok) {
+        if ($this->inUse && $this->noErrors) {
             $occ_command = 'php ' . $this->root_dir . '/occ  files:scan --path="/' . $this->user_name . '/files"';
             shell_exec($occ_command);
         }
     }
 
-    public function CreateLinkAndSync($target, $project){
+    /**
+     * @param $collection_name  name of the collection which is used to create new directory in owncloud_user directory
+     */
+    public function CreateCollectionDirectoryAndSync($collection_name){
 
-        if ($this->inUse && $this->ok) {
-            $link_name = $this->root_dir . 'data/' . $this->user_name . '/files/' . $project;
-            symlink (drupal_realpath($target) .'/data', $link_name);
+        if ($this->inUse && $this->noErrors) {
+            $full_path = $this->root_dir . 'data/' . $this->user_name . '/files/' . $collection_name;
+            if (!file_exists(drupal_realpath($full_path))){
+                drupal_mkdir($full_path);
+                $this::UpdateUserFiles();
+            };
+
+        }
+    }
+
+    /**
+     * @param $collection_name  name of the collection which is used to create new directory in owncloud_user directory
+     */
+    public function DeleteCollectionDirectoryAndSync($collection_name){
+
+        if ($this->inUse && $this->noErrors) {
+            $full_path = $this->root_dir . 'data/' . $this->user_name . '/files/' . $collection_name;
+
+            if (count(scandir($full_path)) == 2){
+                drupal_rmdir($full_path);
+                $this::UpdateUserFiles();
+            };
+
+        }
+    }
+
+    /**
+     * Create as symbolic link pointing from the project folder (which is located in the drupal user data directory)
+     * to the collection folder in owncloud
+     *
+     * @param $user_data_dir drupal path to the users data directory (e.g. public://users/nameUser)
+     * @param $collection name of the collection the bundle belongs to
+     * @param $bundle name of the upload bundle
+     */
+    public function CreateProjectSymlinkAndSync($user_data_dir, $collection, $bundle){
+
+        if ($this->inUse && $this->noErrors) {
+            $link_name = $this->root_dir . 'data/' . $this->user_name . "/files/$collection/$bundle";
+            $target = drupal_realpath("$user_data_dir/$collection/$bundle/data");
+            symlink ($target, $link_name);
             $this::UpdateUserFiles();
         }
     }
-    public function DeleteLinkAndSync($project){
 
-        if ($this->inUse && $this->ok) {
-            $link_name = $this->root_dir . 'data/' . $this->user_name . '/files/' . $project;
+    public function DeleteProjectSymlinkAndSync($collection, $bundle){
+
+        if ($this->inUse && $this->noErrors) {
+            $link_name = $this->root_dir . 'data/' . $this->user_name . "/files/$collection/$bundle";
 
             if(is_link($link_name)) {
                 drupal_unlink($link_name);
