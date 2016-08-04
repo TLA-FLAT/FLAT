@@ -15,6 +15,7 @@ class CMDI_Handler
 
 {
     public $bundle;
+    public $collection;
     public $handle_config;
     public $md_config;
     public $template;
@@ -33,15 +34,16 @@ class CMDI_Handler
      * @param $bundle
      * @param $template
      */
-    public function __construct($bundle, $template)
+    public function __construct($bundle, $collection, $template)
     {
         $this->handle_config = get_handle_configuration();
         $this->md_config = get_metadata_configuration();
         $this->bundle = $bundle;
+        $this->collection = $collection;
         $this->template = $template;
         $this->field_name = $this->md_config['prefix'] . '-' . $template;
         $this->prefix = 'hdl:';
-        $this->export_file = USER_DRUPAL_DATA_DIR .'/' . $bundle . '/metadata/'. $bundle . $this->md_config['ext'];
+        $this->export_file = USER_DRUPAL_DATA_DIR ."/$collection/$bundle/metadata/$bundle" . $this->md_config['ext'];
         
     }
 
@@ -132,11 +134,11 @@ class CMDI_Handler
 
 
     /**
-     * This function recursively searches for files in the user data directory
+     * This function recursively    searches for files in the user data directory
      *
-     * @param $directory location where to search for files
+     * @param $directory string     path where to search for files
      *
-     * @returns $resources array with file id's as keys and filenames as values
+     * @returns $resources array    file id's as keys and file names as values
      */
     public function searchDir($directory){
 
@@ -170,7 +172,7 @@ class CMDI_Handler
         foreach ($this->resources as $fid => $file) {
 
             // transform drupal path to relative path as needed for fedora ingest
-            $localURI = str_replace(USER_DRUPAL_DATA_DIR ."/" . $this->bundle, "..", $file);
+            $localURI = str_replace(USER_DRUPAL_DATA_DIR ."/" . $this->collection ."/" . $this->bundle, "..", $file);
 
             # Mimetype of the file;
             $mime = mime_content_type(drupal_realpath($file)) ;
@@ -298,6 +300,7 @@ function get_example_md ($template){
                         'Description' => 'FLAT Test set')
                 )
             );
+            break;
         case 'experiment':
             $md = array(
                 'field_1' =>
@@ -330,6 +333,7 @@ function get_example_md ($template){
                             ),
                     ),
             );
+            break;
     }
     return $md;
 

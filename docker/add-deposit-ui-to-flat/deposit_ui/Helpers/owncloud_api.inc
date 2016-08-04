@@ -163,6 +163,16 @@ class OwnCloud {
         }
     }
 
+    public function DeleteBrokenLinks(){
+
+        if ($this->inUse && $this->noErrors) {
+            $folder_name = $this->root_dir . 'data/' . $this->user_name . "/files/";
+            $command = "find -L $folder_name -type l -delete";
+            exec($command);
+            $this::UpdateUserFiles();
+        }
+    }
+
 }
 
 

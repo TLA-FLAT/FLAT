@@ -1,14 +1,12 @@
 #!/bin/bash
-if [ $# -ne 4 ];then
+if [ $# -ne 2 ];then
   echo "Not enough parameters specified"
-  echo "Please provide user acronym, bundle name, bag_dir and user_bag_dir"
+  echo "Please provide (1) user_bag_dir and (2) bundle"
   exit 1
 
 else
-  user=$1
-  project=$2
-  bag_dir=$3
-  user_bag_dir=$4
+ user_bag_dir=$1
+ bundle=$2
 fi
 
 nFiles=$(find "$user_bag_dir/" -type f ! -name 'bag-info.txt' ! -name 'bagit.txt' ! -name '*manifest-md5.txt' | wc -l)
@@ -22,7 +20,7 @@ fi
 echo "nFiles to ingest: $nFiles"
 
 #zip all unhidden files
-cd ${user_bag_dir}/..
-zip -r ${project} ${project} -x ".*" -x "*/.*"
+cd "${user_bag_dir}"/..
+zip -r ${bundle} ${bundle} -x ".*" -x "*/.*"
 
 exit $?

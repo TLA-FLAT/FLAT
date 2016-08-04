@@ -25,7 +25,7 @@ function flat_deposit_ui_install()
         'name' => $t('FLAT Upload bundle'),
         'description' => $t('A bundle of one or more data files upload entity'),
         'title_label' => $t('Name of the upload bundle'),
-        'base' => 'node_content', #declare to be able to use content type hooks
+        'base' => 'flat_bundle', #declare to be able to use content type hooks
         'custom' => TRUE
     );
 
@@ -33,8 +33,6 @@ function flat_deposit_ui_install()
     $node_type = node_type_set_defaults($content_type);
 
     node_type_save($node_type);
-
-    #node_add_body_field($node_type, 'Description');
 
     $fields = array();
 
@@ -55,6 +53,7 @@ function flat_deposit_ui_install()
                 'open' => 'open',
                 'awaiting' => 'awaiting',
                 'archived' => 'archived',
+                'processing' => 'processing',
                 'failed' => 'failed'
             )
         ),
@@ -73,7 +72,7 @@ function flat_deposit_ui_install()
         'type' => 'text',
         'cardinality' => 1,
         'settings' => array(
-            'max_length' => 255)
+            'max_length' => 5000)
     );
     
     $fields['upload_cmdi'] = array(
@@ -172,7 +171,13 @@ function flat_deposit_ui_install()
         $instance['bundle'] = 'flat_bundle';
         field_create_instance($instance);
     }
+
+    module_enable(array('flat_deposit_ui_views'));
 }
+
+
+
+
 
 
 /**
@@ -380,6 +385,31 @@ function flat_deposit_ui_schema() {
 function flat_deposit_ui_uninstall(){
     $t = get_t();
 
+
+    // Delete all user data from drupal user data folder and freeze folder
+    module_load_include('php', 'flat_deposit_ui', 'inc/php_functions');
+    module_load_include('inc', 'flat_deposit_ui', 'Helpers/owncloud_api');
+    $users = entity_load('user');
+
+    foreach ($users as $user){
+        if(strlen($user->name) > 0){
+            $user_data_directory =  drupal_realpath('public://users/' . $user->name);
+            $user_freeze_directory =  variable_get('flat_deposit_paths',array())['freeze'] . "/$user->name";
+            if (file_exists($user_data_directory) && $user_data_directory){
+                recursiveRmDir($user_data_directory);
+                rmdir ($user_data_directory);}
+            if (file_exists($user_freeze_directory) && $user_freeze_directory){
+                recursiveRmDir($user_freeze_directory);
+                rmdir ($user_freeze_directory);}
+            $oc = new OwnCloud();
+            if ($oc->noErrors){
+                $oc->DeleteBrokenLinks();
+            }
+        }
+    }
+
+    drupal_set_message($t('All non-archived user project data files have been removed'));
+
     // clean up global variables
     variable_del('flat_deposit_paths');
     variable_del('flat_deposit_modules');
@@ -419,5 +449,6 @@ function flat_deposit_ui_uninstall(){
 
     //Round up uninstall
     drupal_set_message($t('Deposit UI uninstalled'));
+    module_disable(array('flat_deposit_ui_views'),FALSE);
 }
 

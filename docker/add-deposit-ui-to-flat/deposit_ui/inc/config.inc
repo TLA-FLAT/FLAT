@@ -63,7 +63,9 @@ function ingest_service_configuration()
         #CMDI 2 DC transformation
         'cmd2dc' => '/app/flat/cmd2dc.xsl',
         #Lat2 fox java lib
-        'lat2fox' => '/app/flat/lib/lat2fox.jar');
+        'lat2fox' => '/app/flat/lib/lat2fox.jar',
+        #drupal root directory
+        'drupal_root' => '/var/www/html/drupal');
 
 }
 
