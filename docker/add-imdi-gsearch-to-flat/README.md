@@ -8,7 +8,7 @@ This docker file depends on the FLAT base image, the FLAT Islandora SOLR image a
 
 ## Building the image ##
 ```sh
-docker build -t flat ./add-imdi-gsearch-to-flat .
+docker build -t flat ./add-imdi-gsearch-to-flat
 ```
 
 ## Running the image ##
