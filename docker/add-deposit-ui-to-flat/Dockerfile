@@ -53,8 +53,7 @@ RUN cd /var/www/html/drupal/ &&\
     /var/www/composer/vendor/drush/drush/drush -y en views  &&\
     /var/www/composer/vendor/drush/drush/drush -y en views_ui  &&\
     /var/www/composer/vendor/drush/drush/drush -y en flat_views  &&\
-    /var/www/composer/vendor/drush/drush/drush -y dl message  &&\
-    /var/www/composer/vendor/drush/drush/drush -y en message  &&\
+    /var/www/composer/vendor/drush/drush/drush -y en blog  &&\
     /var/www/composer/vendor/drush/drush/drush en flat_deposit_ui -y
 
 # add module configuration
