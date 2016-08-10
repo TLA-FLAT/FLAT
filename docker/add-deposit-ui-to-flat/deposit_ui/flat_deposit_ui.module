@@ -108,6 +108,8 @@ function flat_bundle_view($node, $view_mode) {
             l(t("!name's Uploads", array(
                 '!name' => format_username($node))), 'bundle/' . $node->uid)));
     }
+
+
     return $node;
 }
 
@@ -1476,47 +1478,42 @@ function flat_deposit_ui_form_alter(&$form, &$form_state, $form_id)
 
 
 /**
- * Implements hook_node_delete().
+ * Implements hook_delete().
  */
-function flat_deposit_ui_node_delete($node){
-    $type = $node->type;
+function flat_bundle_delete($node){
 
-    switch ($type){
-        case 'flat_bundle':
-            $bundle = $node->title;
-            $collection = field_get_items('node', $node, 'upload_collection')[0]['value'];
-            $status = field_get_items('node', $node, 'upload_status')[0]['value'];
-            $bundle_directory = drupal_realpath(USER_DRUPAL_DATA_DIR . "/$collection/$bundle");
-            $collection_directory = drupal_realpath(USER_DRUPAL_DATA_DIR . "/$collection");
-            $freeze_directory = USER_FREEZE_DIR . "/$collection/$bundle";
-            $freeze_collection_directory = USER_FREEZE_DIR . "/$collection";
+    $bundle = $node->title;
+    $collection = field_get_items('node', $node, 'upload_collection')[0]['value'];
+    $status = field_get_items('node', $node, 'upload_status')[0]['value'];
+    $bundle_directory = drupal_realpath(USER_DRUPAL_DATA_DIR . "/$collection/$bundle");
+    $collection_directory = drupal_realpath(USER_DRUPAL_DATA_DIR . "/$collection");
+    $freeze_directory = USER_FREEZE_DIR . "/$collection/$bundle";
+    $freeze_collection_directory = USER_FREEZE_DIR . "/$collection";
 
-            module_load_include('php', 'flat_deposit_ui', 'inc/php_functions');
+    module_load_include('php', 'flat_deposit_ui', 'inc/php_functions');
 
 
-            // Routine for open projects
-            if ($status == 'open'){
-                // Remove files and directories from USER data directory
-                if (file_exists($bundle_directory)){
-                    recursiveRmDir($bundle_directory);
-                    rmdir ($bundle_directory);}
-                if (file_exists($collection_directory) && is_dir_empty($collection_directory))rmdir ($collection_directory);
+    // Routine for open projects
+    if ($status == 'open'){
+        // Remove files and directories from USER data directory
+        if (file_exists($bundle_directory)){
+            recursiveRmDir($bundle_directory);
+            rmdir ($bundle_directory);}
+        if (file_exists($collection_directory) && is_dir_empty($collection_directory))rmdir ($collection_directory);
 
-                // remove owncloud link and directory
-                $oc = new OwnCloud();
-                if (!$oc->noErrors){drupal_set_message('owncloud',$oc->error_message);}
-                $oc->DeleteProjectSymlinkAndSync($collection, $bundle);
-                $oc->DeleteCollectionDirectoryAndSync($collection);
-            }
-
-            // Routine for frozen projects
-            // Remove files and directories from FREEZE data directory
-            if (file_exists($freeze_directory)){
-                recursiveRmDir($freeze_directory);
-                rmdir ($freeze_directory);}
-            if (file_exists($freeze_collection_directory) && is_dir_empty($freeze_collection_directory))rmdir ($freeze_collection_directory);
-            break;
+        // remove owncloud link and directory
+        $oc = new OwnCloud();
+        if (!$oc->noErrors){drupal_set_message('owncloud',$oc->error_message);}
+        $oc->DeleteProjectSymlinkAndSync($collection, $bundle);
+        $oc->DeleteCollectionDirectoryAndSync($collection);
     }
+
+    // Routine for frozen projects
+    // Remove files and directories from FREEZE data directory
+    if (file_exists($freeze_directory)){
+        recursiveRmDir($freeze_directory);
+        rmdir ($freeze_directory);}
+    if (file_exists($freeze_collection_directory) && is_dir_empty($freeze_collection_directory))rmdir ($freeze_collection_directory);
 
 }
 

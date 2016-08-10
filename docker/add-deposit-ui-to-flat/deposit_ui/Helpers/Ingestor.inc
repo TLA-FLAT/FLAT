@@ -213,7 +213,7 @@ class Ingestor
                 $this->pid[] = $pid;}
 
             if (count($this->pid) != $this->node['nfiles']) {
-                $message = 'Ingest of bundle only partially succeeded. Check file naming in CMDI file or existing FOXML objects with same PID';
+                $message = 'Ingest of bundle only partially succeeded. Check paths to resources in CMDI file or existing FOXML objects with same PID, or maybe new files have been added after cmdi creation';
                 if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$this->pid) ."\n", $message_type = 3 , ERROR_LOG_FILE );
                 throw new IngestServiceException ($message);
 
@@ -357,6 +357,28 @@ class Ingestor
             $this->deleteFedoraObjects();
         }
     }
+
+
+    public function create_blog_entry (){
+        $bundle = $this->node['bundle'];
+        $collection = $this->node['collection'];
+        $new_node = new stdClass();
+        $new_node->type = 'blog';
+        $new_node->language = 'und';
+        $new_node->title = sprintf("Archiving Report for bundle %s",$bundle);
+        $new_node->uid = $this->node['uid'];
+        $new_node->status = 1;
+        $new_node->sticky = 0;
+        $new_node->promote = 1;
+        $new_node->format = 3;
+        $new_node->revision = 0;
+        $new_node->body['und'][0]['format'] = 'full_html';
+        $new_node->body['und'][0]['summary'] = sprintf("<p>Archiving of %s completed</p>",$bundle, $collection,$bundle, $collection);;
+        $new_node->body['und'][0]['value'] = sprintf("<p>%s %s</p><p>Archiving of %s belonging to %s succeeded.</p>",$bundle, $collection,$bundle, $collection);
+
+        node_save($new_node);
+    }
+
 
     public function rollback()
     {

@@ -16,6 +16,10 @@ require_once ($_POST['module_path'] . '/Helpers/Ingestor.inc');
  *  Definition of all variables and constants
  */
 
+
+
+
+
 //posted variables
 define('DEPOSIT_UI_PATH', $_POST['module_path']);
 define('FREEZE_DIR', $_POST['freeze_dir']);
@@ -32,6 +36,15 @@ define('FEDORA_HOME', $configuration['fedora_home']);
 putenv ('FEDORA_HOME=' . FEDORA_HOME);
 define('LOG_ERRORS', $configuration['log_errors']);
 define('ERROR_LOG_FILE', $configuration['error_log_file']);
+
+
+// include drupal functionality
+$path = '/var/www/html/';
+chdir($path."/drupal");
+define('DRUPAL_ROOT', getcwd()); //the most important line
+require_once './includes/bootstrap.inc';
+drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+
 
 
 // Create Database connection
@@ -63,8 +76,11 @@ while ($node = pg_fetch_array($results, null, PGSQL_ASSOC)) {
         $ingest->batchIngest();
 
         $ingest->changeOwnerId();
-        $ingest->update_field('status','archived');
+
         $ingest->cleanup();
+
+        $ingest->create_blog_entry();
+        node_delete_multiple(array($ingest->node['nid']));
 
     } catch (IngestServiceException $e) {
         $ingest->update_field('status','failed');
