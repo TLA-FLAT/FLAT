@@ -2,7 +2,6 @@
 name = FLAT Views
 description = FLAT Views module - defines views for FLAT deposit module
 dependencies[] = views
-dependencies[] = flat_deposit_ui
 package = FLAT
 core = 7.x
 php = 5.0

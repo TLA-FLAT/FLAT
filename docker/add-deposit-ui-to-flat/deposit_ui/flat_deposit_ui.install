@@ -172,7 +172,8 @@ function flat_deposit_ui_install()
         field_create_instance($instance);
     }
 
-    module_enable(array('flat_deposit_ui_views'));
+    module_enable(array('blog','flat_views'));
+
 }
 
 
@@ -385,6 +386,8 @@ function flat_deposit_ui_schema() {
 function flat_deposit_ui_uninstall(){
     $t = get_t();
 
+    module_disable(array('blog','flat_views'));
+    drupal_uninstall_modules(array('blog'));
 
     // Delete all user data from drupal user data folder and freeze folder
     module_load_include('php', 'flat_deposit_ui', 'inc/php_functions');

@@ -70,7 +70,7 @@ function flat_deposit_ui_enable(){
 
     // give authenticated users the right to use the deposit module
     user_role_change_permissions(DRUPAL_AUTHENTICATED_RID, array('use deposit module' => TRUE));
-
+    
 }
 
 function flat_deposit_ui_node_info() {
