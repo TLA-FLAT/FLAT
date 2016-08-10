@@ -22,7 +22,7 @@ ENV NOTVISIBLE "in users profile"
 RUN echo "export VISIBLE=now" >> /etc/profile
 
 # Add deposit module to installation
-ADD deposit_ui /var/www/html/drupal/sites/all/modules/custom/flat_deposit_ui
+# ADD deposit_ui /var/www/html/drupal/sites/all/modules/custom/flat_deposit_ui
 
 # add WYSIWYG editor
 RUN cd /var/www/html/drupal/sites/all/libraries/ &&\
@@ -48,13 +48,14 @@ RUN cd /var/www/html/drupal/ &&\
     /var/www/composer/vendor/drush/drush/drush dl httprl -y  &&\
     /var/www/composer/vendor/drush/drush/drush en httprl -y  &&\
     /var/www/composer/vendor/drush/drush/drush -y dl feeds  &&\
+    /var/www/composer/vendor/drush/drush/drush -y en feeds  &&\
     /var/www/composer/vendor/drush/drush/drush -y en feeds_ui  &&\
+    /var/www/composer/vendor/drush/drush/drush -y dl job_scheduler  &&\
+    /var/www/composer/vendor/drush/drush/drush -y en job_scheduler  &&\
     /var/www/composer/vendor/drush/drush/drush -y dl views  &&\
     /var/www/composer/vendor/drush/drush/drush -y en views  &&\
-    /var/www/composer/vendor/drush/drush/drush -y en views_ui  &&\
-    /var/www/composer/vendor/drush/drush/drush -y en flat_views  &&\
-    /var/www/composer/vendor/drush/drush/drush -y en blog  &&\
-    /var/www/composer/vendor/drush/drush/drush en flat_deposit_ui -y
+    /var/www/composer/vendor/drush/drush/drush -y en views_ui
+#    /var/www/composer/vendor/drush/drush/drush en flat_deposit_ui -y
 
 # add module configuration
 ENV PGPASSWORD=fedora

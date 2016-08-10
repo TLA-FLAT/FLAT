@@ -70,7 +70,7 @@ function flat_deposit_ui_enable(){
 
     // give authenticated users the right to use the deposit module
     user_role_change_permissions(DRUPAL_AUTHENTICATED_RID, array('use deposit module' => TRUE));
-    
+
 }
 
 function flat_deposit_ui_node_info() {
@@ -1876,89 +1876,89 @@ function flat_bundle_archive_node_form_submit($form, &$form_state){
 /**
  * Implements hook_feeds_importer_default().
  */
-    function flat_deposit_ui_feeds_importer_default()
-    {
+function flat_deposit_ui_feeds_importer_default()
+{
 
-        $export = array();
+    $export = array();
 
-        $feeds_importer = new stdClass();
-        $feeds_importer->disabled = FALSE; /* Edit this to true to make a default feeds_importer disabled initially */
-        $feeds_importer->api_version = 1;
-        $feeds_importer->id = 'example_uploads';
-        $feeds_importer->config = array(
-            'name' => 'Example_uploads',
-            'description' => 'CSV Import of example upload bundles',
-            'fetcher' => array(
-                'plugin_key' => 'FeedsFileFetcher',
-                'config' => array(
-                    'allowed_extensions' => 'txt csv tsv xml opml',
-                    'direct' => FALSE,
-                    'directory' => 'public://feeds',
-                    'allowed_schemes' => array(
-                        0 => 'public',
+    $feeds_importer = new stdClass();
+    $feeds_importer->disabled = FALSE; /* Edit this to true to make a default feeds_importer disabled initially */
+    $feeds_importer->api_version = 1;
+    $feeds_importer->id = 'example_uploads';
+    $feeds_importer->config = array(
+        'name' => 'Example_uploads',
+        'description' => 'CSV Import of example upload bundles',
+        'fetcher' => array(
+            'plugin_key' => 'FeedsFileFetcher',
+            'config' => array(
+                'allowed_extensions' => 'txt csv tsv xml opml',
+                'direct' => FALSE,
+                'directory' => 'public://feeds',
+                'allowed_schemes' => array(
+                    0 => 'public',
+                ),
+            ),
+        ),
+        'parser' => array(
+            'plugin_key' => 'FeedsCSVParser',
+            'config' => array(
+                'delimiter' => ',',
+                'encoding' => 'UTF-8',
+                'no_headers' => 0,
+            ),
+        ),
+        'processor' => array(
+            'plugin_key' => 'FeedsNodeProcessor',
+            'config' => array(
+                'expire' => '-1',
+                'author' => 0,
+                'authorize' => 1,
+                'mappings' => array(
+                    0 => array(
+                        'source' => 'bundle',
+                        'target' => 'title',
+                        'unique' => 1,
+                        'language' => 'und',
+                    ),
+                    1 => array(
+                        'source' => 'collection',
+                        'target' => 'upload_collection',
+                        'unique' => FALSE,
+                        'language' => 'und',
+                    ),
+                    2 => array(
+                        'source' => 'status',
+                        'target' => 'upload_status',
+                        'unique' => FALSE,
+                        'language' => 'und',
+                    ),
+                    3 => array(
+                        'source' => 'user',
+                        'target' => 'user_name',
+                        'unique' => FALSE,
                     ),
                 ),
+                'insert_new' => '1',
+                'update_existing' => '0',
+                'update_non_existent' => 'skip',
+                'input_format' => 'plain_text',
+                'skip_hash_check' => 0,
+                'bundle' => 'flat_bundle',
+                'language' => 'und',
             ),
-            'parser' => array(
-                'plugin_key' => 'FeedsCSVParser',
-                'config' => array(
-                    'delimiter' => ',',
-                    'encoding' => 'UTF-8',
-                    'no_headers' => 0,
-                ),
-            ),
-            'processor' => array(
-                'plugin_key' => 'FeedsNodeProcessor',
-                'config' => array(
-                    'expire' => '-1',
-                    'author' => 0,
-                    'authorize' => 1,
-                    'mappings' => array(
-                        0 => array(
-                            'source' => 'bundle',
-                            'target' => 'title',
-                            'unique' => 1,
-                            'language' => 'und',
-                        ),
-                        1 => array(
-                            'source' => 'collection',
-                            'target' => 'upload_collection',
-                            'unique' => FALSE,
-                            'language' => 'und',
-                        ),
-                        2 => array(
-                            'source' => 'status',
-                            'target' => 'upload_status',
-                            'unique' => FALSE,
-                            'language' => 'und',
-                        ),
-                        3 => array(
-                            'source' => 'user',
-                            'target' => 'user_name',
-                            'unique' => FALSE,
-                        ),
-                    ),
-                    'insert_new' => '1',
-                    'update_existing' => '0',
-                    'update_non_existent' => 'skip',
-                    'input_format' => 'plain_text',
-                    'skip_hash_check' => 0,
-                    'bundle' => 'flat_bundle',
-                    'language' => 'und',
-                ),
-            ),
-            'content_type' => '',
-            'update' => 0,
-            'import_period' => '-1',
-            'expire_period' => 3600,
-            'import_on_create' => 1,
-            'process_in_background' => 0,
-        );
+        ),
+        'content_type' => '',
+        'update' => 0,
+        'import_period' => '-1',
+        'expire_period' => 3600,
+        'import_on_create' => 1,
+        'process_in_background' => 0,
+    );
 
-        $export['example_uploads'] = $feeds_importer;
+    $export['example_uploads'] = $feeds_importer;
 
-        return $export;
-    }
+    return $export;
+}
 
 /**
  * Implements hook_ctools_plugin_api().
@@ -1970,6 +1970,4 @@ function flat_deposit_ui_ctools_plugin_api($module = '', $api = ''){
         return array("version" => 1);
     }
 }
-
-
 
