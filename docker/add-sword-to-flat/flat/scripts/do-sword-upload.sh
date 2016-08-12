@@ -2,7 +2,7 @@
 
 CONTENT_TYPE=application/zip
 FILENAME=$1
-TARGET=https://192.168.99.100:8443/easy-deposit/collection
+TARGET=https://FLAT_HOST:8443/easy-deposit/collection
 SLUG=$2
 MD5=`md5sum -b $FILENAME | awk '{print $1;}'`
 IN_PROGRESS=false

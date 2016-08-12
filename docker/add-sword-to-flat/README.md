@@ -33,7 +33,7 @@ If the SWORD upload is succesful the SIP bag will have arrived in ``/app/flat/de
 
 ## Notes ##
 
- * Hardcoded logins, IPs and paths are found in [/app/flat/deposit/sword/cfg/application.properties](sword/application.properties), [/app/flat/deposit/sword/cfg/logback.xml](sword/logback.xml) and [/app/flat/do-sword-upload.sh](flat/scripts/do-sword-upload.sh)
+ * Hardcoded logins and paths are found in [/app/flat/deposit/sword/cfg/application.properties](sword/application.properties), [/app/flat/deposit/sword/cfg/logback.xml](sword/logback.xml) and [/app/flat/do-sword-upload.sh](flat/scripts/do-sword-upload.sh)
  * [/app/flat/do-sword-upload.sh](flat/scripts/do-sword-upload.sh) uses ``curl -k`` because the certificate is self-signed, this shoud not be needed in production!
 
 ## References ##

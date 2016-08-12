@@ -57,7 +57,7 @@ public class Deposit extends AbstractAction {
                 fedora.debug(true);
                 FedoraRequest.setDefaultClient(fedora);
             }
-            logger.debug("Fedore Commons repository["+FedoraClient.describeRepository().xml(true).execute()+"]");
+            logger.debug("Fedora Commons repository["+FedoraClient.describeRepository().xml(true).execute()+"]");
             
             Collection<File> foxs = FileUtils.listFiles(new File(this.getParameter("dir", "./fox")),new String[] {"xml"},true);
             logger.debug("Loading ["+foxs.size()+"] FOX files from dir["+this.getParameter("dir", "./fox")+"]");

@@ -1,10 +1,15 @@
-FROM        phusion/baseimage
+FROM phusion/baseimage:0.9.19
 MAINTAINER  Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
+
+# set local timezone
+RUN mv /etc/localtime /etc/localtime.bak &&\
+    ln -sf /usr/share/zoneinfo/Europe/Amsterdam /etc/localtime
 
 # Set correct environment variables.
 ENV HOME /root
 ENV DRUPAL_PROJECT=flat
 ENV TOMCAT_TIMEOUT=60
+ENV FLAT_HOST=localhost
 
 # Regenerate SSH host keys. baseimage-docker does not contain any, so you
 # have to do that yourself. You may also comment out this instruction; the
@@ -16,20 +21,7 @@ RUN /etc/my_init.d/00_regen_ssh_host_keys.sh
 #
 RUN apt-get update &&\
 	apt-get -y dist-upgrade &&\
-	apt-get -y install curl wget openssl apache2 postgresql php5 php5-gd php5-pgsql php5-xsl php5-curl unzip default-jdk libapache2-mod-jk expect ssh rsync git maven libxml2-utils
-
-#
-# Install Java 1.8
-#
-RUN set -x; \
-    java_version=8u91; \
-    wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" \
-    http://download.oracle.com/otn-pub/java/jdk/$java_version-b14/jdk-$java_version-linux-x64.tar.gz &&\
-    echo "3f3d7d0cd70bfe0feab382ed4b0e45c0  jdk-$java_version-linux-x64.tar.gz" | md5sum -c - &&\
-    tar -zxvf jdk-$java_version-linux-x64.tar.gz -C /opt &&\
-    rm jdk-$java_version-linux-x64.tar.gz
-ENV JAVA_HOME /opt/jdk1.8.0_91
-ENV PATH $JAVA_HOME/bin:$PATH
+	apt-get -y install curl wget openssl apache2 postgresql libapache2-mod-php php-gd php-pgsql php-xsl php-curl unzip default-jdk libapache2-mod-jk expect ssh rsync git maven libxml2-utils
 
 #
 # Configure apache
