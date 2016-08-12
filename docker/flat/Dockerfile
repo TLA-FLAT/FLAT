@@ -9,6 +9,7 @@ RUN mv /etc/localtime /etc/localtime.bak &&\
 ENV HOME /root
 ENV DRUPAL_PROJECT=flat
 ENV TOMCAT_TIMEOUT=60
+#ENV FLAT_HOST=192.168.99.100
 ENV FLAT_HOST=localhost
 
 # Regenerate SSH host keys. baseimage-docker does not contain any, so you

@@ -42,6 +42,10 @@ This will start your docker container with the following properties:
 
 ## Additional configuration ##
 
+The Dockerfile contains some global environment variables, which might have to be adapted:
+- ``TOMCAT_TIMEOUT`` gives the timeout (default: ``60 ``seconds) to wait for a Tomcat to startup, if you have a slow/busy machine this might have to be increased
+- ``FLAT_HOST`` the hostname/IP (default: ``localhost``) used to access the FLAT services from the host, if you use the Docker Toolbox you have to change this into the IP assigned to your docker-machine (default: ``192.168.99.100``)
+
 ### CMD to Dublin Core ###
 
 CMD is a very flexible metadata format and there is no generic mapping to Dublin Core. Fedora Commons does require Dublin Core. Place a
