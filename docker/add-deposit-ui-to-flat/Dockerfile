@@ -39,6 +39,10 @@ RUN cd /var/www/html/drupal/ &&\
     /var/www/composer/vendor/drush/drush/drush dis toolbar -y &&\
     /var/www/composer/vendor/drush/drush/drush dl admin_menu -y &&\
     /var/www/composer/vendor/drush/drush/drush en admin_menu -y &&\
+    /var/www/composer/vendor/drush/drush/drush -y dl devel  &&\
+    /var/www/composer/vendor/drush/drush/drush -y en devel  &&\
+    /var/www/composer/vendor/drush/drush/drush dl entity -y  &&\ 
+    /var/www/composer/vendor/drush/drush/drush en entity -y  &&\
     /var/www/composer/vendor/drush/drush/drush dl wysiwyg -y  &&\
     /var/www/composer/vendor/drush/drush/drush en wysiwyg -y  &&\
     /var/www/composer/vendor/drush/drush/drush dl imce -y  &&\

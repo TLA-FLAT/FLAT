@@ -2,101 +2,83 @@
 /**
  * Ingest service
  */
+// include drupal functionality
+$drupal_path = $_POST['drupal_path'];
+chdir($drupal_path);
+define('DRUPAL_ROOT', getcwd()); //the most important line
+require_once './includes/bootstrap.inc';
+drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
 /*
  * load configuration, helper functions and dependent classes
  */
-require_once ($_POST['module_path'] . '/inc/config.inc');
-require_once ($_POST['module_path'] . '/inc/php_functions.php');
-require_once ($_POST['module_path'] . '/Helpers/Fedora_REST_API.inc');
-require_once ($_POST['module_path'] . '/Helpers/Ingestor.inc');
+$module_path = drupal_realpath(drupal_get_path('module','flat_deposit_ui'));
+require_once ($module_path . '/inc/config.inc');
+require_once ($module_path . '/inc/php_functions.php');
+require_once ($module_path . '/Helpers/Fedora_REST_API.inc');
+require_once ($module_path . '/Helpers/Ingestor.inc');
 
 
 /*
  *  Definition of all variables and constants
  */
-
-
-
-
-
 //posted variables
-define('DEPOSIT_UI_PATH', $_POST['module_path']);
-define('FREEZE_DIR', $_POST['freeze_dir']);
-define('BAG_DIR', $_POST['bag_dir']);
-define('APACHE_USER', $_POST['apache_user']);
+define('DEPOSIT_UI_PATH', $module_path);
+define('FREEZE_DIR', variable_get('flat_deposit_paths',array())['freeze']);
+define('BAG_DIR', variable_get('flat_deposit_paths',array())['bag']);
+define('APACHE_USER', variable_get('flat_deposit_names',array())['apache_user']);
 
 // variables stored in config.inc
 $configuration = ingest_service_configuration();
 define('SWORD_SCRIPT', $configuration['sword_script']);
-define('CMD2DC', $configuration['cmd2dc']);
-define('LAT2FOX', $configuration['lat2fox']);
 define('BAG_EXE', $configuration['bag_exe']);
-define('FEDORA_HOME', $configuration['fedora_home']);
-putenv ('FEDORA_HOME=' . FEDORA_HOME);
 define('LOG_ERRORS', $configuration['log_errors']);
 define('ERROR_LOG_FILE', $configuration['error_log_file']);
 
 
-// include drupal functionality
-$path = '/var/www/html/';
-chdir($path."/drupal");
-define('DRUPAL_ROOT', getcwd()); //the most important line
-require_once './includes/bootstrap.inc';
-drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
 
 
 // Create Database connection
-$conf = get_drupal_database_settings();
-$conn_string = "host=" . $conf['host'] . " port=" . $conf['port'] ." dbname=" . $conf['dbname'] . " user=" . $conf['user'] .  " password=" . $conf['pw'] ;
-$db = pg_connect($conn_string) or die('Could not connect: ' . pg_last_error());;
-
-
-// Perform SQL query to get nodes from drupal database; Query may result in many nodes, but here I query 1 single node as defined by the nid
-$query = sprintf('SELECT * FROM node WHERE nid = \'%s\'',$_POST['nid']);
-$results = pg_query($db, $query) or die('Query failed: ' . pg_last_error());
+#$conf = get_drupal_database_settings();
+#$conn_string = "host=" . $conf['host'] . " port=" . $conf['port'] ." dbname=" . $conf['dbname'] . " user=" . $conf['user'] .  " password=" . $conf['pw'] ;
+#$db = pg_connect($conn_string) or die('Could not connect: ' . pg_last_error());;
 
 
 // Ingest routine
-while ($node = pg_fetch_array($results, null, PGSQL_ASSOC)) {
-    try {
-        $ingest = new Ingestor($node, $db);
-        
-        $ingest->update_field('status','processing');
+$nid = $_POST['nid'];
 
-        $ingest->prepareBag();
-        $ingest->zipBag();
+try {
+    $ingest = new Ingestor($nid);
+    $ingest->wrapper->upload_status->set('processing');
+    $ingest->wrapper->save();
 
-        $ingest->doSword();
+    $ingest->prepareBag();
+    $ingest->zipBag();
 
-        $ingest->chownDirectory(BAG_DIR . "/" . $ingest->bag['bag_id']);
-        $ingest->createFOXML();
-        $ingest->chownDirectory(BAG_DIR . "/" . $ingest->bag['bag_id']);
-        $ingest->batchIngest();
+    $ingest->doSword();
+    throw new IngestServiceException("Debugging");
+    $ingest->triggerDoorkeeper();
+    $ingest->waitFinishDoorkeeper();
+    $ingest->getBundleFID();
 
-        $ingest->changeOwnerId();
+    $ingest->getConstituentFIDs();
 
-        $ingest->cleanup();
+    $ingest->changeOwnerId();
 
-        $ingest->create_blog_entry();
-        node_delete_multiple(array($ingest->node['nid']));
+    $ingest->cleanup();
 
-    } catch (IngestServiceException $e) {
-        $ingest->update_field('status','failed');
-        $ingest->update_field('exception',$e->getMessage());
-        $ingest->rollback();
+    $ingest->create_blog_entry();
+    node_delete_multiple(array($nid));
 
-    }
+} catch (IngestServiceException $e) {
+    $ingest->wrapper->upload_status->set('failed');
+    $ingest->wrapper->upload_exception->set($e->getMessage());
+    $ingest->wrapper->save();
+
+    $ingest->rollback();
 
 }
-
-// Free resultset
-pg_free_result($results);
-
-
-pg_close($db);
-
 
 
 

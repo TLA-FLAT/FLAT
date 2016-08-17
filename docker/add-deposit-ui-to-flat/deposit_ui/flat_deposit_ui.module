@@ -361,7 +361,7 @@ function flat_deposit_ui_menu()
         'access arguments' => $access,
     );
 
-// Admin configuration group
+    // Admin configuration group
     $items['admin/config/flat_deposit_ui'] = array(
         'title' => 'FLAT deposit UI',
         'description' => 'Administer FLAT deposit user interface',
@@ -690,354 +690,6 @@ function flat_deposit_ui_manage_bundles()
     return $output;
 }
 
-
-
-/**
- * creates cmdi meta data file for bundle
- */
-function flat_deposit_ui_commit_form_cmdi_submit($form, &$form_state){
-    foreach ($form_state['values']['table_open_bundles'] as $key => $checked) {
-        if (!is_int($checked)) {
-
-            // extract bundle data from form data
-            $bundle = $form_state['values']['data_open_bundles'][$key]['bundle'];
-            $collection = $form_state['values']['data_open_bundles'][$key]['collection'];
-            $form_state['redirect'] = 'cmdi/'. $bundle . '/'. $collection . '/create';}
-    }
-}
-
-
-/**
- * creates cmdi meta data file for bundle
- */
-function flat_deposit_ui_commit_form_cmdi_select_submit($form, &$form_state){
-    foreach ($form_state['values']['table_open_bundles'] as $key => $checked) {
-        if (!is_int($checked)) {
-
-            // extract bundle name from form data
-            $bundle = $form_state['values']['data_open_bundles'][$key]['bundle'];
-            $collection = $form_state['values']['data_open_bundles'][$key]['collection'];
-            $form_state['redirect'] = 'cmdi/select/'. $bundle .'/'. $collection ;}
-    }
-}
-
-
-
-
-function flat_deposit_ui_commit_form_delete_submit($form, &$form_state)
-{
-    foreach ($form_state['values']['table_open_bundles'] as $key => $checked) {
-        if (!is_int($checked)) {
-
-            // extract bundle name from form data
-            $uid = $form_state['values']['data_open_bundles'][$key]['uid'];
-            $bundle = $form_state['values']['data_open_bundles'][$key]['bundle'];
-            $collection = $form_state['values']['data_open_bundles'][$key]['collection'];
-
-
-            $source = USER_DRUPAL_DATA_DIR . '/' . $bundle;
-            $del = file_unmanaged_delete_recursive($source);
-
-            //#unlink owncloud symlink
-            $oc = new OwnCloud();
-            $oc->DeleteLinkAndSync($bundle);
-
-            // Remove entry from flat_deposit_ui_upload
-
-            $results = dq_purge_bundle($uid);
-
-
-            if ($del) {
-                $message = t('Bundle ' . $bundle . ' has been deleted.');
-            } else {
-                $message = t('Bundle ' . $bundle . ' has not been deleted.');
-            }
-
-            if ($results) {
-                $message .= t(' Database has been updated');
-            } else {
-                $message .= t(' Note: Database has not been updated');
-            }
-            drupal_set_message($message);
-
-        }
-    }
-}
-
-
-function flat_deposit_ui_commit_form_unfreeze_validate (&$form, &$form_state)
-{
-
-    // Check if user drupal data directory exists
-    if (!file_exists(USER_DRUPAL_DATA_DIR)) {
-        form_set_error ('unfreeze_error', "User Drupal data directory does not exist. Please contact administator");
-        return $form;
-    }
-
-    // Check if backend is owned by www-data and writable
-    $owner = posix_getpwuid(fileowner(USER_DRUPAL_DATA_DIR));
-    if ($owner['name'] != APACHE_USER) {
-        form_set_error ('unfreeze_error', "User Drupal data directory is not writable by application. Please contact administrator");
-        return $form;
-    }
-
-    // Check if drupal data bundle directory already exists
-    // for each checked box
-    foreach ($form_state['values']['table_frozen_bundles'] as $key => $checked) {
-        if (!is_int($checked)) {
-
-            // extract bundle name from form data
-            $uid = $form_state['values']['data_frozen_bundles'][$key]['uid'];
-            $bundle = $form_state['values']['data_frozen_bundles'][$key]['bundle'];
-            $collection = $form_state['values']['data_frozen_bundles'][$key]['collection'];
-
-            $open_bundle_dir = USER_DRUPAL_DATA_DIR . '/' . $bundle ;
-
-            // check if new open directory has been created in the mean time
-            if (file_exists($open_bundle_dir)) {
-                form_set_error ('unfreeze_error', 'A bundle with the name ' . $bundle . ' has already been frozen.');
-                return $form;
-            }
-
-            $db_or = db_or();
-            $db_or->condition('bundle.status', 'being processed' , '=');
-            $db_or->condition('bundle.status', 'archived' , '=');
-
-            $result = db_select('flat_deposit_ui_upload', 'bundle')
-                ->fields('bundle', array('bundle'))
-                ->condition('uid',$uid)
-                ->condition('user_id', USER)
-                ->condition('bundle', $bundle)
-                ->condition('collection', $collection)
-                ->condition($db_or)
-                ->execute()
-                ->rowCount();
-            if ($result){
-                form_set_error ('ingest_error', t('Bundle is already in process and cannot be unfrozen'));
-            }
-        }
-    }
-
-    return $form;
-}
-
-
-function flat_deposit_ui_commit_form_unfreeze_submit ($form, &$form_state)
-{
-    foreach ($form_state['values']['table_frozen_bundles'] as $key => $checked) {
-        if (!is_int($checked)) {
-
-            // extract bundle name from form data
-            $uid = $form_state['values']['data_frozen_bundles'][$key]['uid'];
-            $bundle = $form_state['values']['data_frozen_bundles'][$key]['bundle'];
-            $collection = $form_state['values']['data_frozen_bundles'][$key]['collection'];
-            $source = USER_FREEZE_DIR . '/' . $bundle;
-            $destination = drupal_realpath(USER_DRUPAL_DATA_DIR . '/' . $bundle);
-            $moved = rename($source, $destination);
-
-
-            if ($moved) {
-                // update database entry
-                $fields = array('freeze_time' => 0, 'status' => 'open');
-                $conditions = array('bundle' => $bundle, 'collection' => $collection);
-                dq_update_existing_user_bundle($fields, $conditions);
-
-                //add symbolic link to owncloud user directory
-                $oc = new OwnCloud();
-                $oc->CreateLinkAndSync($destination, $bundle);
-
-                drupal_set_message(t('Bundle ' . $bundle . ' is open and can be changed'));
-            }
-        }
-    }
-}
-
-
-/**
- * Checks if bundle is already processed or erroneous
- *
- * @param drupal form $form
- * @param drupal form state $form_state
- * @return form
- */
-
-function flat_deposit_ui_commit_form_ingest_serve_validate (&$form, &$form_state)
-{
-
-    foreach ($form_state['values']['table_frozen_bundles'] as $key => $checked) {
-        if (!is_int($checked)) {
-
-            // extract bundle name from form data
-            $uid = $form_state['values']['data_frozen_bundles'][$key]['uid'];
-            $bundle = $form_state['values']['data_frozen_bundles'][$key]['bundle'];
-            $collection = $form_state['values']['data_frozen_bundles'][$key]['collection'];
-
-            $result = db_select('flat_deposit_ui_upload', 'bundle')
-                ->fields('bundle', array('bundle'))
-                ->condition('uid',$uid)
-                ->condition('user_id', USER)
-                ->condition('bundle', $bundle)
-                ->condition('collection', $collection)
-                ->condition('status', 'awaiting')
-                ->execute()
-                ->rowCount();
-            if (!$result){
-                $message = 'Incorrect status. Bundle is either already in process or needs revision';
-                form_set_error ('ingest_error', t($message));
-            }
-
-        }
-    }
-
-    return $form;
-}
-
-
-/**
- * Triggers a service that ingests specified bundles into the archive
- *
- * @param $form
- * @param $form_state
- *
- */
-
-function flat_deposit_ui_commit_form_ingest_serve_submit ($form, &$form_state)
-{
-
-    foreach ($form_state['values']['table_frozen_bundles'] as $key => $checked) {
-        if (!is_int($checked)) {
-
-            // extract bundle name from form data
-            $bundle = $form_state['values']['data_frozen_bundles'][$key]['bundle'];
-            $collection = $form_state['values']['data_frozen_bundles'][$key]['collection'];
-
-            // create array containing data needed by the ingest service
-            module_load_include('inc','flat_deposit_ui','inc/config');
-            $data_to_post = ingest_service_configuration();
-            $data_to_post['freeze_dir'] = FREEZE_DIR;
-            $data_to_post['bag_dir'] = BAG_DIR;
-            $data_to_post['apache_user'] = APACHE_USER;
-            $data_to_post['user_id'] = USER;
-            $data_to_post['module_path'] = drupal_realpath(drupal_get_path('module','flat_deposit_ui'));
-            $data_to_post['bundle'] = $bundle;
-            $data_to_post['collection'] = $collection;
-
-            // background service http request settings
-            $options = array(
-                'method' => 'POST',
-                'data' => $data_to_post,
-                'blocking' => FALSE,
-                'headers' => array(
-                    // Set the Host header to self.
-                    'Host' => $_SERVER['HTTP_HOST'],),
-            );
-
-            $url = httprl_build_url_self(drupal_get_path('module', 'flat_deposit_ui') . "/Helpers/Ingest_service.php");
-
-
-            // normal mode
-            if ($form_state['values']['op'] == "Upload project to database") {
-                httprl_request($url, $options);
-
-                // Execute request.
-                httprl_send_request();
-            }
-
-            // Debug mode
-            if ($form_state['values']['op'] == "Upload project (debug)") {
-
-
-                $url_debug = 'http://' . $_SERVER['SERVER_NAME'] . '/drupal/' . drupal_get_path('module', 'flat_deposit_ui') . "/Helpers/Ingest_service.php";
-                $ch = curl_init();
-                curl_setopt_array($ch, array(
-
-                    CURLOPT_URL => $url_debug,
-                    CURLOPT_COOKIE => "XDEBUG_SESSION=PHPSTORM",
-                    CURLOPT_POST => sizeof($data_to_post),
-                    CURLOPT_POSTFIELDS => $data_to_post));
-
-                $result = curl_exec($ch);
-
-                if($errno = curl_errno($ch)) {
-                    $error_message = curl_strerror($errno);
-                    echo "cURL error ({$errno}):\n {$error_message}";
-                }
-                curl_close($ch);
-            }
-        }
-    }
-
-    drupal_set_message('Frozen bundles are being archived');
-}
-
-
-/**
- * Removes user entries with status 'archived' from drupals' flat_deposit_ui_upload table and fills it with data from fedora commons
- * @param $form
- * @param $form_state
- */
-function flat_deposit_ui_commit_form_refresh_archived_submit($form, &$form_state)
-{
-    // deletes entries
-    $del = db_delete('flat_deposit_ui_upload')
-        ->condition('user_id', USER)
-        ->condition('status', 'archived')
-        ->execute();
-
-    // Fedora commons database actions
-    $tuque = islandora_get_tuque_connection();
-    $api_a = $tuque->repository->api->a;
-    $condition = "ownerId=" . USER;
-    $results = $api_a->findObjects('query',$condition);
-
-    module_load_include('inc', 'flat_deposit_ui' , '/inc/config');
-
-    foreach ($results['results'] as $result) {
-        $pid = $result['pid'];
-        if (preg_match('/_CMD/', $pid)) {
-            //Make entry on database
-            $pid_data = $api_a->getObjectProfile($pid);
-            $config = get_initial_bundle_profile();
-            $config['user_id'] = USER;
-            $config['bundle'] = $pid_data['objLabel'];
-            $config['pid_bundle'] = $pid;
-            $config['collection'] = 'Sandbox';
-            $config['status'] = 'archived';
-            $config['date_bundle_ingest'] = strtotime($pid_data['objCreateDate']);
-
-            drupal_write_record('flat_deposit_ui_upload', $config);
-
-        }
-    }
-
-
-}
-
-
-function flat_deposit_ui_freeze_bundle($bundle, $collection){
-    $source = drupal_realpath(USER_DRUPAL_DATA_DIR . '/' . $bundle);
-    $destination = USER_FREEZE_DIR . '/' . $bundle;
-    $moved = rename($source, $destination);
-
-    if ($moved) {
-        // update database entry
-        db_update('flat_deposit_ui_upload')
-            ->fields(array(
-                'freeze_time' => (int)$_SERVER['REQUEST_TIME'],
-                'exceptions' => '',
-                'status' => 'awaiting'))
-            ->condition('user_id', USER)
-            ->condition('bundle', $bundle)
-            ->condition('collection', $collection)
-            ->condition('status', 'open')
-            ->execute();
-
-        //remove symbolic link in owncloud user directory
-        $oc = new OwnCloud();
-        $oc->DeleteLinkAndSync($bundle);
-        drupal_set_message(t('Project ' . $bundle . ' is valid and can be archived'));
-    }
-}
 
 
 
@@ -1416,7 +1068,7 @@ function flat_deposit_ui_form_alter(&$form, &$form_state, $form_id)
                         break;
 
                     case 'awaiting':
-                        hide($form['actions']['delete']);
+
                         $form['actions']['archive'] = array(
                             '#type' => 'submit',
                             '#value' => 'Archive',
@@ -1435,7 +1087,7 @@ function flat_deposit_ui_form_alter(&$form, &$form_state, $form_id)
 
 
                     case 'failed':
-                        hide($form['actions']['delete']);
+
                         if (USER == 'admin'){
                             $form['actions']['archive'] = array(
                                 '#type' => 'submit',
@@ -1475,7 +1127,6 @@ function flat_deposit_ui_form_alter(&$form, &$form_state, $form_id)
     }
 
 }
-
 
 /**
  * Implements hook_delete().
@@ -1596,22 +1247,6 @@ function flat_bundle_edit_node_form_validate($form, &$form_state){
 }
 
 
-// Is called when no other node_form_submit is defined
-function flat_bundle_creatmd_node_form_submit($form, &$form_state){
-
-    $node = $form_state['node'];
-    $form_state['redirect']= "node/$node->nid/cmdi_select/createandfreeze";
-    //drupal_set_message("done");
-
-}
-// Is called when no other node_form_submit is defined
-function flat_bundle_edit_node_form_submit($form, &$form_state){
-
-    $node = $form_state['node'];
-    drupal_set_message("done");
-
-}
-
 
 function flat_bundle_freeze_node_form_validate($form, &$form_state){
 
@@ -1672,6 +1307,26 @@ function flat_bundle_freeze_node_form_validate($form, &$form_state){
     $oc = new OwnCloud();
     if (!$oc->noErrors){form_set_error('owncloud',$oc->error_message);}
 }
+
+
+
+// Is called when no other node_form_submit is defined
+function flat_bundle_creatmd_node_form_submit($form, &$form_state){
+
+    $node = $form_state['node'];
+    $form_state['redirect']= "node/$node->nid/cmdi_select/createandfreeze";
+    //drupal_set_message("done");
+
+}
+
+// Is called when no other node_form_submit is defined
+function flat_bundle_edit_node_form_submit($form, &$form_state){
+
+    $node = $form_state['node'];
+    drupal_set_message("done");
+
+}
+
 
 
 #if ($oc->noErrors){
@@ -1754,17 +1409,6 @@ function flat_bundle_unfreeze_node_form_validate (&$form, &$form_state)
 
 }
 
-
-function flat_bundle_browse_node_form_submit($form, &$form_state)
-{
-    drupal_set_message(t('Do your uploads'));
-
-    $form_state ['redirect'] = 'user/' . $GLOBALS['user']->uid . '/imce';
-
-
-}
-
-
 function flat_bundle_unfreeze_node_form_submit ($form, &$form_state)
 {
     module_load_include('php', 'flat_deposit_ui', 'inc/php_functions');
@@ -1799,6 +1443,18 @@ function flat_bundle_unfreeze_node_form_submit ($form, &$form_state)
 
 }
 
+
+
+function flat_bundle_browse_node_form_submit($form, &$form_state)
+{
+    drupal_set_message(t('Do your uploads'));
+
+    $form_state ['redirect'] = 'user/' . $GLOBALS['user']->uid . '/imce';
+
+
+}
+
+
 /**
  * Triggers a service that ingests specified bundles into the archive
  *
@@ -1812,10 +1468,7 @@ function flat_bundle_archive_node_form_submit($form, &$form_state){
 
     // create array containing data needed by the ingest service
     $data_to_post = array();
-    $data_to_post['module_path'] = drupal_realpath(drupal_get_path('module','flat_deposit_ui'));
-    $data_to_post['bag_dir'] = BAG_DIR;
-    $data_to_post['freeze_dir'] = FREEZE_DIR;
-    $data_to_post['apache_user'] = APACHE_USER;
+    $data_to_post['drupal_path'] = '/var/www/html/drupal/';
     $data_to_post['nid'] = $node->nid;
 
     // background service http request settings
@@ -1955,6 +1608,7 @@ function flat_deposit_ui_feeds_importer_default()
         'process_in_background' => 0,
     );
 
+
     $export['example_uploads'] = $feeds_importer;
 
     return $export;
@@ -1968,6 +1622,7 @@ function flat_deposit_ui_ctools_plugin_api($module = '', $api = ''){
     if ($module == 'feeds' && $api == 'feeds_importer_default'){
 
         return array("version" => 1);
+
     }
 }
 

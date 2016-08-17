@@ -19,66 +19,36 @@ class IngestServiceException extends Exception {}
 class Ingestor
 {
 
-    public $db_connection;
     public $node;
 
+    public $user;
+
+    public $bag;
+
+    public $pid;
     /*
      * Constructor function for Ingestor class. Needs array of node data
      *
      * @param $data row data from drupal node table
      * @param $db database connection
      */
-    public function __construct($node_data, $db)
+    public function __construct($nid)
     {
 
-        $this->entry = $node_data;
-        $this->node["nid"] =  $node_data['nid'];
-        $this->node["bundle"] =  $node_data['title'];
-        $this->node["uid"] =  $node_data['uid'];
+        $this->node = node_load($nid);
 
-        // add exception and status to node
-        $config = get_metadata_configuration();
-        $this->md_prefix = $config['prefix'];
+        $this->user = user_load($this->node->uid);
 
-        $this->db_connection = $db;
-        $this->node["collection"] =  $this->get_collection();
-        $this->node["user"] =  $this->get_user($this->node['uid']);
-        $this->backend_bundle_dir = FREEZE_DIR . "/" . $this->node['user']. "/" . $this->node['collection'] . "/" . $this->node['bundle'];
+        $this->wrapper = entity_metadata_wrapper('node', $this->node);
 
-        $this->bag = array();
+        $this->backend_bundle_dir = FREEZE_DIR . "/" . $this->user->name. "/" . $this->wrapper->upload_collection->value() . "/" . $this->node->title;
+
+        $this->bag = array(
+            'bag_id'  => $this->user->uid . "_" . $this->node->nid);
+
 
     }
 
-    /**
-     * Queries the collection data field table of the drupal database to receive the associated collection value
-     * @return string $collection
-     */
-    public function get_collection(){
-
-        $query = sprintf('SELECT upload_collection_value FROM field_data_upload_collection WHERE entity_id = \'%s\'',$this->node['nid']);
-        $results = pg_query($this->db_connection, $query) or die('Query failed: ' . pg_last_error());
-
-        $collection = pg_fetch_array($results, null, PGSQL_ASSOC)['upload_collection_value'];
-        return $collection;
-
-    }
-
-    /**
-     * Queries drupal "users"-table to receive the user name belonging to uid
-     *
-     * $param $string uid user ID
-     *
-     * @return string $collection
-     */
-    public function get_user($uid){
-
-        $query = sprintf('SELECT name FROM users WHERE uid = \'%s\'',$uid);
-        $results = pg_query($this->db_connection, $query) or die('Query failed: ' . pg_last_error());
-
-        $name = pg_fetch_array($results, null, PGSQL_ASSOC)['name'];
-        return $name;
-
-    }
 
     /**
      * make bag with data at right location
@@ -111,16 +81,14 @@ class Ingestor
      */
     public function zipBag()
     {
-        $command = DEPOSIT_UI_PATH . "/Helpers/scripts/zip_sip.sh \"$this->backend_bundle_dir\" " . $this->node['bundle'];
+        $command = DEPOSIT_UI_PATH . "/Helpers/scripts/zip_sip.sh \"$this->backend_bundle_dir\" " . $this->node->title;
         exec($command, $output_prep, $return);
+
         if ($return) {
             $message = 'Error creating zip file;';
             if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$output_prep) ."\n", $message_type = 3 , ERROR_LOG_FILE );
             throw new IngestServiceException ($message . implode(";\n", $output_prep). implode(";\n", $command));
-        } else {
-            $this->node['nfiles'] = intval(str_split($output_prep['0'], 18)[1]);
         }
-
     }
 
     /**
@@ -129,109 +97,205 @@ class Ingestor
      * @throws IngestServiceException
      */
 
-    public function doSword(){
-        $command = "cd \"" . $this->backend_bundle_dir . "\"/../;" . SWORD_SCRIPT  . " " . $this->node['bundle'] . ".zip";
+    public function doSword()
+    {
+
+        $command = "cd \"" . $this->backend_bundle_dir . "\"/../;" . SWORD_SCRIPT . " " . $this->node->title . ".zip " . $this->bag['bag_id'];
         exec($command, $output_bag, $return);
 
-        $bag_id = str_split($output_bag['4'], strrpos($output_bag['4'], '/') + 1)[1];
-
         // sleep because sword is slow
-        sleep (15);
-        if (!$bag_id || !file_exists(BAG_DIR . '/' . $bag_id)) {
-            $message = 'Error creating bag. Check bag log (deposit/sword/tmp/' . $bag_id . '/deposit.properties)';
-            if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$output_bag) ."\n", $message_type = 3 , ERROR_LOG_FILE );
-            throw new IngestServiceException ($message . implode(";\n", $output_bag). implode(";\n", $command));
-        } else {
-            $this->bag['bag_id'] = $bag_id;
+        sleep(15);
+
+        if (!file_exists(BAG_DIR . '/' . $this->bag['bag_id'])) {
+            $message = 'Error doing sword. Check bag log (deposit/sword/tmp/' . $this->bag['bag_id'] . '/deposit.properties)';
+            if (LOG_ERRORS) error_log(date(DATE_RSS) . ";\t" . $message . ";\t" . implode(" ", $output_bag) . "\n", $message_type = 3, ERROR_LOG_FILE);
+            throw new IngestServiceException ($message . implode(";\n", $output_bag) . implode(";\n", $command));
         }
     }
 
     /**
-     * Change rights of newly created bag directory
+     * Create Bag at correct bag location
      *
-     * @throws IngestServiceException
-     */
-    public function chownDirectory($dir){
-        $user = APACHE_USER . ":" . APACHE_USER;
-        $command = sprintf("sudo chown -R %s %s",  $user , $dir);
-        exec($command, $output_chmod, $return);
-        if ($return) {
-            $message = 'Unable to adapt rights of directory ' . $dir;
-            if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$output_chmod) ."\n", $message_type = 3 , ERROR_LOG_FILE );
-            throw new IngestServiceException ($message);
-        }
-    }
 
-    /**
-     *  generates FOXML files from CMDI
-     *
-     * @throws IngestServiceException
-     */
-    public function createFOXML(){
 
-        $command = "java -Xmx4096m -jar " . LAT2FOX . " -d=" . CMD2DC . ' -h -z ' . BAG_DIR . '/' . $this->bag['bag_id'];
-        exec($command, $output_fox, $return);
-        if (!file_exists(BAG_DIR . '/' . $this->bag['bag_id']. '/fox')) {
-            $message = 'Error creating foxml files';
-            if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$output_fox) ."\n", $message_type = 3 , ERROR_LOG_FILE );
-            throw new IngestServiceException ($message);
-        }
-    }
 
-    /**
-     * Batch_Ingest for whole bag /SIP.
-     *
-     * After running the command line batch ingest script provided by fedora, output of the command is checked. In case return value is != 0,
-     * an exception is raised. Otherwise the number of ingested files is compared with the number of files as counted before ingest. In case of differences.
-     * another exception is raised.
+
      *
      * @throws IngestServiceException
      */
 
-    public function batchIngest(){
-        $fedora_config = get_configuration_fedora();
-        $command_b = FEDORA_HOME . "/client/bin/fedora-batch-ingest.sh " .
-            BAG_DIR . "/" . $this->bag['bag_id'] . '/fox ' .
-            BAG_DIR . "/" . $this->bag['bag_id'] . "/log xml info:fedora/fedora-system:FOXML-1.1 " .
-            $fedora_config['host_name'] . ':' . $fedora_config['port'] . " "  .
-            $fedora_config['user'] . " "  . $fedora_config['password'] . " "  . $fedora_config['scheme'] . " "  . $fedora_config['context'] ;
-        exec($command_b, $output_ingest, $return);
-        if ($return) {
-            $message = 'Failed to ingest bundle ';
-            if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$output_ingest) ."\n", $message_type = 3 , ERROR_LOG_FILE );
-            throw new IngestServiceException ($message . implode(" ",$output_ingest) ."\n");
-        } else {
-            // extract pid from command output
-            $Ingests = preg_grep("/ingest succeeded for:/", $output_ingest );
-            foreach ($Ingests as $f){
-                $pid = str_replace("ingest succeeded for: ", "", $f);
-                $pid = str_replace(".xml", "", $pid);
-                $pid = str_replace( $this->md_prefix . "_", $this->md_prefix . ":", $pid);
-                if (substr($pid,-3) == "CMD") {
-                    $pid = str_replace("_CMD", "", $pid);}
+    public function doSword_php()
+    {
+        $path = '/app/flat/backend/admin/Dummy collection';
+        chdir($path);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, "https://localhost/easy-deposit/collection"); //
+        curl_setopt($ch, CURLOPT_PORT, 8443);
+        curl_setopt($ch, CURLOPT_USERPWD, "flat:sword"); //-u
+        curl_setopt($ch, CURLOPT_HEADER, 1); // -i
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // -i
+        curl_setopt($ch, CURLOPT_BINARYTRANSFER, TRUE); // --data-binary
 
-                $this->pid[] = $pid;}
+        curl_setopt($ch, CURLOPT_VERBOSE, 1); // -v
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/zip']);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Slug: 1_24']);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Disposition: attachment; filename=Test_29.zip']);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Packaging: http://purl.org/net/sword/package/BagIt']);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-MD5: f151cac3299be0e08a1be0bc1a4fd2ab']);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['In-Progress: false']);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
-            if (count($this->pid) != $this->node['nfiles']) {
-                $message = 'Ingest of bundle only partially succeeded. Check paths to resources in CMDI file or existing FOXML objects with same PID, or maybe new files have been added after cmdi creation';
-                if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$this->pid) ."\n", $message_type = 3 , ERROR_LOG_FILE );
-                throw new IngestServiceException ($message);
+        #curl_setopt($ch, CURLOPT_POST, 1);
+        #curl_setopt($ch, CURLOPT_POSTFIELDS, array('file' => '@' . 'Test_29.zip')) ;
 
+        $val = curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        $return = $code_only ? $httpcode : $val;
+        return $return;
 
             }
+
+
+    /**
+     * This methods triggest the doorkeeper servlet to create FOXML files for the CMDI and all resources and ingest them.
+     *
+     * triggering is achieved by executing a curl 'put' response to the service IP
+     *
+     * @throws IngestServiceException
+     */
+    public function triggerDoorkeeper(){
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, "http://localhost/flat/doorkeeper/" . $this->bag['bag_id']);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+        curl_setopt($ch, CURLOPT_PORT, 8080);
+        curl_setopt($ch, CURLOPT_PUT, 1);
+
+        curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpcode != 200 && $httpcode != 202 ) {
+            $message = 'Error triggering doorleeper';
+            if (LOG_ERRORS) error_log(date(DATE_RSS) . ";\t" . $message . ";\n", $message_type = 3, ERROR_LOG_FILE);
+            throw new IngestServiceException ($message);
         }
+    }
+
+
+    /**
+     * HTTP GET Request for doorkeeper REST api
+     *
+     * @param bool $code_only if true method returns only HTTP response code
+     * @return mixed
+     */
+    public function getDoorkeeperRequest($code_only=FALSE)
+    {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, "http://localhost/flat/doorkeeper/" . $this->bag['bag_id']);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+        curl_setopt($ch, CURLOPT_PORT, 8080);
+
+        $val = curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        $return = $code_only ? $httpcode : $val;
+        return $return;
+    }
+
+
+    /**
+     * Method requesting every 10 seconds doorkeeper status
+     */
+    public function waitFinishDoorkeeper(){
+
+        #initial check request
+        $httpcode = $this->getDoorkeeperRequest(TRUE);
+        $max_wait = 600;
+        $time = 0;
+        // loop and wait until doorkeeper signals end of request
+        while ($httpcode != 200 && $time <= $max_wait) {
+            sleep(10);
+            $time = $time + 10;
+            $httpcode = $this->getDoorkeeperRequest(TRUE);
+        };
+
+        if ($time >= $max_wait){
+            $message = 'Doorkeeper does not finish';
+            if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message , $message_type = 3 , ERROR_LOG_FILE );
+            throw new IngestServiceException ($message);
+        }
+    }
+
+
+    /**
+     * Method extracting the fedora ID (PID) from CMDI metadata file
+     *
+     *
+     * @return bool|mixed in case CMDI file with MdSelfLink is found the fedora PID, otherwise FALSE
+     */
+    function getBundleFID(){
+
+        $fname = BAG_DIR . $this->bag['bag_id'] . "/". $this->node->title . "/metadata/record.cmdi";
+
+        if (file_exists($fname)) {
+            $xml = simplexml_load_file($fname);
+            $data_array = json_decode(json_encode((array)$xml));
+            $pid_bundle = $data_array->Header->MdSelfLink ;
+            $fid_bundle = preg_replace('/[^A-Za-z0-9]/', '_', $pid_bundle);
+            $fid_bundle = str_replace(array('hdl_'),array('lat:'),$fid_bundle) ;
+
+        }
+        $this->pid['bundle'] = $fid_bundle ? $fid_bundle : [];
+    }
+
+
+
+    /**
+     * Queries Fedoras Commons mulgara index for constituents of a bundles' fedora id (i.e fedora PID)
+     *
+     */
+    public function getConstituentFIDs(){
+        $FID = $this->pid['bundle'];
+        $query = "PREFIX fm: <info:fedora/fedora-system:def/model#>
+            PREFIX fv: <info:fedora/fedora-system:def/view#>
+            PREFIX frel: <info:fedora/fedora-system:def/relations-external#>
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            
+            SELECT ?pid ?label ?created
+                FROM <#ri>
+                WHERE {
+        ?object <http://purl.org/dc/elements/1.1/identifier> ?pid;
+                fm:state fm:Active;
+                fm:label ?label;
+                fm:createdDate ?created;
+                fm:ownerId ?owner;
+                frel:isConstituentOf <info:fedora/" . $FID . ">;
+                }
+            ORDER BY DESC(?created)";
+        $tuque = islandora_get_tuque_connection();
+
+        $results = $tuque->repository->ri->sparqlQuery($query);
+        $constituents = !empty($results) ? array_column(array_column($results,'pid'),'value') : [];
+
+        $this->pid['obj'] = $constituents;
 
     }
+
+
     public function deleteFedoraObjects(){
 
         // create object that can do ReST requests
         $accessFedora = get_configuration_fedora();
         $rest_fedora = new FedoraRESTAPI($accessFedora);
 
-
-        foreach ($this->pid as $pid){
-            $rest_fedora->deleteObject($pid);
-        }
+        if ($this->pid['bundle']){$rest_fedora->deleteObject($this->pid['bundle']);}
+        foreach ($this->pid['obj'] as $pid){$rest_fedora->deleteObject($pid);}
     }
 
 
@@ -250,11 +314,13 @@ class Ingestor
         // Change ownership of ingested files
         $errors_occurred=0;
         $data = array(
-            'ownerId' => $this->node['user']);
+            'ownerId' => $this->user->name);
 
-        foreach ($this->pid as $pid) {
+        $result = $rest_fedora->modifyObject($this->pid['bundle'], $data);
+        if (!$result) {$errors_occurred++;}
+
+        foreach ($this->pid['obj'] as $pid) {
             $result = $rest_fedora->modifyObject($pid, $data);
-
             if (!$result) {$errors_occurred++;}
         }
 
@@ -274,49 +340,6 @@ class Ingestor
 
 
 
-    /**
-     * Updates a node field value; a new row is inserted if no row exists
-     *
-     * @param $db database connection handle
-     */
-     public function update_field ($field, $value){
-
-        $conditions= array("entity_id" => $this->node['nid'],);
-        $fields= array("upload_" . $field . "_value"  => $value);
-        
-        // update field
-        $res = pg_update($this->db_connection, 'field_data_upload_' . $field, $fields, $conditions);
-        if (!$res) {
-            echo ( "field_data_upload_$field has not been updated\n");
-        }
-
-        // update revision
-        $res = pg_update($this->db_connection, 'field_revision_upload_' . $field, $fields, $conditions);
-        if (!$res) {
-            echo ( "field_revision_upload_$field has not been updated\n");
-        }
-
-        // insert exception if it doesn't exist
-         if ($field == 'exception'){
-             $filtered_value = filter_var($value, FILTER_SANITIZE_STRING);
-             $query = "INSERT INTO field_data_upload_$field (entity_type, bundle, deleted, entity_id, revision_id, language, delta, upload_exception_value, upload_exception_format) ";
-             $query .= sprintf("SELECT 'node', 'flat_bundle', 0, %s , %s, 'und', 0, '$filtered_value', NULL  WHERE NOT EXISTS (SELECT 1 FROM field_data_upload_$field WHERE entity_id=%s)", $this->node['nid'], $this->node['nid'] , $this->node['nid']);
-
-             $res = pg_exec($this->db_connection, $query);
-             if (!$res) {
-                 echo ( "Extra row has not been inserted into $field\n");
-             }
-         }
-          // clear cached field
-        $cache_row = array("cid"=>'field:node:'.$this->node['nid']);
-        $res = pg_delete($this->db_connection, 'cache_field', $cache_row);
-        if (!$res) {
-            echo ( "Database table has not been updated\n");
-        }
-
-    }
-
-
     public function deleteBagMeta()
     {
         // delete bag metafiles
@@ -333,7 +356,7 @@ class Ingestor
     public function deleteZipfile()
     {
         // delete zip file
-        $zip = $this->backend_bundle_dir . '/../' . $this->node['bundle'] . ".zip";
+        $zip = $this->backend_bundle_dir . '/../' . $this->node->title . ".zip";
         if (file_exists($zip)) {
             unlink($zip);
         }
@@ -343,7 +366,7 @@ class Ingestor
     {
         // delete bag directory
         $bag_full_path = BAG_DIR . '/' . $this->bag['bag_id'];
-        if (file_exists($bag_full_path && $this->bag['bag_id'])) {
+        if (file_exists($bag_full_path) && $this->bag['bag_id']) {
             recursiveRmDir(BAG_DIR . '/' . $this->bag['bag_id']);
             rmdir(BAG_DIR . '/' . $this->bag['bag_id']);
         }
@@ -353,20 +376,19 @@ class Ingestor
     public function deleteFOs()
     {
         // delete already ingested Objects
-        if ($this->pid) {
-            $this->deleteFedoraObjects();
-        }
+        if ($this->pid['obj']) {$this->deleteFedoraObjects();}
+        if ($this->pid['bundle']) {$this->deleteFedoraObjects();}
     }
 
 
     public function create_blog_entry (){
-        $bundle = $this->node['bundle'];
-        $collection = $this->node['collection'];
+        $bundle = $this->node->title;
+        $collection = $this->wrapper->upload_collection->value();
         $new_node = new stdClass();
         $new_node->type = 'blog';
         $new_node->language = 'und';
         $new_node->title = sprintf("Archiving Report for bundle %s",$bundle);
-        $new_node->uid = $this->node['uid'];
+        $new_node->uid = $this->user->uid;
         $new_node->status = 1;
         $new_node->sticky = 0;
         $new_node->promote = 1;

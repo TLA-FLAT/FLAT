@@ -43,7 +43,7 @@ class CMDI_Handler
         $this->template = $template;
         $this->field_name = $this->md_config['prefix'] . '-' . $template;
         $this->prefix = 'hdl:';
-        $this->export_file = USER_DRUPAL_DATA_DIR ."/$collection/$bundle/metadata/$bundle" . $this->md_config['ext'];
+        $this->export_file = USER_DRUPAL_DATA_DIR ."/$collection/$bundle/metadata/record" . $this->md_config['ext'];
         
     }
 
@@ -80,7 +80,7 @@ class CMDI_Handler
             'Header' => array(
                 'MdCreator' => '',
                 'MdCreationDate' => '',
-                'MdSelfLink' => '',
+                #'MdSelfLink' => '',
                 'MdProfile' => $this->md_config['MdProfile'],
             ),
             'Resources' => array(
@@ -165,7 +165,7 @@ class CMDI_Handler
     /**
      * This method fills the resources section of the cmdi file with all files found in the open bundle data directory
      *
-     *
+     * <ResourceRef>../data/Write_me.txt</ResourceRef>
      */
     function addResourcesToXml(){
 
@@ -180,11 +180,13 @@ class CMDI_Handler
             $data = $this->xml->Resources->ResourceProxyList->addChild('ResourceProxy');
             $data->addAttribute('id', $fid);
             $data->addChild('ResourceType', 'Resource');
-            $data->addChild('ResourceRef', $this->handles[$fid]);
+            $data->addChild('ResourceRef', $localURI);
 
             $data->ResourceType->addAttribute('mimetype', $mime);
 
-            $data->ResourceRef->addAttribute("xmlns:" . $this->md_config['prefix'] .":localURI", $localURI);
+
+            //$data->ResourceRef->addAttribute("xmlns:" . $this->md_config['prefix'] .":localURI", $localURI);
+
 
         }
     }
@@ -193,7 +195,7 @@ class CMDI_Handler
     {
         $this->xml->Header->MdCreator = USER;
         $this->xml->Header->MdCreationDate = format_date(time(), 'custom', 'Y-m-d');;
-        $this->xml->Header->MdSelfLink = $this->handles['cmd'];
+        #$this->xml->Header->MdSelfLink = $this->handles['cmd'];
     }
 
 
@@ -305,14 +307,12 @@ function get_example_md ($template){
             $md = array(
                 'field_1' =>
                     array (
-                        'Name' => 'Twisting Tongues',
-                        'Date' =>
-                            array (
-                                'month' => '6',
-                                'day' => '27',
-                                'year' => '2016',
-                            ),
-                    ),
+                        'Name' => 'Subject_x01',
+                        'Title' => 'Pilot EEG Study',
+                        'Date' => array(
+                            'day' => 25,
+                            'month' =>3,
+                            'year' => 2016),                    ),
                 'Experiment' =>
                     array (
                         'Title' => 'EEG study on bilingual idiomatic expressions  ',
@@ -334,10 +334,42 @@ function get_example_md ($template){
                     ),
             );
             break;
+        case 'minimal':
+            $md = array(
+                'field_1' =>
+                    array (
+                        'Name' => 'Name of Bundle',
+                        'Title' => 'Title of Bundle',
+                        'Date' => array(
+                            'day' => 21,
+                            'month' =>2,
+                            'year' => 2013),
+                        ),
+                'Project'=> array(
+                    'Name' => 'Project name',
+                    'Title' => 'Project Title',
+                    'Id' => '0187502u',
+
+                    'Contact' =>
+                        array (
+                            'Name' => 'Daniel Tobias',
+                            'Email' => 'Daniel@mpi.nl',
+                            'Organisation' => 'MPI'
+                        ),
+                    'descriptions' =>
+                        array (
+                            'Description' => 'bvaboav', ),
+                ),
+            );
+            break;
+
     }
     return $md;
 
 }
+
+
+
 
 function get_example_handles ($bundle)
 {

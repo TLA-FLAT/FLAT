@@ -34,6 +34,9 @@ function flat_deposit_ui_install()
 
     node_type_save($node_type);
 
+    // switch off comments for content type _flat_bundle
+    variable_set('comment_flat_bundle', '0');
+
     $fields = array();
 
     $fields['upload_collection'] = array(
@@ -185,7 +188,7 @@ function flat_deposit_ui_install()
  * Implements hook_schema().
  */
 function flat_deposit_ui_schema() {
-
+/*
     $schema['flat_deposit_ui_upload'] = array(
         'description' => 'Logging of all uploading activity.',
         'fields' => array(
@@ -327,7 +330,7 @@ function flat_deposit_ui_schema() {
             'language' => array('language'),)
 
     );
-
+*/
     // Table keeping track of existing collections
     $schema['flat_deposit_ui_collection'] = array(
         'description' => 'Collection-member relation in FLAT.',
@@ -454,4 +457,3 @@ function flat_deposit_ui_uninstall(){
     drupal_set_message($t('Deposit UI uninstalled'));
     module_disable(array('flat_deposit_ui_views'),FALSE);
 }
-
