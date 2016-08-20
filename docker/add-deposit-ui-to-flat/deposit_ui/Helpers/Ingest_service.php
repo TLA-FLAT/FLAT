@@ -29,20 +29,13 @@ define('BAG_DIR', variable_get('flat_deposit_paths',array())['bag']);
 define('APACHE_USER', variable_get('flat_deposit_names',array())['apache_user']);
 
 // variables stored in config.inc
-$configuration = ingest_service_configuration();
+$configuration = get_ingest_service_configuration();
 define('SWORD_SCRIPT', $configuration['sword_script']);
 define('BAG_EXE', $configuration['bag_exe']);
 define('LOG_ERRORS', $configuration['log_errors']);
 define('ERROR_LOG_FILE', $configuration['error_log_file']);
 
 
-
-
-
-// Create Database connection
-#$conf = get_drupal_database_settings();
-#$conn_string = "host=" . $conf['host'] . " port=" . $conf['port'] ." dbname=" . $conf['dbname'] . " user=" . $conf['user'] .  " password=" . $conf['pw'] ;
-#$db = pg_connect($conn_string) or die('Could not connect: ' . pg_last_error());;
 
 
 // Ingest routine

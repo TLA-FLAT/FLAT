@@ -97,7 +97,7 @@ class Ingestor
      * @throws IngestServiceException
      */
 
-    public function doSword()
+    public function doSword_commandline()
     {
 
         $command = "cd \"" . $this->backend_bundle_dir . "\"/../;" . SWORD_SCRIPT . " " . $this->node->title . ".zip " . $this->bag['bag_id'];
@@ -116,46 +116,53 @@ class Ingestor
     /**
      * Create Bag at correct bag location
      *
-
-
-
-
      *
      * @throws IngestServiceException
      */
 
-    public function doSword_php()
+    public function doSword()
     {
-        $path = '/app/flat/backend/admin/Dummy collection';
+        $zipname = $this->node->title . '.zip';
+        $path = $this->backend_bundle_dir . '/../';
         chdir($path);
+
+        $data = file_get_contents($zipname);
+        $md5 = md5_file($zipname);
+
+        $config = get_configuration_sword();
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, "https://localhost/easy-deposit/collection"); //
-        curl_setopt($ch, CURLOPT_PORT, 8443);
-        curl_setopt($ch, CURLOPT_USERPWD, "flat:sword"); //-u
-        curl_setopt($ch, CURLOPT_HEADER, 1); // -i
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // -i
-        curl_setopt($ch, CURLOPT_BINARYTRANSFER, TRUE); // --data-binary
-
-        curl_setopt($ch, CURLOPT_VERBOSE, 1); // -v
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/zip']);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Slug: 1_24']);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Disposition: attachment; filename=Test_29.zip']);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Packaging: http://purl.org/net/sword/package/BagIt']);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-MD5: f151cac3299be0e08a1be0bc1a4fd2ab']);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['In-Progress: false']);
+        curl_setopt($ch, CURLOPT_URL, $config['url']); //
+        curl_setopt($ch, CURLOPT_PORT, $config['port']);
+        curl_setopt($ch, CURLOPT_USERPWD, sprintf("%s:%s",$config['user'],$config['password']));
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
-        #curl_setopt($ch, CURLOPT_POST, 1);
-        #curl_setopt($ch, CURLOPT_POSTFIELDS, array('file' => '@' . 'Test_29.zip')) ;
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE); // -i
+        curl_setopt($ch, CURLOPT_BINARYTRANSFER, TRUE); // --data-binary
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 
-        $val = curl_exec($ch);
+        curl_setopt($ch, CURLOPT_HEADER, TRUE); // -i
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Content-Type: application/zip',
+            'Content-Disposition: attachment; filename='.$zipname,
+            'Content-MD5: '.$md5,
+            'Packaging: http://purl.org/net/sword/package/BagIt',
+            'Slug: '.$this->bag['bag_id'],
+            'In-Progress: false'));
+
+        $content = curl_exec($ch);
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        $return = $code_only ? $httpcode : $val;
-        return $return;
+        if ($httpcode != 200 && $httpcode != 202 && $httpcode != 201) {
+            $message = sprintf("Error doing sword (HTTP error code (%d) ;\n", $httpcode) .  $content;;
+            if (LOG_ERRORS) error_log(date(DATE_RSS) . ";\t" . $message, $message_type = 3, ERROR_LOG_FILE);
+            throw new IngestServiceException ($message);
+        }
 
-            }
+
+    }
 
 
     /**
@@ -167,15 +174,18 @@ class Ingestor
      */
     public function triggerDoorkeeper(){
 
+        $config = get_configuration_doorkeeper();
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, "http://localhost/flat/doorkeeper/" . $this->bag['bag_id']);
+        curl_setopt($ch, CURLOPT_URL, $config['url'] . $this->bag['bag_id']);
+        curl_setopt($ch, CURLOPT_PORT, $config['port']);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
-        curl_setopt($ch, CURLOPT_PORT, 8080);
         curl_setopt($ch, CURLOPT_PUT, 1);
 
         curl_exec($ch);
+
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
         curl_close($ch);
 
         if ($httpcode != 200 && $httpcode != 202 ) {
@@ -194,11 +204,12 @@ class Ingestor
      */
     public function getDoorkeeperRequest($code_only=FALSE)
     {
+        $config = get_configuration_doorkeeper();
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, "http://localhost/flat/doorkeeper/" . $this->bag['bag_id']);
+        curl_setopt($ch, CURLOPT_URL, $config['url'] . $this->bag['bag_id']);
+        curl_setopt($ch, CURLOPT_PORT, $config['port']);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
-        curl_setopt($ch, CURLOPT_PORT, 8080);
 
         $val = curl_exec($ch);
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);

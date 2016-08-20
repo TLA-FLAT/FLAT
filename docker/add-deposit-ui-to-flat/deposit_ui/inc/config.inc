@@ -47,7 +47,7 @@ function get_configuration_fedora(){
  * Called by flat_deposit_ui_commit_form_ingest_serve_submit.
  * @return array paths and executable names which are passed to the ingest service
  */
-function ingest_service_configuration()
+function get_configuration_ingest_service()
 {
     return array(
         # the bagit executable
@@ -56,33 +56,24 @@ function ingest_service_configuration()
         'log_errors' => TRUE,
         # directory to log errors)
         'error_log_file' => '/app/flat/backend/Ingest_service_error.log',
-        # sword upload script
-        'sword_script' => "/app/flat/do-sword-upload.sh",
     );
 }
 
-function get_handle_configuration()
+function get_configuration_handle()
 {
-    $site_configuration = drupal_realpath(drupal_get_path('module', 'flat_deposit_ui')) . '/inc/config_MPI.inc';
-    if (file_exists($site_configuration)){
-        require_once ($site_configuration);
-        return MPI_handle_configuration();
-    } else {
+    return array(
+        # Whether or not to use a handle server; If false, locally unique IDs will be generated instead
+        'test_mode' => TRUE,
+        'prefix' => 'hdl:',
+        'schema' => 'http',
+        'host_name' => 'hostname',
+        'port' => 8000,
 
-        return array(
-            # Whether or not to use a handle server; If false, locally unique IDs will be generated instead
-            'test_mode' => TRUE,
-            'prefix' => 'hdl:',
-            'schema' => 'http',
-            'host_name' => 'hostname',
-            'port' => 8000,
-
-        );
-    }
+    );
 }
 
 
-function get_metadata_configuration()
+function get_configuration_metadata()
 {
     return array(
         'site_name' => 'MPI',
@@ -93,14 +84,27 @@ function get_metadata_configuration()
 
 }
 
-
-function get_solr_configuration()
+function get_configuration_sword()
 {
-    $site_configuration = drupal_realpath(drupal_get_path('module', 'flat_deposit_ui')) . '/inc/config_MPI.inc';
-    if (file_exists($site_configuration)) {
-        require_once($site_configuration);
-        return MPI_solr_configuration();
-    } else{
+    return array(
+        'url' => 'https://192.168.99.100/easy-deposit/collection',
+        'port'=> 8443,
+        'user'=> 'flat',
+        'password'=> 'sword',
+    );
+
+}
+
+function get_configuration_doorkeeper()
+{
+    return array(
+        'url' => "http://localhost/flat/doorkeeper/",
+        'port' => 8080)
+        ;
+}
+
+function get_configuration_solr()
+{
     return array(
         'schema' => 'https',
         'host_name' => 'lux125.mpi.nl',
@@ -108,8 +112,8 @@ function get_solr_configuration()
         'path' => 'solr',
         'core' => 'collection1',
     );
-    }
 }
+
 /*
 DEFAULT SETTINGS OF THE FLAT_DEPOSIT_UI MODULE AND FUNCTIONS TO SET THESE
 */
@@ -177,29 +181,4 @@ function flat_deposit_set_owncloud(){
         'host' => $_SERVER['HTTP_HOST'],
         'root_dir'=> '/var/www/owncloud/'));
 
-}
-
-/**
- * Default values of new bundle entries when created in drupal upload log table
- */
-function get_initial_bundle_profile()
-{
-    return array('user_id' => '',
-        'bundle' => '',
-        'pid_bundle' => '',
-        'collection' => '',
-        'status' => 'open',
-        'bag_id' => '',
-        'exceptions' => '',
-        'freeze_time' => 0,
-        'nfiles' => 0,
-        'baginplace' => 0,
-        'zipped' => 0,
-        'bagged' => 0,
-        'foxml' => 0,
-        'bag_ingested' => 0,
-        'data_purged' => 0,
-        'owner_added' => 0,
-        'date_bundle_ingest' => 0,
-    );
 }

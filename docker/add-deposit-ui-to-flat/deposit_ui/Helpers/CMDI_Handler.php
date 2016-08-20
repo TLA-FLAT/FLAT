@@ -36,8 +36,8 @@ class CMDI_Handler
      */
     public function __construct($bundle, $collection, $template)
     {
-        $this->handle_config = get_handle_configuration();
-        $this->md_config = get_metadata_configuration();
+        $this->handle_config = get_configuration_handle();
+        $this->md_config = get_configuration_metadata();
         $this->bundle = $bundle;
         $this->collection = $collection;
         $this->template = $template;
