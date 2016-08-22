@@ -10,7 +10,7 @@ If you want to use owncloud, you need to configure this app. The dockerfile will
 
 
 ## File and Folder permissions ##
-In order to ingest data without doorkeeper plugin, the sudoer file (visudo) needs to be adapted. Please copy/paste the code from the shell/sudoer.ini file using visudo
+In order to ingest data, the sudoer file (visudo) needs to be adapted. Please copy/paste the code from the shell/sudoer.ini file using visudo
 
 =======
 
@@ -19,6 +19,9 @@ sudo /usr/sbin/visudo
 :%d #deletes the whole content
 
 ```
+
+Also make sure that the bag folder is writeable by all users
+
 =======
 ### SSH (optional) ###
 
