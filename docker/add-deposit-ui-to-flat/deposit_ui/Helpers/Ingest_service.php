@@ -29,11 +29,11 @@ define('BAG_DIR', variable_get('flat_deposit_paths',array())['bag']);
 define('APACHE_USER', variable_get('flat_deposit_names',array())['apache_user']);
 
 // variables stored in config.inc
-$configuration = get_ingest_service_configuration();
-define('SWORD_SCRIPT', $configuration['sword_script']);
+$configuration = get_configuration_ingest_service();
 define('BAG_EXE', $configuration['bag_exe']);
 define('LOG_ERRORS', $configuration['log_errors']);
 define('ERROR_LOG_FILE', $configuration['error_log_file']);
+define('SWORD_TMP_DIR', $configuration['sword_tmp_dir']);
 
 
 
@@ -43,6 +43,7 @@ $nid = $_POST['nid'];
 
 try {
     $ingest = new Ingestor($nid);
+    #throw new IngestServiceException("Debugging");
     $ingest->wrapper->upload_status->set('processing');
     $ingest->wrapper->save();
 
@@ -50,24 +51,26 @@ try {
     $ingest->zipBag();
 
     $ingest->doSword();
-    throw new IngestServiceException("Debugging");
-    $ingest->triggerDoorkeeper();
-    $ingest->waitFinishDoorkeeper();
-    $ingest->getBundleFID();
+    $ingest->checkStatusSword();
 
+    $ingest->triggerDoorkeeper();
+    $ingest->checkStatusDoorkeeper();
+
+    $ingest->getBundleFID();
     $ingest->getConstituentFIDs();
 
     $ingest->changeOwnerId();
 
     $ingest->cleanup();
 
-    $ingest->create_blog_entry();
+    $ingest->create_blog_entry('success');
     node_delete_multiple(array($nid));
 
 } catch (IngestServiceException $e) {
     $ingest->wrapper->upload_status->set('failed');
     $ingest->wrapper->upload_exception->set($e->getMessage());
     $ingest->wrapper->save();
+    $ingest->create_blog_entry('failure');
 
     $ingest->rollback();
 

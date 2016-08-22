@@ -56,6 +56,8 @@ function get_configuration_ingest_service()
         'log_errors' => TRUE,
         # directory to log errors)
         'error_log_file' => '/app/flat/backend/Ingest_service_error.log',
+        # directory sword uses to temporarily save bags
+        'sword_tmp_dir' => '/app/flat/deposit/sword/tmp/'
     );
 }
 
@@ -87,7 +89,7 @@ function get_configuration_metadata()
 function get_configuration_sword()
 {
     return array(
-        'url' => 'https://192.168.99.100/easy-deposit/collection',
+        'url' => 'https://192.168.99.100/easy-deposit/',
         'port'=> 8443,
         'user'=> 'flat',
         'password'=> 'sword',

@@ -44,7 +44,7 @@ class Ingestor
         $this->backend_bundle_dir = FREEZE_DIR . "/" . $this->user->name. "/" . $this->wrapper->upload_collection->value() . "/" . $this->node->title;
 
         $this->bag = array(
-            'bag_id'  => $this->user->uid . "_" . $this->node->nid);
+            'bag_id'  => $this->user->name . "_" . $this->node->nid . "_" . $this->node->title);
 
 
     }
@@ -122,16 +122,19 @@ class Ingestor
 
     public function doSword()
     {
+        $cwd = getcwd();
         $zipname = $this->node->title . '.zip';
         $path = $this->backend_bundle_dir . '/../';
+
         chdir($path);
+
 
         $data = file_get_contents($zipname);
         $md5 = md5_file($zipname);
 
         $config = get_configuration_sword();
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $config['url']); //
+        curl_setopt($ch, CURLOPT_URL, $config['url'].'collection'); //
         curl_setopt($ch, CURLOPT_PORT, $config['port']);
         curl_setopt($ch, CURLOPT_USERPWD, sprintf("%s:%s",$config['user'],$config['password']));
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
@@ -155,15 +158,53 @@ class Ingestor
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
+        chdir($cwd);
+
         if ($httpcode != 200 && $httpcode != 202 && $httpcode != 201) {
-            $message = sprintf("Error doing sword (HTTP error code (%d) ;\n", $httpcode) .  $content;;
+            $message = sprintf("SWORD Server error (HTTP error code (%d) ;\n", $httpcode) .  $content;;
+            if (LOG_ERRORS) error_log(date(DATE_RSS) . ";\t" . $message, $message_type = 3, ERROR_LOG_FILE);
+            throw new IngestServiceException ($message);
+        }
+
+    }
+
+
+    /**
+     * Create Bag at correct bag location
+     *
+     *
+     * @throws IngestServiceException
+     */
+
+    public function checkStatusSword()
+    {
+
+        $config = get_configuration_sword();
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $config['url'] . 'statement/' .$this->bag['bag_id'] ); //
+        curl_setopt($ch, CURLOPT_PORT, $config['port']);
+        curl_setopt($ch, CURLOPT_USERPWD, sprintf("%s:%s",$config['user'],$config['password']));
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE); // -i
+        curl_setopt($ch, CURLOPT_BINARYTRANSFER, TRUE); // --data-binary
+
+
+        $content = curl_exec($ch);
+
+        curl_close($ch);
+        $xml = simplexml_load_string($content) ;
+        $status = (string)$xml->category['term'];
+
+        if ($status != 'SUBMITTED') {
+            $message = "Error creating bag;\n" .  $content;
             if (LOG_ERRORS) error_log(date(DATE_RSS) . ";\t" . $message, $message_type = 3, ERROR_LOG_FILE);
             throw new IngestServiceException ($message);
         }
 
 
     }
-
 
     /**
      * This methods triggest the doorkeeper servlet to create FOXML files for the CMDI and all resources and ingest them.
@@ -182,7 +223,7 @@ class Ingestor
         curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
         curl_setopt($ch, CURLOPT_PUT, 1);
 
-        curl_exec($ch);
+        $val = curl_exec($ch);
 
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
@@ -202,7 +243,7 @@ class Ingestor
      * @param bool $code_only if true method returns only HTTP response code
      * @return mixed
      */
-    public function getDoorkeeperRequest($code_only=FALSE)
+    public function doorkeeperGetRequest($code_only=FALSE)
     {
         $config = get_configuration_doorkeeper();
         $ch = curl_init();
@@ -222,25 +263,49 @@ class Ingestor
 
     /**
      * Method requesting every 10 seconds doorkeeper status
+     *
+     * toDO check return value of doorkeeper
      */
-    public function waitFinishDoorkeeper(){
+    public function checkStatusDoorkeeper(){
 
         #initial check request
-        $httpcode = $this->getDoorkeeperRequest(TRUE);
-        $max_wait = 600;
+        $httpcode = $this->doorkeeperGetRequest(TRUE);
+                $max_wait = 60;
         $time = 0;
         // loop and wait until doorkeeper signals end of request
         while ($httpcode != 200 && $time <= $max_wait) {
             sleep(10);
             $time = $time + 10;
-            $httpcode = $this->getDoorkeeperRequest(TRUE);
+            $httpcode = $this->doorkeeperGetRequest(TRUE);
         };
 
+        // Check time criterion
         if ($time >= $max_wait){
-            $message = 'Doorkeeper does not finish';
+            $message = "Max time of $max_wait seconds exceeded; Doorkeeper does not finish";
             if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message , $message_type = 3 , ERROR_LOG_FILE );
             throw new IngestServiceException ($message);
         }
+
+        // check outcome doorkeeper
+        $val = $this->doorkeeperGetRequest();
+        $expected = 'The SIP['.$this->bag['bag_id'].'] has been executed succesfully!';
+
+        if ($val != $expected){
+            $message = 'Doorkeeper error';
+            if (LOG_ERRORS) error_log(date(DATE_RSS) . ";\t" . $message . ";\n", $message_type = 3, ERROR_LOG_FILE);
+            throw new IngestServiceException ($message);
+        }
+        //will be changed to return either fid or FALSE and make getBundleFID-method obsolete
+        /*
+        if (!val){
+            $message = 'Doorkeeper error';
+            if (LOG_ERRORS) error_log(date(DATE_RSS) . ";\t" . $message . ";\n", $message_type = 3, ERROR_LOG_FILE);
+            throw new IngestServiceException ($message);
+        } else {
+            $this->pid['bundle'] = $val;
+
+        }
+                  * */
     }
 
 
@@ -262,7 +327,13 @@ class Ingestor
             $fid_bundle = str_replace(array('hdl_'),array('lat:'),$fid_bundle) ;
 
         }
-        $this->pid['bundle'] = $fid_bundle ? $fid_bundle : [];
+        if (!$fid_bundle OR $fid_bundle == ""){
+            $message = 'Could not extract Fedora ID for record.cmdi';
+            if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message , $message_type = 3 , ERROR_LOG_FILE );
+            throw new IngestServiceException ($message);
+        }
+
+        $this->pid['bundle'] = $fid_bundle;
     }
 
 
@@ -375,12 +446,18 @@ class Ingestor
 
     public function deleteBagDirectory()
     {
-        // delete bag directory
+        $tmp_full_path = SWORD_TMP_DIR . '/' . $this->bag['bag_id'];
         $bag_full_path = BAG_DIR . '/' . $this->bag['bag_id'];
-        if (file_exists($bag_full_path) && $this->bag['bag_id']) {
-            recursiveRmDir(BAG_DIR . '/' . $this->bag['bag_id']);
-            rmdir(BAG_DIR . '/' . $this->bag['bag_id']);
+        $dirs = array($tmp_full_path, $bag_full_path);
+
+        foreach ($dirs as $dir){
+            shell_exec(sprintf('sudo chown -R %s:%s %s', APACHE_USER , APACHE_USER, $dir));
+            if (file_exists($dir)) {
+                recursiveRmDir($dir);
+                rmdir($dir);
+            }
         }
+
     }
 
 
@@ -392,13 +469,38 @@ class Ingestor
     }
 
 
-    public function create_blog_entry (){
+    public function create_blog_entry ($entry_type){
+
         $bundle = $this->node->title;
         $collection = $this->wrapper->upload_collection->value();
+        $link_node = array(
+            'theme' => 'link',
+            'text' => 'here',
+            'path' => '/node/'.$this->node->nid,
+            'options' => array(
+                'attributes' => array(),
+                'html' => FALSE
+            ));
+
+        switch ($entry_type){
+            case 'success':
+                $value = sprintf("<p>%s %s</p><p>Archiving of %s belonging to %s succeeded.</p>",$bundle, $collection,$bundle, $collection);
+                $summary = sprintf("<p>Archiving of %s completed</p>",$bundle, $collection,$bundle, $collection);
+                break;
+            case 'failure':
+                $value = sprintf("<p>Archiving of %s has failed</p>",$bundle, $collection,$bundle, $collection);;
+                $summary = sprintf("<p>%s %s</p><p>Archiving of %s belonging to %s has failed. Check ". theme_link($link_node) ."</p>",$bundle, $collection,$bundle, $collection);
+                break;
+            default:
+                $value = "<p>blog entry type not set</p>";
+                $summary = "<p>blog entry type not set</p>";
+                break;
+        }
+
         $new_node = new stdClass();
         $new_node->type = 'blog';
         $new_node->language = 'und';
-        $new_node->title = sprintf("Archiving Report for bundle %s",$bundle);
+        $new_node->title = sprintf("Result of archiving attempt for bundle %s",$bundle);
         $new_node->uid = $this->user->uid;
         $new_node->status = 1;
         $new_node->sticky = 0;
@@ -406,9 +508,8 @@ class Ingestor
         $new_node->format = 3;
         $new_node->revision = 0;
         $new_node->body['und'][0]['format'] = 'full_html';
-        $new_node->body['und'][0]['summary'] = sprintf("<p>Archiving of %s completed</p>",$bundle, $collection,$bundle, $collection);;
-        $new_node->body['und'][0]['value'] = sprintf("<p>%s %s</p><p>Archiving of %s belonging to %s succeeded.</p>",$bundle, $collection,$bundle, $collection);
-
+        $new_node->body['und'][0]['summary'] = $summary;
+        $new_node->body['und'][0]['value'] = $value;
         node_save($new_node);
     }
 
