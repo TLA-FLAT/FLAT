@@ -55,9 +55,10 @@ docker build --rm=true -t flat add-gsearch-to-flat/
 docker build --rm=true -t flat add-islandora-solr-to-flat/
 docker build --rm=true -t flat add-imdi-gsearch-to-flat/
 
-# add solution packs and sword (in order to allow running updated dockerfiles without redoing the whole procedure make new image)
+# add solution packs, sword and doorkeeper 
 docker build --rm=true -t flat add-solution-packs-to-flat/
-docker build --rm=true -t flat-with-sword add-sword-to-flat/
+docker build --rm=true -t flat add-sword-to-flat/
+docker build --rm=true -t flat add-doorkeeper-to-flat/
 
 #new image for deposit UI
 docker build --rm=true -t flat add-deposit-ui-to-flat/
