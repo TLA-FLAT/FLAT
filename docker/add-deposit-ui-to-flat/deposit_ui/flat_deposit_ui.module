@@ -387,9 +387,6 @@ function flat_deposit_ui_menu()
     $items['workspace'] = array(
         'title' => 'Workspace',
         'type' => MENU_LOCAL_TASK,
-        'page callback' => 'flat_deposit_ui_workspace',
-        'page arguments' => array(
-            'content' => 'View implementation Under construction'),
         'access arguments' => array('use deposit module'));
 
     // Page for ingested data
@@ -567,7 +564,7 @@ function flat_deposit_ui_owncloud_form($node, &$form_state)
         '#submit' => array('flat_deposit_ui_admin_form_reset_submit'));
 
 
-    #return $form;
+    return $form;
 }
 
 
@@ -735,7 +732,6 @@ function flat_deposit_ui_cmdi_select_form($form, &$form_state){
         $template_dir = USER_DRUPAL_DATA_DIR . '/Templates/';
         $listing = array_diff(scandir($template_dir), array('..', '.'));
         $templates = [];
-        $i = 0;
 
         #foreach ($listing as $f) {$templates[(string)$i] = substr($f, 0, -4);$i++;} #make list of de-suffixed names
         foreach ($listing as $f) {
@@ -988,7 +984,7 @@ function flat_deposit_ui_form_alter(&$form, &$form_state, $form_id)
 {
 
     // for debug info uncomment dpm
-    dpm ($form_id);
+    #dpm ($form_id);
     switch ($form_id){
 
         case "flat_bundle_node_form":{
