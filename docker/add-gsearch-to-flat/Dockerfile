@@ -84,6 +84,10 @@ RUN mkdir -p /tmp &&\
     cd /tmp &&\
     git clone -b 4.x https://github.com/discoverygarden/basic-solr-config.git &&\
     cd /tmp/basic-solr-config &&\
+    git clone https://github.com/discoverygarden/islandora_transforms.git &&\
+    cd /tmp/basic-solr-config/islandora_transforms &&\
+    git checkout 821b645 &&\
+    cd /tmp/basic-solr-config &&\
     sed -i "s|/usr/local/fedora|$FEDORA_HOME|g" foxmlToSolr.xslt &&\
     sed -i "s|/usr/local/fedora|$FEDORA_HOME|g" islandora_transforms/slurp_all_MODS_to_solr.xslt &&\
     sed -i "s|/usr/local/fedora|$FEDORA_HOME|g" islandora_transforms/WORKFLOW_to_solr.xslt &&\
@@ -96,13 +100,13 @@ RUN mkdir -p /tmp &&\
 #
 
 RUN mkdir /tmp/saxon &&\
-	cd /tmp/saxon &&\ 
-	wget -O SaxonHE9-7-0-2J.zip "http://downloads.sourceforge.net/project/saxon/Saxon-HE/9.7/SaxonHE9-7-0-2J.zip?r=&use_mirror=netix" &&\
-	unzip "SaxonHE9-7-0-2J.zip" &&\
-	mkdir -p /app/flat/lib/saxon &&\
-	rm "SaxonHE9-7-0-2J.zip" &&\
-	mv * /app/flat/lib/saxon/ &&\
-	rm -r /tmp/saxon
+    cd /tmp/saxon &&\ 
+    wget -O SaxonHE9-7-0-2J.zip "http://downloads.sourceforge.net/project/saxon/Saxon-HE/9.7/SaxonHE9-7-0-2J.zip?r=&use_mirror=netix" &&\
+    unzip "SaxonHE9-7-0-2J.zip" &&\
+    mkdir -p /app/flat/lib/saxon &&\
+    rm "SaxonHE9-7-0-2J.zip" &&\
+    mv * /app/flat/lib/saxon/ &&\
+    rm -r /tmp/saxon
 
 #
 # Add FLAT's own scripts and tools 
@@ -121,4 +125,4 @@ RUN cd /tmp/FindProfiles &&\
     
 #Clean up APT when done.
 RUN apt-get clean &&\
-	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
