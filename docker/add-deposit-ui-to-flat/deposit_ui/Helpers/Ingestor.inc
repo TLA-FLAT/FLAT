@@ -520,7 +520,7 @@ class Ingestor
         $new_node->uid = $this->user->uid;
         $new_node->status = 1;
         $new_node->sticky = 0;
-        $new_node->promote = 1;
+        $new_node->promote = 0;
         $new_node->format = 3;
         $new_node->revision = 0;
         $new_node->body['und'][0]['format'] = 'full_html';

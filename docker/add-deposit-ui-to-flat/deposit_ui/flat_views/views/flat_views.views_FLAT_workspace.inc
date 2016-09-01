@@ -43,6 +43,11 @@ $handler->display->display_options['footer']['view']['table'] = 'views';
 $handler->display->display_options['footer']['view']['field'] = 'view';
 $handler->display->display_options['footer']['view']['label'] = 'Notification block';
 $handler->display->display_options['footer']['view']['view_to_insert'] = 'notifications:block';
+/* Relationship: Content: Author */
+$handler->display->display_options['relationships']['uid']['id'] = 'uid';
+$handler->display->display_options['relationships']['uid']['table'] = 'node';
+$handler->display->display_options['relationships']['uid']['field'] = 'uid';
+$handler->display->display_options['relationships']['uid']['required'] = TRUE;
 /* Field: Content: Title */
 $handler->display->display_options['fields']['title']['id'] = 'title';
 $handler->display->display_options['fields']['title']['table'] = 'node';
@@ -65,9 +70,9 @@ $handler->display->display_options['fields']['upload_status']['label'] = 'Upload
 $handler->display->display_options['fields']['created']['id'] = 'created';
 $handler->display->display_options['fields']['created']['table'] = 'node';
 $handler->display->display_options['fields']['created']['field'] = 'created';
+$handler->display->display_options['fields']['created']['label'] = 'Initiated on';
 $handler->display->display_options['fields']['created']['date_format'] = 'long';
 $handler->display->display_options['fields']['created']['second_date_format'] = 'long';
-$handler->display->display_options['fields']['created']['label'] = 'Initiated on';
 /* Field: Content: Edit link */
 $handler->display->display_options['fields']['edit_node']['id'] = 'edit_node';
 $handler->display->display_options['fields']['edit_node']['table'] = 'views_entity_node';
@@ -82,9 +87,9 @@ $handler->display->display_options['fields']['delete_node']['label'] = 'Delete';
 $handler->display->display_options['sorts']['created']['id'] = 'created';
 $handler->display->display_options['sorts']['created']['table'] = 'node';
 $handler->display->display_options['sorts']['created']['field'] = 'created';
+$handler->display->display_options['sorts']['created']['expose']['label'] = 'Initiation date';
 $handler->display->display_options['sorts']['created']['order'] = 'DESC';
 $handler->display->display_options['sorts']['created']['exposed'] = TRUE;
-$handler->display->display_options['sorts']['created']['expose']['label'] = 'Initiation date';
 /* Sort criterion: Content: Name of the collection (upload_collection) */
 $handler->display->display_options['sorts']['upload_collection_value']['id'] = 'upload_collection_value';
 $handler->display->display_options['sorts']['upload_collection_value']['table'] = 'field_data_upload_collection';
@@ -97,13 +102,6 @@ $handler->display->display_options['sorts']['upload_status_value']['table'] = 'f
 $handler->display->display_options['sorts']['upload_status_value']['field'] = 'upload_status_value';
 $handler->display->display_options['sorts']['upload_status_value']['exposed'] = TRUE;
 $handler->display->display_options['sorts']['upload_status_value']['expose']['label'] = 'Upload status';
-/* Filter criterion: Content: Published */
-$handler->display->display_options['filters']['status']['id'] = 'status';
-$handler->display->display_options['filters']['status']['table'] = 'node';
-$handler->display->display_options['filters']['status']['field'] = 'status';
-$handler->display->display_options['filters']['status']['value'] = 1;
-$handler->display->display_options['filters']['status']['group'] = 1;
-$handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
 /* Filter criterion: Content: Type */
 $handler->display->display_options['filters']['type']['id'] = 'type';
 $handler->display->display_options['filters']['type']['table'] = 'node';
@@ -111,11 +109,13 @@ $handler->display->display_options['filters']['type']['field'] = 'type';
 $handler->display->display_options['filters']['type']['value'] = array(
     'flat_bundle' => 'flat_bundle',
 );
-/* Filter criterion: Content: Author uid */
-$handler->display->display_options['filters']['uid']['id'] = 'uid';
-$handler->display->display_options['filters']['uid']['table'] = 'node';
-$handler->display->display_options['filters']['uid']['field'] = 'uid';
-$handler->display->display_options['filters']['uid']['value'] = '';
+/* Filter criterion: User: Current */
+$handler->display->display_options['filters']['uid_current']['id'] = 'uid_current';
+$handler->display->display_options['filters']['uid_current']['table'] = 'users';
+$handler->display->display_options['filters']['uid_current']['field'] = 'uid_current';
+$handler->display->display_options['filters']['uid_current']['relationship'] = 'uid';
+$handler->display->display_options['filters']['uid_current']['value'] = '1';
+
 
 /* Display: Personal upload view page */
 $handler = $view->new_display('page', 'Personal upload view page', 'page');

@@ -35,6 +35,14 @@ function flat_deposit_ui_install()
     // switch off comments for content type _flat_bundle
     variable_set('comment_flat_bundle', '0');
 
+    // switch off promotion of new entries to front
+    $node_options = variable_get('node_options_flat_bundle', array());
+    $promote_key = array_search('promote', $node_options);
+    if ($promote_key !== false) {
+        unset($node_options[$promote_key]);
+        variable_set('node_options_flat_bundle', $node_options);
+    }
+
 
     // Attach fields to the flat bundle content type by creating fields and instances of these fields
     $fields = array();

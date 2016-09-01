@@ -35,6 +35,11 @@ $handler->display->display_options['row_options']['inline'] = array(
     'title' => 'title',
     'created' => 'created',
 );
+/* Relationship: Content: Author */
+$handler->display->display_options['relationships']['uid']['id'] = 'uid';
+$handler->display->display_options['relationships']['uid']['table'] = 'node';
+$handler->display->display_options['relationships']['uid']['field'] = 'uid';
+$handler->display->display_options['relationships']['uid']['required'] = TRUE;
 /* Field: Content: Title */
 $handler->display->display_options['fields']['title']['id'] = 'title';
 $handler->display->display_options['fields']['title']['table'] = 'node';
@@ -63,13 +68,6 @@ $handler->display->display_options['sorts']['created']['id'] = 'created';
 $handler->display->display_options['sorts']['created']['table'] = 'node';
 $handler->display->display_options['sorts']['created']['field'] = 'created';
 $handler->display->display_options['sorts']['created']['order'] = 'DESC';
-/* Filter criterion: Content: Published */
-$handler->display->display_options['filters']['status']['id'] = 'status';
-$handler->display->display_options['filters']['status']['table'] = 'node';
-$handler->display->display_options['filters']['status']['field'] = 'status';
-$handler->display->display_options['filters']['status']['value'] = 1;
-$handler->display->display_options['filters']['status']['group'] = 1;
-$handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
 /* Filter criterion: Content: Type */
 $handler->display->display_options['filters']['type']['id'] = 'type';
 $handler->display->display_options['filters']['type']['table'] = 'node';
@@ -77,11 +75,12 @@ $handler->display->display_options['filters']['type']['field'] = 'type';
 $handler->display->display_options['filters']['type']['value'] = array(
     'blog' => 'blog',
 );
-/* Filter criterion: Content: Author uid */
-$handler->display->display_options['filters']['uid']['id'] = 'uid';
-$handler->display->display_options['filters']['uid']['table'] = 'node';
-$handler->display->display_options['filters']['uid']['field'] = 'uid';
-$handler->display->display_options['filters']['uid']['value'] = '';
+/* Filter criterion: User: Current */
+$handler->display->display_options['filters']['uid_current']['id'] = 'uid_current';
+$handler->display->display_options['filters']['uid_current']['table'] = 'users';
+$handler->display->display_options['filters']['uid_current']['field'] = 'uid_current';
+$handler->display->display_options['filters']['uid_current']['relationship'] = 'uid';
+$handler->display->display_options['filters']['uid_current']['value'] = '1';
 
 /* Display: Page */
 $handler = $view->new_display('page', 'Page', 'page');
