@@ -23,6 +23,7 @@ $handler = $view->new_display('default', 'Master', 'default');
 $handler->display->display_options['title'] = 'My workspace';
 $handler->display->display_options['use_more_always'] = FALSE;
 $handler->display->display_options['access']['type'] = 'perm';
+$handler->display->display_options['access']['perm'] = 'use deposit module';
 $handler->display->display_options['cache']['type'] = 'none';
 $handler->display->display_options['query']['type'] = 'views_query';
 $handler->display->display_options['exposed_form']['type'] = 'basic';
@@ -120,3 +121,6 @@ $handler->display->display_options['filters']['uid']['value'] = '';
 $handler = $view->new_display('page', 'Personal upload view page', 'page');
 $handler->display->display_options['display_description'] = 'View of all personal uploads';
 $handler->display->display_options['path'] = 'workspace';
+
+
+$views[$view->name] = $view;

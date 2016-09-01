@@ -291,7 +291,7 @@ class Ingestor
         $expected = 'The SIP['.$this->bag['bag_id'].'] has been executed succesfully!';
 
         if ($val != $expected){
-            $message = 'Doorkeeper error';
+            $message = 'Doorkeeper error' . $val;
             if (LOG_ERRORS) error_log(date(DATE_RSS) . ";\t" . $message . ";\n", $message_type = 3, ERROR_LOG_FILE);
             throw new IngestServiceException ($message);
         }
@@ -476,7 +476,7 @@ class Ingestor
         $link_node = array(
             'theme' => 'link',
             'text' => 'here',
-            'path' => '/node/'.$this->node->nid,
+            'path' => 'node/'.$this->node->nid,
             'options' => array(
                 'attributes' => array(),
                 'html' => FALSE

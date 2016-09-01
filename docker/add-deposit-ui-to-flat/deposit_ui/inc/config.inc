@@ -32,7 +32,7 @@ function get_drupal_database_settings(){
 function get_configuration_fedora(){
     return array(
         'host_name' => 'localhost',
-        'host_ip' => '192.168.99.100',
+        'host_ip' => '127.0.0.1',
         'port' => 8443,
         'scheme' => 'https',
         'user' => 'fedoraAdmin',
@@ -89,7 +89,7 @@ function get_configuration_metadata()
 function get_configuration_sword()
 {
     return array(
-        'url' => 'https://192.168.99.100/easy-deposit/',
+        'url' => 'https://localhost/easy-deposit/',
         'port'=> 8443,
         'user'=> 'flat',
         'password'=> 'sword',
@@ -136,22 +136,6 @@ function flat_deposit_set_paths()
 }
 
 
-function flat_deposit_set_modules()
-{
-    $flat_deposit_modules = variable_get('flat_deposit_modules', array());
-
-    //already installed
-    if (!empty($flat_deposit_modules[0])) {
-        variable_del('flat_deposit_modules');
-    }
-    variable_set('flat_deposit_modules', array(
-            'owncloud' => TRUE
-        )
-    );
-
-    return TRUE;
-}
-
 function flat_deposit_set_names()
 {
     $flat_deposit_names = variable_get('flat_deposit_names', array());
@@ -178,9 +162,11 @@ function flat_deposit_set_owncloud(){
         variable_del('owncloud_settings');
     }
     variable_set('owncloud_settings', array(
+        'activated' => TRUE,
         'admin_name' => 'admin',
         'admin_pass' => 'admin',
         'host' => $_SERVER['HTTP_HOST'],
-        'root_dir'=> '/var/www/owncloud/'));
+        'root_dir'=> '/var/www/owncloud/',
+        'temp_dir'=> '/tmp/'));
 
 }

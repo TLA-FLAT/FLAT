@@ -55,7 +55,7 @@ docker build --rm=true -t flat add-gsearch-to-flat/
 docker build --rm=true -t flat add-islandora-solr-to-flat/
 docker build --rm=true -t flat add-imdi-gsearch-to-flat/
 
-# add solution packs, sword and doorkeeper 
+# add solution packs, sword and doorkeeper
 docker build --rm=true -t flat add-solution-packs-to-flat/
 docker build --rm=true -t flat add-sword-to-flat/
 docker build --rm=true -t flat add-doorkeeper-to-flat/
@@ -71,7 +71,7 @@ rm flat-base.tar
 
 ## Running the image ##
 ```sh
-docker run -p 80:80 -p 8443:8443 -p 8080:8080 --name <Container> -i -t <name FLAT base image>
+docker run -p 80:80 -p 8443:8443 -p 8080:8080 -p 8222:22 -v <local_path>:<remote_path> --name <Container> -i -t <name FLAT base image>
 ```
 
 
