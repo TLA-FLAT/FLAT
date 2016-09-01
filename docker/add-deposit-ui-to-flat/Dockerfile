@@ -119,8 +119,12 @@ RUN mv /var/www/owncloud/config/config.php /var/www/owncloud/config/config.backu
 COPY owncloud/changeRights.sh /tmp/changeRights.sh
 RUN /tmp/changeRights.sh
 
-RUN cd /var/www/owncloud/ &&\
-	sudo -u www-data php occ app:enable files_external
+#RUN /etc/init.d/postgresql start &&\
+#	/var/www/fedora/tomcat/bin/startup.sh &&\
+#	sleep 10 &&\
+#	cd /var/www/owncloud/ &&\
+#	sudo -u www-data php occ app:enable files_external
+
 
 #Add bagit to image
 RUN cd /app/flat &&\
