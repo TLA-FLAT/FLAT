@@ -9,17 +9,17 @@
  */
 function flat_deposit_ui_install()
 {
+    $t = get_t();
 
+    //basic settings
     module_load_include('inc', 'flat_deposit_ui', 'inc/config');
-
     flat_deposit_set_paths();
-    flat_deposit_set_modules();
     flat_deposit_set_names();
     flat_deposit_set_owncloud();
 
-    $t = get_t();
 
-    // content type definition
+    // Add flat bundle content type
+    // This content type is the core entity that will contain information about each upload
     $content_type = array(
         'type' => 'flat_bundle',
         'name' => $t('FLAT Upload bundle'),
@@ -28,15 +28,23 @@ function flat_deposit_ui_install()
         'base' => 'flat_bundle', #declare to be able to use content type hooks
         'custom' => TRUE
     );
-
     // Set remaining definitions with defaults
     $node_type = node_type_set_defaults($content_type);
-
     node_type_save($node_type);
 
     // switch off comments for content type _flat_bundle
     variable_set('comment_flat_bundle', '0');
 
+    // switch off promotion of new entries to front
+    $node_options = variable_get('node_options_flat_bundle', array());
+    $promote_key = array_search('promote', $node_options);
+    if ($promote_key !== false) {
+        unset($node_options[$promote_key]);
+        variable_set('node_options_flat_bundle', $node_options);
+    }
+
+
+    // Attach fields to the flat bundle content type by creating fields and instances of these fields
     $fields = array();
 
     $fields['upload_collection'] = array(
@@ -46,7 +54,6 @@ function flat_deposit_ui_install()
         'settings' => array(),
             'locked' => TRUE
     );
-    #$check_field_type = field_info_field_types('list_text');
     $fields['upload_status'] = array(
         'field_name' => 'upload_status',
         'type' => 'list_text',
@@ -62,7 +69,6 @@ function flat_deposit_ui_install()
         ),
         'locked' => TRUE
     );
-
     $fields['upload_exception'] = array(
         'field_name' => 'upload_exception',
         'type' => 'text',
@@ -77,18 +83,32 @@ function flat_deposit_ui_install()
         'settings' => array(
             'max_length' => 5000)
     );
-    
     $fields['upload_cmdi'] = array(
         'field_name' => 'upload_cmdi',
         'type' => 'list_boolean',
         'cardinality' => 1,
         'settings' => array()
     );
-    
-    foreach ($fields as $field) {
-        field_create_field($field);
-}
+    $fields['upload_external'] = array(
+        'field_name' => 'upload_external',
+        'type' => 'list_boolean',
+        'cardinality' => 1,
+        'settings' => array(
+            'allowed_values'=> array(
+                0 => "no",
+                1 => "yes"),
+        ),
+    );
+    $fields['upload_location'] = array(
+        'field_name' => 'upload_location',
+        'type' => 'text',
+        'cardinality' => 1,
+        'settings' => array(
+            'max_length' => 5000)
+    );
 
+    foreach ($fields as $field) {
+        field_create_field($field);}
 
     $instances = array();
 
@@ -169,18 +189,83 @@ function flat_deposit_ui_install()
             )
         )
     );
+
+    $instances['upload_external'] = array(
+        'field_name' => 'upload_external',
+        'label' => $t('Data is located on archive server'
+        ),
+        'description' => $t('Check this option if data is not uploaded using this side but if it is already available on the archive server'),
+        'widget' => array(
+            'type' => 'option_buttons'
+        ),
+        'default_value' => array(
+            0 => array('value'=> '0')),
+        'required' => TRUE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            ),
+
+
+        )
+    );
+
+    $instances['upload_location'] = array(
+        'field_name' => 'upload_location',
+        'label' => $t('Location where data is stored'
+        ),
+        'description' => $t('Location where archive server can find data to be uploaded'),
+        'widget' => array(
+            'type' => 'text'
+        ),
+        'required' => FALSE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            ),
+
+        )
+    );
     foreach ($instances as $instance){
         $instance['entity_type'] = 'node';
         $instance['bundle'] = 'flat_bundle';
         field_create_instance($instance);
     }
 
+    // Add owncloud integration field to user entity type
+    $field = array(
+        'field_name' => 'mount_owncloud',
+        'type' => 'list_boolean',
+        'cardinality' => 1,
+        'settings' => array(
+            'allowed_values'=> array(
+                0 => "Unavailable",
+                1 => "Available"),
+        ),
+
+    );
+    field_create_field($field);
+    $instance = array(
+        'field_name' => 'mount_owncloud',
+        'entity_type' => 'user',
+        'bundle' => 'user',
+        'label' => 'Owncloud integration',
+        'settings' => array('user_register_form' => 1),
+        'widget' => array(
+            'type' => 'options_button', // or whatever widget type you want
+        ),
+        'default_value' => array(
+            0 => array('value'=> '0'))
+    );
+    field_create_instance($instance);
+
+
+    // enable blog functionality in order to allow the backend to create ingest reports
     module_enable(array('blog','flat_views'));
 
 }
-
-
-
 
 
 
@@ -188,149 +273,7 @@ function flat_deposit_ui_install()
  * Implements hook_schema().
  */
 function flat_deposit_ui_schema() {
-/*
-    $schema['flat_deposit_ui_upload'] = array(
-        'description' => 'Logging of all uploading activity.',
-        'fields' => array(
-            'uid'  => array(
-                'type' => 'serial',
-                'unsigned' => TRUE,
-                'not null' => TRUE,
-                'description' => 'ID of the upload instance'
-            ),
-            'user_id'  => array(
-                'type' => 'varchar',
-                'length' => 63,
-                'not null' => TRUE,
-                'description' => 'User ID'
-            ),
-            'bundle' => array(
-                'type' => 'varchar',
-                'length' => 63,
-                'not null' => FALSE,
-                'description' => 'Persistent ID of bundle.'
-            ),
-            'pid_bundle' => array(
-                'type' => 'varchar',
-                'length' => 63,
-                'not null' => FALSE,
-                'description' => 'Bundle name.'
-            ),
-            'collection' => array(
-                'type' => 'varchar',
-                'length' => 127,
-                'not null' => FALSE,
-                'description' => 'Name of the project / corpus.'
-            ),
-            'status' => array(
-                'type' => 'varchar',
-                'length' => 63,
-                'not null' => TRUE,
-                'description' => 'Name given to the upload.'
-            ),
-            'bag_id' => array(
-                'type' => 'varchar',
-                'length' => 63,
-                'not null' => FALSE,
-                'description' => 'Bag ID.'
-            ),
-            'exceptions' => array(
-                'type' => 'varchar',
-                'length' => 127,
-                'not null' => FALSE,
-                'default' => '',
-                'description' => 'Exceptions.'
-            ),
-            'freeze_time' => array(
-                'type' => 'int',
-                'length' => 20,
-                'not null' => FALSE,
-                'description' => 'Data is located at freeze directory'
-            ),
-            'nfiles' => array(
-                'type' => 'int',
-                'length' => 20,
-                'not null' => FALSE,
-#                'default' => 0,
-                'description' => 'Count of zipped files in freeze directory'
-            ),
-            'baginplace' => array(
-                'type' => 'int',
-                'pgsql_type' => 'boolean',
-                'not null' => FALSE,
-                #               'default' => 0,
-                'description' => 'Bag has been created for data'
-            ),
-            'zipped' => array(
-                'type' => 'int',
-                'pgsql_type' => 'boolean',
-                'not null' => FALSE,
-                #              'default' => 0,
-                'description' => 'Bag has been created for data'
-            ),
-            'bagged' => array(
-                'type' => 'int',
-                'pgsql_type' => 'boolean',
-                'not null' => FALSE,
-                #             'default' => 0,
-                'description' => 'Bag has been created for data'
-            ),
-            'foxml' => array(
-                'type' => 'int',
-                'pgsql_type' => 'boolean',
-                'not null' => FALSE,
-                #            'default' => 0,
-                'description' => 'FOXML has been created for data'
-            ),
-            'bag_ingested' => array(
-                'type' => 'int',
-                'pgsql_type' => 'boolean',
-                'not null' => FALSE,
-                #           'default' => 0,
-                'description' => 'Bag has been ingested'
-            ),
-            'data_purged' => array(
-                'type' => 'int',
-                'pgsql_type' => 'boolean',
-                'not null' => FALSE,
-                #          'default' => 0,
-                'description' => 'Uploaded data has been purged'
-            ),
-            'owner_added' => array(
-                'type' => 'int',
-                'pgsql_type' => 'boolean',
-                'not null' => FALSE,
-                #         'default' => 0,
-                'description' => 'Notification has been unchecked'
-            ),
-            'date_bundle_ingest' => array(
-                'type' => 'int',
-                'not null' => FALSE,
-                'description' => 'Date at which bundle was ingested'
-            ),
-            'note_unchecked' => array(
-                'type' => 'int',
-                'not null' => FALSE,
-                'description' => 'Indicate whether status info should be shown'
-            ),
-            'language' => array(
-                'description' => 'language of the displayed entity',
-                'length' => 12,
-                'type' => 'varchar',
-                'not null' => TRUE,
-                'default' => ''
-            ),
-        ),
 
-        'unique keys' => array(
-            'ukey' => array('user_id', 'bundle', 'collection'),
-        ),
-        'primary key' => array('uid'),
-        'indexes' => array(
-            'language' => array('language'),)
-
-    );
-*/
     // Table keeping track of existing collections
     $schema['flat_deposit_ui_collection'] = array(
         'description' => 'Collection-member relation in FLAT.',
@@ -407,18 +350,29 @@ function flat_deposit_ui_uninstall(){
             if (file_exists($user_freeze_directory) && $user_freeze_directory){
                 recursiveRmDir($user_freeze_directory);
                 rmdir ($user_freeze_directory);}
-            $oc = new OwnCloud();
-            if ($oc->noErrors){
-                $oc->DeleteBrokenLinks();
-            }
+
         }
     }
 
     drupal_set_message($t('All non-archived user project data files have been removed'));
 
+
+    // Unmount all user drupal data directory mounts
+    $oc = new OwnCloud();
+    if ($oc->noErrors){
+        $mounts = $oc->ListAllDrupalMounts();
+
+        foreach (array_column($mounts,'mount_id') as $mount_id){
+
+            $oc->UnmountUserArchiveMount($mount_id);
+        };
+
+    }
+
+    drupal_set_message($t('All  user drupal data directory mounts have been unmounted'));
+
     // clean up global variables
     variable_del('flat_deposit_paths');
-    variable_del('flat_deposit_modules');
     variable_del('flat_deposit_names');
     variable_del('owncloud_settings');
 
@@ -438,6 +392,7 @@ function flat_deposit_ui_uninstall(){
 
     //Remove all custom content type fields and field instances and clean up entries in field_config / field_config_instance tables
     field_attach_delete_bundle('node','flat_bundle');
+    field_attach_delete_bundle('user', 'user');
 
     db_delete('field_config_instance')
         ->condition('deleted', 1)
@@ -447,7 +402,6 @@ function flat_deposit_ui_uninstall(){
 
     drupal_set_message($t('Custom field and field instances have been removed'));
 
-
     // Delete custom content type
     node_type_delete('flat_upload');
     drupal_set_message($t('Custom content type has been removed'));
@@ -455,5 +409,5 @@ function flat_deposit_ui_uninstall(){
 
     //Round up uninstall
     drupal_set_message($t('Deposit UI uninstalled'));
-    module_disable(array('flat_deposit_ui_views'),FALSE);
+    module_disable(array('flat_deposit_ui_views','blog'),FALSE);
 }

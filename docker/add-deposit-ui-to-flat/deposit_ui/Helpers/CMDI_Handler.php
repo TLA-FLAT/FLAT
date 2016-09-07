@@ -9,7 +9,7 @@
 
 
 require_once (drupal_realpath(drupal_get_path('module', 'flat_deposit_ui')) . '/inc/config.inc');
-require_once (drupal_realpath(drupal_get_path('module', 'flat_deposit_ui')) . '/Helpers/Handle_REST_API.inc');
+
 
 class CMDI_Handler
 

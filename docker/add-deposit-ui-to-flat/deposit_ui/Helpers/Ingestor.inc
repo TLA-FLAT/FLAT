@@ -44,7 +44,7 @@ class Ingestor
         $this->backend_bundle_dir = FREEZE_DIR . "/" . $this->user->name. "/" . $this->wrapper->upload_collection->value() . "/" . $this->node->title;
 
         $this->bag = array(
-            'bag_id'  => $this->user->name . "_" . $this->node->nid . "_" . $this->node->title);
+            'bag_id'  => $this->user->name . "_" . $this->node->nid . "_" . $this->node->title .'_' . uniqid());
 
 
     }
@@ -170,6 +170,34 @@ class Ingestor
 
 
     /**
+     * HTTP GET Request for SWORD REST api
+     *
+     * @param bool $code_only if true method returns only HTTP response code
+     * @return mixed
+     */
+    public function swordGetRequest($code_only=FALSE)
+    {
+        $config = get_configuration_sword();
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, $config['url'] . 'statement/' .$this->bag['bag_id'] ); //
+        curl_setopt($ch, CURLOPT_PORT, $config['port']);
+        curl_setopt($ch, CURLOPT_USERPWD, sprintf("%s:%s",$config['user'],$config['password']));
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE); // -i
+
+        $val = curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        curl_close($ch);
+
+        return $code_only ? $httpcode : $val;
+    }
+
+
+    /**
      * Create Bag at correct bag location
      *
      *
@@ -178,32 +206,25 @@ class Ingestor
 
     public function checkStatusSword()
     {
-
-        $config = get_configuration_sword();
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $config['url'] . 'statement/' .$this->bag['bag_id'] ); //
-        curl_setopt($ch, CURLOPT_PORT, $config['port']);
-        curl_setopt($ch, CURLOPT_USERPWD, sprintf("%s:%s",$config['user'],$config['password']));
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE); // -i
-        curl_setopt($ch, CURLOPT_BINARYTRANSFER, TRUE); // --data-binary
-
-
-        $content = curl_exec($ch);
-
-        curl_close($ch);
-        $xml = simplexml_load_string($content) ;
+        #initial check request
+        $val = $this->swordGetRequest();
+        $xml =simplexml_load_string($val) ;
         $status = (string)$xml->category['term'];
 
+        // loop and wait until SWORD signals end of request
+        while ($status == 'FINALIZING') {
+            sleep(10);
+            $val = $this->swordGetRequest();
+            $xml =simplexml_load_string($val) ;
+            $status = (string)$xml->category['term'];
+        };
+
+        // check outcome SWORD
         if ($status != 'SUBMITTED') {
-            $message = "Error creating bag;\n" .  $content;
+            $message = "Error creating bag;\n" .  $val;
             if (LOG_ERRORS) error_log(date(DATE_RSS) . ";\t" . $message, $message_type = 3, ERROR_LOG_FILE);
             throw new IngestServiceException ($message);
         }
-
-
     }
 
     /**
@@ -230,7 +251,7 @@ class Ingestor
         curl_close($ch);
 
         if ($httpcode != 200 && $httpcode != 202 ) {
-            $message = 'Error triggering doorleeper';
+            $message = 'Error triggering doorkeeper' . $val;
             if (LOG_ERRORS) error_log(date(DATE_RSS) . ";\t" . $message . ";\n", $message_type = 3, ERROR_LOG_FILE);
             throw new IngestServiceException ($message);
         }
@@ -270,8 +291,9 @@ class Ingestor
 
         #initial check request
         $httpcode = $this->doorkeeperGetRequest(TRUE);
-                $max_wait = 60;
+        $max_wait = 60;
         $time = 0;
+
         // loop and wait until doorkeeper signals end of request
         while ($httpcode != 200 && $time <= $max_wait) {
             sleep(10);
@@ -288,24 +310,18 @@ class Ingestor
 
         // check outcome doorkeeper
         $val = $this->doorkeeperGetRequest();
-        $expected = 'The SIP['.$this->bag['bag_id'].'] has been executed succesfully!';
+        $xml =simplexml_load_string($val) ;
 
-        if ($val != $expected){
-            $message = 'Doorkeeper error';
-            if (LOG_ERRORS) error_log(date(DATE_RSS) . ";\t" . $message . ";\n", $message_type = 3, ERROR_LOG_FILE);
-            throw new IngestServiceException ($message);
-        }
-        //will be changed to return either fid or FALSE and make getBundleFID-method obsolete
-        /*
-        if (!val){
-            $message = 'Doorkeeper error';
+
+        if ($xml['status'] != 'succeeded'){
+            $message = 'Doorkeeper error' . $val;
             if (LOG_ERRORS) error_log(date(DATE_RSS) . ";\t" . $message . ";\n", $message_type = 3, ERROR_LOG_FILE);
             throw new IngestServiceException ($message);
         } else {
-            $this->pid['bundle'] = $val;
+            $this->pid['bundle'] = $xml['fid'];
 
         }
-                  * */
+
     }
 
 
@@ -476,7 +492,7 @@ class Ingestor
         $link_node = array(
             'theme' => 'link',
             'text' => 'here',
-            'path' => '/node/'.$this->node->nid,
+            'path' => 'node/'.$this->node->nid,
             'options' => array(
                 'attributes' => array(),
                 'html' => FALSE
@@ -504,7 +520,7 @@ class Ingestor
         $new_node->uid = $this->user->uid;
         $new_node->status = 1;
         $new_node->sticky = 0;
-        $new_node->promote = 1;
+        $new_node->promote = 0;
         $new_node->format = 3;
         $new_node->revision = 0;
         $new_node->body['und'][0]['format'] = 'full_html';
