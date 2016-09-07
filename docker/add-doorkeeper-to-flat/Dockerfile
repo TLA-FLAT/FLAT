@@ -34,6 +34,16 @@ RUN mkdir /tmp/fits &&\
 # The FLAT Doorkeeper
 #
 
+RUN cd /tmp &&\
+    git clone https://github.com/menzowindhouwer/fedora-cargo-plugin.git fedora-cargo-plugin &&\
+    cd /tmp/fedora-cargo-plugin &&\
+    mvn clean install
+
+RUN cd /tmp &&\
+    git clone https://github.com/menzowindhouwer/fedora-client.git fedora-client &&\
+    cd /tmp/fedora-client &&\
+    mvn clean install
+
 ADD flat/deposit/DoorKeeper /tmp/DoorKeeper
 RUN cd /tmp/DoorKeeper &&\
     mvn -Dmaven.test.skip=true clean install &&\

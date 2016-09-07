@@ -23,7 +23,12 @@ import com.yourmediashelf.fedora.client.request.FedoraRequest;
 import com.yourmediashelf.fedora.client.response.IngestResponse;
 import com.yourmediashelf.fedora.client.response.GetDatastreamResponse;
 import java.io.File;
+import java.io.FileInputStream;
+import java.security.KeyStore;
 import java.util.Collection;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
 import nl.mpi.tla.flat.deposit.Resource;
@@ -49,11 +54,32 @@ public class Deposit extends AbstractAction {
                 }
         });
         try {
+            SSLContext theSslContext = null;
+            if (this.hasParameter("trustStore")) {
+                String ts = this.getParameter("trustStore");
+                String tsPass = this.getParameter("trustStorePass");
+                KeyStore theClientTruststore = KeyStore.getInstance(KeyStore.getDefaultType());
+                theClientTruststore.load(new FileInputStream(ts),tsPass.toCharArray());
+                TrustManagerFactory theTrustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                theTrustManagerFactory.init(theClientTruststore);
+                theSslContext = SSLContext.getInstance("TLS");
+                theSslContext.init(null,theTrustManagerFactory.getTrustManagers(),null);
+                HttpsURLConnection.setDefaultSSLSocketFactory(theSslContext.getSocketFactory());
+            }
+//            String keystore = System.getProperty("javax.net.ssl.trustStore"); 
+//            if (keystore!=null) {
+//                File ks = new File(keystore);
+//                if (ks.exists())
+//                    logger.debug("keystore["+keystore+"]["+ks.getAbsolutePath()+"] exists");
+//                else
+//                    logger.error("keystore["+keystore+"]["+ks.getAbsolutePath()+"] doesn't exist!");
+//            } else
+//                logger.debug("keystore[NULL]");
             SIP sip = context.getSIP();
             logger.debug("Fedora Commons["+this.getParameter("fedoraServer")+"]["+this.getParameter("fedoraUser")+":"+this.getParameter("fedoraPassword")+"]");
             if (!FedoraRequest.isDefaultClientSet()) {
                 FedoraCredentials credentials = new FedoraCredentials(this.getParameter("fedoraServer"), this.getParameter("fedoraUser"), this.getParameter("fedoraPassword"));
-                FedoraClient fedora = new FedoraClient(credentials);
+                FedoraClient fedora = new FedoraClient(theSslContext,credentials);
                 fedora.debug(true);
                 FedoraRequest.setDefaultClient(fedora);
             }

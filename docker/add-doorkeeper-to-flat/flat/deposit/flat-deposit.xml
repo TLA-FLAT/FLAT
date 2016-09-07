@@ -92,6 +92,8 @@
             <parameter name="fedoraUser" value="{$fedoraUser}"/>
             <parameter name="fedoraPassword" value="{$fedoraPassword}"/>
             <parameter name="dir" value="{$work}/fox"/>
+            <parameter name="trustStore" value="/opt/jssecacerts"/>
+            <parameter name="trustStorePass" value="changeit"/>
         </action>
         <!--
         <action class="nl.mpi.tla.flat.deposit.action.ACL"/>

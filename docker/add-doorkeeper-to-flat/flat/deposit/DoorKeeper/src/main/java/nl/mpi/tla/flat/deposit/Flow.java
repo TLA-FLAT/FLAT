@@ -207,19 +207,31 @@ public class Flow {
     }
     
     public boolean run() throws DepositException {
-        boolean next = initFlow();
-        if (next) {
+        if (initFlow()) {
+            DepositException t = null;
             try {
-                next = mainFlow();
+                status = new Boolean(mainFlow());
             } catch (Exception e) {
-                exceptionFlow(e);
-                next= false;
+                status = new Boolean(false);
+                try {
+                    exceptionFlow(e);
+                } catch(DepositException x) {
+                    t = x;
+                    Flow.logger.error(" exception during the exception handling flow! "+x.getMessage(),x);
+                }
             } finally {
-                finalFlow();
+                try {
+                    finalFlow();
+                } catch(DepositException x) {
+                    t = x;
+                    Flow.logger.error(" exception during the final flow! "+x.getMessage());
+                }
             }
-        }
-        status = new Boolean(next);
-        return next;
+            if (t != null)
+                throw t;
+        } else
+            status = new Boolean(false);
+        return status.booleanValue();
     }
     
     private boolean initFlow() throws DepositException {
@@ -245,7 +257,7 @@ public class Flow {
     private boolean exceptionFlow(Exception e) throws DepositException {
         boolean next = true;
         if (exceptionActions.isEmpty())
-            throw new DepositException(e);
+            Flow.logger.error(" exception during the flow! "+e.getMessage(),e);
         for (ActionInterface action:exceptionActions) {
             next = action.perform(context);
             if (!next)
