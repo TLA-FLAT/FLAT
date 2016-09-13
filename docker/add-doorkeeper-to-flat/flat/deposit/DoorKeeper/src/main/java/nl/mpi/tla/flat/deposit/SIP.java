@@ -152,7 +152,7 @@ public class SIP {
         try {
             for (XdmItem resource:Saxon.xpath(Saxon.wrapNode(this.rec),"/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Resource']",null,NAMESPACES)) {
                 Node resNode = Saxon.unwrapNode((XdmNode)resource);
-                Resource res = new Resource(base.toURI().resolve(Saxon.xpath2string(resource,"cmd:ResourceRef",null,NAMESPACES)),resNode);
+                Resource res = new Resource(base.toURI().resolve(new URI(null,null,Saxon.xpath2string(resource,"cmd:ResourceRef",null,NAMESPACES),null,null)),resNode);
                 if (Saxon.xpath2boolean(resource,"normalize-space(cmd:ResourceType/@mimetype)!=''",null,NAMESPACES)) {
                     res.setMime(Saxon.xpath2string(resource,"cmd:ResourceType/@mimetype",null,NAMESPACES));
                 }

@@ -3,6 +3,7 @@ package nl.mpi.tla.lat2fox;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
@@ -71,7 +72,7 @@ public final class SaxonExtensionFunctions {
         }
 
         public SequenceType[] getArgumentTypes() {
-            return new SequenceType[] { SequenceType.SINGLE_STRING };
+            return new SequenceType[] { SequenceType.SINGLE_ANY_URI };
         }
 
         public SequenceType getResultType(SequenceType[] suppliedArgTypes) {
@@ -88,12 +89,11 @@ public final class SaxonExtensionFunctions {
                 public Sequence call(XPathContext context, Sequence[] arguments) throws XPathException {
                     Sequence seq = null;
                     try {
-                        String path = ((StringValue) arguments[0].head()).getStringValue().replaceAll("^file://?/?","/");
-                        boolean exists = (new java.io.File(path)).exists();
-                        //System.err.println("DBG: file["+path+"] exists?["+exists+"]");
+                        URI uri = new URI(((StringValue) arguments[0].head()).getStringValue());
+                        boolean exists = (new java.io.File(uri)).exists();
                         seq = (new XdmAtomicValue(exists)).getUnderlyingValue();
                     } catch(Exception e) {
-                        System.err.println("ERR: "+e.getMessage());
+                        System.err.println("ERR: ["+((StringValue) arguments[0].head()).getStringValue()+"]:"+e.getMessage());
                         e.printStackTrace(System.err);
                     }
                     return seq;

@@ -444,7 +444,7 @@
 			<!-- add MGMT data stream -->
 			<xsl:choose>
 				<xsl:when test="empty($management-dir)"/>
-				<xsl:when test="sx:fileExists(concat($management-dir, '/', replace($fid, '[^a-zA-Z0-9]', '_'), '.xml'))">
+				<xsl:when test="sx:fileExists(resolve-uri(concat($management-dir, '/', replace($fid, '[^a-zA-Z0-9]', '_'), '.xml'),$base))">
 					<xsl:message>
 						<xsl:text>DBG: CMD FOX[</xsl:text>
 						<xsl:value-of select="$fid"/>
@@ -470,7 +470,7 @@
 			<!-- add POLICY data stream -->
 			<xsl:choose>
 				<xsl:when test="empty($policies-dir)"/>
-				<xsl:when test="sx:fileExists(concat($policies-dir, '/', replace($fid, '[^a-zA-Z0-9]', '_'), '.xml'))">
+				<xsl:when test="sx:fileExists(resolve-uri(concat($policies-dir, '/', replace($fid, '[^a-zA-Z0-9]', '_'), '.xml'),$base))">
 					<xsl:message>
 						<xsl:text>DBG: CMD FOX[</xsl:text>
 						<xsl:value-of select="$fid"/>
@@ -486,7 +486,7 @@
 						</foxml:datastreamVersion>
 					</foxml:datastream>
 				</xsl:when>
-				<xsl:when test="sx:fileExists(concat($policies-dir, '/default-cmd-policy.xml'))">
+				<xsl:when test="sx:fileExists(resolve-uri(concat($policies-dir, '/default-cmd-policy.xml'),$base))">
 					<xsl:message>
 						<xsl:text>DBG: CMD FOX[</xsl:text>
 						<xsl:value-of select="$fid"/>
@@ -502,7 +502,7 @@
 						</foxml:datastreamVersion>
 					</foxml:datastream>
 				</xsl:when>
-				<xsl:when test="sx:fileExists(concat($policies-dir, '/default-policy.xml'))">
+				<xsl:when test="sx:fileExists(resolve-uri(concat($policies-dir, '/default-policy.xml'),$base))">
 					<xsl:message>
 						<xsl:text>DBG: CMD FOX[</xsl:text>
 						<xsl:value-of select="$fid"/>
@@ -630,10 +630,10 @@
 								</xsl:message>
 								<xsl:sequence select="false()"/>
 							</xsl:when>
-							<xsl:when test="starts-with($resURI, 'file:') and exists($import-base) and sx:fileExists(replace($resURI, $conversion-base, $import-base))">
+							<xsl:when test="starts-with($resURI, 'file:') and exists($import-base) and sx:fileExists(replace($resURI, $conversion-base, $import-base) cast as xs:anyURI)">
 								<xsl:sequence select="true()"/>
 							</xsl:when>
-							<xsl:when test="starts-with($resURI, 'file:') and not(sx:fileExists($resURI))">
+							<xsl:when test="starts-with($resURI, 'file:') and not(sx:fileExists($resURI cast as xs:anyURI))">
 								<xsl:variable name="uri">
 									<xsl:choose>
 										<xsl:when test="exists($import-base)">
@@ -833,7 +833,7 @@
 								<!-- add POLICY data stream -->
 								<xsl:choose>
 									<xsl:when test="empty($policies-dir)"/>
-									<xsl:when test="sx:fileExists(concat($policies-dir, '/', replace($resID, '[^a-zA-Z0-9]', '_'), '.xml'))">
+									<xsl:when test="sx:fileExists(resolve-uri(concat($policies-dir, '/', replace($resID, '[^a-zA-Z0-9]', '_'), '.xml'),$base))">
 										<xsl:message>
 											<xsl:text>DBG: resource FOX[</xsl:text>
 											<xsl:value-of select="$resFOX"/>
@@ -849,7 +849,7 @@
 											</foxml:datastreamVersion>
 										</foxml:datastream>
 									</xsl:when>
-									<xsl:when test="sx:fileExists(concat($policies-dir, '/default-resource-policy.xml'))">
+									<xsl:when test="sx:fileExists(resolve-uri(concat($policies-dir, '/default-resource-policy.xml'),$base))">
 										<xsl:message>
 											<xsl:text>DBG: resource FOX[</xsl:text>
 											<xsl:value-of select="$resFOX"/>
@@ -865,7 +865,7 @@
 											</foxml:datastreamVersion>
 										</foxml:datastream>
 									</xsl:when>
-									<xsl:when test="sx:fileExists(concat($policies-dir, '/default-policy.xml'))">
+									<xsl:when test="sx:fileExists(resolve-uri(concat($policies-dir, '/default-policy.xml'),$base))">
 										<xsl:message>
 											<xsl:text>DBG: resource FOX[</xsl:text>
 											<xsl:value-of select="$resFOX"/>

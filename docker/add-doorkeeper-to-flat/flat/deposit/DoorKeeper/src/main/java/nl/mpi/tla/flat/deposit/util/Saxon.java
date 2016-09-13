@@ -24,7 +24,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.ErrorListener;
 import javax.xml.transform.Source;
+import net.sf.saxon.Configuration;
 import net.sf.saxon.s9api.DocumentBuilder;
 import net.sf.saxon.s9api.Processor;
 import net.sf.saxon.s9api.QName;
@@ -89,6 +91,8 @@ public class Saxon {
             } catch (Exception e) {
                 logger.error("Couldn't register the Saxon extension functions!",e);
             }
+            //Configuration sxConfig = sxProcessor.getUnderlyingConfiguration();
+            //sxConfig.setMessageEmitterClass("net.sf.saxon.serialize.MessageWarner");
         }
         return sxProcessor;
     }
@@ -103,7 +107,7 @@ public class Saxon {
     private static synchronized XQueryCompiler getXQueryCompiler() {
         if (sxXQueryCompiler == null) {
             sxXQueryCompiler = getProcessor().newXQueryCompiler();
-        }
+        }        
         return sxXQueryCompiler;
     }
 

@@ -1,6 +1,7 @@
 package nl.mpi.tla.flat.deposit.util;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -76,7 +77,7 @@ public final class SaxonExtensionFunctions {
         }
 
         public SequenceType[] getArgumentTypes() {
-            return new SequenceType[] { SequenceType.SINGLE_STRING };
+            return new SequenceType[] { SequenceType.SINGLE_ANY_URI };
         }
 
         public SequenceType getResultType(SequenceType[] suppliedArgTypes) {
@@ -93,8 +94,8 @@ public final class SaxonExtensionFunctions {
                 public Sequence call(XPathContext context, Sequence[] arguments) throws XPathException {
                     Sequence seq = null;
                     try {
-                        String path = ((StringValue) arguments[0].head()).getStringValue().replaceAll("^file://?/?","/");
-                        boolean exists = (new java.io.File(path)).exists();
+                        URI uri = new URI(((StringValue) arguments[0].head()).getStringValue());
+                        boolean exists = (new java.io.File(uri)).exists();
                         seq = (new XdmAtomicValue(exists)).getUnderlyingValue();
                     } catch(Exception e) {
                         logger.error("sx:fileExists failed!",e);

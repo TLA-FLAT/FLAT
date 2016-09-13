@@ -32,10 +32,12 @@ import net.sf.saxon.s9api.XsltTransformer;
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
 import static nl.mpi.tla.flat.deposit.util.Global.NAMESPACES;
+import nl.mpi.tla.flat.deposit.util.SaxonListener;
 import nl.mpi.tla.flat.deposit.util.Saxon;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  *
@@ -55,6 +57,9 @@ public class CreateFOX extends AbstractAction {
             XsltExecutable cmd2fox = null;
             if (hasParameter("cmd2dc")) {
                 XsltTransformer inclCMD2DC = Saxon.buildTransformer(CreateFOX.class.getResource("/CreateFOX/inclCMD2DC.xsl")).load();
+                SaxonListener listener = new SaxonListener("CreateFOX",MDC.get("sip"));
+                inclCMD2DC.setMessageListener(listener);
+                inclCMD2DC.setErrorListener(listener);
                 inclCMD2DC.setSource(new StreamSource(xsl));
                 inclCMD2DC.setParameter(new QName("cmd2dc"),new XdmAtomicValue("file://"+(new File(getParameter("cmd2dc"))).getAbsolutePath()));
                 XdmDestination destination = new XdmDestination();
@@ -65,6 +70,9 @@ public class CreateFOX extends AbstractAction {
                 cmd2fox = Saxon.buildTransformer(xsl);
             }
             XsltTransformer fox = cmd2fox.load();
+            SaxonListener listener = new SaxonListener("CreateFOX",MDC.get("sip"));
+            fox.setMessageListener(listener);
+            fox.setErrorListener(listener);
             fox.setParameter(new QName("fox-base"), new XdmAtomicValue(dir.toString()));
             fox.setParameter(new QName("rels-uri"), new XdmAtomicValue(getParameter("relations")));
             fox.setParameter(new QName("create-cmd-object"), new XdmAtomicValue(false));
