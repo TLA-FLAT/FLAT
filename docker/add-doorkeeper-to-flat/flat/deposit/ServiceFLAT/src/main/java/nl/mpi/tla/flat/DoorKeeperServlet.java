@@ -9,12 +9,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import javax.ws.rs.DefaultValue;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -42,7 +44,11 @@ public class DoorKeeperServlet {
 
     @PUT
     @Produces("text/plain")
-    public Response putSip(@PathParam("sip") String sip) {
+    public Response putSip(
+            @PathParam("sip") String sip, 
+            @DefaultValue("") @QueryParam("from") String start,
+            @DefaultValue("") @QueryParam("to") String stop
+    ) {
         DoorKeeperContextListener doorkeeperContext = (DoorKeeperContextListener)servletContext.getAttribute("DOORKEEPER");
         Flow flow = doorkeeperContext.executed(sip);
         if (flow==null) {
@@ -51,6 +57,10 @@ public class DoorKeeperServlet {
             String sipDir = "";
             try {
                 flow = this.getFlow(params);
+                if (start!=null && !start.isEmpty())
+                    flow.setStart(start);
+                if (stop!=null && !stop.isEmpty())
+                    flow.setStop(stop);
                 sipDir = flow.getContext().getProperty("work", "/tmp").toString();
                 File sd = new File(sipDir);
                 if (!sd.isDirectory()) {

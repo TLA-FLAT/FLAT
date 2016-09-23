@@ -34,7 +34,10 @@ public class DoorKeeper {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(DoorKeeper.class.getName());
     
     private static void showHelp() {
-        System.err.println("INF: doorkeeper <workflow FILE> (<param>=<value>)*");
+        System.err.println("INF: doorkeeper <OPTIONS> <workflow FILE> (<param>=<value>)*");
+        System.err.println("INF: where <OPTIONS> are:");
+        System.err.println("INF: -f <action> : from this action (name) (optional)");
+        System.err.println("INF: -t <action> : to this action (name) (optional)");
     }
     
     static public void addParameter(Map<String,XdmValue> params,String name,String value) {
@@ -47,11 +50,22 @@ public class DoorKeeper {
     }
 
     public static void main(String[] args) {
-
+        String start = null;
+        String stop  = null;
         Map<String,XdmValue> params = new HashMap();
     
-        OptionParser parser = new OptionParser();
+        OptionParser parser = new OptionParser("f:t:?*");
         OptionSet options = parser.parse(args);
+        
+        if (options.has("f"))
+            start = (String)options.valueOf("f");
+        if (options.has("t"))
+            stop = (String)options.valueOf("t");
+        
+        if (options.has("?")) {
+            showHelp();
+            System.exit(0);
+        }
 
         List arg = options.nonOptionArguments();
         if (arg.size()<1) {
@@ -85,7 +99,7 @@ public class DoorKeeper {
         
         try {
             Flow flw = new Flow(wf,params);
-            flw.run();
+            flw.run(start,stop);
         } catch (Exception ex) {
             logger.error("FATAL:",ex);
             System.exit(1);

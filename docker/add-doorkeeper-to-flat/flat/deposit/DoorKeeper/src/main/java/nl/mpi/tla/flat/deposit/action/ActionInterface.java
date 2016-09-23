@@ -29,6 +29,8 @@ public interface ActionInterface {
     
     public void setName(String name);
     
+    public String getName();
+    
     public void setParameters(Map<String,XdmValue> params);
     
     public boolean perform(Context context) throws DepositException;

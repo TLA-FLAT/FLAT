@@ -66,6 +66,10 @@ public class Flow {
     protected List<ActionInterface> exceptionActions = noActions;
     
     protected List<ActionInterface> finalActions = noActions;
+    
+    protected String start = null;
+    
+    protected String stop = null;
 
     public Flow(File spec) throws DepositException {
         this(spec,new HashMap<String,XdmValue>());
@@ -93,7 +97,7 @@ public class Flow {
         } catch(SaxonApiException e) {
             throw new DepositException(e);
         }
-        this.context = new Context(this.spec,params);
+        this.context = new Context(this,this.spec,params);
         loadFlow();
     }
     
@@ -198,6 +202,22 @@ public class Flow {
         return flow;
     }
     
+    public void setStart(String start) {
+        this.start = start;
+    } 
+    
+    public String getStart() {
+        return this.start;
+    }
+    
+    public void setStop(String stop) {
+        this.stop = stop;
+    } 
+    
+    public String getStop() {
+        return this.stop;
+    }
+    
     public Context getContext() {
         return this.context;
     }
@@ -207,10 +227,22 @@ public class Flow {
     }
     
     public boolean run() throws DepositException {
+        return run(null,null);
+    }
+
+    public boolean run(String stop) throws DepositException {
+        return run(null,stop);
+    }
+
+    public boolean run(String start,String stop) throws DepositException {
+        if (start != null)
+            this.start = start;
+        if (stop != null)
+            this.stop = start;
         if (initFlow()) {
             DepositException t = null;
             try {
-                status = new Boolean(mainFlow());
+                status = new Boolean(mainFlow(start,stop));
             } catch (Exception e) {
                 status = new Boolean(false);
                 try {
@@ -243,13 +275,20 @@ public class Flow {
         }
         return next;
     }
-
-    private boolean mainFlow() throws DepositException {
+    
+    private boolean mainFlow(String start,String stop) throws DepositException {
         boolean next = true;
+        boolean run  = (start==null?true:false);
         for (ActionInterface action:mainActions) {
-            next = action.perform(context);
-            if (!next)
-                break;
+            if (!run && start!=null && action.getName().equals(start))
+                run = true;
+            else if (run && stop!=null && action.getName().equals(stop))
+                run = false;
+            if (run) {
+                next = action.perform(context);
+                if (!next)
+                    break;
+            }
         }
         return next;
     }

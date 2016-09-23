@@ -38,6 +38,11 @@ abstract public class AbstractAction implements ActionInterface {
     }
 
     @Override
+    public String getName() {
+        return this.name;
+    }
+
+    @Override
     public void setParameters(Map<String, XdmValue> params) {
         this.params = params;
     }

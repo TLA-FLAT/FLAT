@@ -41,13 +41,22 @@ public class Context {
     protected Logger actionLogger = logger;
     protected Marker marker = null;
     
+    protected Flow flow = null;
+    
     protected Map<String,XdmValue> props = new LinkedHashMap<>();
     
     protected SIP sip = null;
         
-    public Context(XdmNode spec,Map<String,XdmValue> params)  throws DepositException {
+    public Context(Flow flow,XdmNode spec,Map<String,XdmValue> params)  throws DepositException {
+        this.flow = flow;
         props.putAll(params);
         loadProperties(spec);
+    }
+    
+    // Flow
+    
+    public Flow getFlow() {
+        return flow;
     }
     
     // Properties

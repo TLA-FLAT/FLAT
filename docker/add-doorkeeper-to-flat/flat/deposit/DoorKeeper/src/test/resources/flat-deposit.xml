@@ -23,7 +23,7 @@
         <property name="fedoraServer" value="https://192.168.99.100:8443/fedora"/>
     </config>
     <init>
-        <action id="logSetup" name="log" class="nl.mpi.tla.flat.deposit.action.WorkspaceLogSetup">
+        <action name="logSetup" class="nl.mpi.tla.flat.deposit.action.WorkspaceLogSetup">
             <parameter name="dir" value="{$work}/logs"/>
         </action>        
     </init>
@@ -122,6 +122,9 @@
         -->
     </exception>
     <final>
-        <action id="logSetup" name="log" class="nl.mpi.tla.flat.deposit.action.WorkspaceLogCleanup"/>        
+        <action name="status" class="nl.mpi.tla.flat.deposit.action.UpdateSwordStatus">
+            <parameter name="props" value="{$work}/../deposit.properties"/>
+        </action>        
+        <action name="logTeardown" class="nl.mpi.tla.flat.deposit.action.WorkspaceLogCleanup"/>
     </final>
 </flow>
