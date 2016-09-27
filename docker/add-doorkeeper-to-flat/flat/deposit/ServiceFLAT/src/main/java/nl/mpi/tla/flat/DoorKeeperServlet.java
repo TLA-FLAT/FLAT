@@ -3,8 +3,13 @@ package nl.mpi.tla.flat;
 import nl.mpi.tla.flat.deposit.Flow;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -80,13 +85,52 @@ public class DoorKeeperServlet {
     public Response getSip(@PathParam("sip") String sip) {
         DoorKeeperContextListener doorkeeperContext = (DoorKeeperContextListener)servletContext.getAttribute("DOORKEEPER");
         Flow flow = doorkeeperContext.executed(sip);
-        if (flow == null)
-            return Response.status(Status.NOT_FOUND).entity("ERROR: The SIP["+sip+"] isn't executed!").type("text/plain").build();
-        File sd = new File(flow.getContext().getProperty("work", "/tmp").toString());
-        File log = sd.toPath().resolve("./logs/user-log.xml").toFile();
-        if (!log.isFile())
-            log = null;
-        Boolean status = flow.getStatus();
+        Boolean status = null;
+        File log = null;
+        // known Flow
+        if (flow != null) {
+            File sd = new File(flow.getContext().getProperty("work", "/tmp").toString());
+            log = sd.toPath().resolve("./logs/user-log.xml").toFile();
+            if (!log.isFile())
+                log = null;
+            status = flow.getStatus();
+        } else {
+            // unknown Flow, look if the SIP exists
+            Map<String,XdmValue> params = new HashMap();
+            params.put("sip", new XdmAtomicValue(sip));
+            try {
+                flow = this.getFlow(params);
+                String sipDir = flow.getContext().getProperty("work", "/tmp").toString();
+                File sd = new File(sipDir);
+                if (!sd.isDirectory()) {
+                    // SIP doesn't exist!
+                    return Response.status(Status.NOT_FOUND).entity("The SIP["+sip+"] directory["+sipDir+"] doesn't exist!").type("text/plain").build();
+                }
+                log = sd.toPath().resolve("./logs/user-log.xml").toFile();
+                if (!log.isFile())
+                    log = null;
+                File p = sd.toPath().resolve("../deposit.properties").toFile();
+                if (p.exists() && p.canRead()) {
+                    Properties props = new Properties();
+                    props.load(new FileInputStream(p));
+                    String state = props.getProperty("state.label", "SUBMITTED");
+                    if (state.equals("SUBMITTED")) {
+                        // SIP hasn't been executed, so nu PUT had happened!
+                        return Response.status(Status.NOT_FOUND).entity("ERROR: The SIP["+sip+"] isn't executed!").type("text/plain").build();
+                    } else if (state.equals("FAILED")) {
+                        // FAILED == REJECTED, cause is (hopefully) in the log
+                        status = new Boolean(false);
+                    } else if (state.equals("REJECTED")) {
+                        status = new Boolean(false);
+                    } else if (state.equals("ARCHIVED")) {
+                        status = new Boolean(true);
+                    }
+                }
+            } catch (Exception ex) {
+                return Response.status(Status.INTERNAL_SERVER_ERROR).entity(ex.getMessage()).type("text/plain").build();
+            }
+        }
+        // create response for an executed Flow
         XdmDestination destination = new XdmDestination();
         try {
             XsltTransformer wrap = Saxon.buildTransformer(this.getClass().getResource("/GETResult.xsl")).load();

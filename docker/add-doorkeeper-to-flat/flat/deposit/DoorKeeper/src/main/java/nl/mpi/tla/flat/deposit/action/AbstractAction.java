@@ -39,7 +39,9 @@ abstract public class AbstractAction implements ActionInterface {
 
     @Override
     public String getName() {
-        return this.name;
+        if (this.name!=null && !this.name.trim().equals(""))
+            return this.name;
+        return this.getClass().getName();
     }
 
     @Override

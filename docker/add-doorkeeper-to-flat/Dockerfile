@@ -4,6 +4,7 @@ MAINTAINER	Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 RUN apt-get update &&\
 	apt-get -y dist-upgrade &&\
 	apt-get -y install file
+# mediainfo
 
 #
 # FITS
@@ -11,19 +12,15 @@ RUN apt-get update &&\
 
 RUN mkdir /tmp/fits &&\
     cd /tmp/fits &&\
-    wget http://projects.iq.harvard.edu/files/fits/files/fits-0.10.2.zip &&\
-    unzip fits-0.10.2.zip &&\
-    mv fits-0.10.2 /app/fits &&\
+    wget http://projects.iq.harvard.edu/files/fits/files/fits-1.0.2.zip &&\
+    unzip fits-1.0.2.zip &&\
+    mv fits-1.0.2 /app/fits &&\
     mkdir /app/fits/log-lib &&\
     mv /app/fits/lib/slf4j-log4j12-1.7.12.jar /app/fits/log-lib &&\
     sed -i 's|APPCLASSPATH=""|APPCLASSPATH="${FITS_HOME}/log-lib/slf4j-log4j12-1.7.12.jar"|g' /app/fits/fits-env.sh &&\
     chmod +x /app/fits/*.sh &&\
-    wget https://github.com/harvard-lts/FITSservlet/archive/1.1.1.zip &&\
-    unzip 1.1.1.zip &&\
-    cd FITSservlet-1.1.1 &&\
-    echo "fits.jar.fallback.location=../../../app/fits/lib" > build.properties &&\
-    ant &&\
-    cp dist/fits-1.1.1.war /var/www/fedora/tomcat/webapps/fits.war &&\
+    wget http://projects.iq.harvard.edu/files/fits/files/fits-1.1.3.war &&\
+    cp fits-1.1.3.war /var/www/fedora/tomcat/webapps/fits.war &&\
     mkdir /var/www/fedora/tomcat/webapps/fits &&\
     cd /var/www/fedora/tomcat/webapps/fits &&\
     unzip -n ../fits.war &&\

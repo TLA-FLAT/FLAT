@@ -106,7 +106,7 @@ public class Flow {
             initActions = loadFlow(Saxon.xpath(spec, "/flow/init/action"));
             mainActions = loadFlow(Saxon.xpath(spec, "/flow/main/action"));
             exceptionActions = loadFlow(Saxon.xpath(spec, "/flow/exception/action"));
-            finalActions = loadFlow(Saxon.xpath(spec, "/flow/config/final/action"));
+            finalActions = loadFlow(Saxon.xpath(spec, "/flow/final/action"));
         } catch (SaxonApiException ex) {
             throw new DepositException(ex);
         }
@@ -267,51 +267,63 @@ public class Flow {
     }
     
     private boolean initFlow() throws DepositException {
+        Flow.logger.debug("BEGIN  init flow");
         boolean next = true;
         for (ActionInterface action:initActions) {
+            Flow.logger.debug("ACTION init flow["+action.getName()+"]");
             next = action.perform(context);
             if (!next)
                 break;
         }
+        Flow.logger.debug(" END   init flow["+next+"]");
         return next;
     }
     
     private boolean mainFlow(String start,String stop) throws DepositException {
+        Flow.logger.debug("BEGIN  main flow");
         boolean next = true;
         boolean run  = (start==null?true:false);
         for (ActionInterface action:mainActions) {
             if (!run && start!=null && action.getName().equals(start))
                 run = true;
-            else if (run && stop!=null && action.getName().equals(stop))
-                run = false;
             if (run) {
+                Flow.logger.debug("ACTION main flow["+action.getName()+"]");
                 next = action.perform(context);
                 if (!next)
                     break;
+                if (stop!=null && action.getName().equals(stop))
+                    break;
             }
         }
+        Flow.logger.debug(" END   main flow["+next+"]");
         return next;
     }
 
     private boolean exceptionFlow(Exception e) throws DepositException {
+        Flow.logger.debug("BEGIN  exception flow");
         boolean next = true;
         if (exceptionActions.isEmpty())
             Flow.logger.error(" exception during the flow! "+e.getMessage(),e);
         for (ActionInterface action:exceptionActions) {
+            Flow.logger.debug("ACTION exception flow["+action.getName()+"]");
             next = action.perform(context);
             if (!next)
                 break;
         }
+        Flow.logger.debug(" END   exception flow["+next+"]");
         return next;
     }
 
     private boolean finalFlow() throws DepositException {
+        Flow.logger.debug("BEGIN  final flow");
         boolean next = true;
         for (ActionInterface action:finalActions) {
+            Flow.logger.debug("ACTION final flow["+action.getName()+"]");
             next = action.perform(context);
             if (!next)
                 break;
         }
+        Flow.logger.debug(" END   final flow["+next+"]");
         return next;
     }
 
