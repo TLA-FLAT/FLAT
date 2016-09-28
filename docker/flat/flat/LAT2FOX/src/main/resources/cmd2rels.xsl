@@ -75,6 +75,48 @@
 						</type>
 					</relation>
 				</xsl:for-each>
+				<xsl:for-each select="$rec/cmd:CMD/cmd:Resources/cmd:IsPartOfList/cmd:IsPartOf">
+					<relation>
+						<src>
+							<xsl:choose>
+								<xsl:when test="normalize-space(@lat:localURI)=''">
+									<xsl:message>WRN: no local URI for IsPartOf[<xsl:value-of select="."/>] in CMD record[<xsl:value-of select="$src"/>], using ref instead.</xsl:message>
+									<xsl:choose>
+										<xsl:when test="starts-with(.,'hdl:') or starts-with(.,'http://hdl.handle.net/')">
+											<xsl:value-of select="replace(replace(.,'http://hdl.handle.net/','hdl:'),'@format=.+','')"/>
+										</xsl:when>
+										<xsl:otherwise>
+											<xsl:value-of select="resolve-uri(.,$src)"/>
+										</xsl:otherwise>
+									</xsl:choose>
+								</xsl:when>
+								<xsl:when test="starts-with(@lat:localURI,'hdl:')">
+									<xsl:value-of select="@lat:localURI"/>
+								</xsl:when>
+								<xsl:otherwise>
+									<xsl:value-of select="resolve-uri(@lat:localURI,$src)"/>
+								</xsl:otherwise>
+							</xsl:choose>
+						</src>
+						<from>
+							<xsl:choose>
+								<xsl:when test="starts-with(.,'hdl:') or starts-with(.,'http://hdl.handle.net/')">
+									<xsl:value-of select="replace(replace(.,'http://hdl.handle.net/','hdl:'),'@format=.+','')"/>
+								</xsl:when>
+								<xsl:otherwise>
+									<xsl:value-of select="resolve-uri(.,$src)"/>
+								</xsl:otherwise>
+							</xsl:choose>
+						</from>
+						<dst>
+							<xsl:value-of select="$src"/>
+						</dst>
+						<to>
+							<xsl:value-of select="$frm"/>
+						</to>
+						<type>Metadata</type>
+					</relation>
+				</xsl:for-each>
 			</xsl:for-each>
 		</relations>
 	</xsl:template>

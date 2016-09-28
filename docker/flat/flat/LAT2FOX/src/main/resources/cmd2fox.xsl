@@ -227,11 +227,11 @@
 		<xsl:variable name="dc">
 			<xsl:apply-templates mode="dc"/>
 		</xsl:variable>
-		<!--<xsl:message>DBG: look for parents (rels-to:dst|to) of [<xsl:value-of select="$pid"/>] or [<xsl:value-of select="$base"/>] </xsl:message>-->
+		<xsl:message>DBG: look for parents (rels-to:dst|to) of [<xsl:value-of select="$pid"/>] or [<xsl:value-of select="$base"/>] </xsl:message>
 		<xsl:variable name="parents" select="
 				distinct-values($rels-doc/key('rels-to', ($pid,
 				$base))[type = 'Metadata']/from)"/>
-		<!--<xsl:message>DBG: parents[<xsl:value-of select="string-join($parents,', ')"/>] </xsl:message>-->
+		<xsl:message>DBG: parents[<xsl:value-of select="string-join($parents,', ')"/>] </xsl:message>
 		<xsl:variable name="collections" select="cmd:collections()"/>
 		<foxml:digitalObject VERSION="1.1" PID="{$fid}" xmlns:xsii="http://www.w3.org/2001/XMLSchema-instance" xsii:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/definitions/1/0/foxml1-1.xsd">
 			<xsl:comment>
@@ -938,11 +938,11 @@
 		<xsl:copy>
 			<xsl:apply-templates select="@*" mode="#current"/>
 			<xsl:apply-templates select="cmd:MdCreator | cmd:MdCreationDate" mode="#current"/>
-			<MdSelfLink xmlns="http://www.clarin.eu/cmd/">
+			<cmd:MdSelfLink>
 				<xsl:copy-of select="cmd:MdSelfLink/@* except @lat:localURI"/>
 				<xsl:attribute name="lat:localURI" select="cmd:lat('lat:', $pid)"/>
 				<xsl:value-of select="$pid"/>
-			</MdSelfLink>
+			</cmd:MdSelfLink>
 			<xsl:apply-templates select="node() except (cmd:MdCreator | cmd:MdCreationDate | cmd:MdSelfLink)" mode="#current"/>
 		</xsl:copy>
 	</xsl:template>
