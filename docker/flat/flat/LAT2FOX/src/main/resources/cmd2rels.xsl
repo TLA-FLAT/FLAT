@@ -7,7 +7,7 @@
 	version="2.0">
 	
 	<xsl:param name="dir" select="'./'"/>
-        <xsl:param name="ext" select="'cmdi'"/>
+    <xsl:param name="ext" select="'cmdi'"/>
 	
 	<xsl:template name="main">
 		<relations>
