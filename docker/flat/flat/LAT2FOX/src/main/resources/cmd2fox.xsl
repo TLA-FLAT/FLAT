@@ -947,35 +947,39 @@
 	<xsl:template match="cmd:ResourceProxyList" mode="cmd">
 		<xsl:param name="pid" tunnel="yes"/>
 		<xsl:param name="base" tunnel="yes"/>
-		<xsl:apply-templates select="cmd:ResourceProxy[cmd:ResourceType != 'Metadata']" mode="#current"/>
-		<xsl:variable name="metadata" select="cmd:ResourceProxy[cmd:ResourceType = 'Metadata']"/>
-		<xsl:variable name="children" select="$rels-doc/key('rels-from', ($pid,$base))[type = 'Metadata']"/>
-		<!-- legimate children -->
-		<xsl:for-each select="$children">
-			<cmd:ResourceProxy>
-				<xsl:choose>
-					<xsl:when test="exists($metadata[exists((resolve-uri(cmd:ResourceRef,$base),cmd:ResourceRef/resolve-uri(@lat:localURI,$base))=(to,dst))][normalize-space(@id)!=''])">
-						<xsl:attribute name="id" select="$metadata[exists((resolve-uri(cmd:ResourceRef,$base),cmd:ResourceRef/resolve-uri(@lat:localURI,$base))=(to,dst))]/@id"/>
-					</xsl:when>
-					<xsl:otherwise>
-						<xsl:attribute name="id" select="generate-id()"/>
-					</xsl:otherwise>
-				</xsl:choose>
-				<cmd:ResourceType mimetype="application/x-cmdi+xml">Metadata</cmd:ResourceType>
-				<xsl:variable name="ref">
-					<cmd:ResourceRef lat:localURI="{dst}">
-						<xsl:value-of select="to"/>
-					</cmd:ResourceRef>
-				</xsl:variable>
-				<xsl:apply-templates select="$ref" mode="#current"/>
-			</cmd:ResourceProxy>
-		</xsl:for-each>
-		<!-- illegimate children (could be dead links) -->
-		<xsl:for-each select="$metadata">
-			<xsl:if test="empty((resolve-uri(cmd:ResourceRef,$base),cmd:ResourceRef/resolve-uri(@lat:localURI,$base))=($children/to,$children/dst))">
-				<xsl:apply-templates select="." mode="#current"/>
-			</xsl:if>
-		</xsl:for-each>
+		<xsl:copy>
+			<!-- process non-Metadata resource proxies -->
+			<xsl:apply-templates select="cmd:ResourceProxy[cmd:ResourceType != 'Metadata']" mode="#current"/>
+			<!-- process Metadata resource proxies -->
+			<xsl:variable name="metadata" select="cmd:ResourceProxy[cmd:ResourceType = 'Metadata']"/>
+			<xsl:variable name="children" select="$rels-doc/key('rels-from', ($pid,$base))[type = 'Metadata']"/>
+			<!-- legimate children -->
+			<xsl:for-each select="$children">
+				<cmd:ResourceProxy>
+					<xsl:choose>
+						<xsl:when test="exists($metadata[exists((resolve-uri(cmd:ResourceRef,$base),cmd:ResourceRef/resolve-uri(@lat:localURI,$base))=(to,dst))][normalize-space(@id)!=''])">
+							<xsl:attribute name="id" select="$metadata[exists((resolve-uri(cmd:ResourceRef,$base),cmd:ResourceRef/resolve-uri(@lat:localURI,$base))=(to,dst))]/@id"/>
+						</xsl:when>
+						<xsl:otherwise>
+							<xsl:attribute name="id" select="generate-id()"/>
+						</xsl:otherwise>
+					</xsl:choose>
+					<cmd:ResourceType mimetype="application/x-cmdi+xml">Metadata</cmd:ResourceType>
+					<xsl:variable name="ref">
+						<cmd:ResourceRef lat:localURI="{dst}">
+							<xsl:value-of select="to"/>
+						</cmd:ResourceRef>
+					</xsl:variable>
+					<xsl:apply-templates select="$ref" mode="#current"/>
+				</cmd:ResourceProxy>
+			</xsl:for-each>
+			<!-- illegimate children (could be dead links) -->
+			<xsl:for-each select="$metadata">
+				<xsl:if test="empty((resolve-uri(cmd:ResourceRef,$base),cmd:ResourceRef/resolve-uri(@lat:localURI,$base))=($children/to,$children/dst))">
+					<xsl:apply-templates select="." mode="#current"/>
+				</xsl:if>
+			</xsl:for-each>
+		</xsl:copy>
 	</xsl:template>
 
 	<xsl:template match="cmd:ResourceRef" mode="cmd">
