@@ -932,11 +932,11 @@
 		<xsl:copy>
 			<xsl:apply-templates select="@*" mode="#current"/>
 			<xsl:apply-templates select="cmd:MdCreator | cmd:MdCreationDate" mode="#current"/>
-			<cmd:MdSelfLink>
+			<MdSelfLink xmlns="http://www.clarin.eu/cmd/">
 				<xsl:copy-of select="cmd:MdSelfLink/@* except @lat:localURI"/>
 				<xsl:attribute name="lat:localURI" select="cmd:lat('lat:', $pid)"/>
 				<xsl:value-of select="$pid"/>
-			</cmd:MdSelfLink>
+			</MdSelfLink>
 			<xsl:apply-templates select="node() except (cmd:MdCreator | cmd:MdCreationDate | cmd:MdSelfLink)" mode="#current"/>
 		</xsl:copy>
 	</xsl:template>
@@ -955,7 +955,7 @@
 			<xsl:variable name="children" select="$rels-doc/key('rels-from', ($pid,$base))[type = 'Metadata']"/>
 			<!-- legimate children -->
 			<xsl:for-each select="$children">
-				<cmd:ResourceProxy>
+				<ResourceProxy xmlns="http://www.clarin.eu/cmd/">
 					<xsl:choose>
 						<xsl:when test="exists($metadata[exists((resolve-uri(cmd:ResourceRef,$base),cmd:ResourceRef/resolve-uri(@lat:localURI,$base))=(to,dst))][normalize-space(@id)!=''])">
 							<xsl:attribute name="id" select="$metadata[exists((resolve-uri(cmd:ResourceRef,$base),cmd:ResourceRef/resolve-uri(@lat:localURI,$base))=(to,dst))]/@id"/>
@@ -964,14 +964,14 @@
 							<xsl:attribute name="id" select="generate-id()"/>
 						</xsl:otherwise>
 					</xsl:choose>
-					<cmd:ResourceType mimetype="application/x-cmdi+xml">Metadata</cmd:ResourceType>
+					<ResourceType mimetype="application/x-cmdi+xml">Metadata</ResourceType>
 					<xsl:variable name="ref">
-						<cmd:ResourceRef lat:localURI="{dst}">
+						<ResourceRef lat:localURI="{dst}">
 							<xsl:value-of select="to"/>
-						</cmd:ResourceRef>
+						</ResourceRef>
 					</xsl:variable>
 					<xsl:apply-templates select="$ref" mode="#current"/>
-				</cmd:ResourceProxy>
+				</ResourceProxy>
 			</xsl:for-each>
 			<!-- illegimate children (could be dead links) -->
 			<xsl:for-each select="$metadata">
