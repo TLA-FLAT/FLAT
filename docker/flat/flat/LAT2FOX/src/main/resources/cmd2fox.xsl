@@ -227,12 +227,55 @@
 		<xsl:variable name="dc">
 			<xsl:apply-templates mode="dc"/>
 		</xsl:variable>
-		<xsl:message>DBG: look for parents (rels-to:dst|to) of [<xsl:value-of select="$pid"/>] or [<xsl:value-of select="$base"/>] </xsl:message>
-		<xsl:variable name="parents" select="
+		<xsl:variable name="parents" as="xs:string*">
+			<xsl:message>DBG: look for relations (rels-to:dst|to) of [<xsl:value-of select="$pid"/>] or [<xsl:value-of select="$base"/>] </xsl:message>
+			<xsl:variable name="rels" select="
 				distinct-values($rels-doc/key('rels-to', ($pid,
 				$base))[type = 'Metadata']/from)"/>
-		<xsl:message>DBG: parents[<xsl:value-of select="string-join($parents,', ')"/>] </xsl:message>
-		<xsl:variable name="collections" select="cmd:collections()"/>
+			<xsl:choose>
+				<xsl:when test="exists($rels)">
+					<xsl:for-each select="$rels">
+						<xsl:sequence select="cmd:lat('lat:',current())"/>
+					</xsl:for-each>
+				</xsl:when>
+				<xsl:when test="exists($rec/cmd:CMD/cmd:Header/cmd:IsPartOfList/cmd:IsPartOf)">
+					<xsl:for-each select="$rec/cmd:CMD/cmd:Header/cmd:IsPartOfList/cmd:IsPartOf">
+						<xsl:choose>
+							<xsl:when test="normalize-space(@lat:flatURI)!=''">
+								<xsl:sequence select="@lat:flatURI"/>
+							</xsl:when>
+							<xsl:otherwise>
+								<xsl:choose>
+									<xsl:when test="starts-with(.,'lat:')">
+										<xsl:sequence select="."/>
+									</xsl:when>
+									<xsl:when test="starts-with(.,'hdl:') or starts-with(.,'http://hdl.handle.net/')">
+										<xsl:sequence select="cmd:lat('lat:',replace(replace(.,'http://hdl.handle.net/','hdl:'),'@format=.+',''))"/>
+									</xsl:when>
+									<xsl:otherwise>
+										<xsl:sequence select="cmd:lat('lat:',resolve-uri(.,$base))"/>
+									</xsl:otherwise>
+								</xsl:choose>
+							</xsl:otherwise>
+						</xsl:choose>
+					</xsl:for-each>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:variable name="collections" select="cmd:collections()"/>
+					<xsl:choose>
+						<xsl:when test="exists($collections)">
+							<xsl:for-each select="$collections">
+								<xsl:sequence select="current()"/>
+							</xsl:for-each>
+						</xsl:when>
+						<xsl:otherwise>
+							<xsl:sequence select="'islandora:compound_collection'"/>
+						</xsl:otherwise>
+					</xsl:choose>
+				</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+		<xsl:message>DBG: parents[<xsl:value-of select="string-join($parents,', ')"/>]</xsl:message>
 		<foxml:digitalObject VERSION="1.1" PID="{$fid}" xmlns:xsii="http://www.w3.org/2001/XMLSchema-instance" xsii:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/definitions/1/0/foxml1-1.xsd">
 			<xsl:comment>
 				<xsl:text>Source: </xsl:text>
@@ -319,26 +362,10 @@
 															<xsl:text>1</xsl:text>
 														</xsl:element>
 														<!-- CMD object has to become a member of the collections the compound is a member of -->
-														<xsl:choose>
-															<xsl:when test="exists($parents)">
-																<xsl:for-each select="$parents">
-																	<fedora:isMemberOfCollection rdf:resource="info:fedora/{cmd:lat('lat:',current())}"/>
-																</xsl:for-each>
-															</xsl:when>
-															<xsl:otherwise>
-																<xsl:choose>
-																	<xsl:when test="exists($collections)">
-																		<xsl:for-each select="$collections">
-																			<fedora:isMemberOfCollection rdf:resource="info:fedora/{current()}"/>
-																		</xsl:for-each>
-																	</xsl:when>
-																	<xsl:otherwise>
-																		<fedora:isMemberOfCollection rdf:resource="info:fedora/islandora:compound_collection"/>
-																	</xsl:otherwise>
-																</xsl:choose>
-															</xsl:otherwise>
-														</xsl:choose>
-														<!-- a CMD object uses the cmdi content model and is a member of the cmdi collection -->
+														<xsl:for-each select="$parents">
+															<fedora:isMemberOfCollection rdf:resource="info:fedora/{current()}"/>
+														</xsl:for-each>
+														<!-- a CMD object uses the CMDI content model -->
 														<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_cmdiCModel"/>
 													</rdf:Description>
 												</rdf:RDF>
@@ -398,26 +425,9 @@
 						<rdf:RDF xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:fedora-model="info:fedora/fedora-system:def/model#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 							<rdf:Description rdf:about="info:fedora/{$fid}">
 								<!-- relationships to (parent) collections -->
-								<xsl:choose>
-									<xsl:when test="exists($parents)">
-										<xsl:for-each select="$parents">
-											<fedora:isMemberOfCollection rdf:resource="info:fedora/{cmd:lat('lat:',current())}"/>
-										</xsl:for-each>
-									</xsl:when>
-									<xsl:otherwise>
-										<!--<xsl:message>DBG: NO parents[<xsl:value-of select="string-join($parents,', ')"/>] </xsl:message>-->
-										<xsl:choose>
-											<xsl:when test="exists($collections)">
-												<xsl:for-each select="$collections">
-													<fedora:isMemberOfCollection rdf:resource="info:fedora/{current()}"/>
-												</xsl:for-each>
-											</xsl:when>
-											<xsl:otherwise>
-												<fedora:isMemberOfCollection rdf:resource="info:fedora/islandora:compound_collection"/>
-											</xsl:otherwise>
-										</xsl:choose>
-									</xsl:otherwise>
-								</xsl:choose>
+								<xsl:for-each select="$parents">
+									<fedora:isMemberOfCollection rdf:resource="info:fedora/{current()}"/>
+								</xsl:for-each>
 								<!-- if the CMD has references to other metadata files it's a collection -->
 								<xsl:if test="sx:evaluate($rec, $always-collection-eval, $NS) or exists(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType = 'Metadata'])">
 									<fedora-model:hasModel rdf:resource="info:fedora/islandora:collectionCModel"/>
@@ -733,25 +743,9 @@
 														</xsl:otherwise>
 													</xsl:choose>
 													<!-- resource has to become a member of the collection the compound is a member of -->
-													<xsl:choose>
-														<xsl:when test="exists($parents)">
-															<xsl:for-each select="$parents">
-																<fedora:isMemberOfCollection rdf:resource="info:fedora/{cmd:lat('lat:',current())}"/>
-															</xsl:for-each>
-														</xsl:when>
-														<xsl:otherwise>
-															<xsl:choose>
-																<xsl:when test="exists($collections)">
-																	<xsl:for-each select="$collections">
-																		<fedora:isMemberOfCollection rdf:resource="info:fedora/{current()}"/>
-																	</xsl:for-each>
-																</xsl:when>
-																<xsl:otherwise>
-																	<fedora:isMemberOfCollection rdf:resource="info:fedora/islandora:compound_collection"/>
-																</xsl:otherwise>
-															</xsl:choose>
-														</xsl:otherwise>
-													</xsl:choose>
+													<xsl:for-each select="$parents">
+														<fedora:isMemberOfCollection rdf:resource="info:fedora/{current()}"/>
+													</xsl:for-each>
 													<!-- add specific content models for specific MIME types -->
 													<xsl:choose>
 														<xsl:when test="starts-with($resMIME,'audio/')">
@@ -946,6 +940,43 @@
 			<xsl:apply-templates select="node() except (cmd:MdCreator | cmd:MdCreationDate | cmd:MdSelfLink)" mode="#current"/>
 		</xsl:copy>
 	</xsl:template>
+	
+	<!-- skip the back links -->
+	<xsl:template match="cmd:IsPartOfList" mode="cmd"/>
+	
+	<xsl:template match="cmd:ResourceProxyList" mode="cmd">
+		<xsl:param name="pid" tunnel="yes"/>
+		<xsl:param name="base" tunnel="yes"/>
+		<xsl:apply-templates select="cmd:ResourceProxy[cmd:ResourceType != 'Metadata']" mode="#current"/>
+		<xsl:variable name="metadata" select="cmd:ResourceProxy[cmd:ResourceType = 'Metadata']"/>
+		<xsl:variable name="children" select="$rels-doc/key('rels-from', ($pid,$base))[type = 'Metadata']"/>
+		<!-- legimate children -->
+		<xsl:for-each select="$children">
+			<cmd:ResourceProxy>
+				<xsl:choose>
+					<xsl:when test="exists($metadata[exists((resolve-uri(cmd:ResourceRef,$base),cmd:ResourceRef/resolve-uri(@lat:localURI,$base))=(to,dst))][normalize-space(@id)!=''])">
+						<xsl:attribute name="id" select="$metadata[exists((resolve-uri(cmd:ResourceRef,$base),cmd:ResourceRef/resolve-uri(@lat:localURI,$base))=(to,dst))]/@id"/>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:attribute name="id" select="generate-id()"/>
+					</xsl:otherwise>
+				</xsl:choose>
+				<cmd:ResourceType mimetype="application/x-cmdi+xml">Metadata</cmd:ResourceType>
+				<xsl:variable name="ref">
+					<cmd:ResourceRef lat:localURI="{dst}">
+						<xsl:value-of select="to"/>
+					</cmd:ResourceRef>
+				</xsl:variable>
+				<xsl:apply-templates select="$ref" mode="#current"/>
+			</cmd:ResourceProxy>
+		</xsl:for-each>
+		<!-- illegimate children (could be dead links) -->
+		<xsl:for-each select="$metadata">
+			<xsl:if test="empty((resolve-uri(cmd:ResourceRef,$base),cmd:ResourceRef/resolve-uri(@lat:localURI,$base))=($children/to,$children/dst))">
+				<xsl:apply-templates select="." mode="#current"/>
+			</xsl:if>
+		</xsl:for-each>
+	</xsl:template>
 
 	<xsl:template match="cmd:ResourceRef" mode="cmd">
 		<xsl:param name="base" tunnel="yes"/>
@@ -981,9 +1012,7 @@
 				</xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
-		<xsl:variable name="hdl" select="
-				cmd:pid(($pid,
-				$lcl), $lvl)"/>
+		<xsl:variable name="hdl" select="cmd:pid(($pid, $lcl), $lvl)"/>
 		<xsl:choose>
 			<xsl:when test="starts-with($pid, 'file:') or starts-with($lcl, 'file:')">
 				<xsl:choose>
