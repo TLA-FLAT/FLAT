@@ -34,7 +34,7 @@
     <main>
         <action name="check workspace" class="nl.mpi.tla.flat.deposit.action.SIPLoad"/>
         <action name="assemble package" class="nl.mpi.tla.flat.deposit.action.PackageAssembly">
-            <parameter name="dir" value="{$work}/data"/>
+            <parameter name="dir" value="{$work}/resources"/>
             <parameter name="prefix" value="{$epicPrefix}"/>
  			<!--
  		    <parameter name="prefix" value="{$tlaHandlePrefix}"/>
@@ -52,7 +52,7 @@
         <action name="manual evaluation" class="nl.mpi.tla.flat.deposit.action.Evaluate"/>
         -->
         <action name="persist resources" class="nl.mpi.tla.flat.deposit.action.Persist">
-            <parameter name="resourcesDir" value="{$work}/data"/>
+            <parameter name="resourcesDir" value="{$work}/resources"/>
             <parameter name="policyFile" value="{$base}/policies/persistence-policy.xml"/>
             <parameter name="xpathDatasetName" value="replace(//*[name()='MdSelfLink'], 'hdl:{$epicPrefix}/','')"/>
             <!--
@@ -131,7 +131,7 @@
     </exception>
     <final>
         <action name="status" class="nl.mpi.tla.flat.deposit.action.UpdateSwordStatus">
-            <parameter name="props" value="{$work}/../deposit.properties"/>
+            <parameter name="props" value="{$work}/../../deposit.properties"/>
         </action>
         <action name="logTeardown" class="nl.mpi.tla.flat.deposit.action.WorkspaceLogCleanup"/>        
     </final>

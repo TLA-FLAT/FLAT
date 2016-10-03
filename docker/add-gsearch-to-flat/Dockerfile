@@ -84,9 +84,10 @@ RUN mkdir -p /tmp &&\
     cd /tmp &&\
     git clone -b 4.x https://github.com/discoverygarden/basic-solr-config.git &&\
     cd /tmp/basic-solr-config &&\
+	git checkout 3d741cd &&\
     git clone https://github.com/discoverygarden/islandora_transforms.git &&\
     cd /tmp/basic-solr-config/islandora_transforms &&\
-    git checkout 821b645 &&\
+    git checkout 5fe2b48 &&\
     cd /tmp/basic-solr-config &&\
     sed -i "s|/usr/local/fedora|$FEDORA_HOME|g" foxmlToSolr.xslt &&\
     sed -i "s|/usr/local/fedora|$FEDORA_HOME|g" islandora_transforms/slurp_all_MODS_to_solr.xslt &&\
