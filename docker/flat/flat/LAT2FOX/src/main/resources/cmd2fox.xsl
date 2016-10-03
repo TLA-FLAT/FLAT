@@ -238,8 +238,8 @@
 						<xsl:sequence select="cmd:lat('lat:',current())"/>
 					</xsl:for-each>
 				</xsl:when>
-				<xsl:when test="exists($rec/cmd:CMD/cmd:Header/cmd:IsPartOfList/cmd:IsPartOf)">
-					<xsl:for-each select="$rec/cmd:CMD/cmd:Header/cmd:IsPartOfList/cmd:IsPartOf">
+				<xsl:when test="exists($rec/cmd:CMD/cmd:Resources/cmd:IsPartOfList/cmd:IsPartOf)">
+					<xsl:for-each select="$rec/cmd:CMD/cmd:Resources/cmd:IsPartOfList/cmd:IsPartOf">
 						<xsl:choose>
 							<xsl:when test="normalize-space(@lat:flatURI)!=''">
 								<xsl:sequence select="@lat:flatURI"/>

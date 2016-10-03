@@ -34,13 +34,14 @@ RUN mkdir -p /app/flat/deposit/sword/cfg &&\
 ADD sword/logback.xml /app/flat/deposit/sword/cfg/logback.xml
 ADD sword/application.properties /app/flat/deposit/sword/cfg/application.properties
 RUN sed -i "s|FLAT_HOST|${FLAT_HOST}|g" /app/flat/deposit/sword/cfg/application.properties
-ADD sword/test-sip.zip /app/flat/deposit/test-sip.zip
     
 ENV EASY_DEPOSIT_HOME /app/flat/deposit/sword
 
 #
 # Add FLAT's own scripts and tools 
 #
+
+ADD flat/deposit/test/test-sip.zip /app/flat/deposit/test/test-sip.zip
 
 RUN mkdir -p /app/flat
 ADD flat/scripts/* /app/flat/
