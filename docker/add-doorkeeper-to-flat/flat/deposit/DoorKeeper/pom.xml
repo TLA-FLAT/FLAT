@@ -37,6 +37,12 @@
             <artifactId>fluent-hc</artifactId>
             <version>4.5.1</version>
         </dependency>
+        <!-- validation -->
+        <dependency>
+            <groupId>eu.clarin.cmdi</groupId>
+	    	<artifactId>cmdi-validator-core</artifactId>
+            <version>1.0.0</version>
+        </dependency>
         <!-- persistence -->
         <dependency>
             <groupId>commons-lang</groupId>

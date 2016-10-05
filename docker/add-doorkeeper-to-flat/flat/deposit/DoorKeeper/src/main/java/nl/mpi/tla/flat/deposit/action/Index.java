@@ -18,21 +18,14 @@ package nl.mpi.tla.flat.deposit.action;
 
 import java.io.InputStream;
 import java.net.Authenticator;
-import java.net.MalformedURLException;
 import java.net.PasswordAuthentication;
 import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.xml.transform.stream.StreamSource;
-import net.sf.saxon.s9api.XdmNode;
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
 import nl.mpi.tla.flat.deposit.Resource;
 import nl.mpi.tla.flat.deposit.SIP;
-import nl.mpi.tla.flat.deposit.util.Saxon;
 
 /**
  *
