@@ -34,7 +34,7 @@ sleep 10 &&\
 RUN cd /tmp/islandora &&\
 	wget "https://github.com/Islandora/php_lib/archive/7.x-1.5.zip" &&\
 	mv 7.x-1.5.zip php_lib-7.x-1.5.zip &&\
-	unzip php_lib-7.x-1.5.zip -d /var/www/html/ $DRUPAL_PROJECT/sites/all/modules/contrib/ &&\
+	unzip php_lib-7.x-1.5.zip -d /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
 	wget "https://github.com/Islandora/objective_forms/archive/7.x-1.5.zip" &&\
 	mv 7.x-1.5.zip objective_forms-7.x-1.5.zip &&\
