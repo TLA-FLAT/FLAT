@@ -424,14 +424,18 @@ function flat_deposit_ui_menu()
     $items['commitchanges'] = array(
         'title' => 'Commit changes',
         'type' => MENU_LOCAL_TASK,
-        'page callback' => 'drupal_get_form',
-        'page arguments' => array('flat_deposit_ui_commit_form'),
+        'page callback' => 'flat_deposit_ui_commit_changes',
+        'page arguments' => array('Under construction'),
         'access arguments' => array('use deposit module'));
 
 
     return $items;
 };
 
+
+function flat_deposit_ui_commit_changes($arg) {return $arg;
+
+}
 
 function flat_deposit_ui_workspace($arg) {
 
@@ -718,7 +722,7 @@ function flat_deposit_ui_cmdi_select_form($form, &$form_state){
         ],
     ];
 
-    $form['select_template_fieldset']['checkbox_ajax_trigger'] = array(
+    $form['select_template_fieldset']['checkbox__trigger'] = array(
         '#title' => t('Fill template with saved meta data'),
         '#type' => 'checkbox',
         '#ajax' => array(
@@ -775,18 +779,15 @@ function flat_deposit_ui_cmdi_select_ajax_callback ($form, &$form_state)
 
 function flat_deposit_ui_cmdi_select_form_validate($form, &$form_state){
     $node = $form_state['build_info']['args'][0];
-    $wrapper = entity_metadata_wrapper('node', $node);
-
-    $bundle = $node->title;
-    $collection = $wrapper->upload_collection->value();
     $template = $form_state['values']['cmdi_select'];
 
     module_load_include('php','flat_deposit_ui','Helpers/CMDI_Handler');
-    $cmd = new CMDI_Handler($bundle, $collection, $template);
+    $cmd = new CMDI_Handler($node, $template);
 
     if ($cmd->projectCmdiFileExists()) form_set_error ('ingest_error', t('CMDI file already exists at target location'));
     return $form;
 }
+
 
 function flat_deposit_ui_cmdi_select_form_submit($form, &$form_state){
     $template = $form_state['values']['cmdi_select'];
@@ -955,18 +956,17 @@ function flat_deposit_ui_cmdi_create_form_submit($form, &$form_state){
 
     // generate CMDI xml and save to disc
     module_load_include('php','flat_deposit_ui','Helpers/CMDI_Handler');
-    $cmd = new CMDI_Handler($bundle, $collection, $template);
+    $cmd = new CMDI_Handler($node, $template);
 
     # prepare xml
     $cmd->getXML();
-    $cmd->resources = $cmd->searchDir(USER_DRUPAL_DATA_DIR . "/$collection/$bundle");
-    $cmd->handles = $cmd->getHandles();
 
     # fill/change xml object
     $cmd->changeHeader();
-    $cmd->addResourcesToXml();
     $cmd->processFormData($form_state['values']);
     $cmd->addComponentInfoToXml();
+    #$cmd->resources = $cmd->searchDir(USER_DRUPAL_DATA_DIR . "/$collection/$bundle");
+    #$cmd->addResourcesToXml();
 
 
     $cmd->xml->asXML($cmd->export_file);
@@ -1001,6 +1001,36 @@ function flat_deposit_ui_form_alter(&$form, &$form_state, $form_id)
             hide($form['upload_exception']);
             hide($form['upload_cmdi']);
             hide($form['actions']['preview']);
+
+
+            // Hide location where data is stored if external is unchecked
+            /*
+            $form['upload_external']['und']['#ajax'] =
+                array(
+                'callback' => 'flat_deposit_ui_external_select_ajax_callback',
+                'wrapper' => 'upload-location-add-more-wrapper',
+                'method' => 'replace',
+                'effect' => 'fade',
+            );
+*/
+            $form['upload_location']['#states'] = array(
+
+                // Hide the settings when the cancel notify checkbox is disabled.
+                'visible' => array(
+
+                    ':input[name="upload_external[und]"]' => array('checked' => TRUE)));
+
+
+
+            $checked = isset($form_state['values']['upload_external']['und'][0]['value']) ? $form_state['values']['upload_external']['und'][0]['value'] : 0 ;
+            if (!$checked) {
+                #'#states' => array(
+                    #$form['upload_location']['#states']['visible'] => array(
+                #hide($form['upload_location']);
+            }else{
+               # show($form['upload_location']);
+                $a = 2;
+            }
 
 
             // Add individual 'select' options to drop down menu
@@ -1142,6 +1172,15 @@ function flat_deposit_ui_form_alter(&$form, &$form_state, $form_id)
 
 }
 
+function flat_deposit_ui_external_select_ajax_callback ($form, &$form_state)
+{
+
+    return $form['upload_location'];
+}
+
+
+
+
 function flat_deposit_ui_user_profile_owncloud_validate (&$form, &$form_state)
 {
     $oc = new OwnCloud();
@@ -1179,7 +1218,36 @@ function flat_deposit_ui_user_profile_owncloud_submit (&$form, &$form_state){
     }
 }
 
+function flat_bundle_validate($node, $form, &$form_state){
+    $node_wrapper = entity_metadata_wrapper('node', $node);
+    $external = $node_wrapper->upload_external->value();
+    $location = $node_wrapper->upload_location->value();
+    if ($external AND !$location){
+        form_set_error('flat_bundle','Location needs to be set when data is located on archive server');
+    }
 
+
+}
+
+
+// custom node submission handler. Removes value of local storage path if bool external is set to 0.
+function flat_deposit_ui_node_submit($node, $form, &$form_state){
+    $type = $node->type ;
+    switch ($type){
+        case 'flat_bundle':
+            $node_wrapper = entity_metadata_wrapper('node', $node);
+            $external = $node_wrapper->upload_external->value();
+
+            if (!$external){
+                $node_wrapper->upload_location->set(NULL);
+            }
+
+
+            break;
+
+    }
+
+}
 
 /**
  * Implements hook_delete().
@@ -1222,50 +1290,73 @@ function flat_bundle_delete($node){
 
 }
 
-function flat_bundle_add_node_form_validate($form, &$form_state){
+function flat_bundle_add_node_form_validate($form, &$form_state)
+{
     #dpm ($form_state);
+    $bundle_name = $form_state['values']['title'];
+    $collection = $form_state['values']['upload_collection']['und'][0]['value'];
+
     //Validate bundle name
     // no special characters
-    $bundle_name = $form_state['values']['title'];
     if (!preg_match('/^[a-zA-Z0-9\_]{2,40}+$/', $bundle_name)) {
         $message = 'Allowed are all letters, numbers and underscores (max length 40)';
         $field = 'upload_bundle';
 
-
-        form_set_error($field,$message);
+        form_set_error($field, $message);
         return $form;
     }
 
 
     //Check that bundle name is distinctive from existing bundles
-    $collection = $form_state['values']['upload_collection']['und'][0]['value'];
+    $user_id = $GLOBALS['user']->uid = "1";
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'flat_bundle')
+        ->propertyCondition('uid', $user_id)
+        ->fieldCondition('upload_collection', 'value', $collection, '=');
+
+    $result = $query->execute();
+    $nids = array_keys($result['node']);
+    $query = db_select('node', 'n')
+        ->fields('n', array('title'))
+        ->condition('n.nid', $nids, 'IN');
+
+    $results = $query->execute()->fetchAll();
 
 
-    if (file_exists(USER_DRUPAL_DATA_DIR . "/$collection")){
-        $dirs = scandir(USER_DRUPAL_DATA_DIR . "/$collection");
-        if (file_exists(USER_FREEZE_DIR . "/$collection")){ $dirs = array_merge($dirs, array_diff(scandir(USER_FREEZE_DIR . "/$collection"), array('..', '.')));}
-        foreach ($dirs as $dir){
-            if (strtolower($dir)==strtolower($bundle_name)){
-                $message = "Bundle with same or very similar bundle name exists in user data or freeze directory";
-                $field = 'bundle';
-                form_set_error($field,$message);
-                return $form;
-            }
-        };
+    foreach ($results as $result){
+        if (strtolower($result->title) == strtolower($bundle_name)) {
+            $message = "Bundle with same or very similar bundle name exists";
+            $field = 'bundle';
+            form_set_error($field, $message);
+            return $form;
+        }
     }
 
     // Check Owncloud availability and existence user account
     $oc = new OwnCloud();
     if (!$oc->noErrors){form_set_error('owncloud',$oc->error_message);}
 
-    // Add directory name to form_state
+
+    // Check if external location is accessible by drupal
+    $external = $form_state['values']['upload_external']['und'][0]['value']; #wrapper can"t be used during initiation. If this doesn't work use node_presave
+    if ($external){
+
+        $error = flat_deposit_ui_external_location_error($form_state['values']['upload_location']['und'][0]['value']);
+        if ($error){
+            form_set_error('external location', $error);
+            return $form;
+        }
+    }
+
     $form_state['values']['extra_values']['full_directory_path'] = USER_DRUPAL_DATA_DIR  . "/$collection/$bundle_name";
 
-    #form_set_error('','Testing');
+
 }
 
 
 function flat_bundle_add_node_form_submit($form, &$form_state){
+
     $bundle = $form_state['values']['title'];
     $collection = $form_state['values']['upload_collection']['und'][0]['value'];
 
@@ -1274,21 +1365,35 @@ function flat_bundle_add_node_form_submit($form, &$form_state){
     global $user;
     imce_initiate_profile ($user);
 
-    // Create collection directory if not existing
-    if (!file_exists(USER_DRUPAL_DATA_DIR . "/$collection")) {
-        drupal_mkdir(USER_DRUPAL_DATA_DIR . "/$collection");
-        drupal_set_message(t('Creating new collection folder'));
-    }
-    // Create bundle directory
-    $target = $form_state['values']['extra_values']['full_directory_path'];
-    drupal_mkdir($target);
-    drupal_mkdir($target . '/metadata');
-    drupal_mkdir($target . '/data');
+    $external = $form_state['values']['upload_external']['und'][0]['value']; #wrapper can"t be used during initiation. If this doesn't work use node_presave
+    if ($external) {
+        $a = module_load_include('inc', 'flat_deposit_ui', 'inc/config');
+        $config = get_configuration_ingest_service();
 
-    //create symbolic link in owncloud user directory and refresh to see new directory
+        $location = $form_state['values']['upload_location']['und'][0]['value'];
+        $target = $config['alternate_dir'] . USER . $config['alternate_subdir'] . "/" . $location;
+
+    } else {
+
+        // Create collection directory if not existing
+        if (!file_exists(USER_DRUPAL_DATA_DIR . "/$collection")) {
+            drupal_mkdir(USER_DRUPAL_DATA_DIR . "/$collection");
+            drupal_set_message(t('Creating new collection folder'));
+        }
+
+        $target = $form_state['values']['extra_values']['full_directory_path'];
+
+        // Create bundle directory
+        drupal_mkdir($target);
+        }
+
+    // create subdirectories
+    $subs = array('data', 'metadata');
+    foreach ($subs as $sub ) {if (!file_exists($target . '/metadata')) drupal_mkdir($target . '/'.  $sub);};
+
+
+    //Refresh owncloud user directory to see new data
     $oc = new OwnCloud();
-    #$oc->CreateCollectionDirectoryAndSync($collection);
-    #$oc->CreateProjectSymlinkAndSync(USER_DRUPAL_DATA_DIR , $collection, $bundle);
     $oc->UpdateUserFiles();
 
 }
@@ -1339,9 +1444,35 @@ function flat_bundle_freeze_node_form_validate($form, &$form_state){
         return $form;
     }
 
+
+    // Check Owncloud availability and existence user account
+    $oc = new OwnCloud();
+    if (!$oc->noErrors){
+        form_set_error('owncloud',$oc->error_message);
+        return $form;}
+
+
+    // Check if external location is accessible by drupal
+    $wrapper = entity_metadata_wrapper('node', $form_state["node"]);
+
+    if ($wrapper->upload_external->value()){
+
+        $error = flat_deposit_ui_external_location_error($wrapper->upload_location->value());
+        if ($error){
+            form_set_error('external location', $error);
+            return $form;
+        }
+
+        $a = module_load_include('inc', 'flat_deposit_ui', 'inc/config');
+        $config = get_configuration_ingest_service();
+
+        $alternate_full_path = $config['alternate_dir'] . USER . $config['alternate_subdir'] . "/" . $wrapper->upload_location->value();
+    }
+
     // In case upload folder contains one cmdi file, check if file a valid xml file?
-    if (count(glob(drupal_realpath(USER_DRUPAL_DATA_DIR . "/$collection/$bundle/metadata/*.cmdi"))) == 1) {
-        $cmdi = glob(drupal_realpath(USER_DRUPAL_DATA_DIR) . "/$collection/$bundle/metadata/*.cmdi")[0];
+    $cmdi_path = $wrapper->upload_external->value() ? $alternate_full_path : drupal_realpath( USER_DRUPAL_DATA_DIR . "/$collection/$bundle/");
+    if (count(glob("$cmdi_path/metadata/*.cmdi")) == 1) {
+        $cmdi = glob("$cmdi_path/metadata/*.cmdi")[0];
 
         $finfo = new finfo(FILEINFO_MIME, "/etc/magic");
         $mime = $finfo->file($cmdi);
@@ -1358,12 +1489,33 @@ function flat_bundle_freeze_node_form_validate($form, &$form_state){
 
         form_set_value($form['upload_cmdi'],array('und' => array(0 => array('value' => 1))), $form_state);
     }
-
-    // Check Owncloud availability and existence user account
-    $oc = new OwnCloud();
-    if (!$oc->noErrors){form_set_error('owncloud',$oc->error_message);}
 }
 
+/**
+ *
+ */
+function flat_deposit_ui_external_location_error($location)
+{
+// Check if external location is accessible by drupal
+
+
+    $a = module_load_include('inc', 'flat_deposit_ui', 'inc/config');
+    $config = get_configuration_ingest_service();
+
+    if (!is_writable($config['alternate_dir'])){
+        $message =  sprintf('External root directory %s  does not exist or is not writable. Please contact administrator',$config["alternate_dir"]);
+        return $message;
+    };
+
+    $alternate_full_path = $config['alternate_dir'] . USER . $config['alternate_subdir'] . "/" . $location;
+
+    if (!is_writable($alternate_full_path)){
+        $message = sprintf('External user directory %s does not exist or is not writable.',$alternate_full_path);
+        return $message;
+    };
+
+    return FALSE;
+}
 
 
 // Is called when no other node_form_submit is defined
@@ -1399,19 +1551,33 @@ function flat_bundle_freeze_node_form_submit($form, &$form_state){
 }
 
 /**
- * Executes the backend freeze of a bundle. Moves colection/bundle directory from drupal_data_user to backend
+ * Executes the freeze of a bundle. Freezing includes moving source data of the user directory (either drupal user data or external)
+ * to a different target (i.e. freeze) location.
+ * colection/bundle directory from drupal_data_user to backend
  *
  */
 function flat_bundle_freeze_bundle($node){
 
     $bundle = $node->title;
     $collection = field_get_items('node', $node, 'upload_collection')[0]['value'];
-    $collection_directory = drupal_realpath(USER_FREEZE_DIR) . "/$collection/";
-
-    $source = drupal_realpath(USER_DRUPAL_DATA_DIR) . "/$collection/$bundle";
     $target = USER_FREEZE_DIR . "/$collection/$bundle";
 
-    if (!file_exists($collection_directory)){drupal_mkdir($collection_directory);}
+    // create collection sub-directory if needed
+    $subdirectory = drupal_realpath(USER_FREEZE_DIR) . "/$collection/";
+    if (!file_exists($subdirectory)){drupal_mkdir($subdirectory);}
+
+    // define source depending on bundle characteristics
+    $wrapper = entity_metadata_wrapper('node', $node);
+    if ($wrapper->upload_external->value()){
+
+        $a = module_load_include('inc', 'flat_deposit_ui', 'inc/config');
+
+        $config = get_configuration_ingest_service();
+        $source = $config['alternate_dir'] . USER . $config['alternate_subdir'] . "/" . $wrapper->upload_location->value();
+
+    } else{
+        $source = drupal_realpath(USER_DRUPAL_DATA_DIR) . "/$collection/$bundle";
+    }
 
     $moved = rename($source, $target);
 
@@ -1426,8 +1592,6 @@ function flat_bundle_freeze_bundle($node){
 
         //remove symbolic link in owncloud user directory
         $oc = new OwnCloud();
-        #$oc->DeleteProjectSymlinkAndSync($collection, $bundle);
-        #$oc->DeleteCollectionDirectoryAndSync($collection);
         $oc->UpdateUserFiles();
         drupal_set_message(t('Project ' . $bundle . ' is valid and can be archived'));
     }
@@ -1462,28 +1626,74 @@ function flat_bundle_unfreeze_node_form_validate (&$form, &$form_state)
     }
     // Check Owncloud availability and existence user account
     $oc = new OwnCloud();
-    if (!$oc->noErrors){form_set_error('owncloud',$oc->error_message);}
+    if (!$oc->noErrors){
+        form_set_error('owncloud',$oc->error_message);
+        return $form;}
+
+    // Check if external location is accessible by drupal
+    $wrapper = entity_metadata_wrapper('node', $form_state["node"]);
+
+    $a = module_load_include('inc', 'flat_deposit_ui', 'inc/config');
+
+    if ($wrapper->upload_external->value()) {
+        $config = get_configuration_ingest_service();
+
+        if (!is_writable($config['alternate_dir'])) {
+            form_set_error('external location', sprintf('External root directory %s  does not exist or is not writable. Please contact administrator', $config["alternate_dir"]));
+            return $form;
+        };
+
+        $alternate_fullpath = $config['alternate_dir'] . USER . $config['alternate_subdir'] . "/" . $wrapper->upload_location->value();
+
+        if (!is_writable($alternate_fullpath)) {
+            form_set_error('external location', sprintf('External user directory %s does not exist or is not writable.', $alternate_fullpath));
+            return $form;
+        };
+    }
 
 }
 
 function flat_bundle_unfreeze_node_form_submit ($form, &$form_state)
 {
-    module_load_include('php', 'flat_deposit_ui', 'inc/php_functions');
+
+    //inserted
+/*
+
+
+    // define source depending on bundle characteristics
+*/
+    //end insert
+
     // extract bundle name from form data
     $node = $form_state['node'];
     $bundle = $node->title;
     $collection = field_get_items('node', $node, 'upload_collection')[0]['value'];
 
-
-    $collection_directory = drupal_realpath(USER_FREEZE_DIR) . "/$collection/";
     $source = USER_FREEZE_DIR . "/$collection/$bundle";
-    $target = drupal_realpath(USER_DRUPAL_DATA_DIR) . "/$collection/$bundle";
+
+    // define target location depending on bundle characteristics
+    $wrapper = entity_metadata_wrapper('node', $node);
+    if ($wrapper->upload_external->value()){
+
+        $a = module_load_include('inc', 'flat_deposit_ui', 'inc/config');
+
+        $config = get_configuration_ingest_service();
+        $target = $config['alternate_dir'] . USER . $config['alternate_subdir'] . "/" . $wrapper->upload_location->value();
+
+    } else{
+        $target = drupal_realpath(USER_DRUPAL_DATA_DIR) . "/$collection/$bundle";
+    }
+
 
     $moved = rename($source, $target);
 
-    if (is_dir_empty($collection_directory)){drupal_rmdir($collection_directory);}
-
     if ($moved) {
+
+        // remove collection sub-directory if it is otherwise empty
+        module_load_include('php', 'flat_deposit_ui', 'inc/php_functions');
+        $collection_directory = drupal_realpath(USER_FREEZE_DIR) . "/$collection/";
+        if (is_dir_empty($collection_directory)){drupal_rmdir($collection_directory);}
+
         // change value of status field
         $node_wrapper = entity_metadata_wrapper('node', $node);
         $node_wrapper->upload_status->set('open');

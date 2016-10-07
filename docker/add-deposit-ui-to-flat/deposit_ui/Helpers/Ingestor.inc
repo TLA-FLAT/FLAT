@@ -26,6 +26,8 @@ class Ingestor
     public $bag;
 
     public $pid;
+
+    public $nResources;
     /*
      * Constructor function for Ingestor class. Needs array of node data
      *
@@ -43,10 +45,59 @@ class Ingestor
 
         $this->backend_bundle_dir = FREEZE_DIR . "/" . $this->user->name. "/" . $this->wrapper->upload_collection->value() . "/" . $this->node->title;
 
-        $this->bag = array(
-            'bag_id'  => $this->user->name . "_" . $this->node->nid . "_" . $this->node->title .'_' . uniqid());
+        $this->bag = array();
+
+        $this->bag ['bag_id']  = $this->user->name . "_" . $this->node->nid . "_" . $this->node->title .'_' . uniqid();
+        $this->bag ['temp_extension'] = 'temp';
+        $this->bag ['temp_folder']  = $this->backend_bundle_dir . '/' . $this->bag ['temp_extension'];
+
+    }
 
 
+    
+    /**
+     * Method for loading an existing meta data file, and adding resources to it. Resouces can be either found in the freeze directory or,
+     * in case this option is chosen at a different location. Root path for alternate location is set in config.inc .
+     *
+     * @throws IngestServiceException
+     */
+    public function addResourcesToCMDI(){
+
+        // Load existing xml file
+        $bundle = $this->node->title;
+        $collection = $this->wrapper->upload_collection->value();
+        
+
+        module_load_include('php','flat_deposit_ui','Helpers/CMDI_Handler');
+        $cmd = new CMDI_Handler($this->node);
+
+        if (!$cmd->projectCmdiFileExists()){
+            throw new IngestServiceException ('No file with meta data found');
+        }
+
+        $cmd->getXML();
+
+        // clean up all resources before current resources are added
+        $c = $cmd->xml->Resources->ResourceProxyList->ResourceProxy->count();
+        for ($i = 0; $i < $c; $i++) {
+            unset($cmd->xml->Resources->ResourceProxyList->ResourceProxy[0]);
+        }
+
+        // scan all files of the bundle freeze directory and add theses as resources to the CMDI;
+        $resource_directory =  FREEZE_DIR . '/' . $this->user->name . "/$collection/$bundle/data" ;
+        $cmd->resources = $cmd->searchDir($resource_directory);
+
+
+        if (empty($cmd->resources)){
+            throw new IngestServiceException ('Data directory of upload bundle is empty (' . $resource_directory . ')');
+        }
+
+        $cmd->addResourcesToXml();
+        $cmd->xml->asXML($cmd->export_file);
+
+        //count number of added resources
+        $count = $cmd->xml->Resources->ResourceProxyList->ResourceProxy->count();
+        $this->nResources = $count;
     }
 
 
@@ -57,20 +108,35 @@ class Ingestor
 
     public function prepareBag()
     {
-        $command = BAG_EXE . ' baginplace ' . "\"" . $this->backend_bundle_dir . "\"";
+
+        mkdir($this->bag['temp_folder']);
+        mkdir($this->bag['temp_folder'] . '/data');
+
+        $command = 'cp -R "' . $this->backend_bundle_dir .  '/metadata" "' . $this->bag['temp_folder'] .  '/data"';
+        exec($command, $output, $return);
+        if ($return) {
+            $message = 'Could not copy metadata to temporary bag directory';
+            if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$output) ."\n", $message_type = 3 , ERROR_LOG_FILE );
+            throw new IngestServiceException ($message . implode(";\n",$output));
+        }
+
+        $command = BAG_EXE . ' baginplace ' . '"' . $this->bag['temp_folder'] .  '"';
         exec($command, $output, $return);
         if ($return) {
             $message = 'Error making bag';
             if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$output) ."\n", $message_type = 3 , ERROR_LOG_FILE );
             throw new IngestServiceException ($message . implode(";\n",$output));
         }
-        $command = BAG_EXE . ' update ' . "\"" . $this->backend_bundle_dir . "\"";
+
+        $command = BAG_EXE . ' update ' . '"' . $this->bag['temp_folder'] .  '"';
+
         exec($command, $output, $return);
         if ($return) {
             $message = 'Error updating bag info';
             if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message . ";\t". implode(" ",$output) ."\n", $message_type = 3 , ERROR_LOG_FILE );
             throw new IngestServiceException ($message . implode(";\n",$output));
         }
+
 
     }
 
@@ -81,7 +147,7 @@ class Ingestor
      */
     public function zipBag()
     {
-        $command = DEPOSIT_UI_PATH . "/Helpers/scripts/zip_sip.sh \"$this->backend_bundle_dir\" " . $this->node->title;
+        $command = DEPOSIT_UI_PATH . '/Helpers/scripts/zip_sip.sh "' . $this->bag['temp_folder'] .'" ' . $this->node->title;
         exec($command, $output_prep, $return);
 
         if ($return) {
@@ -94,37 +160,14 @@ class Ingestor
     /**
      * Create Bag at correct bag location
      *
-     * @throws IngestServiceException
-     */
-
-    public function doSword_commandline()
-    {
-
-        $command = "cd \"" . $this->backend_bundle_dir . "\"/../;" . SWORD_SCRIPT . " " . $this->node->title . ".zip " . $this->bag['bag_id'];
-        exec($command, $output_bag, $return);
-
-        // sleep because sword is slow
-        sleep(15);
-
-        if (!file_exists(BAG_DIR . '/' . $this->bag['bag_id'])) {
-            $message = 'Error doing sword. Check bag log (deposit/sword/tmp/' . $this->bag['bag_id'] . '/deposit.properties)';
-            if (LOG_ERRORS) error_log(date(DATE_RSS) . ";\t" . $message . ";\t" . implode(" ", $output_bag) . "\n", $message_type = 3, ERROR_LOG_FILE);
-            throw new IngestServiceException ($message . implode(";\n", $output_bag) . implode(";\n", $command));
-        }
-    }
-
-    /**
-     * Create Bag at correct bag location
-     *
      *
      * @throws IngestServiceException
      */
-
     public function doSword()
     {
         $cwd = getcwd();
         $zipname = $this->node->title . '.zip';
-        $path = $this->backend_bundle_dir . '/../';
+        $path = $this->backend_bundle_dir;
 
         chdir($path);
 
@@ -238,7 +281,7 @@ class Ingestor
 
         $config = get_configuration_doorkeeper();
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $config['url'] . $this->bag['bag_id']);
+        curl_setopt($ch, CURLOPT_URL, $config['url'] . $this->bag['bag_id'] ); #. '/' . $this->bag['temp_extension']);
         curl_setopt($ch, CURLOPT_PORT, $config['port']);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
@@ -324,33 +367,6 @@ class Ingestor
 
     }
 
-
-    /**
-     * Method extracting the fedora ID (PID) from CMDI metadata file
-     *
-     *
-     * @return bool|mixed in case CMDI file with MdSelfLink is found the fedora PID, otherwise FALSE
-     */
-    function getBundleFID(){
-
-        $fname = BAG_DIR . $this->bag['bag_id'] . "/". $this->node->title . "/metadata/record.cmdi";
-
-        if (file_exists($fname)) {
-            $xml = simplexml_load_file($fname);
-            $data_array = json_decode(json_encode((array)$xml));
-            $pid_bundle = $data_array->Header->MdSelfLink ;
-            $fid_bundle = preg_replace('/[^A-Za-z0-9]/', '_', $pid_bundle);
-            $fid_bundle = str_replace(array('hdl_'),array('lat:'),$fid_bundle) ;
-
-        }
-        if (!$fid_bundle OR $fid_bundle == ""){
-            $message = 'Could not extract Fedora ID for record.cmdi';
-            if (LOG_ERRORS) error_log ( date(DATE_RSS) . ";\t" . $message , $message_type = 3 , ERROR_LOG_FILE );
-            throw new IngestServiceException ($message);
-        }
-
-        $this->pid['bundle'] = $fid_bundle;
-    }
 
 
 
@@ -450,11 +466,20 @@ class Ingestor
         }
     }
 
+    public function deleteTempBag()
+    {
+        $dir = $this->bag['temp_folder'];
+        if (file_exists($dir)){
+            recursiveRmDir($dir);
+            rmdir ($dir);
+        }
+    }
+
 
     public function deleteZipfile()
     {
         // delete zip file
-        $zip = $this->backend_bundle_dir . '/../' . $this->node->title . ".zip";
+        $zip = $this->backend_bundle_dir . '/' . $this->node->title . ".zip";
         if (file_exists($zip)) {
             unlink($zip);
         }
@@ -486,32 +511,28 @@ class Ingestor
 
 
     public function create_blog_entry ($entry_type){
+        if ($entry_type == 'succeeded'){
+            $bdl = $this->pid['bundle'];
+            $bdl = preg_replace('/[^a-zA-Z0-9_:]/u', '_', $bdl);
+            $url_link = 'http://localhost/flat/islandora/object/' . $bdl ;
+        } elseif ($entry_type == 'failed'){
+            $url_link = 'node/' . $this->node->nid;
+        }
 
         $bundle = $this->node->title;
         $collection = $this->wrapper->upload_collection->value();
         $link_node = array(
             'theme' => 'link',
             'text' => 'here',
-            'path' => 'node/'.$this->node->nid,
+            'path' => $url_link,
             'options' => array(
                 'attributes' => array(),
                 'html' => FALSE
             ));
 
-        switch ($entry_type){
-            case 'success':
-                $value = sprintf("<p>%s %s</p><p>Archiving of %s belonging to %s succeeded.</p>",$bundle, $collection,$bundle, $collection);
-                $summary = sprintf("<p>Archiving of %s completed</p>",$bundle, $collection,$bundle, $collection);
-                break;
-            case 'failure':
-                $value = sprintf("<p>Archiving of %s has failed</p>",$bundle, $collection,$bundle, $collection);;
-                $summary = sprintf("<p>%s %s</p><p>Archiving of %s belonging to %s has failed. Check ". theme_link($link_node) ."</p>",$bundle, $collection,$bundle, $collection);
-                break;
-            default:
-                $value = "<p>blog entry type not set</p>";
-                $summary = "<p>blog entry type not set</p>";
-                break;
-        }
+        $summary = sprintf("<p>Archiving of %s %s</p>",$bundle, $entry_type);
+        $body = sprintf("<p>%s %s</p><p>Archiving of %s belonging to %s %s. Check ". theme_link($link_node) . '</p>',$bundle, $collection,$bundle, $collection, $entry_type);
+        $body = preg_replace(array('/lat_/') , array('lat%3A'), $body);
 
         $new_node = new stdClass();
         $new_node->type = 'blog';
@@ -525,24 +546,23 @@ class Ingestor
         $new_node->revision = 0;
         $new_node->body['und'][0]['format'] = 'full_html';
         $new_node->body['und'][0]['summary'] = $summary;
-        $new_node->body['und'][0]['value'] = $value;
+        $new_node->body['und'][0]['value'] = $body;
         node_save($new_node);
     }
 
 
     public function rollback()
     {
-        $this->deleteBagMeta();
+        $this->deleteTempBag();
         $this->deleteZipfile();
         $this->deleteBagDirectory();
         $this->deleteFOs();
     }
 
     public function cleanup(){
-        $this->deleteBagMeta();
+        $this->deleteTempBag();
         $this->deleteZipfile();
-        $this->deleteBagDirectory();
-        $this->deleteOriginal();
+        #$this->deleteOriginal();
     }
 
 }

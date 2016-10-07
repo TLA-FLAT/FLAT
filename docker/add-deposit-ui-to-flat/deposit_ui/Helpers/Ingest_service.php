@@ -17,7 +17,7 @@ require_once ($module_path . '/inc/config.inc');
 require_once ($module_path . '/inc/php_functions.php');
 require_once ($module_path . '/Helpers/Fedora_REST_API.inc');
 require_once ($module_path . '/Helpers/Ingestor.inc');
-
+require_once ($module_path . '/Helpers/CMDI_Handler.php');
 
 /*
  *  Definition of all variables and constants
@@ -35,17 +35,17 @@ define('LOG_ERRORS', $configuration['log_errors']);
 define('ERROR_LOG_FILE', $configuration['error_log_file']);
 define('SWORD_TMP_DIR', $configuration['sword_tmp_dir']);
 
-
-
-
 // Ingest routine
 $nid = $_POST['nid'];
 
 try {
     $ingest = new Ingestor($nid);
     #throw new IngestServiceException("Debugging");
+
     $ingest->wrapper->upload_status->set('processing');
     $ingest->wrapper->save();
+
+    $ingest->addResourcesToCMDI();
 
     $ingest->prepareBag();
     $ingest->zipBag();
@@ -56,15 +56,16 @@ try {
     $ingest->triggerDoorkeeper();
     $ingest->checkStatusDoorkeeper();
 
-    $ingest->getBundleFID();
     $ingest->getConstituentFIDs();
 
     $ingest->changeOwnerId();
 
     $ingest->cleanup();
 
-    $ingest->create_blog_entry('success');
-    node_delete_multiple(array($nid));
+    $ingest->create_blog_entry('succeeded');
+    #node_delete_multiple(array($nid));
+    $ingest->wrapper->upload_status->set('awaiting');
+    $ingest->wrapper->save();
 
 } catch (IngestServiceException $e) {
     $ingest->wrapper->upload_status->set('failed');

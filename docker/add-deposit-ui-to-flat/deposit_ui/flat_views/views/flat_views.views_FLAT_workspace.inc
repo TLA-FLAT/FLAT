@@ -31,6 +31,63 @@ $handler->display->display_options['exposed_form']['options']['autosubmit'] = TR
 $handler->display->display_options['pager']['type'] = 'full';
 $handler->display->display_options['pager']['options']['items_per_page'] = '10';
 $handler->display->display_options['style_plugin'] = 'table';
+$handler->display->display_options['style_options']['columns'] = array(
+    'title' => 'title',
+    'upload_collection' => 'upload_collection',
+    'upload_status' => 'upload_status',
+    'created' => 'created',
+    'edit_node' => 'edit_node',
+    'delete_node' => 'delete_node',
+);
+$handler->display->display_options['style_options']['default'] = '-1';
+$handler->display->display_options['style_options']['info'] = array(
+    'title' => array(
+        'sortable' => 0,
+        'default_sort_order' => 'asc',
+        'align' => '',
+        'separator' => '',
+        'empty_column' => 0,
+    ),
+    'upload_collection' => array(
+        'sortable' => 0,
+        'default_sort_order' => 'asc',
+        'align' => '',
+        'separator' => '',
+        'empty_column' => 0,
+    ),
+    'upload_status' => array(
+        'sortable' => 0,
+        'default_sort_order' => 'asc',
+        'align' => '',
+        'separator' => '',
+        'empty_column' => 0,
+    ),
+    'created' => array(
+        'sortable' => 0,
+        'default_sort_order' => 'asc',
+        'align' => '',
+        'separator' => '',
+        'empty_column' => 0,
+    ),
+    'edit_node' => array(
+        'align' => '',
+        'separator' => '',
+        'empty_column' => 0,
+    ),
+    'delete_node' => array(
+        'align' => '',
+        'separator' => '',
+        'empty_column' => 0,
+    ),
+);
+/* Header: Global: Text area */
+$handler->display->display_options['header']['area']['id'] = 'area';
+$handler->display->display_options['header']['area']['table'] = 'views';
+$handler->display->display_options['header']['area']['field'] = 'area';
+$handler->display->display_options['header']['area']['label'] = 'link_create_new_bundle';
+$handler->display->display_options['header']['area']['empty'] = TRUE;
+$handler->display->display_options['header']['area']['content'] = '<a href="node/add/flat-bundle">Inititate new bundle</a>';
+$handler->display->display_options['header']['area']['format'] = 'filtered_html';
 /* Header: Global: View area */
 $handler->display->display_options['header']['view_1']['id'] = 'view_1';
 $handler->display->display_options['header']['view_1']['table'] = 'views';
