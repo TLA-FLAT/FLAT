@@ -42,7 +42,7 @@
         </action>
         <action name="validate metadata" class="nl.mpi.tla.flat.deposit.action.Validate">
             <parameter name="schemaCache" value="{$base}/cache/schemas"/>
-            <!--<parameter name="rules" value="{$base}/policies/rules.sch"/>-->
+            <parameter name="rules" value="{$base}/policies/rules.sch"/>
         </action>
         <action name="validate resources" class="nl.mpi.tla.flat.deposit.action.FITS">
         	<parameter name="fitsService" value="{$fitsService}"/>
