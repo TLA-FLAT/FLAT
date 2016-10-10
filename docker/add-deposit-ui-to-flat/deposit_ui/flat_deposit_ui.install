@@ -377,10 +377,10 @@ function flat_deposit_ui_uninstall(){
     variable_del('owncloud_settings');
 
 
-    // Delete all flat_upload content type nodes
+    // Delete all flat_upload content type and notification nodes
     $nids = db_select('node','n')
         ->fields('n', array('nid'))
-        ->condition('type', array('flat_collection_name', 'flat_member', 'flat_bundle'), 'IN')
+        ->condition('type', array('flat_collection_name', 'flat_member', 'flat_bundle', 'blog'), 'IN')
         ->execute()
         ->fetchCol();
 
@@ -389,7 +389,7 @@ function flat_deposit_ui_uninstall(){
         drupal_set_message($t('Nodes containing Custom content types have been removed'));
     }
 
-
+    
     //Remove all custom content type fields and field instances and clean up entries in field_config / field_config_instance tables
     field_attach_delete_bundle('node','flat_bundle');
     field_attach_delete_bundle('user', 'user');

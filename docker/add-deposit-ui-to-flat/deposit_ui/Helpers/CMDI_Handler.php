@@ -16,7 +16,6 @@ class CMDI_Handler
 {
     public $bundle;
     public $collection;
-    public $handle_config;
     public $md_config;
     public $template;
     public $field_name;
@@ -31,21 +30,52 @@ class CMDI_Handler
 
     /**
      * CMDI_creator constructor.
+     * @param $file string    folder name where to export the xml file to
      * @param $bundle
      * @param $template
      */
-    public function __construct($bundle, $collection, $template)
+    public function __construct($node, $template='default')
     {
-        $this->handle_config = get_configuration_handle();
-        $this->md_config = get_configuration_metadata();
-        $this->bundle = $bundle;
-        $this->collection = $collection;
+        $wrapper = entity_metadata_wrapper('node', $node);
+
+        $this->bundle = $node->title;
+        $this->collection = $wrapper->upload_collection->value();
         $this->template = $template;
+        $this->user = user_load($node->uid);
+
+        $this->md_config = get_configuration_metadata();
+
         $this->field_name = $this->md_config['prefix'] . '-' . $template;
         $this->prefix = 'hdl:';
-        $this->export_file = USER_DRUPAL_DATA_DIR ."/$collection/$bundle/metadata/record" . $this->md_config['ext'];
+        $this->export_file = $this->determine_export_file($wrapper);
         
     }
+
+
+    /**
+     * Function dertermining location of CMDI. Depending on the bundles status this can be either the freeze directory or either the drupal data directory or an external directory
+     * @param $wrapper
+     * @return string
+     */
+    public function determine_export_file($wrapper){
+        $status = $wrapper->upload_status->value();
+        $external = $wrapper->upload_external->value();
+
+        if ($status == 'processing'){
+            $file = FREEZE_DIR . '/' . $this->user->name . "/$this->collection/$this->bundle/metadata/record.cmdi";
+        } elseif ($external){
+            $a = module_load_include('inc', 'flat_deposit_ui', 'inc/config');
+            $config = get_configuration_ingest_service();
+
+            $location = $wrapper->upload_location->value();
+            $file = $config['alternate_dir'] . USER . $config['alternate_subdir'] . "/$location/metadata/record.cmdi";
+        } else {
+            $file = USER_DRUPAL_DATA_DIR."/$this->collection/$this->bundle/metadata/record.cmdi";
+        }
+    return $file;
+    }
+
+
 
     /**
      * This method either loads a simpleXML object from an existing CMDI file or generates a CMDI tree with only the basic nodes.
@@ -106,32 +136,6 @@ class CMDI_Handler
     }
 
 
-    /**
-     * Implements the request for handles; In test mode local unique IDs are created. Otherwise the
-     *
-     * @return array handles for each file in directory
-     */
-    public function getHandles()
-    {
-        $handles = [];
-        if ($this->handle_config['test_mode']){
-            $uid = uniqid();
-
-            $handles ['cmd'] =  $this->handle_config['prefix'] . '1839/00-0000-' . substr($uid,0,4) . "-" . substr($uid,4,4) . "-" . substr($uid,8,4) . "-". substr($uid,12);
-
-            foreach ($this->resources as $fid => $file) {
-                $uid = uniqid();
-                $handles [$fid] = $this->handle_config['prefix'] . '1839/00-0000-' . substr($uid, 0, 4) . "-" . substr($uid, 4, 4) . "-" . substr($uid, 8, 4) . "-" . substr($uid, 12);
-            }
-
-    }   else {
-            //Todo: implement here to get handles from handle server
-
-            $hdl = new HandleRESTAPI();
-        }
-        return $handles;
-    }
-
 
     /**
      * This function recursively    searches for files in the user data directory
@@ -143,7 +147,7 @@ class CMDI_Handler
     public function searchDir($directory){
 
 
-        $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory . '/data'));
+        $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory,RecursiveDirectoryIterator::FOLLOW_SYMLINKS));
 
         $resources = array();
         $c=10000; # counter for resource ID (each resource within an CMDI-object needs an unique identifier)
@@ -158,7 +162,10 @@ class CMDI_Handler
             $resources[$fid] = $file->getPathname();
 
         }
+
         return $resources;
+
+
     }
 
 
@@ -172,7 +179,7 @@ class CMDI_Handler
         foreach ($this->resources as $fid => $file) {
 
             // transform drupal path to relative path as needed for fedora ingest
-            $localURI = str_replace(USER_DRUPAL_DATA_DIR ."/" . $this->collection ."/" . $this->bundle, "..", $file);
+            #$localURI = str_replace(USER_FREEZE_DIR ."/" . $this->collection ."/" . $this->bundle, "..", $file);
 
             # Mimetype of the file;
             $mime = mime_content_type(drupal_realpath($file)) ;
@@ -180,13 +187,9 @@ class CMDI_Handler
             $data = $this->xml->Resources->ResourceProxyList->addChild('ResourceProxy');
             $data->addAttribute('id', $fid);
             $data->addChild('ResourceType', 'Resource');
-            $data->addChild('ResourceRef', $localURI);
+            $data->addChild('ResourceRef', $file);
 
             $data->ResourceType->addAttribute('mimetype', $mime);
-
-
-            //$data->ResourceRef->addAttribute("xmlns:" . $this->md_config['prefix'] .":localURI", $localURI);
-
 
         }
     }
@@ -219,6 +222,7 @@ class CMDI_Handler
 
         $clean_data['Date'] = $date;
         $clean_data['Date'] = $date;
+
         // add all template specific fields to the xml
         foreach ($form_data['form_fields_template'] as $field){
             if ($field != "field_1"){
@@ -371,23 +375,6 @@ function get_example_md ($template){
 
 
 
-function get_example_handles ($bundle)
-{
-    $handles = array();
-    switch ($bundle) {
-        case 'First_try':
-            $handles ['cmd'] = '11142/00-E3C00A6B-CFB2-4BE4-BB90-E410A36F5F3B';
-        case 'DvR_Sandbox':
-            $handles['cmd'] = '1839/00-0000-0000-0415-4A87-5';
-            $handles['d111111'] = '1839/00-0000-0000-0215-4A87-5';
-            $handles['d111112'] = '1839/00-0000-0000-0315-4A87-5';
-        case 'Test2':
-            $handles['cmd'] = '1839/00-0000-0000-0815-4A87-5';
-            $handles['d111111'] = '1839/00-0000-0000-0715-4A87-5';
-            $handles['d111112'] = '1839/00-0000-0000-0615-4A87-5';
-    }
-    return $handles;
-}
 
 function get_processing_instructions($profile){
     switch ($profile){

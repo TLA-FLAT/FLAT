@@ -1,25 +1,6 @@
 FROM        flat
 MAINTAINER	Daniel von Rhein <daniel.vonrhein@mpi.nl>
 
-#Build xdebug library
-RUN apt-get update &&\
-    apt-get -y dist-upgrade &&\
-    apt-get -y install php-pear &&\
-    apt-get -y install php7.0-dev  &&\
-    apt-get install net-tools &&\
-    pecl install xdebug
-
-#Add xdebug configuration to php.ini
-COPY xdebug/xdebug.conf /tmp/
-RUN cat /tmp/xdebug.conf > /etc/php/7.0/apache2/conf.d/xdebug.ini
-
-
-
-#Add SSH root-account to docker image
-RUN echo 'root:root' | chpasswd  &&\
-	sed -i '/#PermitRootLogin/s/^#//g' /etc/ssh/sshd_config &&\
-	sed -e 's/#PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
-
 # Add deposit module to installation
 # ADD deposit_ui /var/www/html/flat/sites/all/modules/custom/flat_deposit_ui
 
@@ -27,7 +8,6 @@ RUN echo 'root:root' | chpasswd  &&\
 RUN cd /var/www/html/flat/sites/all/libraries/ &&\
     wget http://download.cksource.com/CKEditor/CKEditor/CKEditor%203.6.2/ckeditor_3.6.2.tar.gz &&\
     tar xzvf ckeditor_3.6.2.tar.gz
-
 
 # change drupal default setting of database host from localhost to 127.0.0.1 as this is more reliable  
 RUN sed -e "s/'host' => 'localhost'/'host' => '127.0.0.1'/" /var/www/html/flat/sites/default/settings.php
@@ -41,10 +21,6 @@ RUN cd /var/www/html/flat/ &&\
     sleep 10 &&\
     /var/www/composer/vendor/drush/drush/drush dis toolbar -y &&\
     /var/www/composer/vendor/drush/drush/drush pmu toolbar -y &&\
-    /var/www/composer/vendor/drush/drush/drush dl admin_menu -y &&\
-    /var/www/composer/vendor/drush/drush/drush en admin_menu -y &&\
-    /var/www/composer/vendor/drush/drush/drush -y dl devel  &&\
-    /var/www/composer/vendor/drush/drush/drush -y en devel  &&\
     /var/www/composer/vendor/drush/drush/drush dl entity -y  &&\ 
     /var/www/composer/vendor/drush/drush/drush en entity -y  &&\
     /var/www/composer/vendor/drush/drush/drush dl wysiwyg -y  &&\
@@ -55,9 +31,8 @@ RUN cd /var/www/html/flat/ &&\
     /var/www/composer/vendor/drush/drush/drush en imce_wysiwyg -y   &&\
     /var/www/composer/vendor/drush/drush/drush dl httprl -y  &&\
     /var/www/composer/vendor/drush/drush/drush en httprl -y  &&\
-    /var/www/composer/vendor/drush/drush/drush -y dl feeds  &&\
-    /var/www/composer/vendor/drush/drush/drush -y en feeds  &&\
-    /var/www/composer/vendor/drush/drush/drush -y en feeds_ui  &&\
+#    /var/www/composer/vendor/drush/drush/drush -y dl content_access  &&\
+#    /var/www/composer/vendor/drush/drush/drush -y en content_access  &&\
     /etc/init.d/postgresql stop 
 
 	
@@ -73,7 +48,6 @@ RUN cd /var/www/html/flat/ &&\
     /var/www/composer/vendor/drush/drush/drush -y en views_ui &&\
     /etc/init.d/postgresql stop 
 #    /var/www/composer/vendor/drush/drush/drush en flat_deposit_ui -y
-
 
 # add module configuration
 ENV PGPASSWORD=fedora

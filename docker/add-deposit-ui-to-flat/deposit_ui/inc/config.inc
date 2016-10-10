@@ -57,19 +57,12 @@ function get_configuration_ingest_service()
         # directory to log errors)
         'error_log_file' => '/app/flat/backend/Ingest_service_error.log',
         # directory sword uses to temporarily save bags
-        'sword_tmp_dir' => '/app/flat/deposit/sword/tmp/'
-    );
-}
-
-function get_configuration_handle()
-{
-    return array(
-        # Whether or not to use a handle server; If false, locally unique IDs will be generated instead
-        'test_mode' => TRUE,
-        'prefix' => 'hdl:',
-        'schema' => 'http',
-        'host_name' => 'hostname',
-        'port' => 8000,
+        'sword_tmp_dir' => '/app/flat/deposit/sword/tmp/',
+        # root of the alternative directory where ingest service can search for archiving files.
+        # This root need to contain user data folders named just as the LDAP login name
+        'alternate_dir' => '/var/www/owncloud/data/',
+        # (optional) subdirectory following user login name (e.g. in owncloud this is '/files')
+        'alternate_subdir' => '/files'
 
     );
 }
