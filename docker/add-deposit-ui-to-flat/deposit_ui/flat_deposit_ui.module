@@ -160,12 +160,21 @@ function collection_form($form, $form_state, $entity){
     $form['collection_name'] = array(
         '#title' => t('Collection Name'),
         '#type' => 'textfield',
+        '#description' => 'Unique, pragmatic name for the collection (e.g. acronym)',
         '#default_value' => isset($entity->collection_name) ? $entity->collection_name : '',
+        '#required' => TRUE);
+
+    $form['collection_tree'] = array(
+        '#title' => t('Collection full path'),
+        '#type' => 'textfield',
+        '#description' => 'Complete path of collection (from root collection to final subdirectory)',
+        '#default_value' => isset($entity->collection_tree) ? $entity->collection_tree : '',
         '#required' => TRUE);
 
     $form ['member'] = array(
         '#type' => 'textfield',
         '#title' => t('Member Name'),
+        '#description' => 'User that is member of this collection',
         '#default_value' => isset($entity->member) ? $entity->member : '',
         '#required' => TRUE);
 
@@ -185,10 +194,64 @@ function collection_form($form, $form_state, $entity){
     return $form;
 }
 
+/**
+ *Add validation logic
+ *
+ */
+function collection_form_validate($form, &$form_state){
+    
+    module_load_include('inc','flat_deposit_ui','inc/manage_collections');
+    $method = $form_state['build_info']['args'][1];
+    
+    switch ($method){
+        case 'edit':{
+            
+        }
+
+    }
+
+    //Checks collection name
+    // sanity
+    if (!preg_match('!^[a-zA-Z0-9_]+$!', $form_state['values']['collection_name'])) {
+        form_set_error('collection_creation', t('The collection name must contain only letters, numbers, slashes, and underscores.'));
+        return $form;
+    }
+
+    //Checks fullpath
+    // sanity
+    if (!preg_match('!^[a-zA-Z0-9_/]+$!', $form_state['values']['collection_tree'])) {
+        form_set_error('collection_creation', t('The collection name must contain only letters, numbers, slashes, and underscores.'));
+        return $form;
+    }
+
+    // uniqueness of path
+    $collections = db_select('flat_deposit_ui_collection','p')
+        ->fields('p',array('collection_name','collection_tree','member'))
+        ->condition('member', $form_state['values']['member'])
+        ->execute()
+        ->fetchAll(PDO::FETCH_ASSOC);
+
+    // test if array returned by query (all collections user is member of) contains collection name assigned to current collection. In positive cases
+    //this is a number. We also want to stop processing only if collection is new (i.e. allow editing an existing collection).
+    if (is_numeric(array_search($form_state['values']['collection_tree'],array_column($collections,'collection_tree'))) AND
+        $form['collection_tree']['#default_value'] != $form_state['values']['collection_tree'] ){
+        $i = array_search($form_state['values']['collection_tree'],array_column($collections,'collection_tree'));
+        form_set_error('collection_creation','Collection with exactly same path already exists (' . array_column($collections,'collection_name')[$i] . ')');
+        return $form;
+
+    }
+
+}
+
+
 function collection_form_submit($form, &$form_state){
+
+    $labels = explode('/',$form_state['values']['collection_tree']);
+    $data = get_collection_tree_data($labels, 'create');
 
     #Add values for mandatory fields
     $form_state['values']['label'] = $form_state['values']['collection_name'] . '_' . $form_state['values']['member'];
+    $form_state['values']['collection_pid'] = end($data['pid']);
     $form_state['values']['date_created'] = time();
 
     $entity = entity_ui_form_submit_build_entity($form, $form_state);
@@ -428,13 +491,25 @@ function flat_deposit_ui_menu()
         'page arguments' => array('Under construction'),
         'access arguments' => array('use deposit module'));
 
+    $items['islandora/object/%islandora_object/add'] = array(
+        'title' => 'Add',
+        'page callback' => 'flat_deposit_ui_add_object',
+        'page arguments' => array(2),
+        'type' => MENU_LOCAL_TASK,
+
+    );
+
 
     return $items;
 };
 
+function flat_deposit_ui_add_object(){
+    return 'test';
+}
 
-function flat_deposit_ui_commit_changes($arg) {return $arg;
+function flat_deposit_ui_commit_changes($arg) {
 
+    return $arg;
 }
 
 function flat_deposit_ui_workspace($arg) {
@@ -696,6 +771,8 @@ function flat_deposit_ui_manage_bundles()
     );
 
     return $output;
+
+
 }
 
 
@@ -991,7 +1068,7 @@ function flat_deposit_ui_form_alter(&$form, &$form_state, $form_id)
 {
 
     // for debug info uncomment dpm
-    #dpm ($form_id);
+    dpm ($form_id);
     switch ($form_id){
 
         case "flat_bundle_node_form":{
@@ -1307,32 +1384,34 @@ function flat_bundle_add_node_form_validate($form, &$form_state)
     }
 
 
-    //Check that bundle name is distinctive from existing bundles
+    //Check that bundle name is distinctive from existing bundles. Therefore we need to query user nodes with the specified
+    // upload_collection value of the new node
     $user_id = $GLOBALS['user']->uid = "1";
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'node')
         ->entityCondition('bundle', 'flat_bundle')
         ->propertyCondition('uid', $user_id)
-        ->fieldCondition('upload_collection', 'value', $collection, '=');
+        ->fieldCondition('upload_collection', 'value', "$collection", '=');
 
-    $result = $query->execute();
-    $nids = array_keys($result['node']);
-    $query = db_select('node', 'n')
-        ->fields('n', array('title'))
-        ->condition('n.nid', $nids, 'IN');
+    $user_node_nids_in_collection = $query->execute();
+    if (!empty($user_node_nids_in_collection)) {
+        $nids = array_keys($user_node_nids_in_collection['node']);
+        $query = db_select('node', 'n')
+            ->fields('n', array('title'))
+            ->condition('n.nid', $nids, 'IN');
 
-    $results = $query->execute()->fetchAll();
+        $user_nodes = $query->execute()->fetchAll();
 
 
-    foreach ($results as $result){
-        if (strtolower($result->title) == strtolower($bundle_name)) {
-            $message = "Bundle with same or very similar bundle name exists";
-            $field = 'bundle';
-            form_set_error($field, $message);
-            return $form;
+        foreach ($user_nodes as $node){
+            if (strtolower($node->title) == strtolower($bundle_name)) {
+                $message = "Bundle with same or very similar bundle name exists";
+                $field = 'bundle';
+                form_set_error($field, $message);
+                return $form;
+            }
         }
     }
-
     // Check Owncloud availability and existence user account
     $oc = new OwnCloud();
     if (!$oc->noErrors){form_set_error('owncloud',$oc->error_message);}
@@ -1377,7 +1456,7 @@ function flat_bundle_add_node_form_submit($form, &$form_state){
 
         // Create collection directory if not existing
         if (!file_exists(USER_DRUPAL_DATA_DIR . "/$collection")) {
-            drupal_mkdir(USER_DRUPAL_DATA_DIR . "/$collection");
+            drupal_mkdir(USER_DRUPAL_DATA_DIR . "/$collection" , NULL, TRUE);
             drupal_set_message(t('Creating new collection folder'));
         }
 
@@ -1564,7 +1643,7 @@ function flat_bundle_freeze_bundle($node){
 
     // create collection sub-directory if needed
     $subdirectory = drupal_realpath(USER_FREEZE_DIR) . "/$collection/";
-    if (!file_exists($subdirectory)){drupal_mkdir($subdirectory);}
+    if (!file_exists($subdirectory)){drupal_mkdir($subdirectory, NULL, TRUE);}
 
     // define source depending on bundle characteristics
     $wrapper = entity_metadata_wrapper('node', $node);

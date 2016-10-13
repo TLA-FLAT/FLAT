@@ -116,7 +116,8 @@ class CMDI_Handler
             'Resources' => array(
                 'ResourceProxyList' => '',
                 'JournalFileProxyList' => '',
-                'ResourceRelationList' => '',),
+                'ResourceRelationList' => '',
+                'IsPartOfList' => ''),
             'Components' => array(
                 $this->field_name => '')
         );
@@ -194,6 +195,8 @@ class CMDI_Handler
         }
     }
 
+
+
     function changeHeader()
     {
         $this->xml->Header->MdCreator = USER;
@@ -211,8 +214,8 @@ class CMDI_Handler
     function processFormData($form_data){
 
         $clean_data = array();
-        $clean_data['Name'] = $form_data['field_1']['Name'];
         $clean_data['Title'] = $form_data['field_1']['Title'];
+        $clean_data['Name'] = $form_data['field_1']['Name'];
 
         if ($form_data['field_1']['Date']) {
             $month = (strlen($form_data['field_1']['Date']['month']) == 1 ) ? $form_data['field_1']['Date']['month'] : '0'.$form_data['field_1']['Date']['month'];
@@ -276,8 +279,8 @@ function get_example_md ($template){
         case 'session':
             $md = array(
                 'field_1' => array(
-                    'Name' => 'DvR_Sandbox',
                     'Title' => 'The DvR_Sandbox',
+                    'Name' => 'DvR_Sandbox',
                     'Date' => array(
                         'day' => 25,
                         'month' =>5,
@@ -294,8 +297,8 @@ function get_example_md ($template){
                 ),
 
                 'Project' => array(
-                    'Name' =>'FLAT archive',
                     'Title' =>'Deposit module',
+                    'Name' =>'FLAT archive',
                     'Id' =>'',
                     'Contact' => array(
                         'Name' => 'Daniel',
@@ -311,8 +314,8 @@ function get_example_md ($template){
             $md = array(
                 'field_1' =>
                     array (
-                        'Name' => 'Subject_x01',
                         'Title' => 'Pilot EEG Study',
+                        'Name' => 'Subject_x01',
                         'Date' => array(
                             'day' => 25,
                             'month' =>3,
@@ -342,8 +345,8 @@ function get_example_md ($template){
             $md = array(
                 'field_1' =>
                     array (
-                        'Name' => 'Name of Bundle',
                         'Title' => 'Title of Bundle',
+                        'Name' => 'Name of Bundle',
                         'Date' => array(
                             'day' => 21,
                             'month' =>2,

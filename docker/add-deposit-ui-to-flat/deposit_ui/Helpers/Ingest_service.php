@@ -46,6 +46,7 @@ try {
     $ingest->wrapper->save();
 
     $ingest->addResourcesToCMDI();
+    $ingest->addIsPartOfToCMDI();
 
     $ingest->prepareBag();
     $ingest->zipBag();
@@ -63,6 +64,7 @@ try {
     $ingest->cleanup();
 
     $ingest->create_blog_entry('succeeded');
+
     #node_delete_multiple(array($nid));
     $ingest->wrapper->upload_status->set('awaiting');
     $ingest->wrapper->save();
