@@ -7,7 +7,8 @@ RUN apt-get update &&\
     apt-get -y install php-pear &&\
     apt-get -y install php7.0-dev  &&\
     apt-get install net-tools &&\
-    pecl install xdebug
+    pecl install xdebug &&\
+    pear install PHP_CodeSniffer
 
 #Add xdebug configuration to php.ini
 COPY xdebug/xdebug.conf /tmp/

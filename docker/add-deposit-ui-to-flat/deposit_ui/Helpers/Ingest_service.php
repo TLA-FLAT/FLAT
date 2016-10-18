@@ -65,15 +65,15 @@ try {
 
     $ingest->create_blog_entry('succeeded');
 
-    #node_delete_multiple(array($nid));
-    $ingest->wrapper->upload_status->set('awaiting');
-    $ingest->wrapper->save();
+    node_delete_multiple(array($nid));
+    #$ingest->wrapper->upload_status->set('awaiting');
+    #$ingest->wrapper->save();
 
 } catch (IngestServiceException $e) {
     $ingest->wrapper->upload_status->set('failed');
     $ingest->wrapper->upload_exception->set($e->getMessage());
     $ingest->wrapper->save();
-    $ingest->create_blog_entry('failure');
+    $ingest->create_blog_entry('failed');
 
     $ingest->rollback();
 

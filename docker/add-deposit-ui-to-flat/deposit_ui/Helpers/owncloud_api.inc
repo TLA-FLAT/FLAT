@@ -290,8 +290,27 @@ class OwnCloud
         return $code ? false : $drupal_mounts;
     }
 
+
+    public function WarnUserMount()
+    {
+
+        if ($this->inUse && $this->noErrors) {
+            $activated = FALSE;
+            $link = array(
+                'theme' => 'link',
+                'text' => 'user account',
+                'path' => 'user',
+                'options' => array(
+                    'attributes' => array(),
+                    //REQUIRED:
+                    'html' => FALSE,
+                ),
+            );
+
+            if (!$activated) {
+                drupal_set_message(t("Owncloud integration has not been activated yet. You can do this in your " . theme_link($link)  . " settings", array()), 'warning');
+            }
+        }
+
+    }
 }
-
-
-
-

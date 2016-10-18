@@ -498,10 +498,82 @@ function flat_deposit_ui_menu()
         'type' => MENU_LOCAL_TASK,
 
     );
+    $items['devel'] = array(
+        'title' => 'Development Test site',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array( 'devel'),
+        'type' => MENU_LOCAL_TASK,
+        'access arguments' => array('use deposit module'),
+
+    );
 
 
     return $items;
 };
+
+function devel($form, &$form_state){
+    $form = array();
+
+    $form['fieldset'] = array(
+        '#title' => t('Fieldset Title'),
+        '#type' => 'fieldset',
+    );
+
+    $form['fieldset']['checkbox_trigger'] = array(
+        '#title' => t('Add text field below options'),
+        '#type' => 'checkbox',
+        '#ajax' => array(
+            'callback' => 'checkbox_trigger_ajax_callback',
+            'wrapper' => 'container-info',
+            'method' => 'replace',
+            'effect' => 'fade',
+        ),
+    );
+
+    $form['mytextcontainer'] = array(
+        '#type' => 'container',
+        '#weight' => 5,
+        '#attributes' => array(
+            'id' => array('container-info'),
+            ),
+        );
+
+    // Adjust values of textfield based on trigger value
+    $checked = isset($form_state['values']['checkbox_trigger']) ? $form_state['values']['checkbox_trigger'] : 0 ;
+
+    if ($checked) {
+        $message = "Trigger has been pushed";
+        $title = 'Textfield title 1';
+        $access = TRUE;
+    } else {
+        $message = "The trigger has NOT been pushed";
+        $title = 'Textfield title 2';
+        $access = FALSE;
+    }
+
+    $form['mytextcontainer']['textfield'] = array(
+        '#type' => 'textfield',
+        '#access' => $access,
+        '#title' => $title,
+        '#default_value' => t($message));
+
+    $form['submit'] = array (
+        '#type' => 'submit',
+        '#value' => t('Select'),
+        '#submit' => array('devel_form_submit'),
+        '#validate' => array('devel_form_validate'));
+
+    return $form;
+}
+
+function checkbox_trigger_ajax_callback ($form, &$form_state)
+{
+    return $form['mytextcontainer'];
+}
+
+
+
+
 
 function flat_deposit_ui_add_object(){
     return 'test';
@@ -799,7 +871,7 @@ function flat_deposit_ui_cmdi_select_form($form, &$form_state){
         ],
     ];
 
-    $form['select_template_fieldset']['checkbox__trigger'] = array(
+    $form['select_template_fieldset']['checkbox_ajax_trigger'] = array(
         '#title' => t('Fill template with saved meta data'),
         '#type' => 'checkbox',
         '#ajax' => array(
@@ -1068,46 +1140,45 @@ function flat_deposit_ui_form_alter(&$form, &$form_state, $form_id)
 {
 
     // for debug info uncomment dpm
-    dpm ($form_id);
+    #dpm ($form_id);
     switch ($form_id){
 
         case "flat_bundle_node_form":{
 
-            // Adapt general appearance
+            // Adapt general appearance as e.g. hide unwanted buttons
             $form['upload_status']['und']['#disabled'] = TRUE;
             hide($form['upload_exception']);
             hide($form['upload_cmdi']);
             hide($form['actions']['preview']);
 
 
-            // Hide location where data is stored if external is unchecked
-            /*
-            $form['upload_external']['und']['#ajax'] =
-                array(
-                'callback' => 'flat_deposit_ui_external_select_ajax_callback',
-                'wrapper' => 'upload-location-add-more-wrapper',
+            // Adapt description of external location such that it contains the root of the external path
+            module_load_include('inc', 'flat_deposit_ui', 'inc/config');
+            $config = get_configuration_ingest_service();
+            $root = $config['alternate_dir'];
+            $form['upload_location']['und'][0]['value']['#description'] .= " (specific folder name located in" . $root .  USER . ")";
+
+            // Hide location where data is stored if checkbox (external) is unchecked
+            // Create ajax trigger out of checkbox
+            $form['upload_external']['und']['#ajax'] = array(
+                'callback' => 'select_external_trigger_ajax_callback',
+                'wrapper' => 'upload-location-container',
                 'method' => 'replace',
                 'effect' => 'fade',
             );
-*/
-            $form['upload_location']['#states'] = array(
 
-                // Hide the settings when the cancel notify checkbox is disabled.
-                'visible' => array(
-
-                    ':input[name="upload_external[und]"]' => array('checked' => TRUE)));
+            // assign wrapper to location container such that AJAX can update this part when triggered
+            $form['upload_location']['#attributes']['id'] = array('upload-location-container');
 
 
-
+            // set access value (show or not) depending on checkbox value
             $checked = isset($form_state['values']['upload_external']['und'][0]['value']) ? $form_state['values']['upload_external']['und'][0]['value'] : 0 ;
-            if (!$checked) {
-                #'#states' => array(
-                    #$form['upload_location']['#states']['visible'] => array(
-                #hide($form['upload_location']);
-            }else{
-               # show($form['upload_location']);
-                $a = 2;
+            if ($checked) {
+                $access = TRUE;
+            } else {
+                $access = FALSE;
             }
+            $form['upload_location']['und'][0]['value']['#access'] = $access;
 
 
             // Add individual 'select' options to drop down menu
@@ -1119,7 +1190,6 @@ function flat_deposit_ui_form_alter(&$form, &$form_state, $form_id)
                 ->fetchCol();
 
 
-            if (empty($collections)){$collections=['Dummy collection'];} // test data
 
             foreach ($collections as $index => $collection){
                 $form ['upload_collection']['und']['#options'][$collection] =  $collection;
@@ -1135,12 +1205,11 @@ function flat_deposit_ui_form_alter(&$form, &$form_state, $form_id)
 
 
 
-            // For new bundles
-            // add validation
+            // For new bundle creation add custom validation
             if (!isset($node->nid) || isset($node->is_new)) {
                 $form['#validate'][] = 'flat_bundle_add_node_form_validate';
                 $form['#submit'][] = 'flat_bundle_add_node_form_submit';
-            } else{
+            } else {
                 // for existing bundles:
                 // Add additional submit button to menu: (depending on status) freeze or unfreeze
                 $status = field_get_items('node', $node, 'upload_status')[0]['value'];
@@ -1221,8 +1290,11 @@ function flat_deposit_ui_form_alter(&$form, &$form_state, $form_id)
                 $form['#validate'][] = 'flat_bundle_edit_node_form_validate';
                 $form['#submit'][] = 'flat_bundle_edit_node_form_submit';
 
-                //Todo: add the possibility to change name collection /bundle
+
                 $form['upload_collection']['und']['#disabled'] = TRUE;
+                #$form['upload_external']['und']['#disabled'] = TRUE;
+                #$form['upload_location']['und']['#disabled'] = TRUE;
+
                 //when disabling a form field without default value, the associated field value is being removed from the node (might be a bug).
                 //As workaround, add the assigned field value as default value
                 $default_collection = field_get_items('node', $node, 'upload_collection')[0]['value'];
@@ -1249,11 +1321,12 @@ function flat_deposit_ui_form_alter(&$form, &$form_state, $form_id)
 
 }
 
-function flat_deposit_ui_external_select_ajax_callback ($form, &$form_state)
-{
 
+function select_external_trigger_ajax_callback ($form, &$form_state)
+{
     return $form['upload_location'];
 }
+
 
 
 
@@ -1429,7 +1502,7 @@ function flat_bundle_add_node_form_validate($form, &$form_state)
     }
 
     $form_state['values']['extra_values']['full_directory_path'] = USER_DRUPAL_DATA_DIR  . "/$collection/$bundle_name";
-
+#form_set_error('debug','debug');
 
 }
 
@@ -1474,6 +1547,11 @@ function flat_bundle_add_node_form_submit($form, &$form_state){
     //Refresh owncloud user directory to see new data
     $oc = new OwnCloud();
     $oc->UpdateUserFiles();
+
+
+    //Warn if owncloud has not been activated
+    $oc->WarnUserMount();
+
 
 }
 
@@ -1568,6 +1646,8 @@ function flat_bundle_freeze_node_form_validate($form, &$form_state){
 
         form_set_value($form['upload_cmdi'],array('und' => array(0 => array('value' => 1))), $form_state);
     }
+
+
 }
 
 /**
@@ -1673,6 +1753,8 @@ function flat_bundle_freeze_bundle($node){
         $oc = new OwnCloud();
         $oc->UpdateUserFiles();
         drupal_set_message(t('Project ' . $bundle . ' is valid and can be archived'));
+
+
     }
 }
 
@@ -1862,7 +1944,7 @@ function flat_bundle_archive_node_form_submit($form, &$form_state){
     }
 
     $form_state['redirect'] = 'bundle/'. $GLOBALS['user']->uid;
-    drupal_set_message('Frozen bundles are being archived');
+    drupal_set_message('Frozen bundle is being archived');
 
 
 
