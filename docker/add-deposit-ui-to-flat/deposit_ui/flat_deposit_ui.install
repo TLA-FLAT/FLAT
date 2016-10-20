@@ -192,9 +192,9 @@ function flat_deposit_ui_install()
 
     $instances['upload_external'] = array(
         'field_name' => 'upload_external',
-        'label' => $t('Data is located on archive server'
+        'label' => $t('Data has alternate storage location'
         ),
-        'description' => $t('Check this option if data is not uploaded using this side but if it is already available on the archive server'),
+        'description' => $t('Check this option if data is available at a different location'),
         'widget' => array(
             'type' => 'option_buttons'
         ),
@@ -215,7 +215,7 @@ function flat_deposit_ui_install()
         'field_name' => 'upload_location',
         'label' => $t('Location where data is stored'
         ),
-        'description' => $t('Location where archive server can find data to be uploaded'),
+        'description' => $t('Folder where data to be archived is stored'),
         'widget' => array(
             'type' => 'text'
         ),
@@ -290,10 +290,22 @@ function flat_deposit_ui_schema() {
                 'not null' => TRUE,
                 'description' => 'Name of the collection'
             ),
+            'collection_tree'  => array(
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => TRUE,
+                'description' => 'Complete path of collection (from root collection to final subdirectory)'
+            ),
+            'collection_pid'  => array(
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => TRUE,
+                'description' => 'PID assigned by fedora to collection'
+            ),
             'member' => array(
                 'type' => 'varchar',
                 'length' => 63,
-                'not null' => TRUE,
+                'not null' => FALSE,
                 'description' => 'Member of the collection.'
             ),
             'label'  => array(

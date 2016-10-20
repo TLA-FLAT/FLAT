@@ -30,6 +30,56 @@ function query_owned_collections($user)
 }
 
 /**
+ * Gets a list of all data ingested since last login
+ */
+
+function query_collection_CModels()
+{
+    $query = "PREFIX fm: <" . FEDORA_MODEL_URI . ">
+    PREFIX frelx: <info:fedora/fedora-system:def/relations-external#>
+            SELECT ?pid ?label ?created
+            FROM <#ri>
+            WHERE {
+                ?object <http://purl.org/dc/elements/1.1/identifier> ?pid;
+                fm:state fm:Active;
+                fm:label ?label;
+                fm:createdDate ?created;
+                fm:hasModel <info:fedora/islandora:collectionCModel>;
+            }
+            ORDER BY DESC(?created)";
+    return $query;
+}
+
+
+function query_collection_CModels_begin($label)
+{
+    $query = "PREFIX fm: <" . FEDORA_MODEL_URI . ">
+    PREFIX frelx: <info:fedora/fedora-system:def/relations-external#>
+            SELECT ?pid ?label ?created
+            FROM <#ri>
+            WHERE {
+                ?object <http://purl.org/dc/elements/1.1/identifier> ?pid;
+                fm:state fm:Active;
+                fm:label ?label;
+                fm:createdDate ?created;
+                fm:label '" . $label . "';
+                fm:hasModel <info:fedora/islandora:collectionCModel>;";
+    return $query;
+
+}
+
+function query_collection_CModels_end()
+{
+    $query = "}
+    ORDER BY DESC(?created)";
+    return $query;
+}
+
+
+
+
+
+/**
  * Fedora SPARQL query for all owned data.
  */
 

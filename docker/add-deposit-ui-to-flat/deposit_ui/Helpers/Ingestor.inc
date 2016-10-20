@@ -92,12 +92,64 @@ class Ingestor
             throw new IngestServiceException ('Data directory of upload bundle is empty (' . $resource_directory . ')');
         }
 
+        
         $cmd->addResourcesToXml();
         $cmd->xml->asXML($cmd->export_file);
 
         //count number of added resources
         $count = $cmd->xml->Resources->ResourceProxyList->ResourceProxy->count();
         $this->nResources = $count;
+    }
+
+    /**
+     * Method for loading an existing meta data file, and adding the parent relationship to the CMDI, which can be used
+     * later to be translated into rel-ext info of the corresponding foxml object. In foxml, rel-ext will be extended by
+     * isMemberofCollection attribute, which will point to the pid of the parent collection.
+     *
+     * @throws IngestServiceException
+     */
+    public function addIsPartOfToCMDI(){
+
+        $bundle = $this->node->title;
+        $collection = $this->wrapper->upload_collection->value();
+
+        // Load existing xml file
+        module_load_include('php','flat_deposit_ui','Helpers/CMDI_Handler');
+        $cmd = new CMDI_Handler($this->node);
+
+        if (!$cmd->projectCmdiFileExists()){
+            throw new IngestServiceException ('No file with meta data found');
+        }
+
+        $cmd->getXML();
+
+        // clean up all references to parents
+        if(!isset($cmd->xml->Resources->IsPartOfList)){
+            $cmd->xml->Resources->addChild('IsPartOfList');
+        }
+
+        $c = $cmd->xml->Resources->IsPartOfList->IsPartOf->count();
+        for ($i = 0; $i < $c; $i++) {
+            unset($cmd->xml->Resources->IsPartOfList->IsPartOf[0]);
+        }
+
+
+        // retrieve pid of parent collection
+        $collection_node = db_select('flat_deposit_ui_collection','p')
+            ->fields('p',array('collection_name','collection_pid'))
+            ->condition('member', $this->user->name)
+            ->condition('collection_name', $collection)
+            ->execute()
+            ->fetchAll(PDO::FETCH_ASSOC)[0];
+
+        if (!$collection_node){
+            throw new IngestServiceException ('No entry found for user in flat_deposit_ui_collection table. Contact administrator.');
+        }
+
+        // write pid to cmdi file
+        $parent_pid = $collection_node['collection_pid'];
+        $cmd->xml->Resources->IsPartOfList->addChild('IsPartOf',$parent_pid);
+        $cmd->xml->asXML($cmd->export_file);
     }
 
 
