@@ -23,9 +23,9 @@
 	
 	<xsl:param name="oai-include-eval" select="'true()'"/>
 	
-	<xsl:param name="policies-dir" select="()"/>
+	<xsl:param name="policies-dir" select="()" as="xs:string*"/>
 	
-	<xsl:param name="management-dir" select="()"/>
+	<xsl:param name="management-dir" select="()" as="xs:string*"/>
 	
 	<xsl:param name="always-collection-eval" select="'false()'"/>
 	
@@ -115,6 +115,28 @@
 	<xsl:function name="cmd:pid">
 		<xsl:param name="locs"/>
 		<xsl:sequence select="cmd:pid($locs, 'ERR')"/>
+	</xsl:function>
+	
+	<xsl:function name="cmd:firstFile" as="xs:anyURI?">
+		<xsl:param name="paths" as="xs:string*"/>
+		<xsl:param name="files" as="xs:string*"/>
+		<xsl:param name="base"  as="xs:anyURI"/>
+		<!--<xsl:message>DBG: firstFile(paths[<xsl:value-of select="string-join($paths,',')"/>],files[<xsl:value-of select="string-join($files,',')"/>],base[<xsl:value-of select="$base"/>])</xsl:message>-->
+		<xsl:variable name="res" as="xs:anyURI*">
+			<xsl:for-each select="$files">
+				<xsl:variable name="file" select="."/>
+				<xsl:for-each select="$paths">
+					<xsl:variable name="path" select="."/>
+					<xsl:variable name="uri" select="resolve-uri(concat($path, '/',$file),$base)"/>
+					<!--<xsl:message>DBG: firstFile(...): try[<xsl:value-of select="$uri"/>]</xsl:message>-->
+					<xsl:if test="sx:fileExists($uri)">
+						<xsl:sequence select="$uri"/>
+					</xsl:if>
+				</xsl:for-each>
+			</xsl:for-each>
+		</xsl:variable>
+		<xsl:sequence select="$res[1]"/>
+		<!--<xsl:message>DBG: firstFile(...): result[<xsl:value-of select="$res[1]"/>]</xsl:message>-->
 	</xsl:function>
 
 	<xsl:function name="cmd:collections" as="xs:string*">
@@ -452,25 +474,23 @@
 				</foxml:datastreamVersion>
 			</foxml:datastream>
 			<!-- add MGMT data stream -->
-			<xsl:choose>
-				<xsl:when test="empty($management-dir)"/>
-				<xsl:when test="sx:fileExists(resolve-uri(concat($management-dir, '/', replace($fid, '[^a-zA-Z0-9]', '_'), '.xml'),$base))">
-					<xsl:message>
-						<xsl:text>DBG: CMD FOX[</xsl:text>
-						<xsl:value-of select="$fid"/>
-						<xsl:text>] will include management info[</xsl:text>
-						<xsl:value-of select="concat($management-dir, '/', replace($fid, '[^a-zA-Z0-9]', '_'), '.xml')"/>
-						<xsl:text>]!</xsl:text>
-					</xsl:message>
-					<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="MGMT" STATE="A" CONTROL_GROUP="X" VERSIONABLE="false">
-						<foxml:datastreamVersion ID="MGMT.0" LABEL="Access policy for this object" MIMETYPE="text/xml">
-							<foxml:xmlContent>
-								<xsl:copy-of select="doc(concat($management-dir, '/', replace($fid, '[^a-zA-Z0-9]', '_'), '.xml'))"/>
-							</foxml:xmlContent>
-						</foxml:datastreamVersion>
-					</foxml:datastream>
-				</xsl:when>
-			</xsl:choose>
+			<xsl:for-each select="zero-or-one(cmd:firstFile($management-dir,(concat(replace($fid, '[^a-zA-Z0-9]', '_'), '.xml'), concat('lat_',replace(replace($base,'.*/',''), '[^a-zA-Z0-9]', '_'), '.xml')), $base))">
+				<xsl:variable name="mgmt" select="."/>
+				<xsl:message>
+					<xsl:text>DBG: CMD FOX[</xsl:text>
+					<xsl:value-of select="$fid"/>
+					<xsl:text>] will include management info[</xsl:text>
+					<xsl:value-of select="$mgmt"/>
+					<xsl:text>]!</xsl:text>
+				</xsl:message>
+				<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="MGMT" STATE="A" CONTROL_GROUP="X" VERSIONABLE="false">
+					<foxml:datastreamVersion ID="MGMT.0" LABEL="Collection management info for this object" MIMETYPE="text/xml">
+						<foxml:xmlContent>
+							<xsl:copy-of select="doc($mgmt)"/>
+						</foxml:xmlContent>
+					</foxml:datastreamVersion>
+				</foxml:datastream>
+			</xsl:for-each>
 			<!-- ADD TN data stream -->
 			<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="TN" STATE="A" CONTROL_GROUP="E">
 				<foxml:datastreamVersion ID="TN.0" LABEL="icon.png" MIMETYPE="image/png">
@@ -478,57 +498,23 @@
 				</foxml:datastreamVersion>
 			</foxml:datastream>		
 			<!-- add POLICY data stream -->
-			<xsl:choose>
-				<xsl:when test="empty($policies-dir)"/>
-				<xsl:when test="sx:fileExists(resolve-uri(concat($policies-dir, '/', replace($fid, '[^a-zA-Z0-9]', '_'), '.xml'),$base))">
-					<xsl:message>
-						<xsl:text>DBG: CMD FOX[</xsl:text>
-						<xsl:value-of select="$fid"/>
-						<xsl:text>] will use access policy[</xsl:text>
-						<xsl:value-of select="concat($policies-dir, '/', replace($fid, '[^a-zA-Z0-9]', '_'), '.xml')"/>
-						<xsl:text>]!</xsl:text>
-					</xsl:message>
-					<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="POLICY" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
-						<foxml:datastreamVersion ID="POLICY.0" LABEL="Access policy for this object" MIMETYPE="text/xml">
-							<foxml:xmlContent>
-								<xsl:copy-of select="doc(concat($policies-dir, '/', replace($fid, '[^a-zA-Z0-9]', '_'), '.xml'))"/>
-							</foxml:xmlContent>
-						</foxml:datastreamVersion>
-					</foxml:datastream>
-				</xsl:when>
-				<xsl:when test="sx:fileExists(resolve-uri(concat($policies-dir, '/default-cmd-policy.xml'),$base))">
-					<xsl:message>
-						<xsl:text>DBG: CMD FOX[</xsl:text>
-						<xsl:value-of select="$fid"/>
-						<xsl:text>] will use access policy[</xsl:text>
-						<xsl:value-of select="concat($policies-dir, '/default-cmd-policy.xml')"/>
-						<xsl:text>]!</xsl:text>
-					</xsl:message>
-					<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="POLICY" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
-						<foxml:datastreamVersion ID="POLICY.0" LABEL="Access policy for this object" MIMETYPE="text/xml">
-							<foxml:xmlContent>
-								<xsl:copy-of select="doc(concat($policies-dir, '/default-cmd-policy.xml'))"/>
-							</foxml:xmlContent>
-						</foxml:datastreamVersion>
-					</foxml:datastream>
-				</xsl:when>
-				<xsl:when test="sx:fileExists(resolve-uri(concat($policies-dir, '/default-policy.xml'),$base))">
-					<xsl:message>
-						<xsl:text>DBG: CMD FOX[</xsl:text>
-						<xsl:value-of select="$fid"/>
-						<xsl:text>] will use access policy[</xsl:text>
-						<xsl:value-of select="concat($policies-dir, '/default-policy.xml')"/>
-						<xsl:text>]!</xsl:text>
-					</xsl:message>
-					<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="POLICY" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
-						<foxml:datastreamVersion ID="POLICY.0" LABEL="Access policy for this object" MIMETYPE="text/xml">
-							<foxml:xmlContent>
-								<xsl:copy-of select="doc(concat($policies-dir, '/default-policy.xml'))"/>
-							</foxml:xmlContent>
-						</foxml:datastreamVersion>
-					</foxml:datastream>
-				</xsl:when>
-			</xsl:choose>
+			<xsl:for-each select="zero-or-one(cmd:firstFile($policies-dir, (concat(replace($fid, '[^a-zA-Z0-9]', '_'), '.xml'),'default-cmd-policy.xml','default-policy.xml'), $base))">
+				<xsl:variable name="policy" select="."/>
+				<xsl:message>
+					<xsl:text>DBG: CMD FOX[</xsl:text>
+					<xsl:value-of select="$fid"/>
+					<xsl:text>] will use access policy[</xsl:text>
+					<xsl:value-of select="$policy"/>
+					<xsl:text>]!</xsl:text>
+				</xsl:message>
+				<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="POLICY" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
+					<foxml:datastreamVersion ID="POLICY.0" LABEL="Access policy for this object" MIMETYPE="text/xml">
+						<foxml:xmlContent>
+							<xsl:copy-of select="doc($policy)"/>
+						</foxml:xmlContent>
+					</foxml:datastreamVersion>
+				</foxml:datastream>
+			</xsl:for-each>
 			<!-- Resource Proxies -->
 			<!--<xsl:message>DBG: resourceProxies[<xsl:value-of select="count(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Resource'])"/>]</xsl:message>
 			<xsl:for-each select="/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Resource']">
@@ -827,50 +813,19 @@
 								<!-- add POLICY data stream -->
 								<xsl:choose>
 									<xsl:when test="empty($policies-dir)"/>
-									<xsl:when test="sx:fileExists(resolve-uri(concat($policies-dir, '/', replace($resID, '[^a-zA-Z0-9]', '_'), '.xml'),$base))">
+									<xsl:when test="exists(cmd:firstFile($policies-dir, (concat(replace($resID, '[^a-zA-Z0-9]', '_'), '.xml'), 'default-resource-policy.xml', 'default-policy.xml'), $base))">
+										<xsl:variable name="policy" select="cmd:firstFile($policies-dir, concat(replace($resID, '[^a-zA-Z0-9]', '_'), '.xml'), $base)"/>
 										<xsl:message>
 											<xsl:text>DBG: resource FOX[</xsl:text>
 											<xsl:value-of select="$resFOX"/>
 											<xsl:text>] will use access policy[</xsl:text>
-											<xsl:value-of select="concat($policies-dir, '/', replace($resID, '[^a-zA-Z0-9]', '_'), '.xml')"/>
+											<xsl:value-of select="$policy"/>
 											<xsl:text>]!</xsl:text>
 										</xsl:message>
 										<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="POLICY" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
 											<foxml:datastreamVersion ID="POLICY.0" LABEL="Access policy for this object" MIMETYPE="text/xml">
 												<foxml:xmlContent>
-													<xsl:copy-of select="doc(concat($policies-dir, '/', replace($resID, '[^a-zA-Z0-9]', '_'), '.xml'))"/>
-												</foxml:xmlContent>
-											</foxml:datastreamVersion>
-										</foxml:datastream>
-									</xsl:when>
-									<xsl:when test="sx:fileExists(resolve-uri(concat($policies-dir, '/default-resource-policy.xml'),$base))">
-										<xsl:message>
-											<xsl:text>DBG: resource FOX[</xsl:text>
-											<xsl:value-of select="$resFOX"/>
-											<xsl:text>] will use access policy[</xsl:text>
-											<xsl:value-of select="concat($policies-dir, '/default-resource-policy.xml')"/>
-											<xsl:text>]!</xsl:text>
-										</xsl:message>
-										<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="POLICY" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
-											<foxml:datastreamVersion ID="POLICY.0" LABEL="Access policy for this object" MIMETYPE="text/xml">
-												<foxml:xmlContent>
-													<xsl:copy-of select="doc(concat($policies-dir, '/default-resource-policy.xml'))"/>
-												</foxml:xmlContent>
-											</foxml:datastreamVersion>
-										</foxml:datastream>
-									</xsl:when>
-									<xsl:when test="sx:fileExists(resolve-uri(concat($policies-dir, '/default-policy.xml'),$base))">
-										<xsl:message>
-											<xsl:text>DBG: resource FOX[</xsl:text>
-											<xsl:value-of select="$resFOX"/>
-											<xsl:text>] will use access policy[</xsl:text>
-											<xsl:value-of select="concat($policies-dir, '/default-policy.xml')"/>
-											<xsl:text>]!</xsl:text>
-										</xsl:message>
-										<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="POLICY" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
-											<foxml:datastreamVersion ID="POLICY.0" LABEL="Access policy for this object" MIMETYPE="text/xml">
-												<foxml:xmlContent>
-													<xsl:copy-of select="doc(concat($policies-dir, '/default-policy.xml'))"/>
+													<xsl:copy-of select="doc($policy)"/>
 												</foxml:xmlContent>
 											</foxml:datastreamVersion>
 										</foxml:datastream>
