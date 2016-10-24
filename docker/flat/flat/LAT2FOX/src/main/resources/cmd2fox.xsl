@@ -121,14 +121,14 @@
 		<xsl:param name="paths" as="xs:string*"/>
 		<xsl:param name="files" as="xs:string*"/>
 		<xsl:param name="base"  as="xs:anyURI"/>
-		<!--<xsl:message>DBG: firstFile(paths[<xsl:value-of select="string-join($paths,',')"/>],files[<xsl:value-of select="string-join($files,',')"/>],base[<xsl:value-of select="$base"/>])</xsl:message>-->
+		<xsl:message>DBG: firstFile(paths[<xsl:value-of select="string-join($paths,',')"/>],files[<xsl:value-of select="string-join($files,',')"/>],base[<xsl:value-of select="$base"/>])</xsl:message>
 		<xsl:variable name="res" as="xs:anyURI*">
 			<xsl:for-each select="$files">
 				<xsl:variable name="file" select="."/>
 				<xsl:for-each select="$paths">
 					<xsl:variable name="path" select="."/>
 					<xsl:variable name="uri" select="resolve-uri(concat($path, '/',$file),$base)"/>
-					<!--<xsl:message>DBG: firstFile(...): try[<xsl:value-of select="$uri"/>]</xsl:message>-->
+					<xsl:message>DBG: firstFile(...): try[<xsl:value-of select="$uri"/>]</xsl:message>
 					<xsl:if test="sx:fileExists($uri)">
 						<xsl:sequence select="$uri"/>
 					</xsl:if>
@@ -136,7 +136,7 @@
 			</xsl:for-each>
 		</xsl:variable>
 		<xsl:sequence select="$res[1]"/>
-		<!--<xsl:message>DBG: firstFile(...): result[<xsl:value-of select="$res[1]"/>]</xsl:message>-->
+		<xsl:message>DBG: firstFile(...): result[<xsl:value-of select="$res[1]"/>]</xsl:message>
 	</xsl:function>
 
 	<xsl:function name="cmd:collections" as="xs:string*">
@@ -814,7 +814,7 @@
 								<xsl:choose>
 									<xsl:when test="empty($policies-dir)"/>
 									<xsl:when test="exists(cmd:firstFile($policies-dir, (concat(replace($resID, '[^a-zA-Z0-9]', '_'), '.xml'), 'default-resource-policy.xml', 'default-policy.xml'), $base))">
-										<xsl:variable name="policy" select="cmd:firstFile($policies-dir, concat(replace($resID, '[^a-zA-Z0-9]', '_'), '.xml'), $base)"/>
+										<xsl:variable name="policy" select="cmd:firstFile($policies-dir, (concat(replace($resID, '[^a-zA-Z0-9]', '_'), '.xml'), 'default-resource-policy.xml', 'default-policy.xml'), $base)"/>
 										<xsl:message>
 											<xsl:text>DBG: resource FOX[</xsl:text>
 											<xsl:value-of select="$resFOX"/>

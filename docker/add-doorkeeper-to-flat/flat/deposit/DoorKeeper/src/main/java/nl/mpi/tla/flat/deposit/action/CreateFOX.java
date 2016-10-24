@@ -76,6 +76,8 @@ public class CreateFOX extends AbstractAction {
             fox.setParameter(new QName("fox-base"), new XdmAtomicValue(dir.toString()));
             fox.setParameter(new QName("rels-uri"), new XdmAtomicValue(getParameter("relations")));
             fox.setParameter(new QName("create-cmd-object"), new XdmAtomicValue(false));
+            if (hasParameter("policies"))
+                fox.setParameter(new QName("policies-dir"), params.get("policies"));
             fox.setSource(new DOMSource(context.getSIP().getRecord(),context.getSIP().getBase().toURI().toString()));
             XdmDestination destination = new XdmDestination();
             fox.setDestination(destination);
