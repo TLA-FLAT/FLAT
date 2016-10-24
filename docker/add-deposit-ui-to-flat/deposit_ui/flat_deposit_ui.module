@@ -124,12 +124,49 @@ function flat_bundle_view($node, $view_mode) {
     return $node;
 }
 
-
+/**
+ * Implements hook_view().
+ */
 /**
  * Implements hook_node_view().
  */
+
+function flat_deposit_ui_islandora_view_object($object) {
+
+#    krumo($object);
+
+}
+
 /**
- * Implements hook_user_view_alter().
+ * Removes the 'Add bundle'-menu from every islandora object view if user is not member of the collection
+ *
+ */
+function flat_deposit_ui_menu_local_tasks_alter(&$data, $router_item, $root_path)
+{
+    if (isset($data['tabs'][0]['output'])){
+        $tabs = $data['tabs'][0]['output'];
+        foreach ($tabs as $index => $tab) {
+            if ($tab['#link']['path'] == 'islandora/object/%/add_bundle') {
+                $pid_parent = explode('/', $tab['#link']['tab_parent_href']);
+                $pid_parent = end($pid_parent);
+
+                $collections = query_user_collections(array( $pid_parent));
+
+                if (empty($collections)) {
+                    $data['tabs'][0]['output'][$index]['#link']['access'] = FALSE;
+                    unset($data['tabs'][0]['output'][$index]);
+                }
+            }
+
+        }
+    }
+
+        #krumo($data);
+}
+
+
+/**
+ * Hide owncloud field if owncloud is not in use
  */
 function flat_deposit_ui_user_view_alter(&$build)
 {
@@ -137,6 +174,7 @@ function flat_deposit_ui_user_view_alter(&$build)
     if (!$use_owncloud) {
         $build['mount_owncloud']['#access'] = FALSE;
     }
+
 }
 
 
@@ -387,8 +425,8 @@ function flat_deposit_ui_menu_block_generate(){
         'link_manage_collections' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
-            '#markup' => '<a href="/flat/managecollections" title="Manage collections"><img title="Manage collections" alt="Manage collections" src="/flat/'.drupal_get_path('module','flat_deposit_ui').'/Images/Manage_coll.png"/></a><br/>',
-            '#suffix' => '<a href="/flat/managecollections">Manage collections</a><br/></div>'),
+            '#markup' => '<a href="/flat/manageusercollections" title="Manage collections"><img title="Manage collections" alt="Manage collections" src="/flat/'.drupal_get_path('module','flat_deposit_ui').'/Images/Manage_coll.png"/></a><br/>',
+            '#suffix' => '<a href="/flat/manageusercollections">Manage collections</a><br/></div>'),
         'link_commit' => array(
             '#type' => 'markup',
             '#prefix' => '<div>',
@@ -496,18 +534,18 @@ function flat_deposit_ui_menu()
         'access arguments' => array('use deposit module'));
 
     // Page for manage collections
-    $items['managecollections'] = array(
-        'title' => 'Manage Collections',
+    $items['admin/collections/managecollections'] = array(
+        'title' => 'Manage collections',
         'type' => MENU_LOCAL_TASK,
         'access arguments' => array('admin deposit module'));
 
 
-    $items['managecollections/manage'] = array(
-        'title' => 'Add Collections',
+    $items['manageusercollections'] = array(
+        'title' => 'Manage user collections',
         'type' => MENU_LOCAL_TASK,
-        'page callback' => 'drupal_get_form',
-        'page arguments' => array('flat_deposit_ui_add_collections_form'),
-        'access arguments' => array('admin deposit module'));
+        'page callback' => 'flat_deposit_ui_manage_collections',
+        'page arguments' => array('content' => 'Under construction'),
+        'access arguments' => array('use deposit module'));
 
     // Page for commiting changes
     $items['commitchanges'] = array(
@@ -517,93 +555,80 @@ function flat_deposit_ui_menu()
         'page arguments' => array('Under construction'),
         'access arguments' => array('use deposit module'));
 
-    $items['islandora/object/%islandora_object/add'] = array(
-        'title' => 'Add',
-        'page callback' => 'flat_deposit_ui_add_object',
+
+    $items['islandora/object/%islandora_object/add_bundle'] = array(
+        'title' => 'Add bundle',
+        'page callback' => 'flat_deposit_ui_islandora_object_add_bundle',
         'page arguments' => array(2),
         'type' => MENU_LOCAL_TASK,
-
-    );
-    $items['devel'] = array(
-        'title' => 'Development Test site',
-        'page callback' => 'drupal_get_form',
-        'page arguments' => array( 'devel'),
-        'type' => MENU_LOCAL_TASK,
+        'weight' => 10,
         'access arguments' => array('use deposit module'),
-
-    );
-
+        )
+    ;
 
     return $items;
 };
 
-function devel($form, &$form_state){
-    $form = array();
+function flat_deposit_ui_manage_collections($arg){
+    $collections = query_user_collections();
 
-    $form['fieldset'] = array(
-        '#title' => t('Fieldset Title'),
-        '#type' => 'fieldset',
-    );
+    if (empty($collections)){
 
-    $form['fieldset']['checkbox_trigger'] = array(
-        '#title' => t('Add text field below options'),
-        '#type' => 'checkbox',
-        '#ajax' => array(
-            'callback' => 'checkbox_trigger_ajax_callback',
-            'wrapper' => 'container-info',
-            'method' => 'replace',
-            'effect' => 'fade',
-        ),
-    );
+        return t('You are not member of any collection. Please request membership from corpus manager');}
+        else {
+            $output = array(
+                'collections' => array(
+                    '#theme' => 'table',
+                    '#title' => 'You are member of these collections',
+                    '#caption' => t('Collections'),
+                    '#header' => array('Collection name', 'pid'),
+                    '#rows' => $collections
+                )
+            );
+            return $output;
+        }
+}
 
-    $form['mytextcontainer'] = array(
-        '#type' => 'container',
-        '#weight' => 5,
-        '#attributes' => array(
-            'id' => array('container-info'),
-            ),
-        );
 
-    // Adjust values of textfield based on trigger value
-    $checked = isset($form_state['values']['checkbox_trigger']) ? $form_state['values']['checkbox_trigger'] : 0 ;
 
-    if ($checked) {
-        $message = "Trigger has been pushed";
-        $title = 'Textfield title 1';
-        $access = TRUE;
+/**
+ *
+ * @param $pid
+ * @return array|mixed|null|string
+ */
+function flat_deposit_ui_islandora_object_add_bundle ($pid){
+
+    $collections = query_user_collections(array($pid->id));
+
+    if (empty($collections)){
+
+        return t('You are not member of this collection and can"t create bundles here');
     } else {
-        $message = "The trigger has NOT been pushed";
-        $title = 'Textfield title 2';
-        $access = FALSE;
+        module_load_include('inc', 'node', 'node.pages');
+        $node_type = 'flat_bundle';
+        $form_id = $node_type . '_node_form';
+
+        global $user;
+        $new_node = new stdClass();
+        $new_node->uid = $GLOBALS['user']->uid;
+        $new_node->name = USER;
+        $new_node->type = $node_type;
+        $new_node->language = 'und';
+        $new_node->status = 1;
+        $new_node->sticky = 0;
+        $new_node->revision = FALSE;
+        $new_node->promote = 1;
+        $new_node->comment = 0;
+
+        node_object_prepare($new_node);
+
+        $collection = $collections [0];
+        $form = drupal_get_form($form_id,$new_node,$collection);
+        return $form;
+
     }
-
-    $form['mytextcontainer']['textfield'] = array(
-        '#type' => 'textfield',
-        '#access' => $access,
-        '#title' => $title,
-        '#default_value' => t($message));
-
-    $form['submit'] = array (
-        '#type' => 'submit',
-        '#value' => t('Select'),
-        '#submit' => array('devel_form_submit'),
-        '#validate' => array('devel_form_validate'));
-
-    return $form;
 }
 
-function checkbox_trigger_ajax_callback ($form, &$form_state)
-{
-    return $form['mytextcontainer'];
-}
-
-
-
-
-
-function flat_deposit_ui_add_object(){
-    return 'test';
-}
 
 function flat_deposit_ui_commit_changes($arg) {
 
@@ -1156,7 +1181,8 @@ function flat_deposit_ui_cmdi_create_form_submit($form, &$form_state){
     }
 }
 
-function flat_deposit_ui_form_flat_bundle_node_form_alter(&$form, &$form_state, $form_id){
+function flat_deposit_ui_form_flat_bundle_node_form_alter(&$form, &$form_state, $form_id)
+{
     // Adapt general appearance as e.g. hide unwanted buttons
     $form['upload_status']['und']['#disabled'] = TRUE;
     hide($form['upload_exception']);
@@ -1168,7 +1194,7 @@ function flat_deposit_ui_form_flat_bundle_node_form_alter(&$form, &$form_state, 
     module_load_include('inc', 'flat_deposit_ui', 'inc/config');
     $config = get_configuration_ingest_service();
     $root = $config['alternate_dir'];
-    $form['upload_location']['und'][0]['value']['#description'] .= " (specific folder name located in" . $root .  USER . ")";
+    $form['upload_location']['und'][0]['value']['#description'] .= " (specific folder name located in" . $root . USER . ")";
 
     // Hide location where data is stored if checkbox (external) is unchecked
     // Create ajax trigger out of checkbox
@@ -1184,7 +1210,7 @@ function flat_deposit_ui_form_flat_bundle_node_form_alter(&$form, &$form_state, 
 
 
     // set access value (show or not) depending on checkbox value
-    $checked = isset($form_state['values']['upload_external']['und'][0]['value']) ? $form_state['values']['upload_external']['und'][0]['value'] : 0 ;
+    $checked = isset($form_state['values']['upload_external']['und'][0]['value']) ? $form_state['values']['upload_external']['und'][0]['value'] : 0;
     if ($checked) {
         $access = TRUE;
     } else {
@@ -1192,19 +1218,21 @@ function flat_deposit_ui_form_flat_bundle_node_form_alter(&$form, &$form_state, 
     }
     $form['upload_location']['und'][0]['value']['#access'] = $access;
 
+    //Create selection of collections.
+    //This is dependent from extra parameters. In case the parameter $pid is provided only that specific collection can be used
+    // Otherwise query collections user is member of
+    $args = $form_state['build_info']['args'];
 
-    // Add individual 'select' options to drop down menu
-    $collections= db_select('flat_deposit_ui_collection','p')
-        ->fields('p',array('collection_name','member'))
-        ->condition('member', USER)
-        ->orderBy('collection_name')
-        ->execute()
-        ->fetchCol();
+    if (isset($args[1])) {
+        $collections = array($args[1]);
+        $form['upload_collection']['und']['#default_value'] = $collections;
+        $form['upload_collection']['und']['#disabled'] = TRUE;
+    } else {
+        $collections = query_user_collections();
+    }
 
-
-
-    foreach ($collections as $index => $collection){
-        $form ['upload_collection']['und']['#options'][$collection] =  $collection;
+    foreach ($collections as $index => $collection) {
+        $form ['upload_collection']['und']['#options'][$collection] = $collection;
     }
 
     // Add field to save values
@@ -1214,7 +1242,6 @@ function flat_deposit_ui_form_flat_bundle_node_form_alter(&$form, &$form_state, 
     );
 
     $node = $form_state['node'];
-
 
 
     // For new bundle creation add custom validation
@@ -1314,6 +1341,7 @@ function flat_deposit_ui_form_flat_bundle_node_form_alter(&$form, &$form_state, 
         $form['title']['#disabled'] = TRUE;
     }
 
+ #   krumo($form);
 }
 
 function select_external_trigger_ajax_callback ($form, &$form_state)

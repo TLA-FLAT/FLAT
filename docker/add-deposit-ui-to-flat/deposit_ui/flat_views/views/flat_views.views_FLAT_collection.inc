@@ -162,7 +162,7 @@ $handler->display->display_options['filters']['member']['expose']['remember_role
 
 /* Display: Page */
 $handler = $view->new_display('page', 'Page', 'page');
-$handler->display->display_options['path'] = 'managecollections';
+$handler->display->display_options['path'] = 'admin/collections/managecollections';
 $handler->display->display_options['menu']['type'] = 'tab';
 $handler->display->display_options['menu']['title'] = 'Manage FLAT collection - member relationships';
 $handler->display->display_options['menu']['weight'] = '0';

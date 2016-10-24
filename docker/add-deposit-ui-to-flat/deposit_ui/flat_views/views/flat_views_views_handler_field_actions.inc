@@ -22,7 +22,7 @@ class flat_views_views_handler_field_actions extends views_handler_field {
       $actions[] = array(
         'name' => t('Edit'),
         'url' => 'admin/collections/manage/' . $values->collection_id ,
-        'icon' => theme('image', array('path' => drupal_get_path('module', 'view_actions') . '/images/edit.png', 'alt' => $alt)),
+        'icon' => theme('image', array('path' => drupal_get_path('module', 'flat_views') . '/images/edit.gif', 'alt' => $alt)),
         'title' => $alt,
       );
     }

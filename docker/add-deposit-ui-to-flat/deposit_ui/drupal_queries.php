@@ -17,6 +17,40 @@ function dq_user_is_member_collections($conditions=[],$paged=FALSE){
 
 }
 
+/**
+ * Drupal query of user collections.
+ *
+ * @param array pids of the collections to be queried
+ * @param bool transformed put data in flat structure
+ *
+ * @return mixed array of collection names and pids
+ */
+function query_user_collections($pid=NULL,$transformed=FALSE)
+{
+    $query = db_select('flat_deposit_ui_collection', 'p')
+        ->fields('p', array('collection_name', 'collection_pid',))
+        ->condition('member', USER)
+        ->orderBy('collection_name');
+
+    if ($pid){$query->condition('collection_pid', $pid, 'IN');}
+
+    $results =$query->execute()
+        ->fetchAll(PDO::FETCH_ASSOC);
+
+    $collections = array();
+
+    if ($transformed){
+        foreach ($results as $result){
+            $collections['collection_name'][]=$result['collection_name'];
+            $collections['collection_pid'][]=$result['collection_pid'];
+        }
+    } else {
+        $collections = $results;
+    }
+
+    return $collections;
+}
+
 function dq_user_bundle_data($fields,$conditions=[],$count=FALSE){
     $obj= db_select('flat_deposit_ui_upload','p')
 
