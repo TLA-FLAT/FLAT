@@ -165,14 +165,33 @@
                                             <xsl:if test="exists(key('t-subject',$rule,$t)[sem:predicate=$acl-mode][sem:object=$acl-read])">
                                                 <xsl:for-each select="key('t-subject',$rule,$t)[sem:predicate=$acl-agentClass]/sem:object">
                                                     <xsl:variable name="agent" select="."/>
-                                                    <xsl:message use-when="$debug">DBG: agent[<xsl:value-of select="$agent"/>]</xsl:message>
-                                                    <!-- if the AgentClass is foaf:Agent the resource should be public, as foaf:Agent represents everyone -->
-                                                    <xsl:if test="$agent=$foaf-agent">
-                                                        <xsl:message>INF: read access for everyone!</xsl:message>
-                                                        <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">
-                                                            <xsl:value-of select="$everyone"/>
-                                                        </AttributeValue>
-                                                    </xsl:if>
+                                                    <xsl:message use-when="$debug">DBG: agent class[<xsl:value-of select="$agent"/>]</xsl:message>
+                                                    <xsl:choose>
+                                                        <!-- if the AgentClass is foaf:Agent the resource should be public, as foaf:Agent represents everyone -->
+                                                        <xsl:when test="$agent=$foaf-agent">
+                                                            <xsl:message>INF: read access for everyone!</xsl:message>
+                                                            <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">
+                                                                <xsl:value-of select="$everyone"/>
+                                                            </AttributeValue>
+                                                        </xsl:when>
+                                                        <xsl:otherwise>
+                                                            <!-- go to their accounts -->
+                                                            <xsl:for-each select="key('t-subject',$agent,$t)[sem:predicate=$foaf-account]/sem:object">
+                                                                <xsl:variable name="account" select="."/>
+                                                                <xsl:message use-when="$debug">DBG: account[<xsl:value-of select="$account"/>]</xsl:message>
+                                                                <!-- does the agent have a FLAT account? -->
+                                                                <xsl:if test="key('t-subject',$account,$t)[sem:predicate=$foaf-service]/sem:object=$flat">
+                                                                    <xsl:for-each select="key('t-subject',$account,$t)[sem:predicate=$foaf-accountName]/sem:object">
+                                                                        <xsl:variable name="role" select="."/>
+                                                                        <xsl:message>INF: read access for role[<xsl:value-of select="$role"/>]!</xsl:message>
+                                                                        <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">
+                                                                            <xsl:value-of select="$role"/>
+                                                                        </AttributeValue>
+                                                                    </xsl:for-each>
+                                                                </xsl:if>
+                                                            </xsl:for-each>
+                                                        </xsl:otherwise>
+                                                    </xsl:choose>
                                                 </xsl:for-each>
                                             </xsl:if>
                                         </xsl:for-each>
