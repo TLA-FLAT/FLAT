@@ -1296,10 +1296,10 @@ function flat_deposit_ui_form_flat_bundle_node_form_alter(&$form, &$form_state, 
         $form['upload_collection']['und']['#default_value'] = $collections;
         $form['upload_collection']['und']['#disabled'] = TRUE;
     } else {
-        $collections = query_user_collections();
+        $collections = query_user_collections(NULL,TRUE);
     }
 
-    foreach ($collections as $index => $collection) {
+    foreach ($collections['collection_name'] as $index => $collection) {
         $form ['upload_collection']['und']['#options'][$collection] = $collection;
     }
 
