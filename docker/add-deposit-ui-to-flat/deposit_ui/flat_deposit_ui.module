@@ -598,7 +598,7 @@ function flat_deposit_ui_manage_collections($arg){
  */
 function flat_deposit_ui_islandora_object_add_bundle ($pid){
 
-    $collections = query_user_collections(array($pid->id));
+    $collections = query_user_collections(array($pid->id),TRUE);
 
     if (empty($collections)){
 
@@ -622,7 +622,7 @@ function flat_deposit_ui_islandora_object_add_bundle ($pid){
 
         node_object_prepare($new_node);
 
-        $collection = $collections [0];
+        $collection = $collections ['collection_name'][0];
         $form = drupal_get_form($form_id,$new_node,$collection);
         return $form;
 
@@ -1287,20 +1287,20 @@ function flat_deposit_ui_form_flat_bundle_node_form_alter(&$form, &$form_state, 
     $form['upload_location']['und'][0]['value']['#access'] = $access;
 
     //Create selection of collections.
-    //This is dependent from extra parameters. In case the parameter $pid is provided only that specific collection can be used
+    //This is dependent from extra parameters. In case the name of a collection is provided only that specific collection can be used
     // Otherwise query collections user is member of
     $args = $form_state['build_info']['args'];
 
     if (isset($args[1])) {
-        $collections = array($args[1]);
-        $form['upload_collection']['und']['#default_value'] = $collections;
+        $collections[0]['collection_name'] = $args[1];
+        $form['upload_collection']['und']['#default_value'] = array($collections[0]['collection_name']);
         $form['upload_collection']['und']['#disabled'] = TRUE;
     } else {
-        $collections = query_user_collections(NULL,TRUE);
+        $collections = query_user_collections(NULL);
     }
 
-    foreach ($collections['collection_name'] as $index => $collection) {
-        $form ['upload_collection']['und']['#options'][$collection] = $collection;
+    foreach ($collections as $index => $collection) {
+        $form ['upload_collection']['und']['#options'][$collection['collection_name']] = $collection['collection_name'];
     }
 
     // Add field to save values
