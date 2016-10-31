@@ -97,12 +97,17 @@ class OwnCloud
 
     }
 
+    /**
+     * Checks for existence of owncloud user account. In case of connection errors an exception is thrown. Otherwise
+     *
+     * @return bool
+     */
     public function owncloud_account_exists()
     {
         try {
             $code = $this->call_user_provision_api('get', TRUE);
             if ($code != 200) {
-                throw new OwnCloudConnectionException('Owncloud server error code (' . $code . ')');
+                throw new OwnCloudConnectionException('Owncloud server error code ( HTTP code ' . $code . ')');
             }
 
             $content = $this->call_user_provision_api('get');
@@ -119,6 +124,175 @@ class OwnCloud
         }
     }
 
+    public function GetOwncloudMounts(){
+
+            exec(OC_ROOT . "/occ files_external:export", $res, $code);
+            if ($code){
+                throw new OwnCloudConnectionException("Could not get owncloud mounts. Please ask administrator to check owncloud settings");
+            }
+            return $res;
+    }
+
+    /**
+     * Compares the naming of owncloud directories mounts as specified in $mount->configuration->dir with naming of standard drupal data directory
+     * @return array of all drupal user directory mounts
+     */
+    public function ListAllDrupalMounts($test=FALSE)
+    {
+
+        $drupal_mounts = [];
+
+        // grap mount configurations
+        $res = $this->GetOwncloudMounts();
+        $mounts = json_decode(implode($res));
+
+        // convert path strings of drupal data directory and each owncloud mount into arrays and count overlap between both
+        $d_path = explode("/",drupal_realpath('public://users'));
+
+        foreach ($mounts as $mount) {
+            $m_path = explode('/',$mount->configuration->datadir); # mounted path is always one field longer (i.e. user acronym) than general drupal data path
+            if (count(array_intersect($d_path, $m_path)) == (count($m_path) - 1)){
+                $drupal_mounts [] = $mount;
+            }
+        }
+
+        if ($test){
+            drupal_set_message(t('Owncloud listing drupal mounts test passed. ' . (string)count($mounts) . ' mounts found'));
+        }
+
+        return $drupal_mounts;
+    }
+
+    public function MountDataFolder($test=FALSE)
+    {
+        if ($test){
+            $datadir = OC_TEMP;
+            $mpoint = "/MPI_Archive_TEST";
+        } else {
+            $datadir =drupal_realpath(USER_DRUPAL_DATA_DIR);
+            $mpoint = "/MPI_Archive_" . USER;
+        }
+
+        $fname = OC_TEMP . "/owncloud_mount_" . USER . ".json";
+
+        $mount_config = array(
+            array(
+                "mount_point" => $mpoint,
+                "storage" => "\\OC\\Files\\Storage\\Local",
+                "authentication_type" => "null::null",
+                "configuration" => array(
+                    "datadir" => $datadir),
+                "options" => array(
+                    "enable_sharing" => false,
+                    "encoding_compatibility" => false,
+                    "encrypt" => true,
+                    "filesystem_check_changes" => 1,
+                    "previews" => true),
+                "applicable_users" => array(
+                    USER),
+                "applicable_groups" => []
+            ));
+
+        file_put_contents($fname, json_encode($mount_config));
+        exec(OC_ROOT . "/occ files_external:import $fname", $res, $code);
+
+
+        if ($code){
+            throw new OwnCloudConnectionException("Could not create new owncloud mount. Please ask administrator to check owncloud settings");
+        }
+
+        if ($test){
+            drupal_set_message(t('Owncloud test mount created'));
+        }
+
+        return $code;
+
+    }
+
+    /**
+     * Checks if owncloud mounts contain the user drupal data directory.
+     * @return bool
+     */
+    public function GetUserMount($test=FALSE)
+    {
+        if ($test){
+            $datadir = OC_TEMP;
+        } else {
+            $datadir =drupal_realpath(USER_DRUPAL_DATA_DIR);
+        }
+
+        $res = $this->GetOwncloudMounts();
+        $mounts = json_decode(implode($res));
+
+        foreach ($mounts as $mount) {
+
+            if ($mount->configuration->datadir == $datadir) {
+                $this->mounted = TRUE;
+                $this->archive_mount = $mount;
+            }
+        }
+        return $this->mounted;
+    }
+
+    /**
+     * Unmounts the owncloud mount for a specified mount id. Mount id can be given manually or assigned during GetUserMount
+     * @param null $mount_id
+     * @return bool
+     */
+    public function UnmountUserMount($mount_id = NULL, $test=FALSE)
+    {
+
+        $mount_id = $mount_id ? $mount_id : $this->archive_mount->mount_id;
+
+        exec(OC_ROOT . "/occ files_external:delete -y " . $mount_id, $res, $code);
+
+        if ($test){
+            drupal_set_message(t('Owncloud test mount removed'));
+        }
+
+        return $code ? false : TRUE;
+    }
+
+
+
+
+
+    public function VerifyMount()
+    {
+
+        exec(OC_ROOT . "/occ files_external:verify " . $this->archive_mount->mount_id, $res, $code);
+        if ($res[0] == '  - status: ok') {$this->verified = TRUE;}
+        return $this->verified;
+    }
+
+
+
+
+    public function WarnUserMount()
+    {
+
+        if ($this->inUse && $this->noErrors) {
+
+            $user_data = user_load($GLOBALS['user']->uid);
+            $activated = isset($user_data->mount_owncloud['und'][0]['value']) ? $user_data->mount_owncloud['und'][0]['value'] : '0';
+
+            $link = array(
+                'theme' => 'link',
+                'text' => 'user account',
+                'path' => 'user/' . $GLOBALS['user']->uid . '/edit',
+                'options' => array(
+                    'attributes' => array(),
+                    //REQUIRED:
+                    'html' => FALSE,
+                ),
+            );
+
+            if (is_string($activated) AND $activated == '0') {
+                drupal_set_message(t("Owncloud integration has not been activated yet. You can do this in your " . theme_link($link)  . " settings", array()), 'warning');
+            }
+        }
+
+    }
 
     public function UpdateUserFiles()
     {
@@ -206,114 +380,7 @@ class OwnCloud
         }
     }
 
-    public function MountDrupalDataFolder()
-    {
-
-        $fname = OC_TEMP . "/owncloud_mount_" . USER . ".json";
-
-        $mount_config = array(
-            array(
-                "mount_point" => "/MPI_Archive_" . USER,
-                "storage" => "\\OC\\Files\\Storage\\Local",
-                "authentication_type" => "null::null",
-                "configuration" => array(
-                    "datadir" => drupal_realpath(USER_DRUPAL_DATA_DIR)),
-                "options" => array(
-                    "enable_sharing" => false,
-                    "encoding_compatibility" => false,
-                    "encrypt" => true,
-                    "filesystem_check_changes" => 1,
-                    "previews" => true),
-                "applicable_users" => array(
-                    USER),
-                "applicable_groups" => []
-            ));
-
-        file_put_contents($fname, json_encode($mount_config));
-        exec(OC_ROOT . "/occ files_external:import $fname", $res, $code);
 
 
-        return $code;
 
-    }
-
-    public function UnmountUserArchiveMount($mount_id = NULL)
-    {
-
-        $mount_id = $mount_id ? $mount_id : $this->archive_mount->mount_id;
-        
-        exec(OC_ROOT . "/occ files_external:delete -y " . $mount_id, $res, $code);
-
-        return $code ? false : TRUE;
-    }
-
-
-    public function GetUserArchiveMount()
-    {
-
-        exec(OC_ROOT . "/occ files_external:export", $res, $code);
-        $mounts = json_decode(implode($res));
-        foreach ($mounts as $mount) {
-
-            if ($mount->configuration->datadir == drupal_realpath(USER_DRUPAL_DATA_DIR)) {
-                $this->mounted = TRUE;
-                $this->archive_mount = $mount;
-            }
-        }
-        return $code ? false : TRUE;
-    }
-
-    public function VerifyMount()
-    {
-
-        exec(OC_ROOT . "/occ files_external:verify " . $this->archive_mount->mount_id, $res, $code);
-        if ($res[0] == '  - status: ok') {$this->verified = TRUE;}
-        return $this->verified;
-    }
-
-    public function ListAllDrupalMounts()
-    {
-
-        $drupal_mounts = [];
-        exec(OC_ROOT . "/occ files_external:export", $res, $code);
-        $mounts = json_decode(implode($res));
-        foreach ($mounts as $mount) {
-            $d_path = explode("/",drupal_realpath('public://users'));
-            $m_path = explode('/',$mount->configuration->datadir); # is one field longer than drupal data path
-
-
-            if (count(array_intersect($d_path, $m_path)) == (count($m_path) - 1)){
-                $drupal_mounts [] = $mount;
-
-            }
-        }
-        return $code ? false : $drupal_mounts;
-    }
-
-
-    public function WarnUserMount()
-    {
-
-        if ($this->inUse && $this->noErrors) {
-
-            $user_data = user_load($GLOBALS['user']->uid);
-            $activated = isset($user_data->mount_owncloud['und'][0]['value']) ? $user_data->mount_owncloud['und'][0]['value'] : '0';
-
-            $link = array(
-                'theme' => 'link',
-                'text' => 'user account',
-                'path' => 'user/' . $GLOBALS['user']->uid . '/edit',
-                'options' => array(
-                    'attributes' => array(),
-                    //REQUIRED:
-                    'html' => FALSE,
-                ),
-            );
-
-            if (is_string($activated) AND $activated == '0') {
-                drupal_set_message(t("Owncloud integration has not been activated yet. You can do this in your " . theme_link($link)  . " settings", array()), 'warning');
-            }
-        }
-
-    }
 }

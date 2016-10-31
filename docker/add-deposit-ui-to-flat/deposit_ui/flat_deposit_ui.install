@@ -376,7 +376,7 @@ function flat_deposit_ui_uninstall(){
 
         foreach (array_column($mounts,'mount_id') as $mount_id){
 
-            $oc->UnmountUserArchiveMount($mount_id);
+            $oc->UnmountUserMount($mount_id);
         };
 
     }
