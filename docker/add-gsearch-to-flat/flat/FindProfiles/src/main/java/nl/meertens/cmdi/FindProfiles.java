@@ -28,7 +28,7 @@ import org.codehaus.stax2.evt.XMLEvent2;
 public class FindProfiles {
     
     static final String CMD_NS = "http://www.clarin.eu/cmd/";
-    static final String CR_URI = "http://catalog.clarin.eu/ds/ComponentRegistry/";
+    static final String CR_URI = "http(s)?://catalog.clarin.eu/ds/ComponentRegistry/";
     static final String XSI_NS = "http://www.w3.org/2001/XMLSchema-instance";
     
     static final int ERROR = -1;
@@ -123,7 +123,8 @@ public class FindProfiles {
                                         sdepth = depth;
                                         String prof = xmlr.getAttributeValue(XSI_NS,"schemaLocation");
                                         if (prof!=null) {
-                                            if (prof.contains(CR_URI)) {
+                                            //if (prof.contains(CR_URI)) {
+                                            if (cr_rest.matcher(prof).find()) {
                                                 prof = cr_rest.matcher(prof).replaceFirst("");
                                                 prof = cr_ext.matcher(prof).replaceFirst("");
                                                 profile = prof;

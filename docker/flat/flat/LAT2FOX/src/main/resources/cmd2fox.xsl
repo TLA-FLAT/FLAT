@@ -7,6 +7,8 @@
 	<xsl:param name="rels-doc" select="document($rels-uri)"/>
 	<xsl:key name="rels-from" match="relation" use="src | from"/>
 	<xsl:key name="rels-to" match="relation" use="dst | to"/>
+	
+	<xsl:key name="rp" match="cmd:ResourceProxy" use="cmd:ResourceRef | cmd:ResourceRef/@lat:localURI"/>
 
 	<xsl:param name="conversion-base" select="()"/>
 	<xsl:param name="import-base" select="()"/>
@@ -902,18 +904,38 @@
 	<xsl:template match="cmd:ResourceProxyList" mode="cmd">
 		<xsl:param name="pid" tunnel="yes"/>
 		<xsl:param name="base" tunnel="yes"/>
+		<xsl:message>DBG: cmd:ResourceProxyList</xsl:message>
 		<xsl:copy>
 			<!-- process non-Metadata resource proxies -->
+			<xsl:message>DBG: - non metadata</xsl:message>
 			<xsl:apply-templates select="cmd:ResourceProxy[cmd:ResourceType != 'Metadata']" mode="#current"/>
 			<!-- process Metadata resource proxies -->
 			<xsl:variable name="metadata" select="cmd:ResourceProxy[cmd:ResourceType = 'Metadata']"/>
+			<xsl:variable name="md">
+				<xsl:for-each select="$metadata">
+					<cmd:ResourceProxy>
+						<cmd:ResourceType mimetype="application/x-cmdi+xml">metadata</cmd:ResourceType>
+						<cmd:ResourceRef>
+							<xsl:if test="exists(cmd:ResourceRef/@lat:localURI)">
+								<xsl:attribute name="lat:localURI" select="cmd:ResourceRef/resolve-uri(@lat:localURI,$base)"/>
+							</xsl:if>
+							<xsl:value-of select="resolve-uri(cmd:ResourceRef,$base)"/>
+						</cmd:ResourceRef>
+					</cmd:ResourceProxy>
+				</xsl:for-each>
+			</xsl:variable>
 			<xsl:variable name="children" select="$rels-doc/key('rels-from', ($pid,$base))[type = 'Metadata']"/>
 			<!-- legimate children -->
+			<xsl:message>DBG: - legimate children</xsl:message>
+			<xsl:comment>legimate metadata children</xsl:comment>
 			<xsl:for-each select="$children">
+				<xsl:variable name="ref" select="resolve-uri(cmd:ResourceRef,$base)"/>
+				<xsl:variable name="lcl" select="cmd:ResourceRef/resolve-uri(@lat:localURI,$base)"/>
+				<xsl:variable name="rp" select="key('rp',(to,dst),$md)"/>
 				<ResourceProxy xmlns="http://www.clarin.eu/cmd/">
 					<xsl:choose>
-						<xsl:when test="exists($metadata[exists((resolve-uri(cmd:ResourceRef,$base),cmd:ResourceRef/resolve-uri(@lat:localURI,$base))=(to,dst))][normalize-space(@id)!=''])">
-							<xsl:attribute name="id" select="$metadata[exists((resolve-uri(cmd:ResourceRef,$base),cmd:ResourceRef/resolve-uri(@lat:localURI,$base))=(to,dst))]/@id"/>
+						<xsl:when test="exists($rp[normalize-space(@id)!=''])">
+							<xsl:attribute name="id" select="$rp/@id"/>
 						</xsl:when>
 						<xsl:otherwise>
 							<xsl:attribute name="id" select="generate-id()"/>
@@ -929,8 +951,10 @@
 				</ResourceProxy>
 			</xsl:for-each>
 			<!-- illegimate children (could be dead links) -->
-			<xsl:for-each select="$metadata">
-				<xsl:if test="empty((resolve-uri(cmd:ResourceRef,$base),cmd:ResourceRef/resolve-uri(@lat:localURI,$base))=($children/to,$children/dst))">
+			<xsl:message>DBG: - illegimate children</xsl:message>
+			<xsl:comment>illegimate metadata children (could be dead links)</xsl:comment>
+			<xsl:for-each select="$md">
+				<xsl:if test="empty((cmd:ResourceRef,cmd:ResourceRef/@lat:localURI)=($children/to,$children/dst))">
 					<xsl:apply-templates select="." mode="#current"/>
 				</xsl:if>
 			</xsl:for-each>
