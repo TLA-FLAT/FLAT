@@ -22,7 +22,7 @@ RUN /etc/my_init.d/00_regen_ssh_host_keys.sh
 #
 RUN apt-get update &&\
 	apt-get -y dist-upgrade &&\
-	apt-get -y install curl wget openssl apache2 postgresql libapache2-mod-php php-gd php-pgsql php-xsl php-curl unzip default-jdk libapache2-mod-jk expect ssh rsync git maven libxml2-utils
+	apt-get -y install curl wget openssl apache2 postgresql libapache2-mod-php php-gd php-pgsql php-xsl php-curl unzip default-jdk libapache2-mod-jk ssh rsync git maven libxml2-utils
 
 #
 # Configure apache
@@ -218,15 +218,16 @@ sleep 10 &&\
 	/etc/init.d/postgresql stop
 
 # add the generated certificate for localhost
-ADD cert/InstallCert.jar /tmp/InstallCert.jar
-ADD cert/InstallCert.sh /tmp/InstallCert.sh
-RUN chmod +x /tmp/InstallCert.sh &&\
+RUN mkdir /tmp/cert
+ADD cert/InstallCert.java /tmp/cert/InstallCert.java
+RUN cd /tmp/cert &&\
+    javac InstallCert.java &&\
 	cd /opt &&\
 	/etc/init.d/postgresql start &&\
 	/var/www/fedora/tomcat/bin/startup.sh &&\
 	bash -c "timeout $TOMCAT_TIMEOUT grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 sleep 10 &&\
-	/tmp/InstallCert.sh &&\
+    java -cp /tmp/cert InstallCert localhost:8443 changeit 1 &&\
 	/var/www/fedora/tomcat/bin/shutdown.sh &&\
 	bash -c "timeout $TOMCAT_TIMEOUT grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 	/etc/init.d/postgresql stop
