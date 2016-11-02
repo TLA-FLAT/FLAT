@@ -85,6 +85,10 @@ public class WorkspaceLogSetup extends AbstractAction {
                     "                   <layout class=\"ch.qos.logback.classic.log4j.XMLLayout\"/>\n" +
                     "           </encoder>" +
                     "	</appender>\n" +
+                    "   <logger name=\"nl.knaw.meertens\" level=\"DEBUG\">" +
+                    "		<appender-ref ref=\"USER\" />\n" +
+                    "		<appender-ref ref=\"DEVEL\" />\n" +
+                    "	</logger>\n" +
                     "   <logger name=\"nl.mpi.tla.flat.deposit\" level=\"DEBUG\">" +
                     "		<appender-ref ref=\"USER\" />\n" +
                     "		<appender-ref ref=\"DEVEL\" />\n" +

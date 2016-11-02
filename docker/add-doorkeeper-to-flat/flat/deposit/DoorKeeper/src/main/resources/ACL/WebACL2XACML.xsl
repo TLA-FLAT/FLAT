@@ -61,7 +61,7 @@
             <xsl:variable name="resource" select="."/>
             <xsl:variable name="rid" select="concat($sip,'#',$resource/@id)"/>
             <xsl:message use-when="$debug">DBG: rid[<xsl:value-of select="$rid"/>]</xsl:message>
-            <!-- determine if the resource is public -->
+            <!-- determine if the SIP or resource is public -->
             <xsl:variable name="public" as="xs:boolean*">
                 <xsl:for-each select="(key('t-object',$rid,$t),key('t-object',$sip,$t))[sem:predicate=$acl-accessTo]/sem:subject">
                     <xsl:variable name="rule" select="."/>

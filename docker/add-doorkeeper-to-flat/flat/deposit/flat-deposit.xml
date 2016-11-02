@@ -10,16 +10,6 @@
         <property name="work" value="{flat:findBagBase($bag)}" uniq="true"/>
         <property name="easy" value="{$base}/easy" uniq="true"/>
         <property name="epicPrefix" value="12345"/>
-        <property name="epicUser" value="test"/>
-        <property name="epicPassword" value="test"/>
-        <property name="epicServer" value="http://www.pidconsortium.eu/"/>
-        <!--
-        <property name="tlaHandlePrefix" value="11142"/>
-        <property name="tlaHandleAdminKeyFilePath" value="/flat/resources/admpriv.bin"/>
-        <property name="tlaHandleAdminUserHandleIndex" value="300"/>
-        <property name="tlaHandleAdminUserHandle" value="0.NA/11142"/>
-        <property name="tlaHandleAdminPassword" value="null"/>
-        -->
         <property name="fedoraUser" value="fedoraAdmin"/>
         <property name="fedoraPassword" value="fedora"/>
         <property name="fedoraServer" value="https://localhost:8443/fedora"/>
@@ -38,9 +28,6 @@
         <action name="assemble package" class="nl.mpi.tla.flat.deposit.action.PackageAssembly">
             <parameter name="dir" value="{$work}/resources"/>
             <parameter name="prefix" value="{$epicPrefix}"/>
- 			<!--
- 		    <parameter name="prefix" value="{$tlaHandlePrefix}"/>
- 			-->
         </action>
         <action name="validate metadata" class="nl.mpi.tla.flat.deposit.action.Validate">
             <parameter name="schemaCache" value="{$base}/cache/schemas"/>
@@ -58,18 +45,12 @@
             <parameter name="resourcesDir" value="{$work}/resources"/>
             <parameter name="policyFile" value="{$base}/policies/persistence-policy.xml"/>
             <parameter name="xpathDatasetName" value="replace(//*[name()='MdSelfLink'], 'hdl:{$epicPrefix}/','')"/>
-            <!--
-            <parameter name="xpathDatasetName" value="replace(//*[name()='MdSelfLink'], 'hdl:{$tlaHandlePrefix}/','')"/>
-            -->
         </action>
         <!--
         <action class="nl.mpi.tla.flat.deposit.action.Versions"/>
         -->
         <action class="nl.mpi.tla.flat.deposit.action.HandleAssignment">
             <parameter name="prefix" value="{$epicPrefix}"/>
-	 		<!--
- 		    <parameter name="prefix" value="{$tlaHandlePrefix}"/>
-	 		-->
         </action>
         <!--
         <action class="nl.mpi.tla.flat.deposit.action.Relate"/>
@@ -104,23 +85,12 @@
             <parameter name="trustStore" value="/opt/jssecacerts"/>
             <parameter name="trustStorePass" value="changeit"/>
         </action>
-        <action class="nl.mpi.tla.flat.deposit.action.HandleCreation">
+        <action class="nl.mpi.tla.flat.deposit.action.EPICHandleCreation">
             <parameter name="fedoraServer" value="{$publicFedoraServer}"/>
-            <parameter name="epicServer" value="{$epicServer}"/>
-            <parameter name="epicPrefix" value="{$epicPrefix}"/>
-            <parameter name="epicUser" value="{$epicUser}"/>
-            <parameter name="epicPassword" value="{$epicPassword}"/>
+            <parameter name="epicConfig" value="{$base}/policies/epic-config.xml"/>
+            <parameter name="trustStore" value="/opt/jssecacerts"/>
+            <parameter name="trustStorePass" value="changeit"/>
         </action>
-        <!--
-        <action class="nl.mpi.tla.flat.deposit.action.TLAHandleCreation">
-        	<parameter name="fedoraServer" value="{$fedoraServer}"/>
-        	<parameter name="handlePrefix" value="{$tlaHandlePrefix}"/>
-        	<parameter name="handleAdminKeyFilePath" value="{$tlaHandleAdminKeyFilePath}"/>
-        	<parameter name="handleAdminUserHandleIndex" value="{$tlaHandleAdminUserHandleIndex}"/>
-        	<parameter name="handleAdminUserHandle" value="{$tlaHandleAdminUserHandle}"/>
-        	<parameter name="handleAdminPassword" value="{$tlaHandleAdminPassword}"/>
-        </action>
-        -->
         <action class="nl.mpi.tla.flat.deposit.action.Index">
             <parameter name="gsearchServer" value="{$gsearchServer}"/>
             <parameter name="gsearchUser" value="{$gsearchUser}"/>

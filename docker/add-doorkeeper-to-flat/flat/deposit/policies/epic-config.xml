@@ -1,0 +1,9 @@
+<PIDService>
+  <hostName>www.pidconsortium.eu/</hostName>
+  <URI>http://www.pidconsortium.eu/</URI>
+  <HandlePrefix>12345</HandlePrefix>
+  <userName>epic</userName>
+  <password>test</password>
+  <email>me@example.com</email>
+  <status>test</status>
+</PIDService>

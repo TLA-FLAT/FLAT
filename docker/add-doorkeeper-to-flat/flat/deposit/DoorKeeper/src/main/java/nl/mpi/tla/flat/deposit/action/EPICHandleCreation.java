@@ -16,9 +16,18 @@
  */
 package nl.mpi.tla.flat.deposit.action;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.net.URI;
+import java.security.KeyStore;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
+import nl.knaw.meertens.pid.PIDService;
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
 import nl.mpi.tla.flat.deposit.Resource;
+import org.apache.commons.configuration.XMLConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,23 +43,81 @@ public class EPICHandleCreation extends AbstractAction {
     public boolean perform(Context context) throws DepositException {
         
         String fedora = this.getParameter("fedoraServer");
-        String epic   = this.getParameter("epicServer");
-        String prefix = this.getParameter("epicPrefix");
-        String user   = this.getParameter("epicUser");
-        String pass   = this.getParameter("epicPassword");
+        String epic   = this.getParameter("epicConfig");
 
-        String fid = context.getSIP().getFID().toString().replaceAll("#.*","");
-        String dsid = context.getSIP().getFID().getRawFragment().replaceAll("@.*","");
-        String asof = context.getSIP().getFID().getRawFragment().replaceAll(".*@","");
+        if (epic == null) {
+            logger.error("No EPIC configuration has been specified! Use the epicConfig parameter.");
+            return false;
+        }
         
-        logger.info("Create handle["+context.getSIP().getPID()+"] -> URI["+fedora+"/objects/"+fid+"_CMD/datastreams/"+dsid+"/content?asOfDateTime="+asof+"]");
-        
-        for (Resource res:context.getSIP().getResources()) {
-            String rfid = res.getFID().toString().replaceAll("#.*","");
-            String rdsid = res.getFID().getRawFragment().replaceAll("@.*","");
-            String rasof = res.getFID().getRawFragment().replaceAll(".*@","");
+        File config = new File(epic);
+        if (!config.exists()) {
+            logger.error("The EPIC configuration["+epic+"] doesn't exist!");
+            return false;
+        } else if (!config.isFile()) {
+            logger.error("The EPIC configuration["+epic+"] isn't a file!");
+            return false;
+        } else if (!config.canRead()) {
+            logger.error("The EPIC configuration["+epic+"] can't be read!");
+            return false;
+        }
 
-            logger.info("Create handle["+res.getPID()+"] -> URI["+fedora+"/objects/"+rfid+"/datastreams/"+rdsid+"/content?asOfDateTime="+rasof+"]");
+        try {
+            
+            javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(
+                new javax.net.ssl.HostnameVerifier(){
+                    public boolean verify(String hostname,javax.net.ssl.SSLSession sslSession) {
+                        return true;
+                    }
+                });
+            
+            SSLContext theSslContext = null;
+            if (this.hasParameter("trustStore")) {
+                String ts = this.getParameter("trustStore");
+                String tsPass = this.getParameter("trustStorePass");
+                KeyStore theClientTruststore = KeyStore.getInstance(KeyStore.getDefaultType());
+                theClientTruststore.load(new FileInputStream(ts),tsPass.toCharArray());
+                TrustManagerFactory theTrustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+                theTrustManagerFactory.init(theClientTruststore);
+                theSslContext = SSLContext.getInstance("TLS");
+                theSslContext.init(null,theTrustManagerFactory.getTrustManagers(),null);
+                HttpsURLConnection.setDefaultSSLSocketFactory(theSslContext.getSocketFactory());
+            }
+            
+            logger.debug("EPIC configuration["+config.getAbsolutePath()+"]");
+            PIDService ps = new PIDService(new XMLConfiguration(config), theSslContext);
+
+            String fid = context.getSIP().getFID().toString().replaceAll("#.*","");
+            String dsid = context.getSIP().getFID().getRawFragment().replaceAll("@.*","");
+            String asof = context.getSIP().getFID().getRawFragment().replaceAll(".*@","");
+
+            URI    pid  = context.getSIP().getPID();
+            String uuid = pid.toString().replaceAll(".*/","");
+            String loc  = fedora+"/objects/"+fid+"/datastreams/"+dsid+"/content?asOfDateTime="+asof;
+            
+            logger.info("Create handle["+pid+"]["+uuid+"] -> URI["+loc+"]");
+            
+            String hdl = ps.requestHandle(uuid, loc);
+
+            logger.info("Created handle["+hdl+"] -> URI["+loc+"]");
+
+            for (Resource res:context.getSIP().getResources()) {
+                fid = res.getFID().toString().replaceAll("#.*","");
+                dsid = res.getFID().getRawFragment().replaceAll("@.*","");
+                asof = res.getFID().getRawFragment().replaceAll(".*@","");
+
+                pid  = res.getPID();
+                uuid = pid.toString().replaceAll(".*/","");
+                loc  = fedora+"/objects/"+fid+"/datastreams/"+dsid+"/content?asOfDateTime="+asof;
+
+                logger.info("Create handle["+pid+"]["+uuid+"] -> URI["+loc+"]");
+
+                hdl = ps.requestHandle(uuid, loc);
+
+                logger.info("Created handle["+hdl+"] -> URI["+loc+"]");
+            }
+        } catch(Exception e) {
+            throw new DepositException(e);
         }
         
         return true;
