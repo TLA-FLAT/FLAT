@@ -23,6 +23,7 @@
         <property name="fedoraUser" value="fedoraAdmin"/>
         <property name="fedoraPassword" value="fedora"/>
         <property name="fedoraServer" value="https://localhost:8443/fedora"/>
+        <property name="publicFedoraServer" value="http://localhost/flat"/>
         <property name="gsearchUser" value="fgsAdmin"/>
         <property name="gsearchPassword" value="fgsAdmin"/>
         <property name="gsearchServer" value="http://localhost:8080/fedoragsearch"/>
@@ -104,7 +105,7 @@
             <parameter name="trustStorePass" value="changeit"/>
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.HandleCreation">
-            <parameter name="fedoraServer" value="{$fedoraServer}"/>
+            <parameter name="fedoraServer" value="{$publicFedoraServer}"/>
             <parameter name="epicServer" value="{$epicServer}"/>
             <parameter name="epicPrefix" value="{$epicPrefix}"/>
             <parameter name="epicUser" value="{$epicUser}"/>

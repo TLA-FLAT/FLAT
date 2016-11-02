@@ -29,11 +29,10 @@ RUN apt-get update &&\
 #   - set apache ulimit to 1024
 ADD apache/envvars /etc/apache2/envvars
 ADD apache/apache2.conf /etc/apache2/apache2.conf
-RUN cd /etc/apache2/mods-enabled &&\
-	ln -s ../mods-available/rewrite.load . &&\
-	ln -s ../mods-available/proxy.conf . &&\
-	ln -s ../mods-available/proxy.load . &&\
-	ln -s ../mods-available/proxy_http.load .
+RUN a2enmod ssl &&\
+	a2enmod rewrite &&\
+	a2enmod proxy &&\
+	a2enmod proxy_http
 
 #
 # Configure postgres

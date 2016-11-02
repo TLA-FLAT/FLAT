@@ -13,7 +13,6 @@
     
     <xsl:param name="default-accounts" select="()"/>
     <xsl:param name="default-roles" select="('administrator')"/>
-    <xsl:param name="everyone" select="'anonymous user'"/>
     
     <xsl:variable name="debug" select="false()" static="yes"/>
     
@@ -62,119 +61,130 @@
             <xsl:variable name="resource" select="."/>
             <xsl:variable name="rid" select="concat($sip,'#',$resource/@id)"/>
             <xsl:message use-when="$debug">DBG: rid[<xsl:value-of select="$rid"/>]</xsl:message>
-            <xsl:message>INF: resource[<xsl:value-of select="$resource/cmd:ResourceRef/@lat:localURI"/>][<xsl:value-of select="$resource/cmd:ResourceRef"/>]</xsl:message>
+            <!-- determine if the resource is public -->
+            <xsl:variable name="public" as="xs:boolean*">
+                <xsl:for-each select="(key('t-object',$rid,$t),key('t-object',$sip,$t))[sem:predicate=$acl-accessTo]/sem:subject">
+                    <xsl:variable name="rule" select="."/>
+                    <xsl:message use-when="$debug">DBG: rule[<xsl:value-of select="$rule"/>]</xsl:message>
+                    <!-- does the rule give read access? -->
+                    <xsl:if test="exists(key('t-subject',$rule,$t)[sem:predicate=$acl-mode][sem:object=$acl-read])">
+                        <xsl:for-each select="key('t-subject',$rule,$t)[sem:predicate=$acl-agentClass]/sem:object">
+                            <xsl:variable name="agent" select="."/>
+                            <xsl:message use-when="$debug">DBG: agent class[<xsl:value-of select="$agent"/>]</xsl:message>
+                            <!-- if the AgentClass is foaf:Agent the resource should be public, as foaf:Agent represents everyone -->
+                            <xsl:if test="$agent=$foaf-agent">
+                                <xsl:message use-when="$debug">DBG: read access for everyone!</xsl:message>
+                                <xsl:sequence select="true()"/>
+                            </xsl:if>
+                        </xsl:for-each>
+                    </xsl:if>
+                </xsl:for-each>
+            </xsl:variable>
+            <xsl:message>INF: <xsl:value-of select="if ($public) then ('public') else ('private')"/> resource[<xsl:value-of select="$resource/cmd:ResourceRef/@lat:localURI"/>][<xsl:value-of select="$resource/cmd:ResourceRef"/>]</xsl:message>
             <xsl:result-document href="{$acl-base}/{concat(replace(cmd:lat('lat:',$resource/cmd:ResourceRef), '[^a-zA-Z0-9]', '_'), '.xml')}">
-                <Policy xmlns="urn:oasis:names:tc:xacml:1.0:policy" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" PolicyId="flat-acl-resource-policy" RuleCombiningAlgId="urn:oasis:names:tc:xacml:1.0:rule-combining-algorithm:first-applicable">
-                    <Target>
-                        <Subjects>
-                            <AnySubject/>
-                        </Subjects>
-                        <Resources>
-                            <AnyResource/>
-                        </Resources>
-                        <Actions>
-                            <AnyAction/>
-                        </Actions>
-                    </Target>
-                    <!-- Deny ... -->
-                    <Rule RuleId="deny-dsid-mime" Effect="Deny">
-                        <Target>
-                            <Subjects>
-                                <AnySubject/>
-                            </Subjects>
-                            <Resources>
-                                <!-- ... the OBJ data stream ... -->
-                                <Resource>
-                                    <ResourceMatch MatchId="urn:oasis:names:tc:xacml:1.0:function:string-equal">
-                                        <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">OBJ</AttributeValue>
-                                        <ResourceAttributeDesignator DataType="http://www.w3.org/2001/XMLSchema#string" AttributeId="urn:fedora:names:fedora:2.1:resource:datastream:id"/>
-                                    </ResourceMatch>
-                                </Resource>
-                            </Resources>
-                            <Actions>
-                                <!-- ... to be accessed ... -->
-                                <Action>
-                                    <ActionMatch MatchId="urn:oasis:names:tc:xacml:1.0:function:string-equal">
-                                        <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">urn:fedora:names:fedora:2.1:action:id-getDatastreamDissemination</AttributeValue>
-                                        <ActionAttributeDesignator AttributeId="urn:fedora:names:fedora:2.1:action:id" DataType="http://www.w3.org/2001/XMLSchema#string"/>
-                                    </ActionMatch>
-                                </Action>
-                            </Actions>
-                        </Target>
-                        <!-- ... except by ... -->
-                        <Condition FunctionId="urn:oasis:names:tc:xacml:1.0:function:not">
-                            <Apply FunctionId="urn:oasis:names:tc:xacml:1.0:function:or">
-                                <Apply FunctionId="urn:oasis:names:tc:xacml:1.0:function:string-at-least-one-member-of">
-                                    <SubjectAttributeDesignator DataType="http://www.w3.org/2001/XMLSchema#string" MustBePresent="false" AttributeId="urn:fedora:names:fedora:2.1:subject:loginId"/>
-                                    <Apply FunctionId="urn:oasis:names:tc:xacml:1.0:function:string-bag">
-                                        <!-- ... the default accounts ... -->
-                                        <xsl:for-each select="$default-accounts">
-                                            <xsl:variable name="account" select="."/>
-                                            <xsl:message>INF: read access for account[<xsl:value-of select="$account"/>]!</xsl:message>
-                                            <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">
-                                                <xsl:value-of select="$account"/>
-                                            </AttributeValue>
-                                        </xsl:for-each>
-                                        <!-- DYNAMIC: add any other specific user needing access -->
-                                        <!-- find all agents with access to the resource or the SIP -->
-                                        <xsl:for-each select="(key('t-object',$rid,$t),key('t-object',$sip,$t))[sem:predicate=$acl-accessTo]/sem:subject">
-                                            <xsl:variable name="rule" select="."/>
-                                            <xsl:message use-when="$debug">DBG: rule[<xsl:value-of select="$rule"/>]</xsl:message>
-                                            <!-- does the rule give read access? -->
-                                            <xsl:if test="exists(key('t-subject',$rule,$t)[sem:predicate=$acl-mode][sem:object=$acl-read])">
-                                                <!-- go to the agents -->
-                                                <xsl:for-each select="key('t-subject',$rule,$t)[sem:predicate=$acl-agent]/sem:object">
-                                                    <xsl:variable name="agent" select="."/>
-                                                    <xsl:message use-when="$debug">DBG: agent[<xsl:value-of select="$agent"/>]</xsl:message>
-                                                    <!-- go to their accounts -->
-                                                    <xsl:for-each select="key('t-subject',$agent,$t)[sem:predicate=$foaf-account]/sem:object">
-                                                        <xsl:variable name="account" select="."/>
-                                                        <xsl:message use-when="$debug">DBG: account[<xsl:value-of select="$account"/>]</xsl:message>
-                                                        <!-- does the agent have a FLAT account? -->
-                                                        <xsl:if test="key('t-subject',$account,$t)[sem:predicate=$foaf-service]/sem:object=$flat">
-                                                            <xsl:for-each select="key('t-subject',$account,$t)[sem:predicate=$foaf-accountName]/sem:object">
-                                                                <xsl:variable name="eppn" select="."/>
-                                                                <xsl:message>INF: read access for account[<xsl:value-of select="$eppn"/>]!</xsl:message>
-                                                                <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">
-                                                                    <xsl:value-of select="$eppn"/>
-                                                                </AttributeValue>
-                                                            </xsl:for-each>
-                                                        </xsl:if>
-                                                    </xsl:for-each>
+                <xsl:choose>
+                    <xsl:when test="$public">
+                        <Policy xmlns="urn:oasis:names:tc:xacml:1.0:policy" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" PolicyId="flat-acl-resource-policy" RuleCombiningAlgId="urn:oasis:names:tc:xacml:1.0:rule-combining-algorithm:first-applicable">
+                            <Target>
+                                <Subjects>
+                                    <AnySubject/>
+                                </Subjects>
+                                <Resources>
+                                    <Resource>
+                                        <ResourceMatch MatchId="urn:oasis:names:tc:xacml:1.0:function:string-equal">
+                                            <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">OBJ</AttributeValue>
+                                            <ResourceAttributeDesignator DataType="http://www.w3.org/2001/XMLSchema#string" AttributeId="urn:fedora:names:fedora:2.1:resource:datastream:id"/>
+                                        </ResourceMatch>
+                                    </Resource>
+                                </Resources>
+                                <Actions>
+                                    <Action>
+                                        <ActionMatch MatchId="urn:oasis:names:tc:xacml:1.0:function:string-equal">
+                                            <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">urn:fedora:names:fedora:2.1:action:id-getDatastreamDissemination</AttributeValue>
+                                            <ActionAttributeDesignator AttributeId="urn:fedora:names:fedora:2.1:action:id" DataType="http://www.w3.org/2001/XMLSchema#string"/>
+                                        </ActionMatch>
+                                    </Action>
+                                </Actions>
+                            </Target>
+                            <Rule RuleId="permit-dsid-obj" Effect="Permit"/>
+                            <Rule RuleId="also-allow-everything-else" Effect="Permit">
+                                <Target>
+                                    <Subjects>
+                                        <AnySubject/>
+                                    </Subjects>
+                                    <Resources>
+                                        <AnyResource/>
+                                    </Resources>
+                                    <Actions>
+                                        <AnyAction/>
+                                    </Actions>
+                                </Target>
+                            </Rule>
+                        </Policy>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <Policy xmlns="urn:oasis:names:tc:xacml:1.0:policy" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" PolicyId="flat-acl-resource-policy" RuleCombiningAlgId="urn:oasis:names:tc:xacml:1.0:rule-combining-algorithm:first-applicable">
+                            <Target>
+                                <Subjects>
+                                    <AnySubject/>
+                                </Subjects>
+                                <Resources>
+                                    <AnyResource/>
+                                </Resources>
+                                <Actions>
+                                    <AnyAction/>
+                                </Actions>
+                            </Target>
+                            <!-- Deny ... -->
+                            <Rule RuleId="deny-dsid-obj" Effect="Deny">
+                                <Target>
+                                    <Subjects>
+                                        <AnySubject/>
+                                    </Subjects>
+                                    <Resources>
+                                        <!-- ... the OBJ data stream ... -->
+                                        <Resource>
+                                            <ResourceMatch MatchId="urn:oasis:names:tc:xacml:1.0:function:string-equal">
+                                                <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">OBJ</AttributeValue>
+                                                <ResourceAttributeDesignator DataType="http://www.w3.org/2001/XMLSchema#string" AttributeId="urn:fedora:names:fedora:2.1:resource:datastream:id"/>
+                                            </ResourceMatch>
+                                        </Resource>
+                                    </Resources>
+                                    <Actions>
+                                        <!-- ... to be accessed ... -->
+                                        <Action>
+                                            <ActionMatch MatchId="urn:oasis:names:tc:xacml:1.0:function:string-equal">
+                                                <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">urn:fedora:names:fedora:2.1:action:id-getDatastreamDissemination</AttributeValue>
+                                                <ActionAttributeDesignator AttributeId="urn:fedora:names:fedora:2.1:action:id" DataType="http://www.w3.org/2001/XMLSchema#string"/>
+                                            </ActionMatch>
+                                        </Action>
+                                    </Actions>
+                                </Target>
+                                <!-- ... except by ... -->
+                                <Condition FunctionId="urn:oasis:names:tc:xacml:1.0:function:not">
+                                    <Apply FunctionId="urn:oasis:names:tc:xacml:1.0:function:or">
+                                        <Apply FunctionId="urn:oasis:names:tc:xacml:1.0:function:string-at-least-one-member-of">
+                                            <SubjectAttributeDesignator DataType="http://www.w3.org/2001/XMLSchema#string" MustBePresent="false" AttributeId="urn:fedora:names:fedora:2.1:subject:loginId"/>
+                                            <Apply FunctionId="urn:oasis:names:tc:xacml:1.0:function:string-bag">
+                                                <!-- ... the default accounts ... -->
+                                                <xsl:for-each select="$default-accounts">
+                                                    <xsl:variable name="account" select="."/>
+                                                    <xsl:message>INF: read access for account[<xsl:value-of select="$account"/>]!</xsl:message>
+                                                    <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">
+                                                        <xsl:value-of select="$account"/>
+                                                    </AttributeValue>
                                                 </xsl:for-each>
-                                            </xsl:if>
-                                        </xsl:for-each>
-                                    </Apply>
-                                </Apply>
-                                <Apply FunctionId="urn:oasis:names:tc:xacml:1.0:function:string-at-least-one-member-of">
-                                    <SubjectAttributeDesignator DataType="http://www.w3.org/2001/XMLSchema#string" MustBePresent="false" AttributeId="fedoraRole"/>
-                                    <Apply FunctionId="urn:oasis:names:tc:xacml:1.0:function:string-bag">
-                                        <!-- ... the default roles ... -->
-                                        <xsl:for-each select="$default-roles">
-                                            <xsl:variable name="role" select="."/>
-                                            <xsl:message>INF: read access for any [<xsl:value-of select="$role"/>]!</xsl:message>
-                                            <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">
-                                                <xsl:value-of select="$role"/>
-                                            </AttributeValue>
-                                        </xsl:for-each>
-                                        <!-- DYNAMIC: add everyone if public access is allowed -->
-                                        <xsl:for-each select="(key('t-object',$rid,$t),key('t-object',$sip,$t))[sem:predicate=$acl-accessTo]/sem:subject">
-                                            <xsl:variable name="rule" select="."/>
-                                            <xsl:message use-when="$debug">DBG: rule[<xsl:value-of select="$rule"/>]</xsl:message>
-                                            <!-- does the rule give read access? -->
-                                            <xsl:if test="exists(key('t-subject',$rule,$t)[sem:predicate=$acl-mode][sem:object=$acl-read])">
-                                                <xsl:for-each select="key('t-subject',$rule,$t)[sem:predicate=$acl-agentClass]/sem:object">
-                                                    <xsl:variable name="agent" select="."/>
-                                                    <xsl:message use-when="$debug">DBG: agent class[<xsl:value-of select="$agent"/>]</xsl:message>
-                                                    <xsl:choose>
-                                                        <!-- if the AgentClass is foaf:Agent the resource should be public, as foaf:Agent represents everyone -->
-                                                        <xsl:when test="$agent=$foaf-agent">
-                                                            <xsl:message>INF: read access for everyone!</xsl:message>
-                                                            <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">
-                                                                <xsl:value-of select="$everyone"/>
-                                                            </AttributeValue>
-                                                        </xsl:when>
-                                                        <xsl:otherwise>
+                                                <!-- DYNAMIC: add any other specific user needing access -->
+                                                <!-- find all agents with access to the resource or the SIP -->
+                                                <xsl:for-each select="(key('t-object',$rid,$t),key('t-object',$sip,$t))[sem:predicate=$acl-accessTo]/sem:subject">
+                                                    <xsl:variable name="rule" select="."/>
+                                                    <xsl:message use-when="$debug">DBG: rule[<xsl:value-of select="$rule"/>]</xsl:message>
+                                                    <!-- does the rule give read access? -->
+                                                    <xsl:if test="exists(key('t-subject',$rule,$t)[sem:predicate=$acl-mode][sem:object=$acl-read])">
+                                                        <!-- go to the agents -->
+                                                        <xsl:for-each select="key('t-subject',$rule,$t)[sem:predicate=$acl-agent]/sem:object">
+                                                            <xsl:variable name="agent" select="."/>
+                                                            <xsl:message use-when="$debug">DBG: agent[<xsl:value-of select="$agent"/>]</xsl:message>
                                                             <!-- go to their accounts -->
                                                             <xsl:for-each select="key('t-subject',$agent,$t)[sem:predicate=$foaf-account]/sem:object">
                                                                 <xsl:variable name="account" select="."/>
@@ -182,39 +192,88 @@
                                                                 <!-- does the agent have a FLAT account? -->
                                                                 <xsl:if test="key('t-subject',$account,$t)[sem:predicate=$foaf-service]/sem:object=$flat">
                                                                     <xsl:for-each select="key('t-subject',$account,$t)[sem:predicate=$foaf-accountName]/sem:object">
-                                                                        <xsl:variable name="role" select="."/>
-                                                                        <xsl:message>INF: read access for role[<xsl:value-of select="$role"/>]!</xsl:message>
+                                                                        <xsl:variable name="eppn" select="."/>
+                                                                        <xsl:message>INF: read access for account[<xsl:value-of select="$eppn"/>]!</xsl:message>
                                                                         <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">
-                                                                            <xsl:value-of select="$role"/>
+                                                                            <xsl:value-of select="$eppn"/>
                                                                         </AttributeValue>
                                                                     </xsl:for-each>
                                                                 </xsl:if>
                                                             </xsl:for-each>
-                                                        </xsl:otherwise>
-                                                    </xsl:choose>
+                                                        </xsl:for-each>
+                                                    </xsl:if>
                                                 </xsl:for-each>
-                                            </xsl:if>
-                                        </xsl:for-each>
+                                            </Apply>
+                                        </Apply>
+                                        <Apply FunctionId="urn:oasis:names:tc:xacml:1.0:function:string-at-least-one-member-of">
+                                            <SubjectAttributeDesignator DataType="http://www.w3.org/2001/XMLSchema#string" MustBePresent="false" AttributeId="fedoraRole"/>
+                                            <Apply FunctionId="urn:oasis:names:tc:xacml:1.0:function:string-bag">
+                                                <!-- ... the default roles ... -->
+                                                <xsl:for-each select="$default-roles">
+                                                    <xsl:variable name="role" select="."/>
+                                                    <xsl:message>INF: read access for any [<xsl:value-of select="$role"/>]!</xsl:message>
+                                                    <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">
+                                                        <xsl:value-of select="$role"/>
+                                                    </AttributeValue>
+                                                </xsl:for-each>
+                                                <!-- DYNAMIC: add groups or even everyone if public access is allowed -->
+                                                <xsl:for-each select="(key('t-object',$rid,$t),key('t-object',$sip,$t))[sem:predicate=$acl-accessTo]/sem:subject">
+                                                    <xsl:variable name="rule" select="."/>
+                                                    <xsl:message use-when="$debug">DBG: rule[<xsl:value-of select="$rule"/>]</xsl:message>
+                                                    <!-- does the rule give read access? -->
+                                                    <xsl:if test="exists(key('t-subject',$rule,$t)[sem:predicate=$acl-mode][sem:object=$acl-read])">
+                                                        <xsl:for-each select="key('t-subject',$rule,$t)[sem:predicate=$acl-agentClass]/sem:object">
+                                                            <xsl:variable name="agent" select="."/>
+                                                            <xsl:message use-when="$debug">DBG: agent class[<xsl:value-of select="$agent"/>]</xsl:message>
+                                                            <xsl:choose>
+                                                                <!-- if the AgentClass is foaf:Agent the resource should be public, as foaf:Agent represents everyone -->
+                                                                <xsl:when test="$agent=$foaf-agent">
+                                                                    <!-- should have been handled above, if we use the 'anonymous user' Drupal role the FC API-A will still require a login --> 
+                                                                    <xsl:message terminate="yes">ERR: read access for everyone, but processing is now handling specific user(s| groups)!</xsl:message>
+                                                                </xsl:when>
+                                                                <xsl:otherwise>
+                                                                    <!-- go to their accounts -->
+                                                                    <xsl:for-each select="key('t-subject',$agent,$t)[sem:predicate=$foaf-account]/sem:object">
+                                                                        <xsl:variable name="account" select="."/>
+                                                                        <xsl:message use-when="$debug">DBG: account[<xsl:value-of select="$account"/>]</xsl:message>
+                                                                        <!-- does the agent have a FLAT account? -->
+                                                                        <xsl:if test="key('t-subject',$account,$t)[sem:predicate=$foaf-service]/sem:object=$flat">
+                                                                            <xsl:for-each select="key('t-subject',$account,$t)[sem:predicate=$foaf-accountName]/sem:object">
+                                                                                <xsl:variable name="role" select="."/>
+                                                                                <xsl:message>INF: read access for role[<xsl:value-of select="$role"/>]!</xsl:message>
+                                                                                <AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">
+                                                                                    <xsl:value-of select="$role"/>
+                                                                                </AttributeValue>
+                                                                            </xsl:for-each>
+                                                                        </xsl:if>
+                                                                    </xsl:for-each>
+                                                                </xsl:otherwise>
+                                                            </xsl:choose>
+                                                        </xsl:for-each>
+                                                    </xsl:if>
+                                                </xsl:for-each>
+                                            </Apply>
+                                        </Apply>
                                     </Apply>
-                                </Apply>
-                            </Apply>
-                        </Condition>
-                    </Rule>
-                    <!-- ... but allow anything else -->
-                    <Rule RuleId="allow-everything-else" Effect="Permit">
-                        <Target>
-                            <Subjects>
-                                <AnySubject/>
-                            </Subjects>
-                            <Resources>
-                                <AnyResource/>
-                            </Resources>
-                            <Actions>
-                                <AnyAction/>
-                            </Actions>
-                        </Target>
-                    </Rule>
-                </Policy>
+                                </Condition>
+                            </Rule>
+                            <!-- ... but allow anything else -->
+                            <Rule RuleId="allow-everything-else" Effect="Permit">
+                                <Target>
+                                    <Subjects>
+                                        <AnySubject/>
+                                    </Subjects>
+                                    <Resources>
+                                        <AnyResource/>
+                                    </Resources>
+                                    <Actions>
+                                        <AnyAction/>
+                                    </Actions>
+                                </Target>
+                            </Rule>
+                        </Policy>
+                    </xsl:otherwise>
+                </xsl:choose>
             </xsl:result-document>
         </xsl:for-each>        
     </xsl:template>
