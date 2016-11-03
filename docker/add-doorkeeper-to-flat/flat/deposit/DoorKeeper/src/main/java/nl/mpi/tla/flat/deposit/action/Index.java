@@ -24,8 +24,8 @@ import java.net.URLEncoder;
 import java.util.Scanner;
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
-import nl.mpi.tla.flat.deposit.Resource;
-import nl.mpi.tla.flat.deposit.SIP;
+import nl.mpi.tla.flat.deposit.sip.Resource;
+import nl.mpi.tla.flat.deposit.sip.SIPInterface;
 
 /**
  *
@@ -43,7 +43,7 @@ public class Index extends AbstractAction {
         final String gsearchUser = getParameter("gsearchUser");
         final String gsearchPass = getParameter("gsearchPassword");
         
-        SIP sip = context.getSIP();
+        SIPInterface sip = context.getSIP();
 
         try {
             URL gsearchEndpoint = new URL(gsearchService);

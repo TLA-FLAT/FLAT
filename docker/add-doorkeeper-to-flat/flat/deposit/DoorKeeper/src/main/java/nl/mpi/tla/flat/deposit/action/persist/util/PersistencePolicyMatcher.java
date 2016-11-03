@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import nl.mpi.tla.flat.deposit.DepositException;
-import nl.mpi.tla.flat.deposit.Resource;
+import nl.mpi.tla.flat.deposit.sip.Resource;
 
 /**
  * Class used to match resources with persistence policies.

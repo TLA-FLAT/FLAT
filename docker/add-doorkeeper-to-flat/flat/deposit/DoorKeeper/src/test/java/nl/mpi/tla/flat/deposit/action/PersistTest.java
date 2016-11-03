@@ -40,8 +40,8 @@ import net.sf.saxon.s9api.XdmAtomicValue;
 import net.sf.saxon.s9api.XdmValue;
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
-import nl.mpi.tla.flat.deposit.Resource;
-import nl.mpi.tla.flat.deposit.SIP;
+import nl.mpi.tla.flat.deposit.sip.Resource;
+import nl.mpi.tla.flat.deposit.sip.SIPInterface;
 import nl.mpi.tla.flat.deposit.action.persist.util.PersistDatasetNameRetriever;
 import nl.mpi.tla.flat.deposit.action.persist.util.PersistencePolicies;
 import nl.mpi.tla.flat.deposit.action.persist.util.PersistencePolicy;
@@ -57,7 +57,7 @@ public class PersistTest {
 	@Rule public TemporaryFolder testFolder = new TemporaryFolder();
 	
 	@Mock Context mockContext;
-	@Mock SIP mockSIP;
+	@Mock SIPInterface mockSIP;
 	@Mock Document mockRecord;
 	@Mock PersistencePolicyLoader mockPolicyLoader;
 	@Mock PersistencePolicyMatcher mockPolicyMatcher;

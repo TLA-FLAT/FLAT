@@ -29,8 +29,8 @@ import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmValue;
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
-import nl.mpi.tla.flat.deposit.Resource;
-import nl.mpi.tla.flat.deposit.SIP;
+import nl.mpi.tla.flat.deposit.sip.Resource;
+import nl.mpi.tla.flat.deposit.sip.SIPInterface;
 import nl.mpi.tla.flat.deposit.action.fits.util.FITSHandler;
 
 @RunWith(PowerMockRunner.class)
@@ -43,7 +43,7 @@ public class FITSTest {
 	public ExpectedException exceptionCheck = ExpectedException.none();
 	
 	@Mock Context mockContext;
-	@Mock SIP mockSIP;
+	@Mock SIPInterface mockSIP;
 	@Mock Resource mockResource1;
 	@Mock Resource mockResource2;
 	@Mock Resource mockResource3;

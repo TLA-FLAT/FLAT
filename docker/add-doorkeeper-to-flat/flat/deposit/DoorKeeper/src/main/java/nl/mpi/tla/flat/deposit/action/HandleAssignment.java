@@ -20,8 +20,8 @@ import java.net.URI;
 import java.util.UUID;
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
-import nl.mpi.tla.flat.deposit.Resource;
-import nl.mpi.tla.flat.deposit.SIP;
+import nl.mpi.tla.flat.deposit.sip.Resource;
+import nl.mpi.tla.flat.deposit.sip.SIPInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +36,7 @@ public class HandleAssignment extends AbstractAction {
     @Override
     public boolean perform(Context context) throws DepositException {
         try {
-            SIP sip = context.getSIP();
+            SIPInterface sip = context.getSIP();
             if (!sip.hasPID()) {
                     sip.setPID(new URI("hdl:"+getParameter("prefix","foo")+"/"+UUID.randomUUID()));
                     logger.info("Assigned new PID["+sip.getPID()+"] to the SIP");

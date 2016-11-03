@@ -26,7 +26,7 @@ import javax.net.ssl.TrustManagerFactory;
 import nl.knaw.meertens.pid.PIDService;
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
-import nl.mpi.tla.flat.deposit.Resource;
+import nl.mpi.tla.flat.deposit.sip.Resource;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -20,7 +20,8 @@ import java.io.File;
 import net.sf.saxon.s9api.XdmValue;
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
-import nl.mpi.tla.flat.deposit.SIP;
+import nl.mpi.tla.flat.deposit.sip.SIPInterface;
+import nl.mpi.tla.flat.deposit.sip.CMDI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +70,7 @@ public class SIPLoad extends AbstractAction {
             return false;
         }
 
-        context.setSIP(new SIP(mr));
+        context.setSIP(new CMDI(mr));
 
         return true;
     }

@@ -46,8 +46,8 @@ import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XsltTransformer;
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
-import nl.mpi.tla.flat.deposit.Resource;
-import nl.mpi.tla.flat.deposit.SIP;
+import nl.mpi.tla.flat.deposit.sip.Resource;
+import nl.mpi.tla.flat.deposit.sip.SIPInterface;
 import nl.mpi.tla.flat.deposit.util.Saxon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +63,7 @@ public class EasyBag extends AbstractAction {
     @Override
     public boolean perform(Context context) throws DepositException {
         try {
-            SIP sip = context.getSIP();
+            SIPInterface sip = context.getSIP();
             Path fox = Paths.get(this.getParameter("foxes"));
             Path tmp = Paths.get(this.getParameter("bags"));
             Path bag = Files.createTempDirectory(tmp, "easy-bag-");

@@ -11,7 +11,7 @@ import net.handle.hdllib.HandleException;
 import nl.mpi.handle.util.HandleManager;
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
-import nl.mpi.tla.flat.deposit.Resource;
+import nl.mpi.tla.flat.deposit.sip.Resource;
 import nl.mpi.tla.flat.deposit.action.handle.util.HandleManagerFactory;
 
 public class TLAHandleCreation extends AbstractAction {

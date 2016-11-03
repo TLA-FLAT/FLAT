@@ -21,7 +21,7 @@ import java.net.URI;
 import java.util.UUID;
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
-import nl.mpi.tla.flat.deposit.Resource;
+import nl.mpi.tla.flat.deposit.sip.Resource;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.http.client.fluent.Request;

@@ -18,7 +18,7 @@ package nl.mpi.tla.flat.deposit.action;
 
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
-import nl.mpi.tla.flat.deposit.Resource;
+import nl.mpi.tla.flat.deposit.sip.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

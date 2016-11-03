@@ -26,8 +26,8 @@ import org.slf4j.LoggerFactory;
 
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
-import nl.mpi.tla.flat.deposit.Resource;
-import nl.mpi.tla.flat.deposit.SIP;
+import nl.mpi.tla.flat.deposit.sip.Resource;
+import nl.mpi.tla.flat.deposit.sip.SIPInterface;
 import nl.mpi.tla.flat.deposit.action.fits.util.FITSHandler;
 
 /**
@@ -61,7 +61,7 @@ public class FITS extends AbstractAction {
             throw new DepositException(message, ex);
         }
     	
-    	SIP sip = context.getSIP();
+    	SIPInterface sip = context.getSIP();
     	Set<Resource> resources = sip.getResources();
     	for(Resource currentResource : resources) {
             if(currentResource.hasFile()) {

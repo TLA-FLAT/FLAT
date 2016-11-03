@@ -31,8 +31,8 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 import nl.mpi.tla.flat.deposit.Context;
 import nl.mpi.tla.flat.deposit.DepositException;
-import nl.mpi.tla.flat.deposit.Resource;
-import nl.mpi.tla.flat.deposit.SIP;
+import nl.mpi.tla.flat.deposit.sip.Resource;
+import nl.mpi.tla.flat.deposit.sip.SIPInterface;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,7 +75,7 @@ public class Deposit extends AbstractAction {
 //                    logger.error("keystore["+keystore+"]["+ks.getAbsolutePath()+"] doesn't exist!");
 //            } else
 //                logger.debug("keystore[NULL]");
-            SIP sip = context.getSIP();
+            SIPInterface sip = context.getSIP();
             logger.debug("Fedora Commons["+this.getParameter("fedoraServer")+"]["+this.getParameter("fedoraUser")+":"+this.getParameter("fedoraPassword")+"]");
             if (!FedoraRequest.isDefaultClientSet()) {
                 FedoraCredentials credentials = new FedoraCredentials(this.getParameter("fedoraServer"), this.getParameter("fedoraUser"), this.getParameter("fedoraPassword"));

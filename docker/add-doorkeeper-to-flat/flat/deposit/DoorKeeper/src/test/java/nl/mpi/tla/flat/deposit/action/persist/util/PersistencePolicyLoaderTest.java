@@ -19,7 +19,7 @@ import org.junit.rules.ExpectedException;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmAtomicValue;
 import net.sf.saxon.s9api.XdmValue;
-import nl.mpi.tla.flat.deposit.SIP;
+import nl.mpi.tla.flat.deposit.sip.CMDI;
 
 /**
  * @author guisil
@@ -33,7 +33,7 @@ public class PersistencePolicyLoaderTest {
 	
 	private PersistencePolicyLoader persistencePolicyLoader;
 	
-	private SIP testSIP;
+	private CMDI testSIP;
 	private Map<String, XdmValue> datasetProperties;
 	private String datasetName = "dataset-123456";
 	
@@ -41,7 +41,7 @@ public class PersistencePolicyLoaderTest {
 	public void setUp() throws Exception {
 		persistencePolicyLoader = new PersistencePolicyLoader(resourcesBaseDir);
 		
-		testSIP = new SIP(new File(getClass().getClassLoader().getResource("test_sip/Progressive_Corpus.cmdi").getFile()));
+		testSIP = new CMDI(new File(getClass().getClassLoader().getResource("test_sip/Progressive_Corpus.cmdi").getFile()));
 		
 		datasetProperties = new HashMap<>();
 		datasetProperties.put("dataset_name", new XdmAtomicValue(datasetName));

@@ -16,6 +16,7 @@
  */
 package nl.mpi.tla.flat.deposit;
 
+import nl.mpi.tla.flat.deposit.sip.SIPInterface;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -45,7 +46,7 @@ public class Context {
     
     protected Map<String,XdmValue> props = new LinkedHashMap<>();
     
-    protected SIP sip = null;
+    protected SIPInterface sip = null;
         
     public Context(Flow flow,XdmNode spec,Map<String,XdmValue> params)  throws DepositException {
         this.flow = flow;
@@ -109,13 +110,13 @@ public class Context {
         return (this.sip != null);
     }
     
-    public void setSIP(SIP sip) throws DepositException {
+    public void setSIP(SIPInterface sip) throws DepositException {
         if (this.sip!=null)
             throw new DepositException("SIP is already specified!");
         this.sip = sip;
     }
     
-    public SIP getSIP() throws DepositException {
+    public SIPInterface getSIP() throws DepositException {
         if (this.sip==null)
             throw new DepositException("SIP is not specified!");
         return this.sip;

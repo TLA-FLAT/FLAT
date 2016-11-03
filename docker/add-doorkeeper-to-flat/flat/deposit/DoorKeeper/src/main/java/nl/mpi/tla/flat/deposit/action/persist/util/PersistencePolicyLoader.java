@@ -17,7 +17,7 @@ import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
 import net.sf.saxon.s9api.XdmValue;
 import nl.mpi.tla.flat.deposit.DepositException;
-import nl.mpi.tla.flat.deposit.SIP;
+import nl.mpi.tla.flat.deposit.sip.SIPInterface;
 import nl.mpi.tla.flat.deposit.util.Saxon;
 
 /**
@@ -45,7 +45,7 @@ public class PersistencePolicyLoader {
 	 * @throws SaxonApiException
 	 * @throws DepositException 
 	 */
-	public PersistencePolicies loadPersistencePolicies(Source persistencePoliciesSource, SIP sip, String datasetName) throws SaxonApiException {
+	public PersistencePolicies loadPersistencePolicies(Source persistencePoliciesSource, SIPInterface sip, String datasetName) throws SaxonApiException {
 		
 		logger.debug("Loading persistence policy from source {}", persistencePoliciesSource.getSystemId());
 		

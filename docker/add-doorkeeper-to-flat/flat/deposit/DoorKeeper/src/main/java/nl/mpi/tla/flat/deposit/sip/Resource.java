@@ -14,13 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package nl.mpi.tla.flat.deposit;
+package nl.mpi.tla.flat.deposit.sip;
 
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Date;
+import nl.mpi.tla.flat.deposit.DepositException;
 import nl.mpi.tla.flat.deposit.util.Global;
 import org.w3c.dom.Node;
 

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package nl.mpi.tla.flat.deposit;
+package nl.mpi.tla.flat.deposit.sip;
 
 import java.io.File;
 import java.net.URI;
@@ -31,6 +31,7 @@ import javax.xml.transform.dom.DOMSource;
 import net.sf.saxon.s9api.SaxonApiException;
 import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
+import nl.mpi.tla.flat.deposit.DepositException;
 import nl.mpi.tla.flat.deposit.util.Global;
 import static nl.mpi.tla.flat.deposit.util.Global.NAMESPACES;
 import nl.mpi.tla.flat.deposit.util.Saxon;
@@ -45,9 +46,9 @@ import org.w3c.dom.Node;
  *
  * @author menzowi
  */
-public class SIP {
+public class CMDI implements SIPInterface {
     
-    private static final Logger logger = LoggerFactory.getLogger(SIP.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(CMDI.class.getName());
     protected Marker marker = null;
     
     public static String CMD_NS = "http://www.clarin.eu/cmd/";
@@ -64,7 +65,7 @@ public class SIP {
     
     protected Map<String,String> namespaces = new LinkedHashMap<>();
     
-    public SIP(File spec) throws DepositException {
+    public CMDI(File spec) throws DepositException {
         this.base = spec;
         load(spec);
         loadResourceList();
