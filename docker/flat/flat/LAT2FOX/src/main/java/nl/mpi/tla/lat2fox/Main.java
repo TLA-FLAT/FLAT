@@ -17,6 +17,7 @@
 package nl.mpi.tla.lat2fox;
 
 import java.io.File;
+import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 import javax.xml.transform.TransformerFactory;
@@ -215,7 +216,7 @@ public class Main {
                 System.err.println("DBG: loaded["+rfile.getAbsolutePath()+"]");
             } else {
                 // create lookup document for relations
-                XsltTransformer rels = SaxonUtils.buildTransformer(Main.class.getResource("/cmd2rels.xsl")).load();
+                XsltTransformer rels = SaxonUtils.buildTransformer(new URL(System.getProperty("LAT2FOX.cmd2rels", Main.class.getResource("/cmd2rels.xsl").toString()))).load();
                 rels.setParameter(new QName("ext"), new XdmAtomicValue(cext));
                 rels.setParameter(new QName("dir"), new XdmAtomicValue("file:"+dir));
                 rels.setSource(new StreamSource(Main.class.getResource("/null.xml").toString()));
@@ -230,7 +231,7 @@ public class Main {
             }
             if (relationCheck) {
                 // Check the relations
-                XsltTransformer rcheck = SaxonUtils.buildTransformer(Main.class.getResource("/checkRels.xsl")).load();
+                XsltTransformer rcheck = SaxonUtils.buildTransformer(new URL(System.getProperty("LAT2FOX.checkRels", Main.class.getResource("/checkRels.xsl").toString()))).load();
                 rcheck.setParameter(new QName("rels-doc"), relsDoc);
                 rcheck.setSource(new StreamSource(Main.class.getResource("/null.xml").toString()));
                 XdmDestination dest = new XdmDestination();
@@ -246,8 +247,8 @@ public class Main {
             // if there is a CMD 2 DC or 2 other XSLT include it
             XsltExecutable cmd2fox = null;
             if (dfile != null || mfile != null) {
-                XsltTransformer inclCMD2DC = SaxonUtils.buildTransformer(Main.class.getResource("/inclCMD2DCother.xsl")).load();
-                inclCMD2DC.setSource(new StreamSource(Main.class.getResource("/cmd2fox.xsl").toString()));
+                XsltTransformer inclCMD2DC = SaxonUtils.buildTransformer(new URL(System.getProperty("LAT2FOX.inclCMD2DCother", Main.class.getResource("/inclCMD2DCother.xsl").toString()))).load();
+                inclCMD2DC.setSource(new StreamSource(System.getProperty("LAT2FOX.cmd2fox", Main.class.getResource("/cmd2fox.xsl").toString())));
                 if (dfile != null)
                     inclCMD2DC.setParameter(new QName("cmd2dc"),new XdmAtomicValue("file://"+(new File(dfile)).getAbsolutePath()));
                 if (mfile != null)
@@ -257,7 +258,7 @@ public class Main {
                 inclCMD2DC.transform();
                 cmd2fox = SaxonUtils.buildTransformer(destination.getXdmNode());                
             } else
-                cmd2fox = SaxonUtils.buildTransformer(Main.class.getResource("/cmd2fox.xsl"));
+                cmd2fox = SaxonUtils.buildTransformer(new URL(System.getProperty("LAT2FOX.cmd2fox", Main.class.getResource("/cmd2fox.xsl").toString())));
             int err = 0;
             int i = 0;
             int s = inputs.size();

@@ -33,8 +33,7 @@ import net.sf.saxon.s9api.XdmDestination;
 import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.s9api.XsltTransformer;
 import nl.mpi.tla.flat.deposit.DepositException;
-import nl.mpi.tla.flat.deposit.SIP;
-import nl.mpi.tla.flat.deposit.action.CreateFOX;
+import nl.mpi.tla.flat.deposit.sip.SIPInterface;
 import nl.mpi.tla.flat.deposit.util.Saxon;
 
 @Path("/doorkeeper/{sip}")
@@ -141,7 +140,7 @@ public class DoorKeeperServlet {
             if (status!=null)
                 wrap.setParameter(new QName("status"), new XdmAtomicValue(status.booleanValue()));
             if (flow.getContext().hasSIP()) {
-                SIP ip = flow.getContext().getSIP();
+                SIPInterface ip = flow.getContext().getSIP();
                 if (ip.hasPID())
                     wrap.setParameter(new QName("pid"), new XdmAtomicValue(ip.getPID()));
                 if (ip.hasFID())

@@ -15,7 +15,7 @@
 	<xsl:param name="fox-base" select="'./fox'"/>
 	<xsl:param name="lax-resource-check" select="false()"/>
 
-	<xsl:param name="repository" select="'flat.example.com'"/>
+	<xsl:param name="repository" select="'http://flat.example.com/'"/>
 
 	<xsl:param name="create-cmd-object" select="true()"/>
 
@@ -58,6 +58,7 @@
 	<xsl:function name="cmd:pid">
 		<xsl:param name="locs"/>
 		<xsl:param name="lvl"/>
+		<xsl:param name="def"/>
 		<xsl:choose>
 			<xsl:when test="empty($rels-doc/relations/relation)">
 				<xsl:sequence select="cmd:hdl($locs[1])"/>
@@ -90,7 +91,7 @@
 							<xsl:value-of select="string-join($refs, ', ')"/>
 							<xsl:text>] can't be determined!</xsl:text>
 						</xsl:message>
-						<xsl:sequence select="()"/>
+						<xsl:sequence select="$def"/>
 					</xsl:when>
 					<xsl:otherwise>
 						<xsl:if test="count($hdl) gt 1">
@@ -116,7 +117,13 @@
 
 	<xsl:function name="cmd:pid">
 		<xsl:param name="locs"/>
-		<xsl:sequence select="cmd:pid($locs, 'ERR')"/>
+		<xsl:param name="lvl"/>
+		<xsl:sequence select="cmd:pid($locs, $lvl,())"/>
+	</xsl:function>
+
+	<xsl:function name="cmd:pid">
+		<xsl:param name="locs"/>
+		<xsl:sequence select="cmd:pid($locs, 'ERR',())"/>
 	</xsl:function>
 	
 	<xsl:function name="cmd:firstFile" as="xs:anyURI?">
@@ -208,7 +215,7 @@
 							<xsl:sequence select="$hdl"/>
 						</xsl:when>
 						<xsl:otherwise>
-							<xsl:message>WRN: using base URI instead.</xsl:message>
+							<xsl:message>WRN: using base URI filename instead.</xsl:message>
 							<xsl:sequence select="$base"/>
 						</xsl:otherwise>
 					</xsl:choose>
@@ -258,26 +265,32 @@
 				$base))[type = 'Metadata']/from)"/>
 			<xsl:choose>
 				<xsl:when test="exists($rels)">
+					<xsl:message>DBG: relations.xml[<xsl:value-of select="string-join($rels,',')"/>]</xsl:message>
 					<xsl:for-each select="$rels">
-						<xsl:sequence select="cmd:lat('lat:',current())"/>
+						<xsl:sequence select="cmd:lat('lat:',cmd:pid(current(),'WRN',current()))"/>
 					</xsl:for-each>
 				</xsl:when>
 				<xsl:when test="exists($rec/cmd:CMD/cmd:Resources/cmd:IsPartOfList/cmd:IsPartOf)">
 					<xsl:for-each select="$rec/cmd:CMD/cmd:Resources/cmd:IsPartOfList/cmd:IsPartOf">
 						<xsl:choose>
 							<xsl:when test="normalize-space(@lat:flatURI)!=''">
+								<xsl:message>DBG: IsPartOf.@lat:flatURI[<xsl:value-of select="@lat:flatURI"/>]</xsl:message>
 								<xsl:sequence select="@lat:flatURI"/>
 							</xsl:when>
 							<xsl:otherwise>
 								<xsl:choose>
 									<xsl:when test="starts-with(.,'lat:')">
+										<xsl:message>DBG: IsPartOf.lat[<xsl:value-of select="."/>]</xsl:message>
 										<xsl:sequence select="."/>
 									</xsl:when>
-									<xsl:when test="starts-with(.,'hdl:') or starts-with(.,'http://hdl.handle.net/')">
-										<xsl:sequence select="cmd:lat('lat:',replace(replace(.,'http://hdl.handle.net/','hdl:'),'@format=.+',''))"/>
+									<xsl:when test="starts-with(.,'hdl:') or matches(.,'http(s)?://hdl.handle.net/')">
+										<xsl:message>DBG: IsPartOf.hdl[<xsl:value-of select="cmd:lat('lat:',cmd:hdl(.))"/>]</xsl:message>
+										<xsl:sequence select="cmd:lat('lat:',cmd:hdl(.))"/>
 									</xsl:when>
 									<xsl:otherwise>
-										<xsl:sequence select="cmd:lat('lat:',resolve-uri(.,$base))"/>
+										<xsl:variable name="lcl" select="cmd:lat('lat:',cmd:pid(resolve-uri(.,$base),'ERR',resolve-uri(.,$base)))"/>
+										<xsl:message>DBG: IsPartOf.lcl[<xsl:value-of select="."/>][<xsl:value-of select="resolve-uri(.,$base)"/>][<xsl:value-of select="$lcl"/>]</xsl:message>
+										<xsl:sequence select="$lcl"/>
 									</xsl:otherwise>
 								</xsl:choose>
 							</xsl:otherwise>
@@ -289,7 +302,17 @@
 					<xsl:choose>
 						<xsl:when test="exists($collections)">
 							<xsl:for-each select="$collections">
-								<xsl:sequence select="current()"/>
+								<xsl:choose>
+									<xsl:when test="starts-with(current(),'lat:')">
+										<xsl:sequence select="current()"/>
+									</xsl:when>
+									<xsl:when test="starts-with(current(),'hdl:') or matches(current(),'http(s)?://hdl.handle.net/')">
+										<xsl:sequence select="cmd:lat('lat:',cmd:hdl(current()))"/>
+									</xsl:when>
+									<xsl:otherwise>
+										<xsl:sequence select="cmd:lat('lat:',cmd:pid(resolve-uri(current(),$base),'ERR',resolve-uri(current(),$base)))"/>
+									</xsl:otherwise>
+								</xsl:choose>
 							</xsl:for-each>
 						</xsl:when>
 						<xsl:otherwise>
@@ -376,7 +399,7 @@
 														<!-- OAI -->
 														<xsl:if test="sx:evaluate($rec, $oai-include-eval, $NS)">
 															<oai:itemID xmlns="http://www.openarchives.org/OAI/2.0/">
-																<xsl:value-of select="concat('oai:', $repository, ':', $cmdID)"/>
+																<xsl:value-of select="concat('oai:', replace(replace($repository,'http(s)?//',''),'/','.'), ':', $cmdID)"/>
 															</oai:itemID>
 														</xsl:if>
 														<!-- relationship to the compound -->
@@ -401,6 +424,7 @@
 											<foxml:xmlContent>
 												<xsl:apply-templates mode="cmd">
 													<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
+													<xsl:with-param name="fid" select="$fid" tunnel="yes"/>
 													<xsl:with-param name="base" select="$base" tunnel="yes"/>
 												</xsl:apply-templates>
 											</foxml:xmlContent>
@@ -414,6 +438,7 @@
 									<!-- Metadata: other -->
 									<xsl:apply-templates mode="other">
 										<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
+										<xsl:with-param name="fid" select="$fid" tunnel="yes"/>
 										<xsl:with-param name="base" select="$base" tunnel="yes"/>
 									</xsl:apply-templates>
 								</foxml:digitalObject>
@@ -430,6 +455,7 @@
 							<foxml:xmlContent>
 								<xsl:apply-templates mode="cmd">
 									<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
+									<xsl:with-param name="fid" select="$fid" tunnel="yes"/>
 									<xsl:with-param name="base" select="$base" tunnel="yes"/>
 								</xsl:apply-templates>
 							</foxml:xmlContent>
@@ -438,6 +464,7 @@
 					<!-- Metadata: other -->
 					<xsl:apply-templates mode="other">
 						<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
+						<xsl:with-param name="fid" select="$fid" tunnel="yes"/>
 						<xsl:with-param name="base" select="$base" tunnel="yes"/>
 					</xsl:apply-templates>
 				</xsl:otherwise>
@@ -466,7 +493,7 @@
 									<!-- OAI -->
 									<xsl:if test="sx:evaluate($rec, $oai-include-eval, $NS)">
 										<oai:itemID xmlns="http://www.openarchives.org/OAI/2.0/">
-											<xsl:value-of select="concat('oai:', $repository, ':', $fid)"/>
+											<xsl:value-of select="concat('oai:', replace(replace($repository,'http(s)?//',''),'/','.'), ':', $fid)"/>
 										</oai:itemID>
 									</xsl:if>
 								</xsl:if>
@@ -902,26 +929,34 @@
 	<xsl:template match="cmd:IsPartOfList" mode="cmd"/>
 	
 	<xsl:template match="cmd:ResourceProxyList" mode="cmd">
+		<xsl:param name="fid" tunnel="yes"/>
 		<xsl:param name="pid" tunnel="yes"/>
 		<xsl:param name="base" tunnel="yes"/>
 		<xsl:message>DBG: cmd:ResourceProxyList</xsl:message>
 		<xsl:copy>
-			<!-- process non-Metadata resource proxies -->
-			<xsl:message>DBG: - non metadata</xsl:message>
-			<xsl:apply-templates select="cmd:ResourceProxy[cmd:ResourceType != 'Metadata']" mode="#current"/>
+			<!-- process non-Metadata or LandingPage resource proxies -->
+			<xsl:message>DBG: - non metadata or landing page</xsl:message>
+			<xsl:apply-templates select="cmd:ResourceProxy[not(cmd:ResourceType = ('LandingPage','Metadata'))]" mode="#current"/>
+			<xsl:message>DBG: - create landing page</xsl:message>
+			<ResourceProxy xmlns="http://www.clarin.eu/cmd/" id="home-{replace($fid,'lat:','')}">
+				<ResourceType>LandingPage</ResourceType>
+				<ResourceRef>
+					<xsl:value-of select="concat($repository,'/islandora/object/',encode-for-uri($fid),'#',if ($fid eq cmd:lat('lat:', $pid)) then () else concat('?pid=',encode-for-uri($pid)))"/>
+				</ResourceRef>
+			</ResourceProxy>
 			<!-- process Metadata resource proxies -->
 			<xsl:variable name="metadata" select="cmd:ResourceProxy[cmd:ResourceType = 'Metadata']"/>
 			<xsl:variable name="md">
 				<xsl:for-each select="$metadata">
-					<cmd:ResourceProxy>
-						<cmd:ResourceType mimetype="application/x-cmdi+xml">metadata</cmd:ResourceType>
-						<cmd:ResourceRef>
+					<ResourceProxy xmlns="http://www.clarin.eu/cmd/">
+						<ResourceType mimetype="application/x-cmdi+xml">Metadata</ResourceType>
+						<ResourceRef>
 							<xsl:if test="exists(cmd:ResourceRef/@lat:localURI)">
 								<xsl:attribute name="lat:localURI" select="cmd:ResourceRef/resolve-uri(@lat:localURI,$base)"/>
 							</xsl:if>
 							<xsl:value-of select="resolve-uri(cmd:ResourceRef,$base)"/>
-						</cmd:ResourceRef>
-					</cmd:ResourceProxy>
+						</ResourceRef>
+					</ResourceProxy>
 				</xsl:for-each>
 			</xsl:variable>
 			<xsl:variable name="children" select="$rels-doc/key('rels-from', ($pid,$base))[type = 'Metadata']"/>
@@ -944,7 +979,7 @@
 					<ResourceType mimetype="application/x-cmdi+xml">Metadata</ResourceType>
 					<xsl:variable name="ref">
 						<ResourceRef lat:localURI="{dst}">
-							<xsl:value-of select="to"/>
+							<xsl:value-of select="replace(to,'hdl:','https://hdl.handle.net/')"/>
 						</ResourceRef>
 					</xsl:variable>
 					<xsl:apply-templates select="$ref" mode="#current"/>
@@ -1010,7 +1045,7 @@
 							<xsl:attribute name="lat:localURI" xmlns:lat="http://lat.mpi.nl/">
 								<xsl:value-of select="cmd:lat('lat:', $hdl)"/>
 							</xsl:attribute>
-							<xsl:value-of select="$hdl"/>
+							<xsl:value-of select="replace($hdl,'hdl:','https://hdl.handle.net/')"/>
 						</xsl:copy>
 					</xsl:otherwise>
 				</xsl:choose>
@@ -1023,7 +1058,7 @@
 							<xsl:apply-templates select="node()" mode="#current"/>
 						</xsl:when>
 						<xsl:otherwise>
-							<xsl:value-of select="$hdl"/>
+							<xsl:value-of select="replace($hdl,'hdl:','https://hdl.handle.net/')"/>
 						</xsl:otherwise>
 					</xsl:choose>
 				</xsl:copy>

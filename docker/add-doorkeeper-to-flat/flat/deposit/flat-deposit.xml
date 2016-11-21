@@ -22,9 +22,11 @@
         <action name="logSetup" class="nl.mpi.tla.flat.deposit.action.WorkspaceLogSetup">
             <parameter name="dir" value="{$work}/logs"/>
         </action>        
+        <action name="check workspace" class="nl.mpi.tla.flat.deposit.action.SIPLoad">
+            <parameter name="sip" value="{$work}/metadata/record.cmdi"/>
+        </action>
     </init>
     <main>
-        <action name="check workspace" class="nl.mpi.tla.flat.deposit.action.SIPLoad"/>
         <action name="assemble package" class="nl.mpi.tla.flat.deposit.action.PackageAssembly">
             <parameter name="dir" value="{$work}/resources"/>
             <parameter name="prefix" value="{$epicPrefix}"/>

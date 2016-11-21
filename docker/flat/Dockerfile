@@ -32,7 +32,8 @@ ADD apache/apache2.conf /etc/apache2/apache2.conf
 RUN a2enmod ssl &&\
 	a2enmod rewrite &&\
 	a2enmod proxy &&\
-	a2enmod proxy_http
+	a2enmod proxy_http &&\
+	a2enmod sed
 
 #
 # Configure postgres

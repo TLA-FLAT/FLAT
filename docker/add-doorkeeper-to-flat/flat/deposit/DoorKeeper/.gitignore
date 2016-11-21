@@ -1,9 +1,0 @@
-/bin/
-/target/
-/lib/
-/src/test/resources/workdir/
-.classpath
-.project
-.settings
-.DS_Store
-.README.md.html

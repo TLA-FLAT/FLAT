@@ -41,8 +41,9 @@ RUN cd /tmp &&\
     cd /tmp/fedora-client &&\
     mvn clean install
 
-ADD flat/deposit/DoorKeeper /tmp/DoorKeeper
-RUN cd /tmp/DoorKeeper &&\
+RUN cd /tmp &&\
+    git clone -b develop https://github.com/TLA-FLAT/DoorKeeper.git DoorKeeper &&\
+    cd /tmp/DoorKeeper &&\
     mvn -Dmaven.test.skip=true clean install &&\
     cp target/doorkeeper.jar /app/flat/lib/
 
@@ -67,6 +68,8 @@ RUN mkdir -p /app/flat/deposit/bags &&\
 RUN mkdir -p /app/flat
 ADD flat/scripts/* /app/flat/
 RUN chmod +x /app/flat/*.sh
+
+ENV CATALINA_OPTS "-Djsse.enableSNIExtension=false"
 
 #Clean up APT when done.
 RUN apt-get clean &&\
