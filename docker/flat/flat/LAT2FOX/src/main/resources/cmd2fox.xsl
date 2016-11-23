@@ -399,7 +399,7 @@
 														<!-- OAI -->
 														<xsl:if test="sx:evaluate($rec, $oai-include-eval, $NS)">
 															<oai:itemID xmlns="http://www.openarchives.org/OAI/2.0/">
-																<xsl:value-of select="concat('oai:', replace(replace($repository,'http(s)?//',''),'/','.'), ':', $cmdID)"/>
+																<xsl:value-of select="concat('oai:', replace(replace($repository,'^http(s)?://',''),'/','.'), ':', $cmdID)"/>
 															</oai:itemID>
 														</xsl:if>
 														<!-- relationship to the compound -->
@@ -493,7 +493,7 @@
 									<!-- OAI -->
 									<xsl:if test="sx:evaluate($rec, $oai-include-eval, $NS)">
 										<oai:itemID xmlns="http://www.openarchives.org/OAI/2.0/">
-											<xsl:value-of select="concat('oai:', replace(replace($repository,'http(s)?//',''),'/','.'), ':', $fid)"/>
+											<xsl:value-of select="concat('oai:', replace(replace($repository,'^http(s)?://',''),'/','.'), ':', $fid)"/>
 										</oai:itemID>
 									</xsl:if>
 								</xsl:if>
