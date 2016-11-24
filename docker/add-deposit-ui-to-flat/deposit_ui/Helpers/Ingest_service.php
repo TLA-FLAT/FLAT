@@ -2,6 +2,7 @@
 /**
  * Ingest service
  */
+
 // include drupal functionality
 $drupal_path = $_POST['drupal_path'];
 chdir($drupal_path);
@@ -9,68 +10,90 @@ define('DRUPAL_ROOT', getcwd()); //the most important line
 require_once './includes/bootstrap.inc';
 drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
-/*
- * load configuration, helper functions and dependent classes
- */
-$module_path = drupal_realpath(drupal_get_path('module','flat_deposit_ui'));
-require_once ($module_path . '/inc/config.inc');
-require_once ($module_path . '/inc/php_functions.php');
-require_once ($module_path . '/Helpers/Fedora_REST_API.inc');
-require_once ($module_path . '/Helpers/Ingestor.inc');
-require_once ($module_path . '/Helpers/CMDI_Handler.php');
 
 /*
  *  Definition of all variables and constants
  */
 //posted variables
+$module_path = drupal_realpath(drupal_get_path('module','flat_deposit'));
 define('DEPOSIT_UI_PATH', $module_path);
-define('FREEZE_DIR', variable_get('flat_deposit_paths',array())['freeze']);
-define('BAG_DIR', variable_get('flat_deposit_paths',array())['bag']);
-define('APACHE_USER', variable_get('flat_deposit_names',array())['apache_user']);
+define('FREEZE_DIR', variable_get('flat_deposit_paths')['freeze']);
+define('BAG_DIR', variable_get('flat_deposit_paths')['bag']);
+define('APACHE_USER', variable_get('flat_deposit_names')['apache_user']);
 
-// variables stored in config.inc
-$configuration = get_configuration_ingest_service();
-define('BAG_EXE', $configuration['bag_exe']);
-define('LOG_ERRORS', $configuration['log_errors']);
-define('ERROR_LOG_FILE', $configuration['error_log_file']);
-define('SWORD_TMP_DIR', $configuration['sword_tmp_dir']);
+// variables stored in database
+$config = variable_get('flat_deposit_ingest_service');
+define('BAG_EXE', $config['bag_exe']);
+define('LOG_ERRORS', $config['log_errors']);
+define('ERROR_LOG_FILE', $config['error_log_file']);
+define('SWORD_TMP_DIR', $config['sword_tmp_dir']);
 
-// Ingest routine
+
+/*
+ * load configuration, helper functions and dependent classes
+ */
+require_once ($module_path . '/Helpers/Ingestor.inc');
+require_once ($module_path . '/Helpers/Fedora_REST_API.inc');
+require_once ($module_path . '/Helpers/CMDI_Handler.php');
+require_once ($module_path . '/inc/php_functions.php');
+
+
+// Processing routines
 $nid = $_POST['nid'];
 
 try {
+    // INITIALIZE
     $ingest = new Ingestor($nid);
-    #throw new IngestServiceException("Debugging");
 
-    $ingest->wrapper->upload_status->set('processing');
-    $ingest->wrapper->save();
+    $header  = "Ingest service log file - "  . $ingest->type . " on ".date("F j, Y, g:i a").PHP_EOL. "-------------------------";
+    $ingest->AddEntryLogFile($header);
 
-    $ingest->addResourcesToCMDI();
-    $ingest->addIsPartOfToCMDI();
+    $ingest->updateNodeStatus($ingest->type);
 
-    $ingest->prepareBag();
-    $ingest->zipBag();
 
-    $ingest->doSword();
-    $ingest->checkStatusSword();
+    // VALIDATION ROUTINE
+    if ($ingest->type == 'validating'){
+        // access rights and data freeze
+        $ingest->validate_backend_directory();
+        $ingest->moveData('freeze');
 
-    $ingest->triggerDoorkeeper();
-    $ingest->checkStatusDoorkeeper();
+        // CMDI completion: add resources and isPartOf property
+        $ingest->addResourcesToCMDI();
+        $ingest->addIsPartOfToCMDI();
 
-    $ingest->getConstituentFIDs();
 
-    $ingest->changeOwnerId();
+        // create bag for sword
+        $ingest->prepareBag();
+        $ingest->zipBag();
 
-    $ingest->cleanup();
+        // execute sword
+        $ingest->doSword();
+        #throw new IngestServiceException("Debugging");
+        $ingest->checkStatusSword();
 
-    $ingest->create_blog_entry('succeeded');
 
-    node_delete_multiple(array($nid));
-    #$ingest->wrapper->upload_status->set('awaiting');
-    #$ingest->wrapper->save();
+        // INGEST ROUTINE
+    } elseif ($ingest->type == 'processing'){
+
+        // execute doorkeeper
+        $ingest->triggerDoorkeeper();
+        $ingest->checkStatusDoorkeeper();
+
+        $ingest->getConstituentFIDs();
+
+        $ingest->changeOwnerId();
+
+        $ingest->cleanup();
+    }
+
+    // FINISH
+    $ingest->finalizeProcessing($nid);
+
 
 } catch (IngestServiceException $e) {
-    $ingest->wrapper->upload_status->set('failed');
+    $ingest->AddEntryLogFile('Catching IngestServiceException');
+    $ingest->updateNodeStatus('failed');
+    $ingest->AddEntryLogFile('Error message: ' . $e->getMessage());
     $ingest->wrapper->upload_exception->set($e->getMessage());
     $ingest->wrapper->save();
     $ingest->create_blog_entry('failed');

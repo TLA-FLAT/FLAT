@@ -1,7 +1,13 @@
 <?php
 
-
-function collection_form($form, $form_state, $entity){
+/**
+ * Flat_collection entity form. Necessary to create new collection member relations
+ *
+ * collection name is a pragmatic name for the collection,
+ * collection tree the exact path from the archive root to the place where the collection should be placed
+ * member is the name of the user (acronym) that will become member of this collection
+ */
+function flat_collection_form($form, $form_state, $entity){
 
     $form = array();
 
@@ -15,24 +21,20 @@ function collection_form($form, $form_state, $entity){
     $form['collection_tree'] = array(
         '#title' => t('Collection full path'),
         '#type' => 'textfield',
-        '#description' => 'Complete path of collection (from root collection to final subdirectory)',
+        '#description' => 'Complete path of collection (from root collection to final subdirectory).',
         '#default_value' => isset($entity->collection_tree) ? $entity->collection_tree : '',
         '#required' => TRUE);
 
     $form ['member'] = array(
         '#type' => 'textfield',
         '#title' => t('Member Name'),
-        '#description' => 'User that is member of this collection',
+        '#description' => 'Name of the user (acronym) that will become member of this collection',
         '#default_value' => isset($entity->member) ? $entity->member : '',
         '#required' => TRUE);
 
-    $form['actions'] = array(
-        '#type' => 'actions');
-
-    $form['actions']['submit'] = array(
+    $form['buttons']['submit'] = array(
         '#type' => 'submit',
         '#value' => t('Save'),
-        '#submit' => array('collection_form_submit'),
         '#weight' => 999,
     );
 
@@ -43,37 +45,23 @@ function collection_form($form, $form_state, $entity){
 }
 
 /**
- *Add validation logic
- *
- */
-function collection_form_validate($form, &$form_state){
-
-    module_load_include('inc','flat_deposit_ui','inc/flat_deposit_ui.collections');
-    $method = $form_state['build_info']['args'][1];
-
-    switch ($method){
-        case 'edit':{
-
-        }
-
-    }
+ * flat_collection_form validation
+ * */
+function flat_collection_form_validate($form, &$form_state){
 
     //Checks collection name
     // sanity
     if (!preg_match('!^[a-zA-Z0-9_]+$!', $form_state['values']['collection_name'])) {
-        form_set_error('collection_creation', t('The collection name must contain only letters, numbers, slashes, and underscores.'));
-        return $form;
+        form_set_error('collection_name', t('The collection name must contain only letters, numbers, slashes, and underscores.'));
     }
-
     //Checks fullpath
     // sanity
     if (!preg_match('!^[a-zA-Z0-9_/]+$!', $form_state['values']['collection_tree'])) {
-        form_set_error('collection_creation', t('The collection name must contain only letters, numbers, slashes, and underscores.'));
-        return $form;
+        form_set_error('collection_tree', t('The collection name must contain only letters, numbers, slashes, and underscores.'));
     }
 
     // uniqueness of path
-    $collections = db_select('flat_deposit_ui_collection','p')
+    $collections = db_select('flat_collection','p')
         ->fields('p',array('collection_name','collection_tree','member'))
         ->condition('member', $form_state['values']['member'])
         ->execute()
@@ -83,19 +71,34 @@ function collection_form_validate($form, &$form_state){
     //this is a number. We also want to stop processing only if collection is new (i.e. allow editing an existing collection).
     if (is_numeric(array_search($form_state['values']['collection_tree'],array_column($collections,'collection_tree'))) AND
         $form['collection_tree']['#default_value'] != $form_state['values']['collection_tree'] ){
-        $i = array_search($form_state['values']['collection_tree'],array_column($collections,'collection_tree'));
-        form_set_error('collection_creation','Collection with exactly same path already exists (' . array_column($collections,'collection_name')[$i] . ')');
-        return $form;
 
+        $i = array_search($form_state['values']['collection_tree'],array_column($collections,'collection_tree'));
+        form_set_error('collection_tree','Collection with exactly same path already exists (' . array_column($collections,'collection_name')[$i] . ')');
     }
+
+    // check existence member in user database
+    $match = FALSE;
+    $users = entity_load('user');
+
+    foreach ($users as $user){
+        if ($user->name === $form_state['values']['member']) $match = TRUE;
+    }
+    if (!$match){
+        form_set_error('member','Member does not exist in database');
+    }
+
 
 }
 
+/*
+ * Flat_collection Submission handler. Will generate values for mandatory fields (label, pid and date created).
+ * As pid is a value retrieved from fedora this submission handler has to communicate with fedora as well.
+ */
+function flat_collection_form_submit($form, &$form_state){
 
-function collection_form_submit($form, &$form_state){
-
+    // In fedora the field with the name of a collection is called 'label'
     $labels = explode('/',$form_state['values']['collection_tree']);
-    $data = get_collection_tree_data($labels, 'create');
+    $data = get_hierarchical_pids_by_label($labels, 'create');
 
     #Add values for mandatory fields
     $form_state['values']['label'] = $form_state['values']['collection_name'] . '_' . $form_state['values']['member'];
@@ -106,7 +109,7 @@ function collection_form_submit($form, &$form_state){
     $entity->save();
 
     // Redirect to the management page.
-    $form_state['redirect'] = 'managecollections';
+    $form_state['redirect'] = 'admin/collections';
 
     #drupal_set_message(sprintf("%s is now member of collection %s ", $member,$collection));
 
@@ -120,6 +123,7 @@ function collection_form_submit($form, &$form_state){
 function get_all_collection_cModel_data(){
     $tuque = islandora_get_tuque_connection();
 
+    module_load_include('php', 'flat_deposit', 'fedora_queries');
     $query = query_collection_CModels();
 
     $results = $tuque->repository->ri->sparqlQuery($query);
@@ -133,16 +137,28 @@ function get_all_collection_cModel_data(){
 }
 
 
+/**
+ * Function returning fedora PIDs for hierarchical structured labels.
 
-
-function get_collection_tree_data($labels, $method='view'){
+ * The function builds a sparql query. For labels with an index >0, the query adds information about the preceding object to the query,
+ * allowing by this to have several fedora collection content type objects with the same label.
+ *
+ * @param array $labels strings containing the labels of fedora objects to be queried
+ * @param string $method view existing or create new objects
+ *
+ * @return array data as stored in fedora. Data consists of the original label and the associated pid. For objects in
+ * view-mode that do not exist NULL is returned
+ */
+function get_hierarchical_pids_by_label($labels, $method='view'){
 
     $tuque = islandora_get_tuque_connection();
+    module_load_include('php', 'flat_deposit', 'fedora_queries');
     $data=[];
 
     $count = 0;
 
     foreach ($labels as $label){
+        
         // query where collection label = $label
         $query_begin = query_collection_CModels_begin($label);
 
@@ -151,6 +167,7 @@ function get_collection_tree_data($labels, $method='view'){
             $pid_parent = NULL;
             $query_mid = "frelx:isMemberOfCollection <info:fedora/islandora:compound_collection>;";
         } else {
+
         // add where isMemberOfCollection $pid_parent for subcollections
             $pid_parent = $data['pid'][$count-1];
             $query_mid = "frelx:isMemberOfCollection <info:fedora/" . $pid_parent . ">;";
@@ -173,7 +190,7 @@ function get_collection_tree_data($labels, $method='view'){
         } else {
         // otherwise create collection first or return empty value
             if ($method=='create'){
-                $pid = ingest_new_collection($label, NULL, $pid_parent);
+                $pid = create_new_collection_content_type_object($label, NULL, $pid_parent);
                 $data['pid'][] = $pid;
                 $data['label'][] = $label;
             } else {
@@ -189,9 +206,13 @@ function get_collection_tree_data($labels, $method='view'){
 }
 
 
-
-
-function ingest_new_collection($label, $pid=NULL, $pid_parent=NULL){
+/**
+ * @param $label string label value of the object to be created
+ * @param null $pid PID to be assigned to the object. If not specified this is generated
+ * @param null $pid_parent Object relationship (rel-ext) info to be added to the FoXML.
+ * @return string
+ */
+function create_new_collection_content_type_object($label, $pid=NULL, $pid_parent=NULL){
     // $pid may also be a namespace.
     $pid = $pid ? $pid : 'lat';
 

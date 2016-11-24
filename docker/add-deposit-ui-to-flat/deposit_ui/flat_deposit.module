@@ -1,0 +1,735 @@
+<?php
+
+/**
+ * Implements hook_theme().
+ */
+function flat_deposit_theme() {
+    $themes = array(
+        'image_link' => array(
+            'variables' => array(
+                'link' => array(
+                    'text' =>'Link text',
+                    'path' => 'path/to/ref',
+                    'options' => array(
+                        'attributes' => array(),
+                        'html' => FALSE,
+                    ),
+                ),
+                'image' => array(
+                    'path' => $GLOBALS['base_url'] . '/sites/all/themes/flat_bootstrap_theme/favicon.ico',
+                    'alt' => 'Image title',
+                    'title' => 'image title',
+                    'attributes' => array(),
+                )
+            )
+        ),
+        'node_actions_block' => array(
+            'variables' => array(
+                'title' => FALSE,
+                'status' => FALSE,
+                ),
+            )
+        );
+
+    return $themes;
+
+}
+
+
+/**
+ * Theme function that translates our input into renderable HTML
+ *
+ * $param variables array of data to be rendered
+ * @return string HTML code
+ */
+function theme_image_link($variables) {
+
+    $title = check_plain($variables['link']['text']);
+    $link = url($variables['link']['path']);
+
+    $themed_image = theme_image($variables['image']);
+    $themed_link = theme_link($variables['link']);
+
+    $output = '<a href="' . $link . '" title="' . $title .'">' . $themed_image .'</a><br/>';
+    $output .= $themed_link . '<br/>';
+
+    return $output;
+}
+
+
+
+
+/**
+ * Implements hook_permission().
+ */
+function flat_deposit_permission()
+{
+    // setting up the right to use the deposit and to administer
+    return array(
+        'admin deposit module' => array(
+            'title' => t('Administration of the deposit module'),
+            'description' => t('All administrative tasks'),
+            'restrict access' => TRUE),
+        'use deposit module' => array(
+            'title' => t('Usage of the deposit module'),
+            'description' => t('Make use of the FLAT deposit')),
+        'view collection' => array(
+            'title' => t('View collections'),
+            'description' => t('See overview collections')),
+        'admin collection' => array(
+            'title' => t('Admin collections'),
+            'description' => t('Admin flat_collections')),
+    );
+}
+
+/**
+ * Implements hook_enable().
+ *
+ * setup of initial configuration that is not already configured during install
+ */
+function flat_deposit_enable(){
+
+    // give authenticated users the right to use the deposit module
+    user_role_change_permissions(DRUPAL_AUTHENTICATED_RID, array('use deposit module' => TRUE));
+    // enable blog functionality in order to allow the backend to create ingest reports
+    module_enable(array('blog','flat_views'));
+
+
+}
+
+/**
+ * Implements hook_menu().
+ */
+function flat_deposit_menu()
+{
+
+    // Admin configuration group
+    $items['admin/config/flat_deposit'] = array(
+        'title' => 'FLAT deposit user interface',
+        'description' => 'Administer FLAT deposit user interface',
+        'access callback' => TRUE);
+
+    // Admin configuration - Upload settings
+    $items['admin/config/flat_deposit/customize'] = array(
+        'title' => 'Customize deposit settings',
+        'description' => 'Administer FLAT deposit settings such as temporal storage folders and used plugins',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array( 'flat_deposit_admin_form'),
+        'file' => 'inc/flat_deposit.admin.inc',
+        'access arguments' => array('admin deposit module'));
+
+    //FLAT_BUNDLE
+    // node creation
+    $items['islandora/object/%islandora_object/add_bundle'] = array(
+        'title' => 'Add bundle',
+        'page callback' => 'flat_bundle_node_form_fixed_collection',
+        'page arguments' => array(2),
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 10,
+        'access arguments' => array('use deposit module'),
+    );
+
+    // flat bundle cmdi file menu item
+    $items['node/%node/cmdi_info'] = array(
+        'title' => 'Bundle info file',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'flat_deposit_cmdi',
+        'file' => 'inc/flat_deposit.cmdi.inc',
+        'access arguments' => array('use deposit module')
+    );
+
+    // bundle cmdi file selection form
+    $items['node/%node/cmdi/select'] = array(
+        'type' => MENU_CALLBACK,
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('flat_deposit_cmdi_select_form',1),
+        'file' => 'inc/flat_deposit.cmdi_select.inc',
+        'access arguments' => array('use deposit module'),
+    );
+
+    // bundle cmdi file creator form
+    $items['node/%node/cmdi/create'] = array(
+        'type' => MENU_CALLBACK,
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('flat_deposit_cmdi_create_form',1),
+        'file' => 'inc/flat_deposit.cmdi_create.inc',
+        'access arguments' => array('use deposit module'),
+    );
+
+
+
+    //FLAT_COLLECTION
+    // flat_collection entity rendering
+    $items['flat_collection/%entity_object'] = array(
+        'load arguments' => array('flat_collection'),
+        'title callback' => 'flat_collection_page_title',
+        'title arguments' => array(1),
+        'page callback' => 'entity_ui_entity_page_view',
+        'page arguments' => array(1),
+        'access arguments' => array('view collection'),
+    );
+
+
+
+    return $items;
+}
+
+/**
+ * Implements hook_menu_local_task_alter
+ *
+ */
+function flat_deposit_menu_local_tasks_alter(&$data, $router_item, $root_path)
+{
+    // Remove the 'Add bundle'-menu from every islandora object view if user is not member of the collection
+    if (isset($data['tabs'][0]['output'])){
+        $tabs = $data['tabs'][0]['output'];
+        foreach ($tabs as $index => $tab) {
+            if ($tab['#link']['path'] == 'islandora/object/%/add_bundle') {
+                $pid_parent = explode('/', $tab['#link']['tab_parent_href']);
+                $pid_parent = end($pid_parent);
+
+                module_load_include('php', 'flat_deposit', 'drupal_queries');
+                $collections = query_user_collections(array( $pid_parent));
+
+                if (empty($collections)) {
+                    $data['tabs'][0]['output'][$index]['#link']['access'] = FALSE;
+                    unset($data['tabs'][0]['output'][$index]);
+                }
+            }
+
+        }
+    }
+
+    #krumo($data);
+}
+
+
+/**
+ * FLAT_BUNDLE RELATED FUNCTIONS
+ */
+
+
+/**
+ * Implements hook_node_info
+ *
+ * makes custom content type flat_bundle available
+ */
+function flat_deposit_node_info() {
+    return array(
+        'flat_bundle' => array(
+            'name' => t('FLAT Upload bundle'),
+            'base' => 'flat_bundle',
+            'description' => t('A bundle of one or more data files upload entity'),
+        )
+    );
+}
+
+/**
+ * Implements hook_form.
+ *
+ *  flat_bundle add/edit form
+ *
+ */
+function flat_bundle_form($node, $form_state) {
+    return node_content_form($node, $form_state);
+}
+
+
+/**
+ * Redirects to flat_bundle form
+ * @param $pid
+ */
+function flat_bundle_node_form_fixed_collection($pid)
+{
+
+    module_load_include('php', 'flat_deposit', 'drupal_queries');
+    $collections = query_user_collections(array($pid->id), TRUE);
+
+    if (empty($collections)) {
+
+        return t('You are not member of this collection and can"t create bundles here');
+    } else {
+
+        module_load_include('inc', 'node', 'node.pages');
+        $node_type = 'flat_bundle';
+        $form_id = $node_type . '_node_form';
+
+        global $user;
+        $new_node = new stdClass();
+        $new_node->uid = $GLOBALS['user']->uid;
+        $new_node->name = $user->name;
+        $new_node->type = $node_type;
+        $new_node->language = 'und';
+        $new_node->status = 1;
+        $new_node->sticky = 0;
+        $new_node->revision = FALSE;
+        $new_node->promote = 1;
+        $new_node->comment = 0;
+
+        node_object_prepare($new_node);
+
+        $collection = $collections ['collection_name'][0];
+        $form = drupal_get_form($form_id, $new_node, $collection);
+        return $form;
+
+    }
+}
+
+
+/**
+ * Implements hook_form_FORMID_alter.
+ *
+ * changes visibility and accessibility of certain node fields and addz collection-selection options based on users membership
+ *
+ */
+function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $form_id)
+{
+    // Hide unwanted buttons anf fields
+    hide($form['upload_status']);
+    hide($form['upload_exception']);
+    hide($form['upload_cmdi']);
+    hide($form['actions']['preview']);
+
+    // Conditionally hide field. To do that:
+    // 1. Create ajax trigger out of checkbox to hide location where data is stored if checkbox (external) is unchecked
+    $form['upload_external']['und']['#ajax'] = array(
+        'callback' => 'select_external_trigger_ajax_callback',
+        'wrapper' => 'upload-location-container',
+        'method' => 'replace',
+        'effect' => 'fade',
+    );
+
+    // 2. assign wrapper to location container such that AJAX can update this part when triggered
+    $form['upload_location']['#attributes']['id'] = array('upload-location-container');
+
+    // 3. set access value (show or not) depending on checkbox value
+    $checked = isset($form_state['values']['upload_external']['und'][0]['value']) ? $form_state['values']['upload_external']['und'][0]['value'] : 0;
+    if ($checked) {
+        $access = TRUE;
+    } else {
+        $access = FALSE;
+    }
+    $form['upload_location']['und'][0]['value']['#access'] = $access;
+
+
+    // Adapt description of external location such that it contains the root of the external path
+    global $user;
+
+    $config = variable_get('flat_deposit_paths');
+    $root = $config['alternate_dir'];
+    $form['upload_location']['und'][0]['value']['#description'] .= " (specific folder name located in" . $root . $user->name . ")";
+
+
+    // Form alterations depending on node status
+    $node = $form_state['node'];
+    $node_status = (!isset($node->nid) || isset($node->is_new)) ? 'create' : 'edit';
+
+    switch ($node_status){
+
+        case 'create':{
+
+            // Create selection of collections.
+            // This is dependent from extra parameters. In case the name of a collection is provided only that specific collection can be used
+            // Otherwise options are queried based on collection membership
+            $args = $form_state['build_info']['args'];
+
+            if (isset($args[1])) {
+                $collections[0]['collection_name'] = $args[1];
+                $form['upload_collection']['und']['#default_value'] = array($collections[0]['collection_name']);
+                $form['upload_collection']['und']['#disabled'] = TRUE;
+            } else {
+                module_load_include('php', 'flat_deposit', 'drupal_queries');
+                $collections = query_user_collections(NULL);
+            }
+
+            foreach ($collections as $index => $collection) {
+                $form ['upload_collection']['und']['#options'][$collection['collection_name']] = $collection['collection_name'];
+            }
+
+
+            // custom validation and submission
+            $form['#validate'][] = 'flat_bundle_node_form_add_validate';
+            $form['#submit'][] = 'flat_bundle_node_form_add_submit';
+            break;
+        }
+
+        // for existing bundles:
+        case 'edit':{
+            #$form['#validate'][] = 'flat_bundle_edit_node_form_validate';
+            #$form['#submit'][] = 'flat_bundle_edit_node_form_submit';
+
+            // prevent altering bundle name (title), external location and collection
+            $form['title']['#disabled'] = TRUE;
+            $form['upload_collection']['und']['#disabled'] = TRUE;
+            $form['upload_external']['und']['#disabled'] = TRUE;
+            $form['upload_location']['und']['#disabled'] = TRUE;
+
+            // when disabling a 'select'-form field with no default value, the field value is not populated but rather stays empty.
+            // As this value is mandatory and we want to keep it, we manually have to add it to the form.
+
+            $node_wrapper = entity_metadata_wrapper('node', $node);
+            $selected_collection = $node_wrapper->upload_collection->value();
+
+            $form['upload_collection']['und']['#default_value'][] = $selected_collection;
+            $form ['upload_collection']['und']['#options'][$selected_collection] = $selected_collection;
+
+            break;
+        }
+    }
+}
+
+/**
+ * AJAX trigger which will alter and reload the specified form element
+ */
+function select_external_trigger_ajax_callback ($form, &$form_state)
+{
+    return $form['upload_location'];
+}
+
+
+function flat_bundle_validate($node, $form, &$form_state){
+    $node_wrapper = entity_metadata_wrapper('node', $node);
+    $external = $node_wrapper->upload_external->value();
+    $location = $node_wrapper->upload_location->value();
+    if ($external AND !$location){
+        form_set_error('upload_location',t('Location needs to be set when data is located on archive server'));
+    }
+}
+
+/**
+ * Flat_bundle creation validation
+ */
+function flat_bundle_node_form_add_validate($form, &$form_state){
+    #dpm ($form_state);
+    $bundle_name = $form_state['values']['title'];
+    $collection = $form_state['values']['upload_collection']['und'][0]['value'];
+
+    //Validate bundle name
+    if (!preg_match('/^[a-zA-Z0-9\_]{2,40}+$/', $bundle_name)) {
+        form_set_error('title', t('Allowed are all letters, numbers and underscores (max length 40)'));
+    }
+
+    //Check that bundle name within collection is distinctive from existing bundles, otherwise we get problems with creating new folders.
+    $user_id = $GLOBALS['user']->uid = "1";
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'flat_bundle')
+        ->propertyCondition('uid', $user_id)
+        ->fieldCondition('upload_collection', 'value', "$collection", '=');
+
+    $user_node_nids_in_collection = $query->execute();
+
+    if (!empty($user_node_nids_in_collection)) {
+        $nids = array_keys($user_node_nids_in_collection['node']);
+        $query = db_select('node', 'n')
+            ->fields('n', array('title'))
+            ->condition('n.nid', $nids, 'IN');
+
+        $user_nodes = $query->execute()->fetchAll();
+
+        foreach ($user_nodes as $node){
+            if (strtolower($node->title) == strtolower($bundle_name)) {
+                form_set_error('title', t('Bundle with same or very similar bundle name exists'));
+            }
+        }
+    }
+
+    // Check if external location is accessible by drupal
+    $external = $form_state['values']['upload_external']['und'][0]['value']; #wrapper can't be used during initiation. If this doesn't work use node_presave
+
+    if ($external){
+        $location = $form_state['values']['upload_location']['und'][0]['value'];
+        $is_accessible = flat_deposit_external_location_is_accessible($location);
+        if ($is_accessible !== TRUE){
+            form_set_error('upload_external', t($is_accessible));
+        }
+    }
+
+#    form_set_error('debug', 'debug');
+}
+
+
+/**
+ * submission handler for newly created bundles
+ */
+function flat_bundle_node_form_add_submit($form, &$form_state){
+
+    $bundle = $form_state['values']['title'];
+    $collection = $form_state['values']['upload_collection']['und'][0]['value'];
+
+    // initiate user directories if necessary
+    module_load_include('inc', 'imce', 'inc/imce.page');
+    global $user;
+    imce_initiate_profile ($user);
+
+    // Specify target directory where new data folders will be created
+    $external = $form_state['values']['upload_external']['und'][0]['value'];
+    if ($external) {
+
+        $config = variable_get('flat_deposit_ingest_service');
+
+        $location = $form_state['values']['upload_location']['und'][0]['value'];
+        $target = $config['alternate_dir'] . $user->name . $config['alternate_subdir'] . "/" . $location;
+    } else {
+
+        $target = 'public://users/' . $user->name . "/$collection/$bundle";
+    }
+
+
+    // Create collection, bundle , data and metadata directories
+    $subs = array('data', 'metadata');
+    foreach ($subs as $sub ) {
+        if (!file_exists($target . '/metadata')) drupal_mkdir($target . '/' . $sub, NULL, TRUE);
+    }
+}
+
+
+/**
+ * Implements hook_view().
+ */
+function flat_bundle_view($node, $view_mode) {
+
+
+    if ($view_mode == 'full' && node_is_page($node)) {
+        // Breadcrumb navigation.  l() escapes title, so we should not escape !name.
+        drupal_set_breadcrumb(array(
+            l(t('Home'), NULL),
+            l(t("!name's bundles", array(
+                '!name' => format_username($node))), 'flat_bundle/' . $node->uid)));
+
+        $exception = field_get_items('node', $node, 'upload_exception')[0]['value'];
+        if ($exception) {
+            $node->content["upload_exception"] = field_view_field('node', $node, 'upload_exception');
+        }
+    }
+
+    return $node;
+}
+
+
+/**
+ * Implements hook_block_info().
+ */
+function flat_deposit_block_info()
+{
+    $blocks = array();
+
+
+    $blocks['node_actions'] = array(
+        'info' => t('FLAT deposit upload bundle actions '),
+        'status' => TRUE,
+        'region' => 'content',
+        'visibility' => BLOCK_VISIBILITY_PHP,
+        'pages' => '<?php 
+        if ( arg(0) == "node" AND is_numeric(arg(1)) AND arg(2) == FALSE ) {
+            $node = node_load(arg(1)); 
+            if ($node->type == "flat_bundle"){
+                return TRUE;
+            }
+        }
+        return FALSE;
+        ?>');
+
+
+    return $blocks;
+}
+
+
+/**
+ * Implements hook_block_view().
+ */
+function flat_deposit_block_view($delta = '')
+{
+    if ($delta == 'node_actions') {
+
+
+        $node = menu_get_object();
+        $node_wrapper = entity_metadata_wrapper('node', $node);
+        $status = $node_wrapper->upload_status->value();
+
+        $block = array
+        (
+            'subject' => '',
+            'content' => array
+            (
+                'node_actions_block' => array
+                (
+                    '#theme' => 'node_actions_block',
+                    '#title' => $node->title,
+                    '#status' => $status,
+                ),
+            ),
+        );
+
+        return $block;
+    }
+}
+
+
+/**
+ * Themeing function of the node action block
+
+ */
+function theme_node_actions_block($variables)
+{
+
+    module_load_include('inc','flat_deposit','inc/flat_bundle.actions_form');
+    $form = drupal_get_form('flat_bundle_action_form',$variables);
+    $rendered_form = drupal_render($form);
+
+    return $rendered_form;
+}
+
+
+
+
+/**
+ * FLAT_COLLECTION RELATED FUNCTIONS
+ */
+
+
+/**
+ * Implements hook_entity_info
+ *
+ * makes custom entity type flat_collection available
+ */
+function flat_deposit_entity_info() {
+    $entities = array();
+
+    $entities['flat_collection'] = array(
+
+        // Define basic information.
+        'label' => t('FLAT Collection'),
+        'plural label' => t('FLAT Collections'),
+        'fieldable' => FALSE,
+
+        // Provide information about the database table.
+        'base table' => 'flat_collection',
+        'entity keys' => array(
+            'id' => 'collection_id',
+            'label' => 'label',
+
+        ),
+
+        // Use classes from the Entity API module.
+        'entity class' => 'Entity',
+        'controller class' => 'EntityAPIController',
+
+        // Have Entity API set up an administrative UI.
+        'admin ui' => array(
+            'path' => 'admin/collections',
+            'file' => 'inc/flat_collections.inc'
+        ),
+        'module' => 'flat_deposit',
+        'access callback' => 'flat_collection_access',
+
+        // For content-type entities only, define the callback that
+        // returns the URL for the entity.
+        'uri callback' => 'flat_collection_uri',
+    );
+
+    return $entities;
+}
+
+
+/*
+ * Sets the page title of flat_collections to collection name
+ */
+function flat_collection_page_title($entity){
+    return $entity->collection_name;
+}
+
+
+// For content-type entities, return the URI for an entity.
+function flat_collection_uri($entity) {
+    return array(
+        'path' => 'flat_collection/' . $entity->collection_id,
+    );
+}
+
+
+/**
+ * Access callback: Checks entity access.
+ *
+ * From "Defining an Entity Type in Drupal 7", chapter 4.
+ *
+ * @param string $op
+ *   Operation to check: 'view', 'update', 'create', etc.
+ * @param object|null $entity
+ *   Object to check access on, or NULL to check for all entities.
+ * @param object|null $account
+ *   Account to check access permissions for. NULL means "current user".
+ *
+ * @return bool
+ *   TRUE to allow access; FALSE to deny access.
+ */
+function flat_collection_access($op, $entity, $account = NULL) {
+    if ($op == 'view') {
+        return user_access('view collection', $account);
+    }
+
+    // All other operations use the generic "administer" permission.
+    return user_access('administer collection', $account);
+}
+
+/**
+ * Implements hook_page_alter().
+ */
+function flat_deposit_page_alter(&$page)
+{
+    #krumo ($page);
+}
+
+
+
+/**
+ * Checks if external location specified by user is accessible by drupal
+
+ * @param $location
+ * @return bool|string
+ */
+function flat_deposit_external_location_is_accessible($location)
+{
+
+
+    $config = variable_get('flat_deposit_paths');
+
+    // Check accessibility root directory
+    if (!is_writable($config['alternate_dir'])){
+        $message =  sprintf('External root directory %s does not exist or is not writable. Please contact administrator',$config["alternate_dir"]);
+        return $message;
+    };
+
+    // Check accessibility specific user directory
+    global $user;
+    $alternate_full_path = $config['alternate_dir'] . $user->name . $config['alternate_subdir'] . "/" . $location;
+
+    if (!is_writable($alternate_full_path)){
+        $message = sprintf('External user directory %s does not exist or is not writable.',$alternate_full_path);
+        return $message;
+    };
+
+    return TRUE;
+}
+
+/**
+ * Implements hook_view().
+ */
+function flat_collection_view($node, $view_mode) {
+
+
+    if ($view_mode == 'full' && node_is_page($node)) {
+        // Breadcrumb navigation.  l() escapes title, so we should not escape !name.
+        drupal_set_breadcrumb(array(
+            l(t('Home'), NULL),
+            l(t("!name's bundles", array(
+                '!name' => format_username($node))), 'flat_bundle/' . $node->uid)));
+
+        $exception = field_get_items('node', $node, 'upload_exception')[0]['value'];
+        if ($exception) {
+            $node->content["upload_exception"] = field_view_field('node', $node, 'upload_exception');
+        }
+    }
+
+    return $node;
+}

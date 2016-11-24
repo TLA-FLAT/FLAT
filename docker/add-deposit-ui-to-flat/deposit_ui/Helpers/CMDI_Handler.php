@@ -1,52 +1,39 @@
 <?php
 
-/**
- * Created by PhpStorm.
- * User: danrhe
- * Date: 09/06/16
- * Time: 12:24
- */
-
-
-require_once (drupal_realpath(drupal_get_path('module', 'flat_deposit_ui')) . '/inc/config.inc');
-
 
 class CMDI_Handler
 
 {
-    public $bundle;
-    public $collection;
-    public $md_config;
-    public $template;
-    public $field_name;
-    public $handles;
-    public $xml;
-    public $export_file;
-    public $prefix;
-    public $files_info;
-    public $form_data;
-    public $resources;
-    public $form_fields;
+    public $profile; // profile used to create metadata
+
+    public $xml; // simpleXML element used to populate and export
+    public $user;
+    public $form_data; //data from the input form
+    public $bundle; // node title info
+    public $collection; // node field info
+
+    public $resources; // files to add as resources to CMDI
+
+    public $export_file; // path and name of the xml file storing the cmdi metadata
+
+
+
 
     /**
-     * CMDI_creator constructor.
-     * @param $file string    folder name where to export the xml file to
-     * @param $bundle
-     * @param $template
+     * CMDI_handler constructor.
+     * @param $node stdClass node object
+     * @param $rpofile
      */
-    public function __construct($node, $template='default')
+    public function __construct($node, $profile='default')
     {
-        $wrapper = entity_metadata_wrapper('node', $node);
+        $this->profile = $profile;
 
+        $wrapper = entity_metadata_wrapper('node', $node);
         $this->bundle = $node->title;
         $this->collection = $wrapper->upload_collection->value();
-        $this->template = $template;
+
         $this->user = user_load($node->uid);
 
-        $this->md_config = get_configuration_metadata();
-
-        $this->field_name = $this->md_config['prefix'] . '-' . $template;
-        $this->prefix = 'hdl:';
         $this->export_file = $this->determine_export_file($wrapper);
         
     }
@@ -58,70 +45,33 @@ class CMDI_Handler
      * @return string
      */
     public function determine_export_file($wrapper){
+
         $status = $wrapper->upload_status->value();
-        $external = $wrapper->upload_external->value();
 
-        if ($status == 'processing'){
-            $file = FREEZE_DIR . '/' . $this->user->name . "/$this->collection/$this->bundle/metadata/record.cmdi";
-        } elseif ($external){
-            $a = module_load_include('inc', 'flat_deposit_ui', 'inc/config');
-            $config = get_configuration_ingest_service();
+        if ($status == 'open' || $status == 'failed'){
 
-            $location = $wrapper->upload_location->value();
-            $file = $config['alternate_dir'] . USER . $config['alternate_subdir'] . "/$location/metadata/record.cmdi";
+            $external = $wrapper->upload_external->value();
+
+            if ($external) {
+
+                $config = variable_get('flat_deposit_ingest_service');
+                $location = $wrapper->upload_location->value();
+                $path = $config['alternate_dir'] . $this->user->name . $config['alternate_subdir'] . "/$location";
+
+            } else {
+
+                $path = 'public://users/' . $this->user->name . "/$this->collection/$this->bundle";
+
+            }
+
         } else {
-            $file = USER_DRUPAL_DATA_DIR."/$this->collection/$this->bundle/metadata/record.cmdi";
+
+            $freeze =  variable_get('flat_deposit_paths')['freeze'];
+            $path = $freeze . '/' . $this->user->name . "/$this->collection/$this->bundle";
+
         }
-    return $file;
-    }
 
-
-
-    /**
-     * This method either loads a simpleXML object from an existing CMDI file or generates a CMDI tree with only the basic nodes.
-     */
-    function getXML(){
-
-    if ($this->projectCmdiFileExists()){
-        $this->xml = simplexml_load_file($this->export_file);
-    } else { $this->initiateNewCMDI(); }
-
-
-}
-
-    /**
-     * Methods that generates a new, valid CMDI file including processing instructions, empty data fields and attributes
-     */
-    function initiateNewCMDI(){
-
-        module_load_include('php', 'flat_deposit_ui', 'inc/xml_functions');
-        $this->xml = new SimpleXMLElement_Plus('<CMD/>');
-
-        // add processing instructions
-        $processing_instruction = get_processing_instructions($this->md_config['site_name']) ;
-        $this->xml->addProcessingInstruction($processing_instruction[0], $processing_instruction[1]);
-
-        // add attributes
-        $CMD_attributes = get_attributes ("MPI") ;
-        add_attribute_tree_to_xml($CMD_attributes,$this->xml);
-
-        // add (almost) empty xml data fields (=tree)
-        $basis_tree = array(
-            'Header' => array(
-                'MdCreator' => '',
-                'MdCreationDate' => '',
-                #'MdSelfLink' => '',
-                'MdProfile' => $this->md_config['MdProfile'],
-            ),
-            'Resources' => array(
-                'ResourceProxyList' => '',
-                'JournalFileProxyList' => '',
-                'ResourceRelationList' => '',
-                'IsPartOfList' => ''),
-            'Components' => array(
-                $this->field_name => '')
-        );
-        array_to_xml($basis_tree,$this->xml);
+        return $path . '/metadata/record.cmdi';
     }
 
     /**
@@ -135,6 +85,69 @@ class CMDI_Handler
         $checkfile = (is_null($fileName)) ? $this->export_file : $fileName;
         return file_exists($checkfile);
     }
+
+
+    /**
+     * This method either loads a simpleXML object from an existing CMDI file or generates a CMDI tree with only the basic nodes.
+     */
+    function getXML(){
+
+    if ($this->projectCmdiFileExists()){
+
+        $this->xml = simplexml_load_file($this->export_file);
+
+    } else {
+
+        $this->initiateNewCMDI();
+
+    }
+}
+
+    /**
+     * Methods that generates a new, valid CMDI file including processing instructions, empty data fields and attributes
+     */
+    function initiateNewCMDI(){
+
+        if (!$this->profile){
+            throw new Exception('Profile has not been specified');
+        }
+
+        $config = variable_get('flat_deposit_metadata');
+        module_load_include('php', 'flat_deposit_ui', 'inc/xml_functions');
+
+        $this->xml = new SimpleXMLElement_Plus('<CMD/>');
+
+        // add processing instructions
+        $processing_instruction = get_processing_instructions($config['site']) ;
+        $this->xml->addProcessingInstruction($processing_instruction[0], $processing_instruction[1]);
+
+        // add attributes
+        $CMD_attributes = get_attributes ($config['site']) ;
+        add_attribute_tree_to_xml($CMD_attributes,$this->xml);
+
+
+        //
+        $components_field_value = $config ['prefix'] . '-' . $this->profile;
+
+        // add (almost) empty xml data fields (=tree)
+        $basis_tree = array(
+            'Header' => array(
+                'MdCreator' => '',
+                'MdCreationDate' => '',
+                #'MdSelfLink' => '',
+                'MdProfile' => $config['MdProfile'],
+            ),
+            'Resources' => array(
+                'ResourceProxyList' => '',
+                'JournalFileProxyList' => '',
+                'ResourceRelationList' => '',
+                'IsPartOfList' => ''),
+            'Components' => array(
+                $components_field_value => '')
+        );
+        array_to_xml($basis_tree,$this->xml);
+    }
+
 
 
 
@@ -199,15 +212,16 @@ class CMDI_Handler
 
     function changeHeader()
     {
-        $this->xml->Header->MdCreator = USER;
+        $this->xml->Header->MdCreator = $this->user->name;
         $this->xml->Header->MdCreationDate = format_date(time(), 'custom', 'Y-m-d');;
-        #$this->xml->Header->MdSelfLink = $this->handles['cmd'];
+
     }
 
 
     /**
      * This method transforms drupal form data into valid cmdi meta data.
-     * Particularly, (1) date is formatted (2) tree info is changed (e.g. move Components/field_1/Name to Components/Name)). Only template specific data is added to the class
+     * Particularly, (1) date is formatted (2) tree info is changed (e.g. move Components/field_1/Name to Components/Name)). Only profile
+     *specific data is added to the class
 
      * @param $form_data array of meta data harvested from drupal form
      */
@@ -226,8 +240,8 @@ class CMDI_Handler
         $clean_data['Date'] = $date;
         $clean_data['Date'] = $date;
 
-        // add all template specific fields to the xml
-        foreach ($form_data['form_fields_template'] as $field){
+        // add all profile specific fields to the xml
+        foreach ($form_data['form_fields_keys'] as $field){
             if ($field != "field_1"){
                 $clean_data[$field] = $form_data[$field];}
         }
@@ -241,143 +255,21 @@ class CMDI_Handler
      */
     function addComponentInfoToXml()
     {
+
+        if (!$this->profile){
+            throw new Exception('Profile has not been specified');
+        }
+
         module_load_include('php', 'flat_deposit_ui', 'inc/xml_functions');
 
-        $data = $this->xml->Components->{$this->field_name};
+        $config = variable_get('flat_deposit_metadata');
+        $value = $config ['prefix'] . '-' . $this->profile;
+
+        $data = $this->xml->Components->{$value};
         array_to_xml($this->form_data, $data);
     }
 
 }
-
-
-
-/**
- * Returns a form array with fields that may be filled in by researchers to generate metadata to be archived together with their data
- *
- * @param string $template  The name of the template to be used (at the moment options are experiment, session, and minimal
- * @param array $md     Passed meta data will be used to fill the form with default values
- * @return array $form which will be appended to a form array in drupal and rendered.
- */
-function get_template_form($template, $bundle, $md=NULL)
-{
-    module_load_include('inc', 'flat_deposit_ui', 'inc/CMDI_templates');
-
-    $tmp = new CMDI_templates($template);
-    $tmp->getTemplate($md);
-
-    $form = $tmp->fields;
-
-    return $form;
-}
-
-
-
-
-function get_example_md ($template){
-    switch ($template) {
-
-        case 'session':
-            $md = array(
-                'field_1' => array(
-                    'Title' => 'The DvR_Sandbox',
-                    'Name' => 'DvR_Sandbox',
-                    'Date' => array(
-                        'day' => 25,
-                        'month' =>5,
-                        'year' => 2016),
-                    'descriptions' => array(
-                        'Description' => 'The is a test dataset and Daniels favorite dog is called James',)
-                ),
-
-                'Location' => array(
-                    'Continent'=>'Europe',
-                    'Country'=> 'The Netherlands',
-                    'Region'=> 'House of Language',
-                    'Address'=> 'Wundtlaan 1',
-                ),
-
-                'Project' => array(
-                    'Title' =>'Deposit module',
-                    'Name' =>'FLAT archive',
-                    'Id' =>'',
-                    'Contact' => array(
-                        'Name' => 'Daniel',
-                        'Email' => 'Daniel@email.nl',
-                        'Organisation' => 'MPI Nijmegen',
-                    ),
-                    'descriptions' => array(
-                        'Description' => 'FLAT Test set')
-                )
-            );
-            break;
-        case 'experiment':
-            $md = array(
-                'field_1' =>
-                    array (
-                        'Title' => 'Pilot EEG Study',
-                        'Name' => 'Subject_x01',
-                        'Date' => array(
-                            'day' => 25,
-                            'month' =>3,
-                            'year' => 2016),                    ),
-                'Experiment' =>
-                    array (
-                        'Title' => 'EEG study on bilingual idiomatic expressions  ',
-                        'Notebook_Name' => '',
-                        'Contact' =>
-                            array (
-                                'User_Name' => 'Daniel Tobias',
-                                'Tel_number' => '+3164482903',
-                                'Email' => 'Daniel@mpi.nl',
-                            ),
-                        'descriptions' =>
-                            array (
-                                'Description' => '',
-                            ),
-                        'conclusions' =>
-                            array (
-                                'Conclusion' => '',
-                            ),
-                    ),
-            );
-            break;
-        case 'minimal':
-            $md = array(
-                'field_1' =>
-                    array (
-                        'Title' => 'Title of Bundle',
-                        'Name' => 'Name of Bundle',
-                        'Date' => array(
-                            'day' => 21,
-                            'month' =>2,
-                            'year' => 2013),
-                        ),
-                'Project'=> array(
-                    'Name' => 'Project name',
-                    'Title' => 'Project Title',
-                    'Id' => '0187502u',
-
-                    'Contact' =>
-                        array (
-                            'Name' => 'Daniel Tobias',
-                            'Email' => 'Daniel@mpi.nl',
-                            'Organisation' => 'MPI'
-                        ),
-                    'descriptions' =>
-                        array (
-                            'Description' => 'bvaboav', ),
-                ),
-            );
-            break;
-
-    }
-    return $md;
-
-}
-
-
-
-
 
 function get_processing_instructions($profile){
     switch ($profile){
@@ -389,8 +281,8 @@ function get_processing_instructions($profile){
 
 }
 
-function get_attributes ($xml){
-    switch ($xml){
+function get_attributes ($site){
+    switch ($site){
         case "MPI":
     return array(
         'xmlns:xmlns:xsi' => "http://www.w3.org/2001/XMLSchema-instance",

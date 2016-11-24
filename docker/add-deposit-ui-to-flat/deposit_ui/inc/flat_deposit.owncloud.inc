@@ -12,7 +12,7 @@
 /**
  * Implements hook_form().
  */
-function flat_deposit_ui_owncloud_form($form, &$form_state)
+function flat_deposit_owncloud_form($form, &$form_state)
 {
     $form = array();
 
