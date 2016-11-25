@@ -13,10 +13,10 @@
 /**
  * implement hook_views_data_alter
  * */
-
 function flat_views_views_data_alter(&$data) {
-// debug($data['node']);
-  $data['flat_deposit_ui_collection']['actions'] = array(
+
+  // changes the data that will be rendered
+  $data['flat_collection']['actions'] = array(
       'title' => t('Action buttons'),
       'help' => t('Produces links to actions a user may perform on a collection entity.'),
       'field' => array(
@@ -25,7 +25,7 @@ function flat_views_views_data_alter(&$data) {
           'click sortable' => FALSE,
       ),
   );
-  $data['flat_deposit_ui_collection']['date_created'] = array(
+  $data['flat_collection']['date_created'] = array(
       'title' => t('Created date'),
       'help' => t('The date the relationship was created.'),
       'field' => array(

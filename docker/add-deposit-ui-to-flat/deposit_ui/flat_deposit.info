@@ -1,0 +1,10 @@
+name = FLAT deposit
+package = FLAT
+description = The FLAT repository drupal-based user interface for data deposit
+core = 7.x
+version = 7.x-0.1-dev
+configure = admin/config/flat_deposit/manage
+dependencies[] = imce
+dependencies[] = views
+dependencies[] = feeds
+

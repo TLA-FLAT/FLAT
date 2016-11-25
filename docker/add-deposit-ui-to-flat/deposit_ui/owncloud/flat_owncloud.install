@@ -1,0 +1,81 @@
+<?php
+
+/**
+ * Implements hook_install
+ *
+ * Adds field to user form to be able to use owncloud
+ * Configure owncloud
+ */
+function flat_owncloud_install()
+{
+    $t = get_t();
+
+    //basic settings
+    module_load_include('inc', 'flat_owncloud', 'inc/config');
+
+    flat_deposit_set_owncloud();
+
+    // Add owncloud integration field to user entity type
+    $field = array(
+        'field_name' => 'mount_owncloud',
+        'type' => 'list_boolean',
+        'cardinality' => 1,
+        'settings' => array(
+            'allowed_values'=> array(
+                0 => "Unavailable",
+                1 => "Available"),
+        ),
+
+    );
+    field_create_field($field);
+
+    $instance = array(
+        'field_name' => 'mount_owncloud',
+        'entity_type' => 'user',
+        'bundle' => 'user',
+        'label' => 'Owncloud integration',
+        'settings' => array('user_register_form' => 1),
+        'widget' => array(
+            'type' => 'options_button', // or whatever widget type you want
+        ),
+        'default_value' => array(
+            0 => array('value'=> '0'))
+    );
+    field_create_instance($instance);
+
+
+
+}
+
+/**
+ * Implements hook_uninstall
+ *
+ * removes all owncloud variables
+ * unmounts all drupal owncloud mounts
+ *
+ */
+function flat_owncloud_uninstall()
+{
+    $t = get_t();
+
+    module_load_include('inc', 'flat_owncloud', 'Helpers/owncloud_api');
+    variable_del('flat_owncloud');
+
+
+    // Unmount all user drupal data directory mounts
+    $oc = new OwnCloud();
+    if ($oc->noErrors){
+        $mounts = $oc->ListAllDrupalMounts();
+
+        foreach (array_column($mounts,'mount_id') as $mount_id){
+
+            $oc->UnmountUserMount($mount_id);
+        };
+
+    }
+
+    drupal_set_message($t('All user drupal data directory mounts have been unmounted'));
+
+
+    field_attach_delete_bundle('user', 'user');
+}

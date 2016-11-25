@@ -11,13 +11,13 @@
 class flat_views_views_handler_field_actions extends views_handler_field {
   /**
    * Render function: return html output
-   * Including edit and delete actionq
+   * Including edit and delete actions
    */
   function render($values) {
     // debug ($values);
     $actions = array();
 
-    if (user_access('Edit collection - member relation')) {
+    if (user_access('admin collection')) {
       $alt = t('Edit node');
       $actions[] = array(
         'name' => t('Edit'),
@@ -26,7 +26,7 @@ class flat_views_views_handler_field_actions extends views_handler_field {
         'title' => $alt,
       );
     }
-    if (user_access('delete any content')) {
+    if (user_access('admin collection')) {
       $alt = t('Delete collection - member relation');
       $actions[] = array(
         'name' => t('Delete'),
