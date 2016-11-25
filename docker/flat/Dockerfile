@@ -163,8 +163,8 @@ RUN sed -i "/\"json\"/a \"cmdi\" => \"application/x-cmdi+xml\"," /var/www/html/$
     
 RUN mkdir -p /tmp/bootstrap &&\
 	cd /tmp/bootstrap &&\
-	wget "http://ftp.drupal.org/files/projects/bootstrap-7.x-3.4.zip" &&\
-	unzip bootstrap-7.x-3.4.zip &&\
+	wget "http://ftp.drupal.org/files/projects/bootstrap-7.x-3.8.zip" &&\
+	unzip bootstrap-7.x-3.8.zip &&\
 	mv /tmp/bootstrap/bootstrap /var/www/html/$DRUPAL_PROJECT/sites/all/themes/bootstrap
 
 RUN cp -r /var/www/html/$DRUPAL_PROJECT/sites/all/themes/bootstrap/starterkits/cdn  /var/www/html/$DRUPAL_PROJECT/sites/all/themes/flat_bootstrap_theme &&\

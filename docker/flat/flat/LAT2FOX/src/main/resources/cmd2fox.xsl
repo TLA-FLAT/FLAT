@@ -843,7 +843,7 @@
 								<xsl:choose>
 									<xsl:when test="empty($policies-dir)"/>
 									<xsl:when test="exists(cmd:firstFile($policies-dir, (concat(replace($resID, '[^a-zA-Z0-9]', '_'), '.xml'), 'default-resource-policy.xml', 'default-policy.xml'), $base))">
-										<xsl:variable name="policy" select="cmd:firstFile($policies-dir, (concat(replace($resID, '[^a-zA-Z0-9]', '_'), '.xml'), 'default-resource-policy.xml', 'default-policy.xml'), $base)"/>
+										<xsl:variable name="policy" select="cmd:firstFile($policies-dir, (concat(replace($resID, '[^a-zA-Z0-9]', '_'), '.xml'), 'default-resource-policy.xml', 'default-policy.xml'), $base)" as="xs:anyURI"/>
 										<xsl:message>
 											<xsl:text>DBG: resource FOX[</xsl:text>
 											<xsl:value-of select="$resFOX"/>
@@ -910,17 +910,23 @@
 			<xsl:apply-templates select="@* | node()" mode="#current"/>
 		</xsl:copy>
 	</xsl:template>
+	
+	<xsl:template match="cmd:CMD" mode="cmd">
+		<cmd:CMD xmlns:cmd="http://www.clarin.eu/cmd/">
+			<xsl:apply-templates select="@* | node()" mode="#current"/>
+		</cmd:CMD>
+	</xsl:template>
 
 	<xsl:template match="cmd:Header" mode="cmd">
 		<xsl:param name="pid" tunnel="yes"/>
 		<xsl:copy>
 			<xsl:apply-templates select="@*" mode="#current"/>
 			<xsl:apply-templates select="cmd:MdCreator | cmd:MdCreationDate" mode="#current"/>
-			<MdSelfLink xmlns="http://www.clarin.eu/cmd/">
+			<cmd:MdSelfLink>
 				<xsl:copy-of select="cmd:MdSelfLink/@* except @lat:localURI"/>
 				<xsl:attribute name="lat:localURI" select="cmd:lat('lat:', $pid)"/>
 				<xsl:value-of select="$pid"/>
-			</MdSelfLink>
+			</cmd:MdSelfLink>
 			<xsl:apply-templates select="node() except (cmd:MdCreator | cmd:MdCreationDate | cmd:MdSelfLink)" mode="#current"/>
 		</xsl:copy>
 	</xsl:template>
@@ -938,25 +944,25 @@
 			<xsl:message>DBG: - non metadata or landing page</xsl:message>
 			<xsl:apply-templates select="cmd:ResourceProxy[not(cmd:ResourceType = ('LandingPage','Metadata'))]" mode="#current"/>
 			<xsl:message>DBG: - create landing page</xsl:message>
-			<ResourceProxy xmlns="http://www.clarin.eu/cmd/" id="home-{replace($fid,'lat:','')}">
-				<ResourceType>LandingPage</ResourceType>
-				<ResourceRef>
+			<cmd:ResourceProxy id="home-{replace($fid,'lat:','')}">
+				<cmd:ResourceType>LandingPage</cmd:ResourceType>
+				<cmd:ResourceRef>
 					<xsl:value-of select="concat($repository,'/islandora/object/',encode-for-uri($fid),'#',if ($fid eq cmd:lat('lat:', $pid)) then () else concat('?pid=',encode-for-uri($pid)))"/>
-				</ResourceRef>
-			</ResourceProxy>
+				</cmd:ResourceRef>
+			</cmd:ResourceProxy>
 			<!-- process Metadata resource proxies -->
 			<xsl:variable name="metadata" select="cmd:ResourceProxy[cmd:ResourceType = 'Metadata']"/>
 			<xsl:variable name="md">
 				<xsl:for-each select="$metadata">
-					<ResourceProxy xmlns="http://www.clarin.eu/cmd/">
-						<ResourceType mimetype="application/x-cmdi+xml">Metadata</ResourceType>
-						<ResourceRef>
+					<cmd:ResourceProxy>
+						<cmd:ResourceType mimetype="application/x-cmdi+xml">Metadata</cmd:ResourceType>
+						<cmd:ResourceRef>
 							<xsl:if test="exists(cmd:ResourceRef/@lat:localURI)">
 								<xsl:attribute name="lat:localURI" select="cmd:ResourceRef/resolve-uri(@lat:localURI,$base)"/>
 							</xsl:if>
 							<xsl:value-of select="resolve-uri(cmd:ResourceRef,$base)"/>
-						</ResourceRef>
-					</ResourceProxy>
+						</cmd:ResourceRef>
+					</cmd:ResourceProxy>
 				</xsl:for-each>
 			</xsl:variable>
 			<xsl:variable name="children" select="$rels-doc/key('rels-from', ($pid,$base))[type = 'Metadata']"/>
@@ -967,7 +973,7 @@
 				<xsl:variable name="ref" select="resolve-uri(cmd:ResourceRef,$base)"/>
 				<xsl:variable name="lcl" select="cmd:ResourceRef/resolve-uri(@lat:localURI,$base)"/>
 				<xsl:variable name="rp" select="key('rp',(to,dst),$md)"/>
-				<ResourceProxy xmlns="http://www.clarin.eu/cmd/">
+				<cmd:ResourceProxy>
 					<xsl:choose>
 						<xsl:when test="exists($rp[normalize-space(@id)!=''])">
 							<xsl:attribute name="id" select="$rp/@id"/>
@@ -976,14 +982,14 @@
 							<xsl:attribute name="id" select="generate-id()"/>
 						</xsl:otherwise>
 					</xsl:choose>
-					<ResourceType mimetype="application/x-cmdi+xml">Metadata</ResourceType>
+					<cmd:ResourceType mimetype="application/x-cmdi+xml">Metadata</cmd:ResourceType>
 					<xsl:variable name="ref">
-						<ResourceRef lat:localURI="{dst}">
+						<cmd:ResourceRef lat:localURI="{dst}">
 							<xsl:value-of select="replace(to,'hdl:','https://hdl.handle.net/')"/>
-						</ResourceRef>
+						</cmd:ResourceRef>
 					</xsl:variable>
 					<xsl:apply-templates select="$ref" mode="#current"/>
-				</ResourceProxy>
+				</cmd:ResourceProxy>
 			</xsl:for-each>
 			<!-- illegimate children (could be dead links) -->
 			<xsl:message>DBG: - illegimate children</xsl:message>
