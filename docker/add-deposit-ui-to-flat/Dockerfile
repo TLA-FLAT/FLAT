@@ -2,7 +2,7 @@ FROM        flat
 MAINTAINER	Daniel von Rhein <daniel.vonrhein@mpi.nl>
 
 # Add deposit module to installation
-# ADD deposit_ui /var/www/html/flat/sites/all/modules/custom/flat_deposit_ui
+# ADD flat_deposit /var/www/html/flat/sites/all/modules/custom/flat_deposit
 
 # add WYSIWYG editor
 RUN cd /var/www/html/flat/sites/all/libraries/ &&\
@@ -47,7 +47,7 @@ RUN cd /var/www/html/flat/ &&\
     /var/www/composer/vendor/drush/drush/drush -y en views  &&\
     /var/www/composer/vendor/drush/drush/drush -y en views_ui &&\
     /etc/init.d/postgresql stop 
-#    /var/www/composer/vendor/drush/drush/drush en flat_deposit_ui -y
+#    /var/www/composer/vendor/drush/drush/drush en flat_deposit -y
 
 # add module configuration
 ENV PGPASSWORD=fedora
