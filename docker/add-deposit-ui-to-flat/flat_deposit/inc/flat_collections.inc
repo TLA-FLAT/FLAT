@@ -123,7 +123,7 @@ function flat_collection_form_submit($form, &$form_state){
 function get_all_collection_cModel_data(){
     $tuque = islandora_get_tuque_connection();
 
-    module_load_include('php', 'flat_deposit', 'fedora_queries');
+    module_load_include('php', 'flat_deposit', 'inc/fedora_queries');
     $query = query_collection_CModels();
 
     $results = $tuque->repository->ri->sparqlQuery($query);
@@ -152,7 +152,7 @@ function get_all_collection_cModel_data(){
 function get_hierarchical_pids_by_label($labels, $method='view'){
 
     $tuque = islandora_get_tuque_connection();
-    module_load_include('php', 'flat_deposit', 'fedora_queries');
+    module_load_include('php', 'flat_deposit', 'inc/fedora_queries');
     $data=[];
 
     $count = 0;

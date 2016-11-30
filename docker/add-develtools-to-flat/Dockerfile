@@ -1,4 +1,4 @@
-FROM        flat
+FROM        flat_dvr2
 MAINTAINER	Daniel von Rhein <daniel.vonrhein@mpi.nl>
 
 #Build xdebug library
@@ -27,12 +27,12 @@ RUN cd /var/www/html/flat/ &&\
 	bash -c "timeout 60 grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
     sleep 10 &&\
     /var/www/composer/vendor/drush/drush/drush dl admin_menu -y &&\
-    /var/www/composer/vendor/drush/drush/drush en admin_menu -y &&\
+#    /var/www/composer/vendor/drush/drush/drush en admin_menu -y &&\
     /var/www/composer/vendor/drush/drush/drush -y dl devel  &&\
-    /var/www/composer/vendor/drush/drush/drush -y en devel  &&\
+#    /var/www/composer/vendor/drush/drush/drush -y en devel  &&\
     /var/www/composer/vendor/drush/drush/drush -y dl feeds  &&\
-    /var/www/composer/vendor/drush/drush/drush -y en feeds  &&\
-    /var/www/composer/vendor/drush/drush/drush -y en feeds_ui  &&\
+ #   /var/www/composer/vendor/drush/drush/drush -y en feeds  &&\
+  #  /var/www/composer/vendor/drush/drush/drush -y en feeds_ui  &&\
 
     /etc/init.d/postgresql stop 
 	

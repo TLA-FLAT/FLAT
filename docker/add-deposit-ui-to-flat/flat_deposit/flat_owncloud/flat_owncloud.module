@@ -1,0 +1,28 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: danrhe
+ * Date: 07/11/16
+ * Time: 16:22
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function flat_owncloud_menu()
+{
+
+    $items = array();
+
+    // Admin configuration - Owncloud settings
+    $items['admin/config/flat_deposit/manage_owncloud'] = array(
+        'title' => 'Administer owncloud',
+        'description' => 'Administer owncloud root path and credentials',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array( 'flat_owncloud_admin_form'),
+        'file' => 'inc/flat_owncloud.admin_form.inc',
+        'access arguments' => array('admin deposit module'));
+
+    return $items;
+}
+

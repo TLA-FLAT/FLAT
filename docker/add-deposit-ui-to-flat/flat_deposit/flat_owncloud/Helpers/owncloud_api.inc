@@ -1,10 +1,11 @@
 <?php
-define('OC_ADMIN', variable_get('owncloud_settings',array())['admin_name']);
-define('OC_PASS', variable_get('owncloud_settings',array())['admin_pass']);
-define('OC_ROOT', variable_get('owncloud_settings',array())['root_dir']);
-define('OC_TEMP', variable_get('owncloud_settings',array())['temp_dir']);
-#define('OC_HOST', variable_get('owncloud_settings',array())['host']);
-define('OC_HOST', $_SERVER['HTTP_HOST']);
+
+$config = variable_get('flat_owncloud',array());
+define('OC_ADMIN', $config['admin_name']);
+define('OC_PASS', $config['admin_pass']);
+define('OC_ROOT', $config['root_dir']);
+define('OC_TEMP', $config['temp_dir']);
+define('OC_HOST', $config['host']);
 
 class OwnCloudConnectionException extends Exception {}
 

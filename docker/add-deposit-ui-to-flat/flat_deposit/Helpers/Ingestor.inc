@@ -79,7 +79,7 @@ class Ingestor
         // settings of bag
         $this->bag = array();
 
-        $this->bag ['bag_id'] = $this->user->name . "_" . $this->node->nid . "_" . $this->node->title ; #. '_' . uniqid();
+        $this->bag ['bag_id'] = $this->user->name . "_" . $this->node->nid . "_" . $this->node->title . '_' . uniqid();
         $this->bag ['temp_extension'] = 'temp';
         $this->bag ['temp_folder'] = $this->data_dir['freeze_bundle'] . '/' . $this->bag ['temp_extension'];
 
@@ -101,6 +101,16 @@ class Ingestor
         }
     }
 
+    public function validateNodeStatus()
+    {
+
+        $status = $this->wrapper->upload_status->value();
+
+        if ($status == 'processing' OR $status == 'validating'){
+            throw new IngestServiceException(t('Invalid node status'));
+        }
+    }
+
 
     public function updateNodeStatus($status)
     {
@@ -116,13 +126,15 @@ class Ingestor
 
 
 
-            $this->AddEntryLogFile('Validating backend and source directories:' . implode(', ',$this->data_dir));
+            $this->AddEntryLogFile(t('Validating backend (!freeze) and source directory (!source)', array(
+                '!freeze' => $this->data_dir['freeze_bundle'],
+                '!source'=>$this->data_dir['bundle_source'])));
 
             // Check if data source is accessible
             if (!is_writable($this->data_dir['bundle_source'])) {
 
-                    throw new IngestServiceException(t('The data source directory is not accessible (%dir))',array('%dir' => $this->data_dir['bundle_source'])));
-
+                    throw new IngestServiceException(t('The data source directory is not accessible (%dir))',array(
+                        '%dir' => $this->data_dir['bundle_source'])));
             }
 
             // Check if freeze directory exists
@@ -511,7 +523,7 @@ class Ingestor
     public function doorkeeperGetRequest($code_only=FALSE)
     {
 
-        $config = variable_get('flat_deposit_sword');
+        $config = variable_get('flat_deposit_doorkeeper');
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $config['url'] . $this->bag['bag_id']);
         curl_setopt($ch, CURLOPT_PORT, $config['port']);
