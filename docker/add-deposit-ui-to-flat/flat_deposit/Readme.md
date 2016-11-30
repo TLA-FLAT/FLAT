@@ -21,23 +21,6 @@ In order to ingest data, the sudoer file (visudo) needs to be adapted. Please co
 
 =======
 
-danrhe@git(develop) > git show HEAD~1:docker/add-deposit-ui-to-flat/flat_deposit/Readme.md 
-# FLAT deposit UI configuration #
-
-=======
-## General ##
-When using the docker environment most settings will be configured automatically. However, a few things still need to be done manually.
-
-
-## Owncloud ##
-If you want to use owncloud, you need to configure this app. The dockerfile will automatically do this for you, however, if you don't use docker, you will to do it yourself. You definitely need to change the permission of your owncloud installation. If you also want to be able open the owncloud web gui, you need to add the url of your server to the trusted domanins (see owncloud/addTrusted.php).
-
-
-## File and Folder permissions ##
-In order to ingest data, the sudoer file (visudo) needs to be adapted. Please copy/paste the code from the shell/sudoer.ini file using visudo
-
-=======
-
 ```ssh
 sudo /usr/sbin/visudo
 :%d #deletes the whole content
