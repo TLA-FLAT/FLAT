@@ -1,6 +1,6 @@
 <?php
 
-$config = variable_get('flat_deposit_owncloud',array());
+$config = variable_get('flat_owncloud',array());
 define('OC_ADMIN', $config['admin_name']);
 define('OC_PASS', $config['admin_pass']);
 define('OC_ROOT', $config['root_dir']);

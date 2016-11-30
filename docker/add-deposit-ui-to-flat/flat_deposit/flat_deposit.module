@@ -130,7 +130,7 @@ function flat_deposit_menu_local_tasks_alter(&$data, $router_item, $root_path)
                 $pid_parent = explode('/', $tab['#link']['tab_parent_href']);
                 $pid_parent = end($pid_parent);
 
-                module_load_include('php', 'flat_deposit', 'drupal_queries');
+                module_load_include('php', 'flat_deposit', 'inc/drupal_queries');
                 $collections = query_user_collections(array( $pid_parent));
 
                 if (empty($collections)) {
@@ -251,7 +251,7 @@ function flat_bundle_form($node, $form_state) {
 function flat_bundle_node_form_fixed_collection($pid)
 {
 
-    module_load_include('php', 'flat_deposit', 'drupal_queries');
+    module_load_include('php', 'flat_deposit', 'inc/drupal_queries');
     $collections = query_user_collections(array($pid->id), TRUE);
 
     if (empty($collections)) {
@@ -347,7 +347,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
                 $form['upload_collection']['und']['#default_value'] = array($collections[0]['collection_name']);
                 $form['upload_collection']['und']['#disabled'] = TRUE;
             } else {
-                module_load_include('php', 'flat_deposit', 'drupal_queries');
+                module_load_include('php', 'flat_deposit', 'inc/drupal_queries');
                 $collections = query_user_collections(NULL);
             }
 

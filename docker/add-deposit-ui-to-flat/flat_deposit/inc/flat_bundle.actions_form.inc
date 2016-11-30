@@ -193,6 +193,8 @@ function flat_bundle_action_form_submit($form, &$form_state){
             $data_to_post['drupal_path'] = DRUPAL_ROOT;
             $data_to_post['nid'] = $node->nid;
 
+        //Todo define here server ip address
+        #$aaf
             // background service http request settings
             $options = array(
                 'method' => 'POST',

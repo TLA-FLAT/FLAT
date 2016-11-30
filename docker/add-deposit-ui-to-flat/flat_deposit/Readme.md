@@ -8,13 +8,6 @@ When using the docker environment most settings will be configured automatically
 ## Owncloud ##
 If you want to use owncloud, you need to configure this app. The dockerfile will automatically do this for you, however, if you don't use docker, you will to do it yourself. You definitely need to change the permission of your owncloud installation. If you also want to be able open the owncloud web gui, you need to add the url of your server to the trusted domanins (see owncloud/addTrusted.php).
 
-Make also sure to enable the external file support by running this command
-
-```ssh
-cd /var/www/owncloud
-sudo -u www-data php occ app:enable files_external
-```
-
 
 ## File and Folder permissions ##
 In order to ingest data, the sudoer file (visudo) needs to be adapted. Please copy/paste the code from the shell/sudoer.ini file using visudo

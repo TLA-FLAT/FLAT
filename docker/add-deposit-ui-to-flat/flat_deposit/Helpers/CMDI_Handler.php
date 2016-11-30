@@ -113,7 +113,7 @@ class CMDI_Handler
         }
 
         $config = variable_get('flat_deposit_metadata');
-        module_load_include('php', 'flat_deposit_ui', 'inc/xml_functions');
+        module_load_include('php', 'flat_deposit', 'inc/xml_functions');
 
         $this->xml = new SimpleXMLElement_Plus('<CMD/>');
 
@@ -260,7 +260,7 @@ class CMDI_Handler
             throw new Exception('Profile has not been specified');
         }
 
-        module_load_include('php', 'flat_deposit_ui', 'inc/xml_functions');
+        module_load_include('php', 'flat_deposit', 'inc/xml_functions');
 
         $config = variable_get('flat_deposit_metadata');
         $value = $config ['prefix'] . '-' . $this->profile;
