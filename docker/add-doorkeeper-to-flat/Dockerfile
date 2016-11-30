@@ -42,6 +42,11 @@ RUN cd /tmp &&\
     mvn clean install
 
 RUN cd /tmp &&\
+    git clone https://github.com/meertensinstituut/EPICify.git epicify &&\
+    cd /tmp/epicify &&\
+    mvn clean install
+
+RUN cd /tmp &&\
     git clone -b develop https://github.com/TLA-FLAT/DoorKeeper.git DoorKeeper &&\
     cd /tmp/DoorKeeper &&\
     mvn -Dmaven.test.skip=true clean install &&\
