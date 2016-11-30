@@ -416,7 +416,7 @@ function flat_deposit_ui_menu()
         'description' => 'Administer owncloud root path and credentials',
         'page callback' => 'drupal_get_form',
         'page arguments' => array( 'flat_deposit_ui_owncloud_form'),
-        'file' => 'inc/flat_deposit.owncloud.inc',
+        'file' => 'inc/flat_deposit_owncloud.admin_form.inc',
         'access arguments' => array($access['admin']));
 
     // Page for uploading data
@@ -453,7 +453,7 @@ function flat_deposit_ui_menu()
         'type' => MENU_LOCAL_TASK,
         'page callback' => 'flat_deposit_ui_manage_collections',
         'page arguments' => array('content' => 'Under construction'),
-        'file' => 'inc/flat_deposit.owncloud.inc',
+        'file' => 'inc/flat_deposit_owncloud.admin_form.inc',
         'access arguments' => array($access['user']));
 
     // Page for commiting changes

@@ -6,12 +6,12 @@
  * Adds field to user form to be able to use owncloud
  * Configure owncloud
  */
-function flat_owncloud_install()
+function flat_deposit_owncloud_install()
 {
     $t = get_t();
 
     //basic settings
-    module_load_include('inc', 'flat_owncloud', 'inc/config');
+    module_load_include('inc', 'flat_deposit_owncloud', 'inc/config');
 
     flat_deposit_set_owncloud();
 
@@ -54,12 +54,12 @@ function flat_owncloud_install()
  * unmounts all drupal owncloud mounts
  *
  */
-function flat_owncloud_uninstall()
+function flat_deposit_owncloud_uninstall()
 {
     $t = get_t();
 
-    module_load_include('inc', 'flat_owncloud', 'Helpers/owncloud_api');
-    variable_del('flat_owncloud');
+    module_load_include('inc', 'flat_deposit_owncloud', 'Helpers/owncloud_api');
+    variable_del('flat_deposit_owncloud');
 
 
     // Unmount all user drupal data directory mounts

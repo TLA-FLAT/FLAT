@@ -48,11 +48,12 @@ try {
     $header  = "Ingest service log file - "  . $ingest->type . " on ".date("F j, Y, g:i a").PHP_EOL. "-------------------------";
     $ingest->AddEntryLogFile($header);
 
+    $ingest->validateNodeStatus();
     $ingest->updateNodeStatus($ingest->type);
 
 
-    // VALIDATION ROUTINE
-    if ($ingest->type == 'validating'){
+    // VALIDATION SPECIFIC ACTIONS
+    if ($ingest->type == 'validating') {
         // access rights and data freeze
         $ingest->validate_backend_directory();
         $ingest->moveData('freeze');
@@ -61,19 +62,21 @@ try {
         $ingest->addResourcesToCMDI();
         $ingest->addIsPartOfToCMDI();
 
+    }
 
-        // create bag for sword
-        $ingest->prepareBag();
-        $ingest->zipBag();
+    // GENERAL ACTIONS
+    // create bag for sword
+    $ingest->prepareBag();
+    $ingest->zipBag();
 
-        // execute sword
-        $ingest->doSword();
-        #throw new IngestServiceException("Debugging");
-        $ingest->checkStatusSword();
+    #throw new IngestServiceException("Debugging");
+    // execute sword
+    $ingest->doSword();
+    $ingest->checkStatusSword();
 
 
-        // INGEST ROUTINE
-    } elseif ($ingest->type == 'processing'){
+    // INGEST SPECIFIC ACTIONS
+    if ($ingest->type == 'processing'){
 
         // execute doorkeeper
         $ingest->triggerDoorkeeper();
@@ -83,10 +86,11 @@ try {
 
         $ingest->changeOwnerId();
 
-        $ingest->cleanup();
+
     }
 
     // FINISH
+    $ingest->cleanup();
     $ingest->finalizeProcessing($nid);
 
 

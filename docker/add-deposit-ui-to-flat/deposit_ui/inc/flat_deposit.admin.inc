@@ -134,6 +134,14 @@ function flat_deposit_admin_form($form, &$form_state)
 
     $service = variable_get('flat_deposit_ingest_service');
 
+    $form['ingest_service']['host_name'] = array (
+        '#type' => 'textfield',
+        '#title' => t('Host name'),
+        '#description' => t('Host name or IP of the php server'),
+        '#default_value' => $service['host_name'],
+        '#required' => TRUE,
+    );
+
     $form['ingest_service']['bag_exe'] = array (
         '#type' => 'textfield',
         '#title' => t('Bagit executable'),
@@ -348,8 +356,7 @@ function flat_deposit_admin_form($form, &$form_state)
         '#value' => t('Save'),
         '#submit' => array(
             'keep_default_password',
-            'flat_deposit_admin_form_submit',
-
+            'flat_deposit_admin_form_save_submit',
             )
     );
 
@@ -358,6 +365,29 @@ function flat_deposit_admin_form($form, &$form_state)
         '#value' => t('Reset to defaults'),
         '#submit' => array('flat_deposit_admin_form_reset_submit'),
         '#limit_validation_errors' => array(),
+    );
+
+    $form['buttons']['import'] = array (
+        '#type' => 'submit',
+        '#value' => t('Import settings'),
+        '#submit' => array('flat_deposit_admin_form_import_submit'),
+        '#validate' => array('flat_deposit_admin_form_import_validate'),
+    );
+
+    $form['buttons']['export'] = array (
+        '#type' => 'submit',
+        '#value' => t('Export settings'),
+        '#submit' => array('flat_deposit_admin_form_export_submit'),
+    );
+
+    $form['file']['import'] = array (
+        '#name' => 'File_selector',
+        '#type' => 'file',
+        '#title' => t('Choose a file'),
+        '#title_display' => 'invisible',
+        '#size' => 22,
+        '#theme_wrappers' => array(),
+        '#weight' => 999,
     );
 
     return $form;
@@ -378,18 +408,32 @@ function keep_default_password($form, &$form_state) {
 
 }
 
-function flat_deposit_admin_form_submit ($form, &$form_state)
+function flat_deposit_admin_form_save_submit ($form, &$form_state)
 {
-    variable_set('flat_deposit_paths', $form_state['values']['paths']);
-    variable_set('flat_deposit_names', $form_state['values']['names']);
-    variable_set('flat_deposit_metadata', $form_state['values']['metadata']);
-    variable_set('flat_deposit_ingest_service', $form_state['values']['ingest_service']);
-    variable_set('flat_deposit_sword', $form_state['values']['sword']);
-    variable_set('flat_deposit_doorkeeper', $form_state['values']['doorkeeper']);
-    variable_set('flat_deposit_fedora', $form_state['values']['fedora']);
-    variable_set('flat_deposit_solr', $form_state['values']['solr']);
+
+    module_load_include('inc', 'flat_deposit', 'inc/config');
+
+    #variable_set('flat_deposit_paths', $form_state['values']['paths']);
+    #variable_set('flat_deposit_names', $form_state['values']['names']);
+    #variable_set('flat_deposit_metadata', $form_state['values']['metadata']);
+    #variable_set('flat_deposit_ingest_service', $form_state['values']['ingest_service']);
+    #variable_set('flat_deposit_sword', $form_state['values']['sword']);
+    #variable_set('flat_deposit_doorkeeper', $form_state['values']['doorkeeper']);
+    #variable_set('flat_deposit_fedora', $form_state['values']['fedora']);
+    #variable_set('flat_deposit_solr', $form_state['values']['solr']);
+
+    flat_deposit_set_paths($form_state['values']['paths']);
+    flat_deposit_set_names($form_state['values']['names']);
+    flat_deposit_set_metadata($form_state['values']['metadata']);
+    flat_deposit_set_ingest_service($form_state['values']['ingest_service']);
+    flat_deposit_set_sword($form_state['values']['sword']);
+    flat_deposit_set_doorkeeper($form_state['values']['doorkeeper']);
+    flat_deposit_set_fedora($form_state['values']['fedora']);
+    flat_deposit_set_solr($form_state['values']['solr']);
     drupal_set_message(t('Changed values have been saved'));
+
 }
+
 
 
 function flat_deposit_admin_form_reset_submit ($form, &$form_state){
@@ -405,4 +449,118 @@ function flat_deposit_admin_form_reset_submit ($form, &$form_state){
     flat_deposit_set_solr();
 
     drupal_set_message(t('All settings have been reset to default'));
+}
+
+
+function flat_deposit_admin_form_export_submit()
+{
+
+    $config = array(
+        'paths' =>  variable_get('flat_deposit_paths'),
+        'names' => variable_get('flat_deposit_names'),
+        'metadata' => variable_get('flat_deposit_metadata'),
+        'ingest_service' => variable_get('flat_deposit_ingest_service'),
+        'sword' => variable_get('flat_deposit_sword'),
+        'doorkeeper' => variable_get('flat_deposit_doorkeeper'),
+        'fedora' => variable_get('flat_deposit_fedora'),
+        'solr' => variable_get('flat_deposit_solr'),
+    );
+
+
+    $URI = "temporary://flat_deposit_settings.php";
+
+    file_unmanaged_save_data(serialize($config), $URI, FILE_EXISTS_REPLACE);
+
+    $header =  array('Content-type' => 'application/x-php',
+        'Content-Disposition' => 'attachment; filename=\'flat_deposit_settings.php\'');
+
+    file_transfer($URI, $header);
+
+}
+
+
+function flat_deposit_admin_form_import_validate ($form, &$form_state)
+{
+
+    // Check if file is specified
+    if (empty($_FILES['File_selector']['name'])) {
+        form_set_error('import', t('File needs to be specified for import'));
+
+        return $form;
+    }
+
+    // Check mime type of file
+    $tmp = $_FILES['File_selector']['tmp_name'];
+
+    $type = mime_content_type(drupal_realpath($tmp));
+
+    if ($type != 'text/plain') {
+
+        form_set_error('import', t('File needs to be a plain text file '));
+    }
+
+
+    // Check if file can be read in
+    $content = file_get_contents($tmp);
+
+    if ($content === FALSE) {
+
+        form_set_error('import', t('File can not be processed'));
+        return $form;
+    }
+
+
+    // Check allowed characters
+    if (preg_match('/[^a-zA-Z0-9_.;:"\s\-\{\}\/]/', $content) !== 0) {
+
+        form_set_error('import', t('File contains forbidden strings. Only allowed strings are numbers, letters, underscores (semi-)colons curly brackets.'));
+        return $form;
+    }
+
+    // Check if string can be unserialized
+    $imported_values = @unserialize($content);
+
+    if ($imported_values === false) {
+
+        form_set_error('import', t('Unable to unserialize the string'));
+        return $form;
+
+    }
+
+    // validate that unserialization of imported string results in arrays corresponding to the drupal 'flat_deposit'-variables
+    $checks = array('paths', 'names', 'metadata', 'ingest_service', 'sword', 'doorkeeper', 'fedora', 'solr');
+
+    foreach ($checks as $check) {
+        if (!empty(array_diff_key($imported_values[$check], $form_state['values'][$check]))) {
+
+            form_set_error('imported variable keys do not match with flat_deposit variable keys');
+
+        };
+    }
+
+
+    $form_state['values']['imported_values'] = $imported_values;
+
+    return $form;
+}
+
+
+
+function flat_deposit_admin_form_import_submit ($form, &$form_state){
+
+
+    variable_set('flat_deposit_paths', $form_state['values']['imported_values']['paths']);
+    variable_set('flat_deposit_names', $form_state['values']['imported_values']['names']);
+    variable_set('flat_deposit_metadata', $form_state['values']['imported_values']['metadata']);
+    variable_set('flat_deposit_ingest_service', $form_state['values']['imported_values']['ingest_service']);
+    variable_set('flat_deposit_sword', $form_state['values']['imported_values']['sword']);
+    variable_set('flat_deposit_doorkeeper', $form_state['values']['imported_values']['doorkeeper']);
+    variable_set('flat_deposit_fedora', $form_state['values']['imported_values']['fedora']);
+    variable_set('flat_deposit_solr', $form_state['values']['imported_values']['solr']);
+
+
+
+    drupal_set_message(t('Setting import completed'));
+
+
 }

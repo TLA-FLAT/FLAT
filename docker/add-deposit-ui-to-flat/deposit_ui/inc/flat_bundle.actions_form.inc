@@ -61,6 +61,23 @@ function flat_bundle_action_form($form, &$form_state, $variables){
         '#suffix' => '</p>',
     );
 
+    global $user;
+    if ($user->name == 'admin'){
+        $form['options']['serial'] = array(
+            '#type' => 'checkbox',
+            '#value' => t('serial'),
+            '#title' => t('Serial processing'),
+            '#prefix' => '</p>',
+        );
+    }
+
+    $form['actions']['delete_bundle'] = array(
+        '#type' => 'submit',
+        '#value' => t('Delete bundle'),
+        #    '#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
+        '#suffix' => '</p>',
+    );
+
     $node = menu_get_object();
 
     $form['values']['node'] = array(
@@ -169,6 +186,8 @@ function flat_bundle_action_form_submit($form, &$form_state){
         case 'Validate bundle':
         case 'Archive bundle':{
 
+
+
             // create array containing data needed by the ingest service
             $data_to_post = array();
             $data_to_post['drupal_path'] = DRUPAL_ROOT;
@@ -191,7 +210,7 @@ function flat_bundle_action_form_submit($form, &$form_state){
             $wrapper = entity_metadata_wrapper('node', $node);
             $status = $wrapper->upload_status->value();
 
-            if ($status == 'failed' AND $user->name == 'admin') {
+            if ($form_state['values']['serial']) {
                 $url_debug = str_replace($_SERVER['SERVER_ADDR'], "localhost", $url);
 
                 $ch = curl_init();
@@ -212,17 +231,17 @@ function flat_bundle_action_form_submit($form, &$form_state){
 
             } else {
 
-            // normal background mode
-                httprl_request($url, $options);
+                // normal background mode
+                $request =  httprl_request($url, $options);
 
                 // Execute request.
-                httprl_send_request();
+                $response = httprl_send_request();
             }
 
 
 
             $form_state['redirect'] = '<front>';
-            drupal_set_message('Frozen bundle is being processed');
+            drupal_set_message('Bundle is being processed');
 
 
             break;

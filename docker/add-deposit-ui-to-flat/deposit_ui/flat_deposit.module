@@ -1,63 +1,5 @@
 <?php
 
-/**
- * Implements hook_theme().
- */
-function flat_deposit_theme() {
-    $themes = array(
-        'image_link' => array(
-            'variables' => array(
-                'link' => array(
-                    'text' =>'Link text',
-                    'path' => 'path/to/ref',
-                    'options' => array(
-                        'attributes' => array(),
-                        'html' => FALSE,
-                    ),
-                ),
-                'image' => array(
-                    'path' => $GLOBALS['base_url'] . '/sites/all/themes/flat_bootstrap_theme/favicon.ico',
-                    'alt' => 'Image title',
-                    'title' => 'image title',
-                    'attributes' => array(),
-                )
-            )
-        ),
-        'node_actions_block' => array(
-            'variables' => array(
-                'title' => FALSE,
-                'status' => FALSE,
-                ),
-            )
-        );
-
-    return $themes;
-
-}
-
-
-/**
- * Theme function that translates our input into renderable HTML
- *
- * $param variables array of data to be rendered
- * @return string HTML code
- */
-function theme_image_link($variables) {
-
-    $title = check_plain($variables['link']['text']);
-    $link = url($variables['link']['path']);
-
-    $themed_image = theme_image($variables['image']);
-    $themed_link = theme_link($variables['link']);
-
-    $output = '<a href="' . $link . '" title="' . $title .'">' . $themed_image .'</a><br/>';
-    $output .= $themed_link . '<br/>';
-
-    return $output;
-}
-
-
-
 
 /**
  * Implements hook_permission().
@@ -180,10 +122,10 @@ function flat_deposit_menu()
  */
 function flat_deposit_menu_local_tasks_alter(&$data, $router_item, $root_path)
 {
-    // Remove the 'Add bundle'-menu from every islandora object view if user is not member of the collection
     if (isset($data['tabs'][0]['output'])){
         $tabs = $data['tabs'][0]['output'];
         foreach ($tabs as $index => $tab) {
+            // Remove the 'Add bundle'-menu from every islandora object view if user is not member of the collection
             if ($tab['#link']['path'] == 'islandora/object/%/add_bundle') {
                 $pid_parent = explode('/', $tab['#link']['tab_parent_href']);
                 $pid_parent = end($pid_parent);
@@ -195,13 +137,80 @@ function flat_deposit_menu_local_tasks_alter(&$data, $router_item, $root_path)
                     $data['tabs'][0]['output'][$index]['#link']['access'] = FALSE;
                     unset($data['tabs'][0]['output'][$index]);
                 }
-            }
 
+            // Remove edit- menu from node view
+            } elseif ($tab['#link']['path'] == 'node/%/edit') {
+
+                $data['tabs'][0]['output'][$index]['#link']['access'] = FALSE;
+                unset($data['tabs'][0]['output'][$index]);
+
+            }
         }
     }
 
     #krumo($data);
 }
+
+
+
+/**
+ * Implements hook_theme().
+ */
+function flat_deposit_theme() {
+    $themes = array(
+        'image_link' => array(
+            'variables' => array(
+                'link' => array(
+                    'text' =>'Link text',
+                    'path' => 'path/to/ref',
+                    'options' => array(
+                        'attributes' => array(),
+                        'html' => FALSE,
+                    ),
+                ),
+                'image' => array(
+                    'path' => $GLOBALS['base_url'] . '/sites/all/themes/flat_bootstrap_theme/favicon.ico',
+                    'alt' => 'Image title',
+                    'title' => 'image title',
+                    'attributes' => array(),
+                )
+            )
+        ),
+        'node_actions_block' => array(
+            'variables' => array(
+                'title' => FALSE,
+                'status' => FALSE,
+            ),
+        )
+    );
+
+    return $themes;
+
+}
+
+
+/**
+ * Theme function that translates our input into renderable HTML
+ *
+ * $param variables array of data to be rendered
+ * @return string HTML code
+ */
+function theme_image_link($variables) {
+
+    $title = check_plain($variables['link']['text']);
+    $link = url($variables['link']['path']);
+
+    $themed_image = theme_image($variables['image']);
+    $themed_link = theme_link($variables['link']);
+
+    $output = '<a href="' . $link . '" title="' . $title .'">' . $themed_image .'</a><br/>';
+    $output .= $themed_link . '<br/>';
+
+    return $output;
+}
+
+
+
 
 
 /**
@@ -530,6 +539,14 @@ function flat_deposit_block_info()
         return FALSE;
         ?>');
 
+    $blocks['flat_deposit_menu'] = array(
+        'info' => t('FLAT deposit main menu'),
+        'status' => TRUE,
+        'region' => 'sidebar_second',
+        'visibility' => BLOCK_VISIBILITY_NOTLISTED,
+        'pages' => 'islandora/*',
+
+    );
 
     return $blocks;
 }
@@ -561,8 +578,60 @@ function flat_deposit_block_view($delta = '')
             ),
         );
 
-        return $block;
+
+    } elseif ($delta == 'flat_deposit_menu') {
+
+        $image_links = array(
+            'link_workspace' => array(
+                'name' => 'My workspace',
+                'href' => 'workspace',
+                'image_path' => drupal_get_path('module','flat_deposit') .'/Images/Upload.png',
+            ),
+        );
+
+        // Create complete variables to be sent to theme_image_link
+        foreach ($image_links as $key => $image_link) {
+
+            $variables = array(
+                'link' => array(
+                    'text' => $image_link ['name'],
+                    'path' => $image_link ['href'],
+                    'options' => array(
+                        'attributes' => array(),
+                        'html' => FALSE,),
+                ),
+                'image' => array(
+                    'path' => $image_link['image_path'],
+                    'alt' => $image_link ['name'],
+                    'title' => $image_link ['name'],
+                    'attributes' => array(),
+                )
+            );
+            // Attach render array to array of outputted block items.
+            $output = array();
+            $output [$key] = array(
+                '#prefix' => '<div>',
+                '#type' => 'markup',
+                '#markup' => theme('image_link', $variables),
+                '#suffix' => '</div>',
+            );
+        }
+
+            $block = array (
+            'subject' => t('FLAT Deposit Main Menu'),
+            'content' => array(
+                'deposit_menus' =>$output )
+            );
+
+
+
+
+
+
     }
+
+    return $block;
+
 }
 
 
