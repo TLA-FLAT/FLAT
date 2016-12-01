@@ -46,10 +46,9 @@ RUN cd /tmp &&\
     cd /tmp/epicify &&\
     mvn clean install
 
-#ADD DoorKeeper /tmp/DoorKeeper
-#RUN cd /tmp/DoorKeeper &&\
+ADD DoorKeeper /tmp/DoorKeeper
 RUN cd /tmp &&\
-    git clone -b develop https://github.com/TLA-FLAT/DoorKeeper.git DoorKeeper &&\
+    if [ ! -f /tmp/DoorKeeper/pom.xml ]; then rm -rf DoorKeeper;  git clone -b develop https://github.com/TLA-FLAT/DoorKeeper.git DoorKeeper; fi &&\
     cd /tmp/DoorKeeper &&\
     mvn clean install &&\
     cp target/doorkeeper.jar /app/flat/lib/

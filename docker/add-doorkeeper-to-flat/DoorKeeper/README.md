@@ -1,0 +1,1 @@
+**NOTE**: This is just a dummy directory. Replace it by (a soft link to) a checkout of the [DoorKeeper](https://github.com/TLA-FLAT/DoorKeeper.git) if you want to develop it locally. Otherwise leave the directory like it is, and the Docker build will checkout the latest version.
