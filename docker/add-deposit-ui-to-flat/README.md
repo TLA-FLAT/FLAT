@@ -62,6 +62,7 @@ docker build --rm=true -t flat add-doorkeeper-to-flat/
 
 #new image for deposit UI
 docker build --rm=true -t flat add-deposit-ui-to-flat/
+docker build --rm=true -t flat add-develtools-to-flat/
 
 #cleanup
 docker rm flat-base-con
@@ -77,3 +78,5 @@ docker run -p 80:80 -p 8443:8443 -p 8080:8080 -p 8222:22 -v <local_path>:<remote
 
 
 
+## Notes ##
+Solution packs do interfere with some other modules and cause notifications.
