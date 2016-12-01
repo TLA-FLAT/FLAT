@@ -30,4 +30,12 @@ A test SIP is included:
 
 ## Notes ##
 
+To blend in a local DoorKeeper development replace the dummy DoorKeeper directory by the local development directory. If you use a soft link you'll have to tar the Dockerfile context:
+
+```sh
+cd ./add-doorkeeper-to-flat
+tar -czh . | docker build -t flat -
+cd ..
+```
+
 ## References ##
