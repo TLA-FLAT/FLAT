@@ -126,6 +126,23 @@
 		<xsl:sequence select="cmd:pid($locs, 'ERR',())"/>
 	</xsl:function>
 	
+	<xsl:function name="cmd:escFile" as="xs:anyURI">
+		<xsl:param name="uri" as="xs:anyURI"/>
+		<xsl:choose>
+			<xsl:when test="starts-with($uri,'file:')">
+				<xsl:variable name="paths" as="xs:string*">
+					<xsl:for-each select="tokenize(replace($uri,'file:',''),'/')">
+						<xsl:sequence select="encode-for-uri(.)"/>
+					</xsl:for-each>
+				</xsl:variable>
+				<xsl:sequence select="concat('file:',string-join($paths,'/')) cast as xs:anyURI"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:sequence select="$uri"/>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:function>
+	
 	<xsl:function name="cmd:firstFile" as="xs:anyURI?">
 		<xsl:param name="paths" as="xs:string*"/>
 		<xsl:param name="files" as="xs:string*"/>
@@ -569,10 +586,10 @@
 					<xsl:variable name="resURI">
 						<xsl:choose>
 							<xsl:when test="normalize-space($res/cmd:ResourceRef/@lat:localURI) != ''">
-								<xsl:sequence select="resolve-uri($res/cmd:ResourceRef/@lat:localURI, $base)"/>
+								<xsl:sequence select="cmd:escFile(resolve-uri($res/cmd:ResourceRef/@lat:localURI, $base))"/>
 							</xsl:when>
 							<xsl:when test="normalize-space($resPID) != ''">
-								<xsl:sequence select="resolve-uri($resPID, $base)"/>
+								<xsl:sequence select="cmd:escFile(resolve-uri($resPID, $base))"/>
 							</xsl:when>
 						</xsl:choose>
 					</xsl:variable>
