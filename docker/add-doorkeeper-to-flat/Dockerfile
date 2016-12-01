@@ -50,6 +50,7 @@ RUN cd /tmp &&\
 #RUN cd /tmp/DoorKeeper &&\
 RUN cd /tmp &&\
     git clone -b develop https://github.com/TLA-FLAT/DoorKeeper.git DoorKeeper &&\
+    cd /tmp/DoorKeeper &&\
     mvn clean install &&\
     cp target/doorkeeper.jar /app/flat/lib/
 
