@@ -46,10 +46,11 @@ RUN cd /tmp &&\
     cd /tmp/epicify &&\
     mvn clean install
 
+#ADD DoorKeeper /tmp/DoorKeeper
+#RUN cd /tmp/DoorKeeper &&\
 RUN cd /tmp &&\
     git clone -b develop https://github.com/TLA-FLAT/DoorKeeper.git DoorKeeper &&\
-    cd /tmp/DoorKeeper &&\
-    mvn -Dmaven.test.skip=true clean install &&\
+    mvn clean install &&\
     cp target/doorkeeper.jar /app/flat/lib/
 
 ADD flat/deposit/ServiceFLAT /tmp/ServiceFLAT
