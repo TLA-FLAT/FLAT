@@ -31,6 +31,14 @@ function flat_bundle_action_form($form, &$form_state, $variables){
         '#disabled'=> TRUE,
     );
 
+    $form['actions']['reopen_bundle'] = array(
+        '#type' => 'submit',
+        '#value' => t('Re-open bundle'),
+        #'#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
+        '#description' => t('Click to allow modifications of your bundle'),
+        '#disabled'=> TRUE,
+    );
+
     $form['actions']['validate_bundle'] = array(
         '#type' => 'submit',
         '#value' => t('Validate bundle'),
@@ -65,7 +73,6 @@ function flat_bundle_action_form($form, &$form_state, $variables){
     if ($user->name == 'admin'){
         $form['options']['serial'] = array(
             '#type' => 'checkbox',
-            '#value' => t('serial'),
             '#title' => t('Serial processing'),
             '#prefix' => '</p>',
         );
@@ -85,7 +92,7 @@ function flat_bundle_action_form($form, &$form_state, $variables){
         '#value' => $node
     );
 
-// Specify which handlers become active
+// Specify which handlers to become active and which bundle_image to display
     $status = $variables['status'];
 
     switch ($status){
@@ -98,7 +105,7 @@ function flat_bundle_action_form($form, &$form_state, $variables){
         }
 
         case 'validating':{
-            $name = 'closed_bundle';
+            $name = 'process_bundle';
             break;
         }
 
@@ -111,7 +118,7 @@ function flat_bundle_action_form($form, &$form_state, $variables){
 
         case 'valid':{
             $form['actions']['archive_bundle']['#disabled'] = FALSE;
-
+            $form['actions']['reopen_bundle']['#disabled'] = FALSE;
             $name = 'closed_bundle';
             break;
         }
@@ -161,6 +168,10 @@ function flat_bundle_action_form_validate($form, &$form_state){
 
             break;
         }
+        case 'Re-open bundle':{
+
+            break;
+        }
     }
 }
 
@@ -193,16 +204,17 @@ function flat_bundle_action_form_submit($form, &$form_state){
             $data_to_post['drupal_path'] = DRUPAL_ROOT;
             $data_to_post['nid'] = $node->nid;
 
-        //Todo define here server ip address
-        #$aaf
+
             // background service http request settings
+            $host = variable_get('flat_deposit_ingest_service')['host_name'];
             $options = array(
                 'method' => 'POST',
                 'data' => $data_to_post,
                 'blocking' => FALSE,
                 'headers' => array(
                     // Set the Host header to self.
-                    'Host' => $_SERVER['HTTP_HOST'],),
+                    'Host' => $host,
+                    ),
             );
 
             $url = httprl_build_url_self(drupal_get_path('module', 'flat_deposit') . "/Helpers/Ingest_service.php");
@@ -213,12 +225,12 @@ function flat_bundle_action_form_submit($form, &$form_state){
             $status = $wrapper->upload_status->value();
 
             if ($form_state['values']['serial']) {
-                $url_debug = str_replace($_SERVER['SERVER_ADDR'], "localhost", $url);
+
 
                 $ch = curl_init();
                 curl_setopt_array($ch, array(
 
-                    CURLOPT_URL => $url_debug,
+                    CURLOPT_URL => $url,
                     CURLOPT_COOKIE => "XDEBUG_SESSION=PHPSTORM",
                     CURLOPT_POST => sizeof($data_to_post),
                     CURLOPT_POSTFIELDS => $data_to_post));
@@ -260,6 +272,21 @@ function flat_bundle_action_form_submit($form, &$form_state){
         case 'Delete bundle':{
             $url = array('node/' . $node->nid  . '/delete');
             $form_state['redirect'] = $url;
+            break;
+        }
+        case 'Re-open bundle':{
+            module_load_include('inc','flat_deposit', '/Helpers/Ingestor');
+
+            $ingest = new Ingestor($node->nid);
+
+            $ingest->deleteZipfile();
+
+            $ingest->moveData('unfreeze');
+
+            $ingest->updateNodeStatus('open');
+
+            drupal_set_message('Bundle is open and can be modified');
+
             break;
         }
 

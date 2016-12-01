@@ -336,16 +336,21 @@ function flat_deposit_uninstall(){
     $users = entity_load('user');
 
     foreach ($users as $user){
+
         if(strlen($user->name) > 0){
+
             $user_data_directory =  drupal_realpath('public://users/' . $user->name);
             $user_freeze_directory =  variable_get('flat_deposit_paths',array())['freeze'] . "/$user->name";
+
             if (file_exists($user_data_directory) && $user_data_directory){
+
                 recursiveRmDir($user_data_directory);
                 rmdir ($user_data_directory);}
+
             if (file_exists($user_freeze_directory) && $user_freeze_directory){
+
                 recursiveRmDir($user_freeze_directory);
                 rmdir ($user_freeze_directory);}
-
         }
     }
 

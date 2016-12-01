@@ -80,7 +80,7 @@ function flat_deposit_set_ingest_service($updated_values=NULL)
 {
     $defaults = array(
         # host name of http server
-        'host_name' => '172.17.0.1',
+        'host_name' => $_SERVER['SERVER_ADDR'],
         # the bagit executable
         'bag_exe' => '/usr/local/bin/bagit-4.9.0/bin/bag',
         # Should errors be logged

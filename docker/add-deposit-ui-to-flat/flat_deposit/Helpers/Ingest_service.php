@@ -29,20 +29,12 @@ define('ERROR_LOG_FILE', $config['error_log_file']);
 define('SWORD_TMP_DIR', $config['sword_tmp_dir']);
 
 
-/*
- * load configuration, helper functions and dependent classes
- */
-require_once ($module_path . '/Helpers/Ingestor.inc');
-require_once ($module_path . '/Helpers/Fedora_REST_API.inc');
-require_once ($module_path . '/Helpers/CMDI_Handler.php');
-require_once ($module_path . '/inc/php_functions.php');
-
-
 // Processing routines
 $nid = $_POST['nid'];
 
 try {
     // INITIALIZE
+    module_load_include('inc','flat_deposit', '/Helpers/Ingestor');
     $ingest = new Ingestor($nid);
 
     $header  = "Ingest service log file - "  . $ingest->type . " on ".date("F j, Y, g:i a").PHP_EOL. "-------------------------";

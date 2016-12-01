@@ -137,7 +137,7 @@ function flat_deposit_admin_form($form, &$form_state)
     $form['ingest_service']['host_name'] = array (
         '#type' => 'textfield',
         '#title' => t('Host name'),
-        '#description' => t('Host name or IP of the php server'),
+        '#description' => t('Host name or IP of the http/php server'),
         '#default_value' => $service['host_name'],
         '#required' => TRUE,
     );

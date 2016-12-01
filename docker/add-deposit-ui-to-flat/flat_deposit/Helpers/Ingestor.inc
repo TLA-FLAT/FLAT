@@ -186,6 +186,7 @@ class Ingestor
             $moved = rename($source, $target);
 
             // clean up : remove collection directory if empty
+            module_load_include('php', 'flat_deposit', 'inc/php_functions');
             if (is_dir_empty($collection_directory)){
 
                 rmdir($collection_directory);
@@ -620,6 +621,8 @@ class Ingestor
         $this->AddEntryLogFile('Removing children of erronous ingested info file');
 
         // create object that can do ReST requests
+        module_load_include('inc','flat_deposit', '/Helpers/Fedora_REST_API');
+
         $accessFedora = variable_get('flat_deposit_fedora');
         $rest_fedora = new FedoraRESTAPI($accessFedora);
 
@@ -638,6 +641,8 @@ class Ingestor
         $this->AddEntryLogFile('Changing ownerID of ingested objects');
 
         // create object that can do ReST requests
+        module_load_include('inc','flat_deposit', '/Helpers/Fedora_REST_API');
+
         $accessFedora = variable_get('flat_deposit_fedora');
         $rest_fedora = new FedoraRESTAPI($accessFedora);
 
@@ -665,6 +670,7 @@ class Ingestor
 
     public function deleteOriginal(){
         # delete original
+        module_load_include('php','flat_deposit', '/inc/php_functions');
         recursiveRmDir($this->freeze_dir);
         rmdir ($this->freeze_dir);
     }
@@ -687,6 +693,7 @@ class Ingestor
     {
         $dir = $this->bag['temp_folder'];
         if (file_exists($dir)){
+            module_load_include('php','flat_deposit', '/inc/php_functions');
             recursiveRmDir($dir);
             rmdir ($dir);
         }
@@ -696,7 +703,8 @@ class Ingestor
     public function deleteZipfile()
     {
         // delete zip file
-        $zip = $this->freeze_dir . '/' . $this->node->title . ".zip";
+
+        $zip = $this->data_dir['freeze_bundle'] . '/' . $this->node->title . ".zip";
         if (file_exists($zip)) {
             unlink($zip);
         }
@@ -711,6 +719,7 @@ class Ingestor
         foreach ($dirs as $dir){
             shell_exec(sprintf('sudo chown -R %s:%s %s', APACHE_USER , APACHE_USER, $dir));
             if (file_exists($dir)) {
+                module_load_include('php','flat_deposit', '/inc/php_functions');
                 recursiveRmDir($dir);
                 rmdir($dir);
             }
