@@ -119,4 +119,16 @@
         </rule>
     </pattern>
     
+    <!-- TEST -->
+    <pattern>
+        <title>Test for known profile</title>
+        <rule role="error" context="/cmd11:CMD">
+            <let name="profile" value="distinct-values((replace(@xsi:schemaLocation,'.*(clarin.eu:cr[0-9]+:p_[0-9]+).*','$1'),replace(cmd11:Header/cmd11:MdProfile,'.*(clarin.eu:cr[0-9]+:p_[0-9]+).*','$1')))"/>
+            <let name="allowed" value="('clarin.eu:cr1:p_1345561703683')"/>
+            <assert test="$profile = $allowed">
+                [FLAT TEST] the CMD profile[<value-of select="string-join($profile,', ')"/>] of this record is not allowed by this repository! Allowed profiles are [<value-of select="string-join($allowed,', ')"/>].
+            </assert>
+        </rule>
+    </pattern>    
+    
 </schema>
