@@ -46,6 +46,10 @@ try {
 
     // VALIDATION SPECIFIC ACTIONS
     if ($ingest->type == 'validating') {
+
+        // set doorkeeper query parameter
+        $ingest->doorkeeper_query = 'validate+resources';
+
         // access rights and data freeze
         $ingest->validate_backend_directory();
         $ingest->moveData('freeze');
@@ -66,13 +70,13 @@ try {
     $ingest->doSword();
     $ingest->checkStatusSword();
 
+    // execute doorkeeper
+    $ingest->triggerDoorkeeper($ingest->doorkeeper_query);
+    $ingest->checkStatusDoorkeeper();
+
 
     // INGEST SPECIFIC ACTIONS
     if ($ingest->type == 'processing'){
-
-        // execute doorkeeper
-        $ingest->triggerDoorkeeper();
-        $ingest->checkStatusDoorkeeper();
 
         $ingest->getConstituentFIDs();
 

@@ -31,6 +31,8 @@ class Ingestor
 
     public $freeze_dir;
 
+    public $doorkeeper_query;
+
     /*
      * Constructor function for Ingestor class. Needs array of node data
      *
@@ -72,7 +74,7 @@ class Ingestor
 
         } else {
 
-            $this->data_dir['bundle_source'] = drupal_realpath('public://users/' . $this->user->name . "/" . $this->wrapper->upload_collection->value() . '/' . $this->node->title);
+            $this->data_dir['bundle_source'] = drupal_realpath('public://flat_deposit/' . $this->user->name . "/" . $this->wrapper->upload_collection->value() . '/' . $this->node->title);
 
         }
 
@@ -215,22 +217,38 @@ class Ingestor
         $this->AddEntryLogFile('Adding resources to bundle info file');
 
         // Load existing xml file
-        $bundle = $this->node->title;
-        $collection = $this->wrapper->upload_collection->value();
-
         module_load_include('php','flat_deposit','Helpers/CMDI_Handler');
-        $cmd = new CMDI_Handler($this->node);
+        $profile = $this->wrapper->upload_cmdi->value();
+        $cmd = new CMDI_Handler($this->node,$profile);
 
+        // check and prepare xml
         if (!$cmd->projectCmdiFileExists()){
             throw new IngestServiceException ('No file with meta data found');
         }
 
         $cmd->getXML();
 
+        $isInconsistent = $cmd->checkProfileConsistency();
+        if ($isInconsistent){
+            throw new IngestServiceException ($isInconsistent);
+        }
+
         // clean up all resources before current resources are added
-        $c = $cmd->xml->Resources->ResourceProxyList->ResourceProxy->count();
-        for ($i = 0; $i < $c; $i++) {
+        // Removal existing resources from ResourceProxy child
+        $nResources = $cmd->xml->Resources->ResourceProxyList->ResourceProxy->count();
+        for ($i = 0; $i < $nResources; $i++) {
             unset($cmd->xml->Resources->ResourceProxyList->ResourceProxy[0]);
+        }
+
+        // Add 'Resources'-child to Components->profile if not existing
+        if (!isset($cmd->xml->Components->{$cmd->profile}->Resources)){
+            $cmd->xml->Components->{$cmd->profile}->addChild('Resources');
+        }
+
+        // Removal exitsing resources from Components->{profile}->Resources child
+        $nResources = $cmd->xml->Components->{$cmd->profile}->Resources->count();
+        for ($i = 0; $i < $nResources; $i++) {
+            unset($cmd->xml->Components->{$cmd->profile}->Resources->MediaFile[0]);
         }
 
         // scan all files of the bundle freeze directory and add theses as resources to the CMDI;
@@ -248,6 +266,8 @@ class Ingestor
         //count number of added resources
         $count = $cmd->xml->Resources->ResourceProxyList->ResourceProxy->count();
         $this->nResources = $count;
+
+
     }
 
     /**
@@ -489,13 +509,19 @@ class Ingestor
      *
      * @throws IngestServiceException
      */
-    public function triggerDoorkeeper(){
+    public function triggerDoorkeeper($to=FALSE){
 
         $this->AddEntryLogFile('Trigger doorkeeper');
 
+        if($to){
+           $query = '?to=' . $to ;
+        } else {
+            $query = '';
+        }
+
         $config = variable_get('flat_deposit_doorkeeper');
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $config['url'] . $this->bag['bag_id'] ); #. '/' . $this->bag['temp_extension']);
+        curl_setopt($ch, CURLOPT_URL, $config['url'] . $this->bag['bag_id'] . $query);
         curl_setopt($ch, CURLOPT_PORT, $config['port']);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
@@ -740,12 +766,13 @@ class Ingestor
 
         $this->AddEntryLogFile('Creating blog entry');
 
+        $host = variable_get('flat_deposit_ingest_service')['host_name'];
         if ($entry_type == 'succeeded'){
 
             $bdl = $this->pid['bundle'];
             $bdl = preg_replace('/[^a-zA-Z0-9_:]/u', '_', $bdl);
 
-            $url_link = 'http://localhost/flat/islandora/object/' . $bdl ;
+            $url_link = 'http://' . $host . '/flat/islandora/object/' . $bdl ;
 
         } elseif ($entry_type == 'failed'){
 
@@ -799,6 +826,7 @@ class Ingestor
     public function cleanup(){
         $this->deleteTempBag();
         $this->deleteZipfile();
+        $this->deleteBagDirectory();
         #$this->deleteOriginal();
     }
 

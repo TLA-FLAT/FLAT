@@ -7,13 +7,14 @@
  */
 
 
-function flat_bundle_action_form($form, &$form_state, $variables){
+function flat_bundle_action_form($form, &$form_state, $variables)
+{
 
 
     $form['actions']['bundle_image'] = array(
         '#type' => 'image_button',
         '#value' => t('Bundle image'),
-        '#disabled'=> TRUE,
+        '#disabled' => TRUE,
         '#prefix' => '</p>'
 
     );
@@ -28,7 +29,7 @@ function flat_bundle_action_form($form, &$form_state, $variables){
         '#value' => t('Create info file for bundle'),
         #'#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
         '#description' => t('Bundles are obliged to be accompanied by a info file'),
-        '#disabled'=> TRUE,
+        '#disabled' => TRUE,
     );
 
     $form['actions']['reopen_bundle'] = array(
@@ -36,7 +37,7 @@ function flat_bundle_action_form($form, &$form_state, $variables){
         '#value' => t('Re-open bundle'),
         #'#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
         '#description' => t('Click to allow modifications of your bundle'),
-        '#disabled'=> TRUE,
+        '#disabled' => TRUE,
     );
 
     $form['actions']['validate_bundle'] = array(
@@ -44,13 +45,13 @@ function flat_bundle_action_form($form, &$form_state, $variables){
         '#value' => t('Validate bundle'),
         #'#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
         '#description' => t('Validated bundles will be transferred to different location and can not be altered'),
-        '#disabled'=> TRUE,
+        '#disabled' => TRUE,
     );
 
     $form['actions']['archive_bundle'] = array(
         '#type' => 'submit',
         '#value' => t('Archive bundle'),
-    #    '#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
+        #    '#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
         '#disabled' => TRUE,
     );
 
@@ -70,7 +71,7 @@ function flat_bundle_action_form($form, &$form_state, $variables){
     );
 
     global $user;
-    if ($user->name == 'admin'){
+    if ($user->name == 'admin') {
         $form['options']['serial'] = array(
             '#type' => 'checkbox',
             '#title' => t('Serial processing'),
@@ -86,6 +87,7 @@ function flat_bundle_action_form($form, &$form_state, $variables){
     );
 
     $node = menu_get_object();
+    $wrapper = entity_metadata_wrapper('node', $node);
 
     $form['values']['node'] = array(
         '#type' => 'value',
@@ -95,45 +97,68 @@ function flat_bundle_action_form($form, &$form_state, $variables){
 // Specify which handlers to become active and which bundle_image to display
     $status = $variables['status'];
 
-    switch ($status){
-        case 'open':{
+    switch ($status) {
+        case 'open': {
             $form['actions']['bundle_image']['#disabled'] = FALSE;
             $form['actions']['validate_bundle']['#disabled'] = FALSE;
-            $form['actions']['describe_bundle']['#disabled'] = FALSE;
             $name = 'open_bundle';
             break;
         }
 
-        case 'validating':{
+        case 'validating': {
             $name = 'process_bundle';
             break;
         }
 
-        case 'failed':{
+        case 'failed': {
             $form['actions']['bundle_image']['#disabled'] = FALSE;
             $form['actions']['validate_bundle']['#disabled'] = FALSE;
             $name = 'closed_bundle_failed';
             break;
         }
 
-        case 'valid':{
+        case 'valid': {
             $form['actions']['archive_bundle']['#disabled'] = FALSE;
             $form['actions']['reopen_bundle']['#disabled'] = FALSE;
             $name = 'closed_bundle';
             break;
         }
-        case 'processing':{
+        case 'processing': {
             $name = 'process_bundle';
 
             break;
         }
     }
 
-    $form['actions']['bundle_image']['#src'] = drupal_get_path('module','flat_deposit').'/Images/' . $name . '.jpg';
+    $form['actions']['bundle_image']['#src'] = drupal_get_path('module', 'flat_deposit') . '/Images/' . $name . '.jpg';
+
+
+    // Check / update bundle_cmdi field value
+    if (!$wrapper->upload_cmdi->value()){
+
+         module_load_include('php','flat_deposit','Helpers/CMDI_Handler');
+         $cmd = new CMDI_Handler($node, 'lat-session');
+
+         $cmdi_exists = $cmd->projectCmdiFileExists();
+
+         if($cmdi_exists) {
+             $wrapper->upload_cmdi->set('manually uploaded metadata');
+             $wrapper->save();
+         }
+    }
+
+    // Activate metadata creation button if field value has not been set
+    if (!$wrapper->upload_cmdi->value()) {
+
+        $form['actions']['describe_bundle']['#disabled'] = FALSE;
+    }
 
     return $form;
 
 }
+
+
+
 
 
 
@@ -144,30 +169,32 @@ function flat_bundle_action_form_validate($form, &$form_state){
     $wrapper = entity_metadata_wrapper('node',$node);
 
     switch ($action){
-        case 'Validate bundle':{
+        case 'Validate bundle': {
 
-            // check existence info file
-            module_load_include('php','flat_deposit','Helpers/CMDI_Handler');
+            module_load_include('php', 'flat_deposit', 'Helpers/CMDI_Handler');
             $cmd = new CMDI_Handler($node);
 
-            if(!$cmd->projectCmdiFileExists()) {
+            $cmdi_exists = $cmd->projectCmdiFileExists();
+            $profile_set = $wrapper->upload_cmdi->value();
+
+            // In case no cmdi file exists
+            if (!$cmdi_exists) {
                 form_set_error('validate_bundle', t("Expecting record.cmdi file in metadata folder"));
-            }
 
-            // check profile name is set correctly
-            $profile = $wrapper->upload_cmdi->value();
-            if (!$profile) {
-                form_set_error('validate_bundle', t("Profile has not been set"));
-            }
+                // reset cmdi value in case this has been set
+                if ($profile_set) {
+                    $wrapper->upload_cmdi->set(NULL);
+                    $wrapper->save();
+                    drupal_set_message(t("Value for chosen metadata profile has been reset"), 'status');
+                }
 
-            // reset cmdi value in case
-            if ($profile AND !$cmd->projectCmdiFileExists())  {
-                $wrapper->upload_cmdi->set(NULL);
+                return $form;
             }
-
 
             break;
+
         }
+
         case 'Re-open bundle':{
 
             break;
@@ -278,6 +305,8 @@ function flat_bundle_action_form_submit($form, &$form_state){
             module_load_include('inc','flat_deposit', '/Helpers/Ingestor');
 
             $ingest = new Ingestor($node->nid);
+
+            $ingest->deleteTempBag();
 
             $ingest->deleteZipfile();
 

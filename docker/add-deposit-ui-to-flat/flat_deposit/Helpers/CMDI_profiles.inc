@@ -38,15 +38,15 @@ class CMDI_profiles
                     '#collapsed' => FALSE,
                     '#tree' => TRUE);
 
-                $fields['field_1']['Title'] = array(
-                    '#title' => t('Title'),
-                    '#type' => 'textfield',
-                );
-
                 $fields['field_1']['Name'] = array(
                     '#title' => t('Name'),
                     '#type' => 'textfield',
                     );
+
+                $fields['field_1']['Title'] = array(
+                    '#title' => t('Title'),
+                    '#type' => 'textfield',
+                );
 
                 $fields['field_1']['Date'] = array(
                     '#title' => t('Date'),
@@ -166,13 +166,14 @@ class CMDI_profiles
                     '#tree' => TRUE,
                 );
 
-                $fields['field_1']['Title'] = array(
-                    '#title' => t('Title'),
-                    '#type' => 'textfield',
-                );
 
                 $fields['field_1']['Name'] = array(
                     '#title' => t('Name'),
+                    '#type' => 'textfield',
+                );
+
+                $fields['field_1']['Title'] = array(
+                    '#title' => t('Title'),
                     '#type' => 'textfield',
                 );
 
@@ -255,13 +256,14 @@ class CMDI_profiles
                     '#tree' => TRUE,
                 );
 
-                $fields['field_1']['Title'] = array(
-                    '#title' => t('Title'),
-                    '#type' => 'textfield',
-                );
 
                 $fields['field_1']['Name'] = array(
                     '#title' => t('Name'),
+                    '#type' => 'textfield',
+                );
+
+                $fields['field_1']['Title'] = array(
+                    '#title' => t('Title'),
                     '#type' => 'textfield',
                 );
 

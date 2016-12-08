@@ -15,6 +15,7 @@ class CMDI_Handler
     public $resources; // files to add as resources to CMDI
 
     public $export_file; // path and name of the xml file storing the cmdi metadata
+    public $resource_directory; // path where all resources can be found
 
 
 
@@ -34,7 +35,7 @@ class CMDI_Handler
 
         $this->user = user_load($node->uid);
 
-        $this->export_file = $this->determine_export_file($wrapper);
+        $this->determine_export_file($wrapper);
         
     }
 
@@ -60,7 +61,7 @@ class CMDI_Handler
 
             } else {
 
-                $path = 'public://users/' . $this->user->name . "/$this->collection/$this->bundle";
+                $path = 'public://flat_deposit/' . $this->user->name . "/$this->collection/$this->bundle";
 
             }
 
@@ -71,7 +72,10 @@ class CMDI_Handler
 
         }
 
-        return $path . '/metadata/record.cmdi';
+        $this->export_file = $path . '/metadata/record.cmdi';
+        $this->resource_directory = $path . '/data/';
+
+        return true;
     }
 
     /**
@@ -92,16 +96,99 @@ class CMDI_Handler
      */
     function getXML(){
 
-    if ($this->projectCmdiFileExists()){
+        if ($this->projectCmdiFileExists()){
 
-        $this->xml = simplexml_load_file($this->export_file);
+            $this->xml = simplexml_load_file($this->export_file);
 
-    } else {
+        } else {
 
-        $this->initiateNewCMDI();
+            $this->initiateNewCMDI();
+        }
 
     }
-}
+
+
+    function checkProfileConsistency(){
+
+        $message = FALSE;
+
+        if (!isset($this->xml)){
+            $message = 'xml file has not been loaded';
+
+        } elseif (!isset($this->xml->Components->{$this->profile})){
+
+            $message = 'Metadata profile of loaded xml file does not match with profile specified in FLAT deposit';
+        }
+
+        return $message;
+    }
+
+
+    /**
+     * This method fills the resources section of the cmdi file with all files found in the open bundle data directory
+     *
+     * <ResourceRef>../data/Write_me.txt</ResourceRef>
+     */
+    function addResourcesToXml(){
+
+
+        foreach ($this->resources as $fid => $file) {
+
+            $file_mime = mime_content_type(drupal_realpath($file)) ;
+            $file_size = filesize(drupal_realpath($file));
+
+            // Add Resources to resource proxy list
+            $data = $this->xml->Resources->ResourceProxyList->addChild('ResourceProxy');
+            $data->addAttribute('id', $fid);
+
+            $data->addChild('ResourceType', 'Resource');
+            $data->addChild('ResourceRef', $file);
+
+            $data->ResourceType->addAttribute('mimetype', $file_mime);
+
+            // Add Resources to Components->resource proxy list
+            $data2 = $this->xml->Components->{$this->profile}->Resources->addChild('MediaFile');
+            $data2->addAttribute('ref', $fid);
+            $data2->addChild('Type', 'document');
+            $data2->addChild('Format', $file_mime);
+            $data2->addChild('Size', $file_size);
+        }
+    }
+
+
+
+    /**
+     * This function recursively    searches for files in the user data directory
+     *
+     * @param $directory string     path where to search for files
+     *
+     * @returns $resources array    file id's as keys and file names as values
+     */
+    public function searchDir($directory){
+
+
+        $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory,RecursiveDirectoryIterator::FOLLOW_SYMLINKS));
+
+        $resources = array();
+        $c=10000; # counter for resource ID (each resource within an CMDI-object needs an unique identifier)
+
+
+        foreach ($rii as $file) {
+            if ($file->isDir()){
+                continue;}
+
+            $c++;
+            $fid = "d$c";
+            $resources[$fid] = $file->getPathname();
+
+        }
+
+        return $resources;
+
+
+    }
+
+
 
     /**
      * Methods that generates a new, valid CMDI file including processing instructions, empty data fields and attributes
@@ -151,64 +238,6 @@ class CMDI_Handler
 
 
 
-    /**
-     * This function recursively    searches for files in the user data directory
-     *
-     * @param $directory string     path where to search for files
-     *
-     * @returns $resources array    file id's as keys and file names as values
-     */
-    public function searchDir($directory){
-
-
-        $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory,RecursiveDirectoryIterator::FOLLOW_SYMLINKS));
-
-        $resources = array();
-        $c=10000; # counter for resource ID (each resource within an CMDI-object needs an unique identifier)
-
-
-        foreach ($rii as $file) {
-            if ($file->isDir()){
-                continue;}
-
-            $c++;
-            $fid = "d$c";
-            $resources[$fid] = $file->getPathname();
-
-        }
-
-        return $resources;
-
-
-    }
-
-
-    /**
-     * This method fills the resources section of the cmdi file with all files found in the open bundle data directory
-     *
-     * <ResourceRef>../data/Write_me.txt</ResourceRef>
-     */
-    function addResourcesToXml(){
-
-        foreach ($this->resources as $fid => $file) {
-
-            // transform drupal path to relative path as needed for fedora ingest
-            #$localURI = str_replace(USER_FREEZE_DIR ."/" . $this->collection ."/" . $this->bundle, "..", $file);
-
-            # Mimetype of the file;
-            $mime = mime_content_type(drupal_realpath($file)) ;
-
-            $data = $this->xml->Resources->ResourceProxyList->addChild('ResourceProxy');
-            $data->addAttribute('id', $fid);
-            $data->addChild('ResourceType', 'Resource');
-            $data->addChild('ResourceRef', $file);
-
-            $data->ResourceType->addAttribute('mimetype', $mime);
-
-        }
-    }
-
-
 
     function changeHeader()
     {
@@ -228,8 +257,8 @@ class CMDI_Handler
     function processFormData($form_data){
 
         $clean_data = array();
-        $clean_data['Title'] = $form_data['field_1']['Title'];
         $clean_data['Name'] = $form_data['field_1']['Name'];
+        $clean_data['Title'] = $form_data['field_1']['Title'];
 
         if ($form_data['field_1']['Date']) {
             $month = (strlen($form_data['field_1']['Date']['month']) == 1 ) ? $form_data['field_1']['Date']['month'] : '0'.$form_data['field_1']['Date']['month'];
@@ -251,6 +280,32 @@ class CMDI_Handler
 
 
     /**
+     * This method transforms CMDI meta data as php nested array to a structure that can be used for the cmdi-create form.
+     * @param $form_data array of meta data harvested from drupal form
+     */
+    function transformCMDIToFormData($cmdi_data){
+
+        $cmdi_data ['field_1']= array();
+
+        $cmdi_data ['field_1']['Title'] = $cmdi_data ['Title'];
+        $cmdi_data ['field_1']['Name'] = $cmdi_data ['Name'];
+
+        unset($cmdi_data ['Title']);
+        unset($cmdi_data ['Name']);
+
+
+        // transform date to array of integers
+        $cmdi_data ['field_1']['Date'] = array_combine(['Year', "Month",' Day'], array_map('intval', explode('-', $cmdi_data ['Date'])));
+        unset($cmdi_data ['Date']);
+
+
+
+        return $cmdi_data;
+    }
+
+
+
+    /**
      * Transforms array to xml tree
      */
     function addComponentInfoToXml()
@@ -260,10 +315,7 @@ class CMDI_Handler
             throw new Exception('Profile has not been specified');
         }
 
-        module_load_include('php', 'flat_deposit', 'inc/xml_functions');
-
-        $config = variable_get('flat_deposit_metadata');
-        $value = $config ['prefix'] . '-' . $this->profile;
+        $value =  $this->profile;
 
         $data = $this->xml->Components->{$value};
         array_to_xml($this->form_data, $data);

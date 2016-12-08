@@ -73,7 +73,7 @@ function flat_deposit_menu()
 
     // flat bundle cmdi file menu item
     $items['node/%node/cmdi_info'] = array(
-        'title' => 'Bundle info file',
+        'title' => 'Metadata file',
         'type' => MENU_LOCAL_TASK,
         'page callback' => 'flat_deposit_cmdi',
         'file' => 'inc/flat_deposit.cmdi.inc',
@@ -296,7 +296,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
     // Hide unwanted buttons anf fields
     hide($form['upload_status']);
     hide($form['upload_exception']);
-    hide($form['upload_cmdi']);
+    hide($form['upload_cmdi_creator']);
     hide($form['actions']['preview']);
 
     // Conditionally hide field. To do that:
@@ -481,7 +481,7 @@ function flat_bundle_node_form_add_submit($form, &$form_state){
         $target = $config['alternate_dir'] . $user->name . $config['alternate_subdir'] . "/" . $location;
     } else {
 
-        $target = 'public://users/' . $user->name . "/$collection/$bundle";
+        $target = 'public://flat_deposit/' . $user->name . "/$collection/$bundle";
     }
 
 

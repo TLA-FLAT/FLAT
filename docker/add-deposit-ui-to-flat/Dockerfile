@@ -1,4 +1,4 @@
-FROM        flat
+FROM        flat-deposit
 MAINTAINER	Daniel von Rhein <daniel.vonrhein@mpi.nl>
 
 # Add deposit module to installation

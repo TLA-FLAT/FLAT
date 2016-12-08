@@ -79,7 +79,7 @@ function flat_deposit_cmdi_create_form($form, &$form_state){
 
             global $user;
             $file = $form_state['build_info']['args'][1];
-            $md = include 'public://users/' . $user->name . '/Templates/' . $file . '.php';
+            $md = include 'public://flat_deposit/' . $user->name . '/Templates/' . $file . '.php';
         }
 
 
@@ -120,7 +120,7 @@ function flat_deposit_cmdi_create_form_validate($form, &$form_state){
 
         // Can directory be created?
         global $user;
-        $template_dir = 'public://users/' . $user->name . '/Templates';
+        $template_dir = 'public://flat_deposit/' . $user->name . '/Templates';
 
         if (!file_exists($template_dir)) {drupal_mkdir($template_dir);}
 
@@ -208,8 +208,6 @@ function flat_deposit_cmdi_create_form_submit($form, &$form_state){
     $cmd->processFormData($form_state['values']);
     $cmd->addComponentInfoToXml();
 
-    global $user;
-    $cmd->resources = $cmd->searchDir('public://users/' . $user->name . "/$collection/$bundle");
     $cmd->xml->asXML($cmd->export_file);
     drupal_set_message(t('Created metadata file from template ' . $template));
 
