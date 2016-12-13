@@ -39,7 +39,7 @@ EOF
 }
 
 # Initialize our own variables:
-clarin_fc="https://lux17.mpi.nl/isocat/clarin/vlo/mapping/facetConcepts.xml"
+clarin_fc="https://raw.githubusercontent.com/clarin-eric/VLO/master/vlo-commons/src/main/resources/facetConcepts.xml"
 gsearch_fc="./gsearch-mapping-template.xml"
 gsearch_xsl="./fedoragsearch-2.6/fedoragsearch/FgsConfig/generated_gsearch_config_for_islandora/fgsconfigFinal/index/FgsIndex/foxmlToSolr.xslt"
 gsearch_solr="./fedoragsearch-2.6/fedoragsearch/FgsConfig/generated_gsearch_config_for_islandora/fgsconfigFinal/index/FgsIndex/conf/schema-4.2.0-for-fgs-2.6.xml"

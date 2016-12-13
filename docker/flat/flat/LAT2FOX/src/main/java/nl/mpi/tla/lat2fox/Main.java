@@ -20,11 +20,15 @@ import java.io.File;
 import java.net.URL;
 import java.util.Collection;
 import java.util.List;
+import javax.xml.transform.Source;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.URIResolver;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import net.sf.saxon.Configuration;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.XdmAtomicValue;
 import net.sf.saxon.s9api.XdmDestination;
@@ -54,8 +58,6 @@ public class Main {
         System.err.println("INF: -i=<DIR>   replace source <DIR> by this <DIR> in the FOX files (optional)");
         System.err.println("INF: -n=<NUM>   create subdirectories to contain <NUM> FOX files (default: 0, i.e., no subdirectories)");
         System.err.println("INF: -c=<FILE>  file containing the mapping to collections (optional)");
-        System.err.println("INF: -d=<FILE>  stylesheet containing the mapping from CMD to Dublin Core (recommended)");
-        System.err.println("INF: -m=<FILE>  stylesheet containing the mapping from CMD to other (non CMD and non DC) metadata formats (optional)");
         System.err.println("INF: -o=<XPATH> XPath 2.0 expressions determining if the CMD should be offered via OAI-PMH");
         System.err.println("INF: -a=<XPATH> XPath 2.0 expressions determining if the DO should always be a collection and a compound");
         System.err.println("INF: -s=<NAME>  name of the server/repository used by OAI");
@@ -77,8 +79,6 @@ public class Main {
         String mdir = null;
         String cext = "cmdi";
         String cfile = null;
-        String dfile = null;
-        String mfile = null;
         String oxp = null;
         String axp = null;
         String server = null;
@@ -89,7 +89,7 @@ public class Main {
         boolean relationCheck = true;
         int ndir = 0;
         // check command line
-        OptionParser parser = new OptionParser( "zhlve:r:f:i:x:p:q:n:c:d:m:o:a:s:b:?*" );
+        OptionParser parser = new OptionParser( "zhlve:r:f:i:x:p:q:n:c:o:a:s:b:?*" );
         OptionSet options = parser.parse(args);
         if (options.has("l"))
             laxResourceCheck = true;
@@ -135,34 +135,6 @@ public class Main {
                 ex.printStackTrace(System.err);
             }
         }
-        if (options.has("d")) {
-            dfile = (String)options.valueOf("d");
-            File d = new File(dfile);
-            if (!d.isFile()) {
-                System.err.println("FTL: -d expects a <FILE> argument!");
-                showHelp();
-                System.exit(1);
-            }
-            if (!d.canRead()) {
-                System.err.println("FTL: -d <FILE> argument isn't readable!");
-                showHelp();
-                System.exit(1);
-            }
-        }
-        if (options.has("m")) {
-            mfile = (String)options.valueOf("m");
-            File m = new File(mfile);
-            if (!m.isFile()) {
-                System.err.println("FTL: -m expects a <FILE> argument!");
-                showHelp();
-                System.exit(1);
-            }
-            if (!m.canRead()) {
-                System.err.println("FTL: -m <FILE> argument isn't readable!");
-                showHelp();
-                System.exit(1);
-            }
-        }
         if (options.has("n")) {
             try {
                 ndir = Integer.parseInt((String)options.valueOf("n"));
@@ -201,6 +173,9 @@ public class Main {
             System.err.println("ERR: couldn't register the Saxon extension functions: "+e);
             e.printStackTrace();
         }
+        
+        URIResolver resolver = new JarURIResolver(SaxonUtils.getProcessor().getUnderlyingConfiguration());
+        
         try {
             if (fdir == null)
                 fdir = dir + "/fox";
@@ -244,21 +219,7 @@ public class Main {
             FileUtils.forceMkdir(new File(fdir));
             FileUtils.forceMkdir(new File(xdir));
             Collection<File> inputs = FileUtils.listFiles(new File(dir),new String[] {cext},true);
-            // if there is a CMD 2 DC or 2 other XSLT include it
-            XsltExecutable cmd2fox = null;
-            if (dfile != null || mfile != null) {
-                XsltTransformer inclCMD2DC = SaxonUtils.buildTransformer(new URL(System.getProperty("LAT2FOX.inclCMD2DCother", Main.class.getResource("/inclCMD2DCother.xsl").toString()))).load();
-                inclCMD2DC.setSource(new StreamSource(System.getProperty("LAT2FOX.cmd2fox", Main.class.getResource("/cmd2fox.xsl").toString())));
-                if (dfile != null)
-                    inclCMD2DC.setParameter(new QName("cmd2dc"),new XdmAtomicValue("file://"+(new File(dfile)).getAbsolutePath()));
-                if (mfile != null)
-                    inclCMD2DC.setParameter(new QName("cmd2other"),new XdmAtomicValue("file://"+(new File(mfile)).getAbsolutePath()));
-                XdmDestination destination = new XdmDestination();
-                inclCMD2DC.setDestination(destination);
-                inclCMD2DC.transform();
-                cmd2fox = SaxonUtils.buildTransformer(destination.getXdmNode());                
-            } else
-                cmd2fox = SaxonUtils.buildTransformer(new URL(System.getProperty("LAT2FOX.cmd2fox", Main.class.getResource("/cmd2fox.xsl").toString())));
+            XsltExecutable cmd2fox = SaxonUtils.buildTransformer(new URL(System.getProperty("LAT2FOX.cmd2fox", Main.class.getResource("/cmd2fox.xsl").toString())));
             int err = 0;
             int i = 0;
             int s = inputs.size();
@@ -347,6 +308,24 @@ public class Main {
         } catch(Exception ex) {
             System.err.println("FTL: "+ex);
             ex.printStackTrace(System.err);
+        }
+    }
+    
+    static class JarURIResolver implements URIResolver {
+        
+        private URIResolver resolver = null;
+        
+        public JarURIResolver(Configuration config) {
+            resolver = config.getURIResolver();
+            config.setURIResolver(this);
+        }
+        
+        public Source resolve(String href,String base) throws TransformerException {
+            System.err.println("DBG: resolve(["+href+"],["+base+"])");
+            if (href.equals("cmd2fox.xsl")) {
+                return new javax.xml.transform.stream.StreamSource(Main.class.getResource("/cmd2fox.xsl").toExternalForm());
+            } else
+                return resolver.resolve(href,base);
         }
     }
 }
