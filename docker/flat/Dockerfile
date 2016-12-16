@@ -69,7 +69,7 @@ ENV FEDORA_HOME /var/www/fedora
 ENV CATALINA_HOME /var/www/fedora/tomcat
 
 RUN mkdir /tmp/fedora &&\
-	cd /tmp/fedora &&\ 
+	cd /tmp/fedora &&\
 	wget "http://downloads.sourceforge.net/project/fedora-commons/fedora/3.8.1/fcrepo-installer-3.8.1.jar"
 
 ADD fedora/install.properties /tmp/fedora/install.properties
@@ -77,6 +77,9 @@ RUN /etc/init.d/postgresql start &&\
 	cd /tmp/fedora &&\
 	java -jar fcrepo-installer-3.8.1.jar install.properties &&\
 	/etc/init.d/postgresql stop
+
+# tell fedora about CMDI
+RUN sed -i 's|</mappings>|<mime-mapping><mime-type>application/x-cmdi+xml</mime-type><extension>cmdi</extension></mime-mapping></mappings>|g' /var/www/fedora/server/config/mime-to-extensions.xml
 
 #
 # starting fedora will initialize required directories
@@ -101,7 +104,7 @@ RUN cd /var/www/fedora/data/fedora-xacml-policies/repository-policies/ &&\
 	unzip master.zip &&\
 	rm master.zip &&\
 	mv islandora-xacml-policies-master islandora
-RUN cd /var/www/fedora/tomcat/webapps/fedora/WEB-INF/lib &&\ 
+RUN cd /var/www/fedora/tomcat/webapps/fedora/WEB-INF/lib &&\
 	wget "https://github.com/Islandora/islandora_drupal_filter/releases/download/v7.1.3/fcrepo-drupalauthfilter-3.8.1.jar"
 ADD fedora/jaas.conf /var/www/fedora/server/config/jaas.conf
 ADD fedora/filter-drupal.xml /var/www/fedora/server/config/filter-drupal.xml
@@ -154,10 +157,14 @@ RUN mkdir -p /tmp/islandora &&\
 	mv 7.x-1.6.zip islandora_solution_pack_compound-7.x-1.6.zip &&\
 	unzip islandora_solution_pack_compound-7.x-1.6.zip -d /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/ &&\
     sed -i 's|function islandora_compound_object_islandora_compoundCModel_islandora_view_object|function islandora_compound_object_islandora_compoundCModel_islandora_view_object_DISABLED_BY_FLAT|g' /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/islandora_solution_pack_compound-7.x-1.6/islandora_compound_object.module
-	
+# overwrites the collection object view, so we get file details
+ADD islandora/islandora_basic_collection.module /var/www/html/flat/sites/all/modules/contrib/islandora_solution_pack_collection-7.x-1.6/islandora_basic_collection.module
+
+# add CMDI solution pack
 RUN mkdir -p /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/islandora_solution_pack_cmdi
 ADD flat/islandora_solution_pack_cmdi /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/islandora_solution_pack_cmdi
 
+# tell islandora about CMDI
 RUN sed -i "/\"json\"/a \"cmdi\" => \"application/x-cmdi+xml\"," /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/islandora-7.x-1.6/includes/mimetype.utils.inc &&\
 	sed -i "/header('Content-type: ' . \$datastream/a if (\$datastream->ID == 'CMD') {\nheader('Content-type: ' . 'application/xml');\n}" /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/islandora-7.x-1.6/includes/datastream.inc
     
@@ -173,7 +180,9 @@ RUN cp -r /var/www/html/$DRUPAL_PROJECT/sites/all/themes/bootstrap/starterkits/c
     echo ";; FLAT settings" >> flat_bootstrap_theme.info &&\
 	echo "settings[bootstrap_cdn_jsdelivr_theme] = 'flatly'" >> flat_bootstrap_theme.info &&\
     echo "settings[bootstrap_fluid_container] = 1" >> flat_bootstrap_theme.info
+# determine our own object view
 ADD islandora/islandora-default.tpl.php /var/www/html/$DRUPAL_PROJECT/sites/all/themes/flat_bootstrap_theme/templates/islandora-default.tpl.php
+# overwrite the compound behavior, which does special things for the first member (as being the representative)
 ADD islandora/template.php /var/www/html/$DRUPAL_PROJECT/sites/all/themes/flat_bootstrap_theme/template.php
 
 RUN export PGPASSWORD=fedora &&\
@@ -262,7 +271,7 @@ RUN chmod u+x /var/www/fedora/tomcat/bin/tomcat-fedora.sh &&\
 ENV MAVEN_OPTS -Xss10M
 
 RUN cd /tmp &&\
-    git clone https://github.com/TheLanguageArchive/SchemAnon.git SchemAnon &&\
+    git clone -b develop https://github.com/TheLanguageArchive/SchemAnon.git SchemAnon &&\
     cd /tmp/SchemAnon &&\
     mvn install:install-file -Dfile=lib/org/eclipse/wst/org.eclipse.wst.xml.xpath2.processor/1.1.0/org.eclipse.wst.xml.xpath2.processor-1.1.0.jar -DgroupId=org.eclipse.wst -DartifactId=org.eclipse.wst.xml.xpath2.processor -Dversion=1.1.0 -Dpackaging=jar &&\
     mvn install:install-file -Dfile=lib/xerces/xercesImpl/2.11.0-xml-schema-1.1-beta/xercesImpl-2.11.0-xml-schema-1.1-beta.jar -DpomFile=lib/xerces/xercesImpl/2.11.0-xml-schema-1.1-beta/xercesImpl-2.11.0-xml-schema-1.1-beta.pom -DgroupId=xerces -DartifactId=xercesImpl -Dversion=2.11.0-xml-schema-1.1-beta -Dpackaging=jar &&\
@@ -290,6 +299,9 @@ ENV FLAT_ICONS /app/flat/icons
 RUN apt-get clean &&\
 	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# workdir
+WORKDIR /app/flat
+
 # Use baseimage-docker's init system.
 ENTRYPOINT ["/sbin/my_init"]
 CMD ["--", "/bin/bash", "-l"]
@@ -297,6 +309,3 @@ CMD ["--", "/bin/bash", "-l"]
 EXPOSE 80
 EXPOSE 8080
 EXPOSE 8443
-
-# workdir
-WORKDIR /app/flat

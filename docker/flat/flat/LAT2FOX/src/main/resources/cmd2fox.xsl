@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:foxml="info:fedora/fedora-system:def/foxml#" xmlns:cmd="http://www.clarin.eu/cmd/" xmlns:lat="http://lat.mpi.nl/" xmlns:sx="java:nl.mpi.tla.saxon" exclude-result-prefixes="xs sx lat" version="2.0">
+<xsl:stylesheet xmlns:xd="http://www.oxygenxml.com/ns/doc/xsl" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:foxml="info:fedora/fedora-system:def/foxml#" xmlns:cmd="http://www.clarin.eu/cmd/" xmlns:lat="http://lat.mpi.nl/" xmlns:sx="java:nl.mpi.tla.saxon" exclude-result-prefixes="xs sx lat" version="3.0">
 
+	<xsl:variable name="debug" select="false()" static="yes"/>
+
+	<xd:doc>
+		<xd:desc>
+			<xd:p><xd:i>rec</xd:i> contains a reference to the current CMD record</xd:p>
+		</xd:desc>
+	</xd:doc>
 	<xsl:variable name="rec" select="/"/>
 
 	<xsl:param name="rels-uri" select="'./relations.xml'"/>
@@ -147,14 +154,14 @@
 		<xsl:param name="paths" as="xs:string*"/>
 		<xsl:param name="files" as="xs:string*"/>
 		<xsl:param name="base"  as="xs:anyURI"/>
-		<xsl:message>DBG: firstFile(paths[<xsl:value-of select="string-join($paths,',')"/>],files[<xsl:value-of select="string-join($files,',')"/>],base[<xsl:value-of select="$base"/>])</xsl:message>
+		<xsl:message use-when="$debug">DBG: firstFile(paths[<xsl:value-of select="string-join($paths,',')"/>],files[<xsl:value-of select="string-join($files,',')"/>],base[<xsl:value-of select="$base"/>])</xsl:message>
 		<xsl:variable name="res" as="xs:anyURI*">
 			<xsl:for-each select="$files">
 				<xsl:variable name="file" select="."/>
 				<xsl:for-each select="$paths">
 					<xsl:variable name="path" select="."/>
 					<xsl:variable name="uri" select="resolve-uri(concat($path, '/',$file),$base)"/>
-					<xsl:message>DBG: firstFile(...): try[<xsl:value-of select="$uri"/>]</xsl:message>
+					<xsl:message use-when="$debug">DBG: firstFile(...): try[<xsl:value-of select="$uri"/>]</xsl:message>
 					<xsl:if test="sx:fileExists($uri)">
 						<xsl:sequence select="$uri"/>
 					</xsl:if>
@@ -162,17 +169,17 @@
 			</xsl:for-each>
 		</xsl:variable>
 		<xsl:sequence select="$res[1]"/>
-		<xsl:message>DBG: firstFile(...): result[<xsl:value-of select="$res[1]"/>]</xsl:message>
+		<xsl:message use-when="$debug">DBG: firstFile(...): result[<xsl:value-of select="$res[1]"/>]</xsl:message>
 	</xsl:function>
 
-	<xsl:function name="cmd:collections" as="xs:string*">
+	<xsl:function name="cmd:collections" as="node()*">
 		<!--<xsl:sequence select="for $xp in $collections-map//xpath return if (sx:evaluate($rec,$xp,$collections-map/descendant-or-self::map)) then ($xp/parent::collection/@pid) else ()" as="xs:string*"/>-->
-		<xsl:variable name="collections" as="xs:string*">
+		<xsl:variable name="collections" as="node()*">
 			<xsl:for-each select="$collections-map//xpath">
 				<xsl:variable name="xp" select="current()"/>
 				<xsl:choose>
 					<xsl:when test="sx:evaluate($rec, $xp, $collections-map/descendant-or-self::map)">
-						<!--<xsl:message>
+						<!--<xsl:message use-when="$debug">
 							<xsl:text>XPath[</xsl:text>
 							<xsl:value-of select="$xp"/>
 							<xsl:text>][</xsl:text>
@@ -180,10 +187,10 @@
 								select="sx:evaluate($rec, $xp, $collections-map/descendant-or-self::map)"/>
 							<xsl:text>] matches!</xsl:text>
 						</xsl:message>-->
-						<xsl:sequence select="$xp/parent::collection/@pid"/>
+						<xsl:sequence select="$xp/parent::collection"/>
 					</xsl:when>
 					<xsl:otherwise>
-						<!--<xsl:message>
+						<!--<xsl:message use-when="$debug">
 							<xsl:text>XPath[</xsl:text>
 							<xsl:value-of select="$xp"/>
 							<xsl:text>][</xsl:text>
@@ -199,8 +206,8 @@
 			<xsl:when test="(count($collections) gt 1) and ($collections-map/descendant-or-self::map/@mode = 'first')">
 				<xsl:sequence select="($collections)[1]"/>
 			</xsl:when>
-			<xsl:when test="(count($collections) eq 0) and exists($collections-map/descendant-or-self::map/@default)">
-				<xsl:sequence select="$collections-map/descendant-or-self::map/@default"/>
+			<xsl:when test="(count($collections) eq 0) and exists($collections-map/descendant-or-self::map/default)">
+				<xsl:sequence select="$collections-map/descendant-or-self::map/default"/>
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:sequence select="$collections"/>
@@ -246,7 +253,7 @@
 			</xsl:choose>
 		</xsl:variable>
 		<xsl:variable name="fid" select="cmd:lat('lat:', $pid)"/>
-		<xsl:message>
+		<xsl:message use-when="$debug">
 			<xsl:text>DBG: CMDI2FOX[</xsl:text>
 			<xsl:value-of select="$pid"/>
 			<xsl:text>][</xsl:text>
@@ -255,7 +262,7 @@
 			<xsl:value-of select="$base"/>
 			<xsl:text>]</xsl:text>
 		</xsl:message>
-		<!--<xsl:message>DBG: [<xsl:value-of select="$rels-doc/key('rels-from',$pid)[1]/src"/>]!=[<xsl:value-of select="base-uri()"/>] => [<xsl:value-of select="$rels-doc/key('rels-from',$pid)[1]/src!=base-uri()"/>]</xsl:message>-->
+		<!--<xsl:message use-when="$debug">DBG: [<xsl:value-of select="$rels-doc/key('rels-from',$pid)[1]/src"/>]!=[<xsl:value-of select="base-uri()"/>] => [<xsl:value-of select="$rels-doc/key('rels-from',$pid)[1]/src!=base-uri()"/>]</xsl:message>-->
 		<xsl:if test="$rels-doc/key('rels-from', $pid)[1]/src != $base">
 			<xsl:message>
 				<xsl:text>ERR: record[</xsl:text>
@@ -275,14 +282,15 @@
 		<xsl:variable name="dc">
 			<xsl:apply-templates mode="dc"/>
 		</xsl:variable>
+		<xsl:variable name="collections" select="cmd:collections()"/>
 		<xsl:variable name="parents" as="xs:string*">
-			<xsl:message>DBG: look for relations (rels-to:dst|to) of [<xsl:value-of select="$pid"/>] or [<xsl:value-of select="$base"/>] </xsl:message>
+			<xsl:message use-when="$debug">DBG: look for relations (rels-to:dst|to) of [<xsl:value-of select="$pid"/>] or [<xsl:value-of select="$base"/>] </xsl:message>
 			<xsl:variable name="rels" select="
 				distinct-values($rels-doc/key('rels-to', ($pid,
 				$base))[type = 'Metadata']/from)"/>
 			<xsl:choose>
 				<xsl:when test="exists($rels)">
-					<xsl:message>DBG: relations.xml[<xsl:value-of select="string-join($rels,',')"/>]</xsl:message>
+					<xsl:message use-when="$debug">DBG: relations.xml[<xsl:value-of select="string-join($rels,',')"/>]</xsl:message>
 					<xsl:for-each select="$rels">
 						<xsl:sequence select="cmd:lat('lat:',cmd:pid(current(),'WRN',current()))"/>
 					</xsl:for-each>
@@ -291,22 +299,22 @@
 					<xsl:for-each select="$rec/cmd:CMD/cmd:Resources/cmd:IsPartOfList/cmd:IsPartOf">
 						<xsl:choose>
 							<xsl:when test="normalize-space(@lat:flatURI)!=''">
-								<xsl:message>DBG: IsPartOf.@lat:flatURI[<xsl:value-of select="@lat:flatURI"/>]</xsl:message>
+								<xsl:message use-when="$debug">DBG: IsPartOf.@lat:flatURI[<xsl:value-of select="@lat:flatURI"/>]</xsl:message>
 								<xsl:sequence select="@lat:flatURI"/>
 							</xsl:when>
 							<xsl:otherwise>
 								<xsl:choose>
 									<xsl:when test="starts-with(.,'lat:')">
-										<xsl:message>DBG: IsPartOf.lat[<xsl:value-of select="."/>]</xsl:message>
+										<xsl:message use-when="$debug">DBG: IsPartOf.lat[<xsl:value-of select="."/>]</xsl:message>
 										<xsl:sequence select="."/>
 									</xsl:when>
 									<xsl:when test="starts-with(.,'hdl:') or matches(.,'http(s)?://hdl.handle.net/')">
-										<xsl:message>DBG: IsPartOf.hdl[<xsl:value-of select="cmd:lat('lat:',cmd:hdl(.))"/>]</xsl:message>
+										<xsl:message use-when="$debug">DBG: IsPartOf.hdl[<xsl:value-of select="cmd:lat('lat:',cmd:hdl(.))"/>]</xsl:message>
 										<xsl:sequence select="cmd:lat('lat:',cmd:hdl(.))"/>
 									</xsl:when>
 									<xsl:otherwise>
 										<xsl:variable name="lcl" select="cmd:lat('lat:',cmd:pid(resolve-uri(.,$base),'ERR',resolve-uri(.,$base)))"/>
-										<xsl:message>DBG: IsPartOf.lcl[<xsl:value-of select="."/>][<xsl:value-of select="resolve-uri(.,$base)"/>][<xsl:value-of select="$lcl"/>]</xsl:message>
+										<xsl:message use-when="$debug">DBG: IsPartOf.lcl[<xsl:value-of select="."/>][<xsl:value-of select="resolve-uri(.,$base)"/>][<xsl:value-of select="$lcl"/>]</xsl:message>
 										<xsl:sequence select="$lcl"/>
 									</xsl:otherwise>
 								</xsl:choose>
@@ -315,10 +323,9 @@
 					</xsl:for-each>
 				</xsl:when>
 				<xsl:otherwise>
-					<xsl:variable name="collections" select="cmd:collections()"/>
 					<xsl:choose>
 						<xsl:when test="exists($collections)">
-							<xsl:for-each select="$collections">
+							<xsl:for-each select="$collections/@pid">
 								<xsl:choose>
 									<xsl:when test="starts-with(current(),'lat:')">
 										<xsl:sequence select="current()"/>
@@ -339,7 +346,7 @@
 				</xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
-		<xsl:message>DBG: parents[<xsl:value-of select="string-join($parents,', ')"/>]</xsl:message>
+		<xsl:message use-when="$debug">DBG: parents[<xsl:value-of select="string-join($parents,', ')"/>]</xsl:message>
 		<foxml:digitalObject VERSION="1.1" PID="{$fid}" xmlns:xsii="http://www.w3.org/2001/XMLSchema-instance" xsii:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/definitions/1/0/foxml1-1.xsd">
 			<xsl:comment>
 				<xsl:text>Source: </xsl:text>
@@ -376,7 +383,7 @@
 					<xsl:variable name="cmdFOX" select="concat($fox-base, '/', replace($cmdID, '[^a-zA-Z0-9]', '_'), '.xml')"/>
 					<xsl:choose>
 						<xsl:when test="not(doc-available($cmdFOX))">
-							<xsl:message>DBG: creating CMD FOX[<xsl:value-of select="$cmdFOX"/>]</xsl:message>
+							<xsl:message use-when="$debug">DBG: creating CMD FOX[<xsl:value-of select="$cmdFOX"/>]</xsl:message>
 							<xsl:result-document href="{$cmdFOX}">
 								<foxml:digitalObject VERSION="1.1" PID="{$cmdID}" xmlns:xsii="http://www.w3.org/2001/XMLSchema-instance" xsii:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/definitions/1/0/foxml1-1.xsd">
 									<xsl:comment>
@@ -496,13 +503,13 @@
 								<xsl:for-each select="$parents">
 									<fedora:isMemberOfCollection rdf:resource="info:fedora/{current()}"/>
 								</xsl:for-each>
-								<!-- if the CMD has references to other metadata files it's a collection -->
-								<xsl:if test="sx:evaluate($rec, $always-collection-eval, $NS) or exists(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType = 'Metadata'])">
-									<fedora-model:hasModel rdf:resource="info:fedora/islandora:collectionCModel"/>
-								</xsl:if>
 								<!-- if the CMD is a separate object and/or the CMD has references to resources it's a compound -->
 								<xsl:if test="sx:evaluate($rec, $always-compound-eval, $NS) or $create-cmd-object or exists(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType = 'Resource'])">
 									<fedora-model:hasModel rdf:resource="info:fedora/islandora:compoundCModel"/>
+								</xsl:if>
+								<!-- if the CMD has references to other metadata files it's a collection -->
+								<xsl:if test="sx:evaluate($rec, $always-collection-eval, $NS) or exists(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType = 'Metadata'])">
+									<fedora-model:hasModel rdf:resource="info:fedora/islandora:collectionCModel"/>
 								</xsl:if>
 								<!-- if the CMD is part of the compound FOXML it uses the cmdi content model and is member of the cmdi collection -->
 								<xsl:if test="not($create-cmd-object)">
@@ -522,7 +529,7 @@
 			<!-- add MGMT data stream -->
 			<xsl:for-each select="zero-or-one(cmd:firstFile($management-dir,(concat(replace($fid, '[^a-zA-Z0-9]', '_'), '.xml'), concat('lat_',replace(replace($base,'.*/',''), '[^a-zA-Z0-9]', '_'), '.xml')), $base))">
 				<xsl:variable name="mgmt" select="."/>
-				<xsl:message>
+				<xsl:message use-when="$debug">
 					<xsl:text>DBG: CMD FOX[</xsl:text>
 					<xsl:value-of select="$fid"/>
 					<xsl:text>] will include management info[</xsl:text>
@@ -544,9 +551,9 @@
 				</foxml:datastreamVersion>
 			</foxml:datastream>		
 			<!-- add POLICY data stream -->
-			<xsl:for-each select="zero-or-one(cmd:firstFile($policies-dir, (concat(replace($fid, '[^a-zA-Z0-9]', '_'), '.xml'),'default-cmd-policy.xml','default-policy.xml'), $base))">
+			<xsl:for-each select="zero-or-one(cmd:firstFile($policies-dir, (concat(replace($fid, '[^a-zA-Z0-9]', '_'), '.xml'),($collections/policy[@type='cmd'])[1],'default-cmd-policy.xml','default-policy.xml'), $base))">
 				<xsl:variable name="policy" select="."/>
-				<xsl:message>
+				<xsl:message use-when="$debug">
 					<xsl:text>DBG: CMD FOX[</xsl:text>
 					<xsl:value-of select="$fid"/>
 					<xsl:text>] will use access policy[</xsl:text>
@@ -562,9 +569,9 @@
 				</foxml:datastream>
 			</xsl:for-each>
 			<!-- Resource Proxies -->
-			<!--<xsl:message>DBG: resourceProxies[<xsl:value-of select="count(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Resource'])"/>]</xsl:message>
+			<!--<xsl:message use-when="$debug">DBG: resourceProxies[<xsl:value-of select="count(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Resource'])"/>]</xsl:message>
 			<xsl:for-each select="/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType='Resource']">
-				<xsl:message>DBG: resourceProxy[<xsl:value-of select="position()"/>][<xsl:value-of select="cmd:ResourceRef"/>][<xsl:value-of select="cmd:ResourceRef/@lat:localURI"/>]</xsl:message>
+				<xsl:message use-when="$debug">DBG: resourceProxy[<xsl:value-of select="position()"/>][<xsl:value-of select="cmd:ResourceRef"/>][<xsl:value-of select="cmd:ResourceRef/@lat:localURI"/>]</xsl:message>
 			</xsl:for-each>-->
 			<xsl:for-each-group select="/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType = 'Resource']" group-by="cmd:ResourceRef/normalize-space(@lat:localURI)">
 				<xsl:for-each select="
@@ -596,7 +603,7 @@
 					<xsl:variable name="resID" select="cmd:lat('lat:', $resPID)"/>
 					<!--<xsl:variable name="resFOX" select="concat($fox-base,'/',replace($resURI,'[^a-zA-Z0-9]','_'),'.xml')"/>-->
 					<xsl:variable name="resFOX" select="concat($fox-base, '/', replace($resID, '[^a-zA-Z0-9]', '_'), '.xml')"/>
-					<!--<xsl:message>DBG: resourceProxy[<xsl:value-of select="$resURI"/>][<xsl:value-of select="$resFOX"/>][<xsl:value-of select="$resPID"/>][<xsl:value-of select="$resID"/>]</xsl:message>-->
+					<!--<xsl:message use-when="$debug">DBG: resourceProxy[<xsl:value-of select="$resURI"/>][<xsl:value-of select="$resFOX"/>][<xsl:value-of select="$resPID"/>][<xsl:value-of select="$resID"/>]</xsl:message>-->
 					<!-- take the filepart of the localURI as the resource title -->
 					<xsl:variable name="resTitle">
 						<xsl:choose>
@@ -608,7 +615,7 @@
 							</xsl:otherwise>
 						</xsl:choose>
 					</xsl:variable>
-					<!--<xsl:message>DBG: creating FOX[<xsl:value-of select="$resFOX"/>]?[<xsl:value-of select="not(doc-available($resFOX))"/>]</xsl:message>-->
+					<!--<xsl:message use-when="$debug">DBG: creating FOX[<xsl:value-of select="$resFOX"/>]?[<xsl:value-of select="not(doc-available($resFOX))"/>]</xsl:message>-->
 					<xsl:variable name="resMIME" select="cmd:getMIME($res/cmd:ResourceType/@mimetype,$resURI)"/>
 					<xsl:variable name="createFOX" as="xs:boolean">
 						<xsl:choose>
@@ -725,7 +732,7 @@
 						</xsl:choose>
 					</xsl:variable>
 					<xsl:if test="$createFOX and not(doc-available($resFOX))">
-						<xsl:message>
+						<xsl:message use-when="$debug">
 							<xsl:text>DBG: creating resource FOX[</xsl:text>
 							<xsl:value-of select="$resFOX"/>
 							<xsl:text>]</xsl:text>
@@ -859,9 +866,9 @@
 								<!-- add POLICY data stream -->
 								<xsl:choose>
 									<xsl:when test="empty($policies-dir)"/>
-									<xsl:when test="exists(cmd:firstFile($policies-dir, (concat(replace($resID, '[^a-zA-Z0-9]', '_'), '.xml'), 'default-resource-policy.xml', 'default-policy.xml'), $base))">
-										<xsl:variable name="policy" select="cmd:firstFile($policies-dir, (concat(replace($resID, '[^a-zA-Z0-9]', '_'), '.xml'), 'default-resource-policy.xml', 'default-policy.xml'), $base)" as="xs:anyURI"/>
-										<xsl:message>
+									<xsl:when test="exists(cmd:firstFile($policies-dir, (concat(replace($resID, '[^a-zA-Z0-9]', '_'), '.xml'), ($collections/policy[@type='resource'])[1], 'default-resource-policy.xml', 'default-policy.xml'), $base))">
+										<xsl:variable name="policy" select="cmd:firstFile($policies-dir, (concat(replace($resID, '[^a-zA-Z0-9]', '_'), '.xml'), ($collections/policy[@type='resource'])[1], 'default-resource-policy.xml', 'default-policy.xml'), $base)" as="xs:anyURI"/>
+										<xsl:message use-when="$debug">
 											<xsl:text>DBG: resource FOX[</xsl:text>
 											<xsl:value-of select="$resFOX"/>
 											<xsl:text>] will use access policy[</xsl:text>
@@ -955,12 +962,12 @@
 		<xsl:param name="fid" tunnel="yes"/>
 		<xsl:param name="pid" tunnel="yes"/>
 		<xsl:param name="base" tunnel="yes"/>
-		<xsl:message>DBG: cmd:ResourceProxyList</xsl:message>
+		<xsl:message use-when="$debug">DBG: cmd:ResourceProxyList</xsl:message>
 		<xsl:copy>
 			<!-- process non-Metadata or LandingPage resource proxies -->
-			<xsl:message>DBG: - non metadata or landing page</xsl:message>
+			<xsl:message use-when="$debug">DBG: - non metadata or landing page</xsl:message>
 			<xsl:apply-templates select="cmd:ResourceProxy[not(cmd:ResourceType = ('LandingPage','Metadata'))]" mode="#current"/>
-			<xsl:message>DBG: - create landing page</xsl:message>
+			<xsl:message use-when="$debug">DBG: - create landing page</xsl:message>
 			<cmd:ResourceProxy id="home-{replace($fid,'lat:','')}">
 				<cmd:ResourceType>LandingPage</cmd:ResourceType>
 				<cmd:ResourceRef>
@@ -984,7 +991,7 @@
 			</xsl:variable>
 			<xsl:variable name="children" select="$rels-doc/key('rels-from', ($pid,$base))[type = 'Metadata']"/>
 			<!-- legimate children -->
-			<xsl:message>DBG: - legimate children</xsl:message>
+			<xsl:message use-when="$debug">DBG: - legimate children</xsl:message>
 			<xsl:comment>legimate metadata children</xsl:comment>
 			<xsl:for-each select="$children">
 				<xsl:variable name="ref" select="resolve-uri(cmd:ResourceRef,$base)"/>
@@ -1009,7 +1016,7 @@
 				</cmd:ResourceProxy>
 			</xsl:for-each>
 			<!-- illegimate children (could be dead links) -->
-			<xsl:message>DBG: - illegimate children</xsl:message>
+			<xsl:message use-when="$debug">DBG: - illegimate children</xsl:message>
 			<xsl:comment>illegimate metadata children (could be dead links)</xsl:comment>
 			<xsl:for-each select="$md">
 				<xsl:if test="empty((cmd:ResourceRef,cmd:ResourceRef/@lat:localURI)=($children/to,$children/dst))">
@@ -1099,13 +1106,13 @@
 	<!-- Dublin Core -->
 	<xsl:template match="cmd:CMD" mode="dc">
 		<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
-			<xsl:comment>[CMD2DC] nothing happening here, please overwrite with your own template!</xsl:comment>
+			<xsl:comment>[CMD2DC] nothing happening here, please overwrite with your own templates!</xsl:comment>
 		</oai_dc:dc>
 	</xsl:template>
 
 	<!-- Other -->
 	<xsl:template match="cmd:CMD" mode="other">
-		<xsl:comment>[CMD2Other] nothing happening here, please overwrite with your own template!</xsl:comment>
+		<xsl:comment>[CMD2Other] nothing happening here, please overwrite with your own templates!</xsl:comment>
 	</xsl:template>
 
 </xsl:stylesheet>

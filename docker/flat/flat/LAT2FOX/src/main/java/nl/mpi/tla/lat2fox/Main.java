@@ -188,7 +188,7 @@ public class Main {
             XdmNode relsDoc = null;
             if (rfile != null && rfile.exists()) {
                 relsDoc = SaxonUtils.buildDocument(new StreamSource(rfile));
-                System.err.println("DBG: loaded["+rfile.getAbsolutePath()+"]");
+                System.err.println("INF: loaded["+rfile.getAbsolutePath()+"]");
             } else {
                 // create lookup document for relations
                 XsltTransformer rels = SaxonUtils.buildTransformer(new URL(System.getProperty("LAT2FOX.cmd2rels", Main.class.getResource("/cmd2rels.xsl").toString()))).load();
@@ -201,7 +201,7 @@ public class Main {
                 relsDoc = dest.getXdmNode();
                 if (rfile != null) {
                     TransformerFactory.newInstance().newTransformer().transform(relsDoc.asSource(),new StreamResult(rfile));
-                    System.err.println("DBG: saved["+rfile.getAbsolutePath()+"]");
+                    System.err.println("INF: saved["+rfile.getAbsolutePath()+"]");
                 }
             }
             if (relationCheck) {
@@ -264,7 +264,7 @@ public class Main {
                             System.err.println("WRN:"+i+"/"+s+": saved to FOX["+out.getAbsolutePath()+"] instead!");
                         }
                         TransformerFactory.newInstance().newTransformer().transform(destination.getXdmNode().asSource(),new StreamResult(out));
-                        System.err.println("DBG:"+i+"/"+s+": created["+out.getAbsolutePath()+"]");
+                        System.err.println("INF:"+i+"/"+s+": created["+out.getAbsolutePath()+"]");
                     } catch (Exception e) {
                         System.err.println("ERR:"+i+"/"+s+": "+e);
                         System.err.println("WRN:"+i+"/"+s+": skipping file["+input.getAbsolutePath()+"]");
@@ -284,7 +284,7 @@ public class Main {
                     n++;
                     FileUtils.moveFileToDirectory(input,new File(fdir+"/"+(n==1?++d:d)),true);
                     if (n==1)
-                        System.err.println("DBG:"+i+"/"+s+": moved to dir["+fdir+"/"+d+"]");
+                        System.err.println("INF:"+i+"/"+s+": moved to dir["+fdir+"/"+d+"]");
                 }
             }
             if (validateFOX) {
@@ -302,7 +302,7 @@ public class Main {
                             System.out.println("" + (msg.isError() ? "ERR: " : "WRN: ") + i+"/"+s+": " + msg.getText());
                         }
                     } else
-                        System.err.println("DBG:"+i+"/"+s+": valid file["+input.getAbsolutePath()+"]");
+                        System.err.println("INF:"+i+"/"+s+": valid file["+input.getAbsolutePath()+"]");
                 }
             }
         } catch(Exception ex) {
@@ -321,7 +321,6 @@ public class Main {
         }
         
         public Source resolve(String href,String base) throws TransformerException {
-            System.err.println("DBG: resolve(["+href+"],["+base+"])");
             if (href.equals("cmd2fox.xsl")) {
                 return new javax.xml.transform.stream.StreamSource(Main.class.getResource("/cmd2fox.xsl").toExternalForm());
             } else

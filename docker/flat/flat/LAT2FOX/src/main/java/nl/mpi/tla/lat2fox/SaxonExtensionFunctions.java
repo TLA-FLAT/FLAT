@@ -211,7 +211,7 @@ public final class SaxonExtensionFunctions {
                             xpc.declareNamespace(n.getLocalPart(),n.getStringValue());
                             n = (NamespaceNode)iter.next();
                         }
-                        XPathExecutable xpe = xpc.compile(path.asString());
+                        XPathExecutable xpe = xpc.compile(path.getStringValue());
                         XPathSelector xps   = xpe.load();
                         xps.setContextItem(new XdmNode(node));
                         seq = xps.evaluate().getUnderlyingValue();
