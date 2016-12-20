@@ -74,7 +74,7 @@ function flat_bundle_action_form($form, &$form_state, $variables)
     if ($user->name == 'admin') {
         $form['options']['serial'] = array(
             '#type' => 'checkbox',
-            '#title' => t('Serial processing'),
+            '#title' => t('Serial processing (debug mode)'),
             '#prefix' => '</p>',
         );
     }
@@ -133,20 +133,6 @@ function flat_bundle_action_form($form, &$form_state, $variables)
     $form['actions']['bundle_image']['#src'] = drupal_get_path('module', 'flat_deposit') . '/Images/' . $name . '.jpg';
 
 
-    // Check / update bundle_cmdi field value
-    if (!$wrapper->upload_cmdi->value()){
-
-         module_load_include('php','flat_deposit','Helpers/CMDI_Handler');
-         $cmd = new CMDI_Handler($node, 'lat-session');
-
-         $cmdi_exists = $cmd->projectCmdiFileExists();
-
-         if($cmdi_exists) {
-             $wrapper->upload_cmdi->set('manually uploaded metadata');
-             $wrapper->save();
-         }
-    }
-
     // Activate metadata creation button if field value has not been set
     if (!$wrapper->upload_cmdi->value()) {
 
@@ -171,25 +157,42 @@ function flat_bundle_action_form_validate($form, &$form_state){
     switch ($action){
         case 'Validate bundle': {
 
-            module_load_include('php', 'flat_deposit', 'Helpers/CMDI_Handler');
-            $cmd = new CMDI_Handler($node);
-
-            $cmdi_exists = $cmd->projectCmdiFileExists();
-            $profile_set = $wrapper->upload_cmdi->value();
-
             // In case no cmdi file exists
-            if (!$cmdi_exists) {
-                form_set_error('validate_bundle', t("Expecting record.cmdi file in metadata folder"));
-
-                // reset cmdi value in case this has been set
-                if ($profile_set) {
-                    $wrapper->upload_cmdi->set(NULL);
-                    $wrapper->save();
-                    drupal_set_message(t("Value for chosen metadata profile has been reset"), 'status');
-                }
+            if (!$wrapper->upload_cmdi->value()) {
+                form_set_error('validate_bundle', t("No metadata file has been specified"));
 
                 return $form;
             }
+
+            // In case of wrong naming
+            $exploded_uri = explode('/', $wrapper->upload_cmdi->value()['uri']);
+            $file_name = end($exploded_uri);
+
+            if ($file_name !== 'record.cmdi') {
+                form_set_error('validate_bundle', t("Metadata file has wrong file name"));
+
+                return $form;
+            }
+
+            // Check if target freeze directory exists
+            global $user;
+            if (!file_exists(drupal_realpath('freeze://' . $user->name .'/' . $wrapper->upload_collection->value() . '/' . $node->title . '/metadata'))){
+
+                form_set_error('validate_bundle', t("Target directory for metafile does not exist"));
+                return $form;
+            }
+
+
+            // Check cmdi valid xml
+            $file_field = $wrapper->upload_cmdi->value();
+            $attached_file = file_load($file_field['fid']);
+            $xml = simplexml_load_file(drupal_realpath($attached_file->uri));
+            if (!$xml) {
+
+                form_set_error('validate_bundle', t("Attached file is no valid xml file"));
+            }
+
+
 
             break;
 

@@ -79,7 +79,7 @@ function flat_deposit_cmdi_create_form($form, &$form_state){
 
             global $user;
             $file = $form_state['build_info']['args'][1];
-            $md = include 'public://flat_deposit/' . $user->name . '/Templates/' . $file . '.php';
+            $md = include 'private://flat_deposit/' . $user->name . '/Templates/' . $file . '.php';
         }
 
 
@@ -120,7 +120,7 @@ function flat_deposit_cmdi_create_form_validate($form, &$form_state){
 
         // Can directory be created?
         global $user;
-        $template_dir = 'public://flat_deposit/' . $user->name . '/Templates';
+        $template_dir = 'private://flat_deposit/' . $user->name . '/Templates';
 
         if (!file_exists($template_dir)) {drupal_mkdir($template_dir);}
 
@@ -198,7 +198,7 @@ function flat_deposit_cmdi_create_form_submit($form, &$form_state){
 
     // generate CMDI xml and save to disc
     module_load_include('php','flat_deposit','Helpers/CMDI_Handler');
-    $cmd = new CMDI_Handler($node, $template);
+    /*$cmd = new CMDI_Handler($node);
 
     # prepare xml
     $cmd->getXML();
@@ -210,7 +210,7 @@ function flat_deposit_cmdi_create_form_submit($form, &$form_state){
 
     $cmd->xml->asXML($cmd->export_file);
     drupal_set_message(t('Created metadata file from template ' . $template));
-
+*/
     $form_state['redirect'] ="node/$node->nid";
 
 }

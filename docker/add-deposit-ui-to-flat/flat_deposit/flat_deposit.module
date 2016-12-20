@@ -1,5 +1,40 @@
 <?php
 
+/**
+ * Implements hook_stream_wrappers().
+ */
+function flat_deposit_stream_wrappers() {
+    return array(
+        // the index 'freeze' is the name of the stream.
+        'freeze' => array(
+            'name' => t('The Data Freeze Stream'),
+            //a class that implement the stream
+            'class' => 'FreezeStreamWrapper',
+            'description' => t('Stream wrapper for frozen files'),
+            'type' => STREAM_WRAPPERS_LOCAL_NORMAL,
+        ),
+        //more stream wrappers here
+    );
+}
+
+
+class FreezeStreamWrapper extends DrupalPrivateStreamWrapper {
+    public function getDirectoryPath() {
+
+        return variable_get('flat_deposit_paths')['freeze'];
+    }
+
+    /**
+     * Overrides getExternalUrl().
+     *
+     * Return the HTML URI of a private file.
+     */
+    function getExternalUrl() {
+        $path = str_replace('\\', '/', $this->getTarget());
+        return url('system/files/' . $path, array('absolute' => TRUE));
+    }
+}
+
 
 /**
  * Implements hook_permission().
@@ -471,27 +506,31 @@ function flat_bundle_node_form_add_submit($form, &$form_state){
     global $user;
     imce_initiate_profile ($user);
 
-    // Specify target directory where new data folders will be created
+    // Specify directories for new metadata, resources and freezelocation
     $external = $form_state['values']['upload_external']['und'][0]['value'];
+
     if ($external) {
 
         $config = variable_get('flat_deposit_ingest_service');
 
         $location = $form_state['values']['upload_location']['und'][0]['value'];
-        $target = $config['alternate_dir'] . $user->name . $config['alternate_subdir'] . "/" . $location;
+        $resource_dir = $config['alternate_dir'] . $user->name . $config['alternate_subdir'] . "/" . $location;
+
     } else {
 
-        $target = 'public://flat_deposit/' . $user->name . "/$collection/$bundle";
+        $resource_dir = 'private://flat_deposit/data/' . $user->name . "/$collection/$bundle";
     }
 
+    $meta_dir = 'private://flat_deposit/metadata/' . $user->name . "/$collection/$bundle";
 
-    // Create collection, bundle , data and metadata directories
-    $subs = array('data', 'metadata');
-    foreach ($subs as $sub ) {
-        if (!file_exists($target . '/metadata')) drupal_mkdir($target . '/' . $sub, NULL, TRUE);
-    }
+    $freeze_dir = 'freeze://' . $user->name . "/$collection/$bundle/metadata";
+
+    // Create  bundle data and metadata directories
+    if (!file_exists($resource_dir)) drupal_mkdir($resource_dir, NULL, TRUE);
+    if (!file_exists($meta_dir)) drupal_mkdir($meta_dir, NULL, TRUE);
+    if (!file_exists($freeze_dir)) drupal_mkdir($freeze_dir, NULL, TRUE);
+
 }
-
 
 /**
  * Implements hook_view().
@@ -515,6 +554,55 @@ function flat_bundle_view($node, $view_mode) {
     return $node;
 }
 
+/**
+ * Implements hook_delete().
+ */
+function flat_bundle_delete($node){
+
+    global $user;
+    $bundle = $node->title;
+    $wrapper = entity_metadata_wrapper('node',$node);
+    $collection = $wrapper->upload_collection->value();
+
+    $collection_resources_directory = drupal_realpath('private://flat_deposit/data/' . $user->name . "/$collection");
+    $bundle_resources_directory = "$collection_resources_directory/$bundle";
+
+    $collection_metadata_directory = drupal_realpath('private://flat_deposit/metadata/' . $user->name . "/$collection");
+    $bundle_metadata_directory = "$collection_metadata_directory/$bundle";
+
+    $collection_freeze_directory = 'freeze;//' . $user->name . "/$collection";
+    $bundle_freeze_directory = "$collection_freeze_directory/$bundle";
+
+    module_load_include('php', 'flat_deposit', 'inc/php_functions');
+
+
+    // Remove files and directories from USER
+
+    // bundle resources
+    if (file_exists($bundle_resources_directory)){
+        recursiveRmDir($bundle_resources_directory);
+        rmdir ($bundle_resources_directory);
+    }
+
+    if (file_exists($collection_resources_directory) && is_dir_empty($collection_resources_directory))rmdir ($collection_resources_directory);
+
+    // bundle metadata file
+    if (file_exists($bundle_metadata_directory)){
+            recursiveRmDir($bundle_metadata_directory);
+            rmdir ($bundle_metadata_directory);
+    }
+
+    if (file_exists($collection_metadata_directory) && is_dir_empty($collection_metadata_directory))rmdir ($collection_metadata_directory);
+
+    // Freeze directory
+    if (file_exists($bundle_freeze_directory)){
+        recursiveRmDir($bundle_freeze_directory);
+        rmdir ($bundle_freeze_directory);
+    }
+
+    if (file_exists($collection_freeze_directory) && is_dir_empty($collection_freeze_directory))rmdir ($collection_freeze_directory);
+
+}
 
 /**
  * Implements hook_block_info().

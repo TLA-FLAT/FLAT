@@ -53,7 +53,7 @@ function flat_deposit_install()
         'settings' => array(
             'display_field' => 1,
             'display_default' => 1,
-            'uri_scheme' => 'public',
+            'uri_scheme' => 'private',
         ),
         'type' => 'file',
         'entity_types' => array('node'),
@@ -163,7 +163,7 @@ function flat_deposit_install()
             'filefield_paths' =>
                 array (
                     'file_path' => array (
-                        'value' =>  'flat_deposit/[current-user:name]/[node:upload_collection]/[node:title]/metadata',
+                        'value' =>  'flat_deposit/metadata/[current-user:name]/[node:upload_collection]/[node:title]/',
                         'options' => array(
                             'slashes' => 0,
                             'pathauto' => FALSE,
@@ -304,6 +304,14 @@ function flat_deposit_install()
     flat_deposit_set_fedora();
     flat_deposit_set_solr();
 
+
+    variable_set('file_private_path','sites/default/files/private');
+    if (!file_exists(DRUPAL_ROOT . '/' . variable_get('file_private_path'))){
+        drupal_mkdir(DRUPAL_ROOT . '/' . variable_get('file_private_path'), NULL, TRUE);}
+
+    variable_set('file_default_scheme','private');
+    variable_set('imce_settings_disable_private',0);
+
 }
 
 
@@ -396,7 +404,7 @@ function flat_deposit_uninstall(){
 
         if(strlen($user->name) > 0){
 
-            $user_data_directory =  drupal_realpath('public://flat_deposit/' . $user->name);
+            $user_data_directory =  drupal_realpath('private://flat_deposit/' . $user->name);
             $user_freeze_directory =  variable_get('flat_deposit_paths',array())['freeze'] . "/$user->name";
 
             if (file_exists($user_data_directory) && $user_data_directory){

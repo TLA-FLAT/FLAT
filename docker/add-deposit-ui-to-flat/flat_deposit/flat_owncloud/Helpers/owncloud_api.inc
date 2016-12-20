@@ -148,7 +148,7 @@ class OwnCloud
         $mounts = json_decode(implode($res));
 
         // convert path strings of drupal data directory and each owncloud mount into arrays and count overlap between both
-        $d_path = explode("/",drupal_realpath('public://flat_deposit'));
+        $d_path = explode("/",drupal_realpath('private://flat_deposit'));
 
         foreach ($mounts as $mount) {
             $m_path = explode('/',$mount->configuration->datadir); # mounted path is always one field longer (i.e. user acronym) than general drupal data path
@@ -171,7 +171,7 @@ class OwnCloud
             $mpoint = "/MPI_Archive_TEST";
         } else {
             global $user;
-            $datadir =drupal_realpath('public://flat_deposit/'. $user->name);
+            $datadir =drupal_realpath('private://flat_deposit/'. $user->name);
             $mpoint = "/MPI_Archive_" . $user->name;
         }
 
@@ -221,7 +221,7 @@ class OwnCloud
             $datadir = OC_TEMP;
         } else {
             global $user;
-            $datadir =drupal_realpath('public://flat_deposit/'. $user->name);
+            $datadir =drupal_realpath('private://flat_deposit/'. $user->name);
         }
 
         $res = $this->GetOwncloudMounts();
@@ -342,7 +342,7 @@ class OwnCloud
      * Create as symbolic link pointing from the project folder (which is located in the drupal user data directory)
      * to the collection folder in owncloud
      *
-     * @param $user_data_dir drupal path to the users data directory (e.g. public://flat_deposit/nameUser)
+     * @param $user_data_dir drupal path to the users data directory (e.g. private://flat_deposit/nameUser)
      * @param $collection name of the collection the bundle belongs to
      * @param $bundle name of the upload bundle
      */

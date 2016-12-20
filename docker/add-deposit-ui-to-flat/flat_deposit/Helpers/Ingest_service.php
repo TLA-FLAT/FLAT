@@ -26,7 +26,10 @@ $config = variable_get('flat_deposit_ingest_service');
 define('BAG_EXE', $config['bag_exe']);
 define('LOG_ERRORS', $config['log_errors']);
 define('ERROR_LOG_FILE', $config['error_log_file']);
+
+$config = variable_get('flat_deposit_paths');
 define('SWORD_TMP_DIR', $config['sword_tmp_dir']);
+
 
 
 // Processing routines
@@ -48,24 +51,28 @@ try {
     if ($ingest->type == 'validating') {
 
         // set doorkeeper query parameter
-        $ingest->doorkeeper_query = 'validate+resources';
+        $ingest->doorkeeper_query = 'validate%20resources';
 
         // access rights and data freeze
         $ingest->validate_backend_directory();
         $ingest->moveData('freeze');
 
-        // CMDI completion: add resources and isPartOf property
-        $ingest->addResourcesToCMDI();
-        $ingest->addIsPartOfToCMDI();
 
     }
 
     // GENERAL ACTIONS
+    // CMDI completion: add resources and isPartOf property
+    $ingest->adaptCMDIresources('ingest');
+    $ingest->addIsPartOfToCMDI($ingest->parent_id);
+#throw new IngestServiceException('debug');
     // create bag for sword
     $ingest->prepareBag();
     $ingest->zipBag();
 
-    #throw new IngestServiceException("Debugging");
+    // CMDI completion: add resources and isPartOf property
+    $ingest->adaptCMDIresources('rollback');
+    $ingest->removeIsPartOfFromCMDI($ingest->parent_id);
+
     // execute sword
     $ingest->doSword();
     $ingest->checkStatusSword();

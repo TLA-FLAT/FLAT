@@ -29,9 +29,11 @@ class Ingestor
 
     public $nResources;
 
-    public $freeze_dir;
+    public $finished_actions;
 
     public $doorkeeper_query;
+
+    public $parent_id;
 
     /*
      * Constructor function for Ingestor class. Needs array of node data
@@ -47,6 +49,8 @@ class Ingestor
 
         $this->user = user_load($this->node->uid);
 
+        $this->finished_actions = array();
+
         // Determine processing routine
         $status = $this->wrapper->upload_status->value();
         if ($status == 'failed' OR $status == 'open') {
@@ -61,29 +65,34 @@ class Ingestor
 
         // Determine paths
         $config = variable_get('flat_deposit_paths');
-        $this->data_dir = array(
+        $this->dir = array(
             'freeze' => $config['freeze'],
             'freeze_bundle' => $config['freeze'] . "/" . $this->user->name . "/" . $this->wrapper->upload_collection->value() . "/" . $this->node->title,
          );
 
-        // source path of the bundle
+        // source path of the bundle data and meta data
+
+        $this->dir['origin_meta'] = 'private://flat_deposit/metadata/' . $this->user->name . "/" . $this->wrapper->upload_collection->value() . '/' . $this->node->title;
+        $this->dir['freeze_meta'] = 'freeze://' . "/" . $this->user->name . "/" . $this->wrapper->upload_collection->value() . '/' . $this->node->title;
+
         if ($this->wrapper->upload_external->value()) {
 
             $config = variable_get('flat_deposit_paths');
-            $this->data_dir['bundle_source'] = $config['alternate_dir'] . $this->user->name . $config['alternate_subdir'] . "/" . $this->wrapper->upload_external->value();
+            $this->dir['origin_data'] = $config['alternate_dir'] . $this->user->name . $config['alternate_subdir'] . "/" . $this->wrapper->upload_external->value();
 
         } else {
 
-            $this->data_dir['bundle_source'] = drupal_realpath('public://flat_deposit/' . $this->user->name . "/" . $this->wrapper->upload_collection->value() . '/' . $this->node->title);
+            $this->dir['origin_data'] = drupal_realpath('private://flat_deposit/data/' . $this->user->name . "/" . $this->wrapper->upload_collection->value() . '/' . $this->node->title);
 
         }
+
 
         // settings of bag
         $this->bag = array();
 
         $this->bag ['bag_id'] = $this->user->name . "_" . $this->node->nid . "_" . $this->node->title . '_' . uniqid();
         $this->bag ['temp_extension'] = 'temp';
-        $this->bag ['temp_folder'] = $this->data_dir['freeze_bundle'] . '/' . $this->bag ['temp_extension'];
+        $this->bag ['temp_folder'] = $this->dir['freeze_bundle'] . '/' . $this->bag ['temp_extension'];
 
         // log settings
         $config = variable_get('flat_deposit_ingest_service');
@@ -92,218 +101,19 @@ class Ingestor
         $dir = $config['log_file_dir'] ? $config['log_file_dir'] : './';
         $this->logfile = $dir . '/Ingest_service_log_' . date("j.n.Y_g.i") . '.txt';
 
+        $this->parent_id = $this->getParentID()['collection_pid'];
+
     }
 
-
-    public function AddEntryLogFile($entry) {
-
-        if ($this->log) {
-
-            file_put_contents($this->logfile, $entry . PHP_EOL, FILE_APPEND);
-        }
-    }
-
-    public function validateNodeStatus()
-    {
-
-        $status = $this->wrapper->upload_status->value();
-
-        if ($status == 'processing' OR $status == 'validating'){
-            throw new IngestServiceException(t('Invalid node status'));
-        }
-    }
-
-
-    public function updateNodeStatus($status)
-    {
-
-        $this->wrapper->upload_status->set($status);
-        $this->wrapper->save();
-
-        $this->AddEntryLogFile('set status to ' . $status);
-    }
-
-
-    public function validate_backend_directory()    {
-
-
-
-            $this->AddEntryLogFile(t('Validating backend (!freeze) and source directory (!source)', array(
-                '!freeze' => $this->data_dir['freeze_bundle'],
-                '!source'=>$this->data_dir['bundle_source'])));
-
-            // Check if data source is accessible
-            if (!is_writable($this->data_dir['bundle_source'])) {
-
-                    throw new IngestServiceException(t('The data source directory is not accessible (%dir))',array(
-                        '%dir' => $this->data_dir['bundle_source'])));
-            }
-
-            // Check if freeze directory exists
-            if (!file_exists($this->data_dir['freeze'])) {
-                throw new IngestServiceException("No backend freeze directory exists. Please contact administator");
-            }
-
-            // Check if freeze directory is owned by apache_user and writable
-            if (!is_writable($this->data_dir['freeze'])) {
-                throw new IngestServiceException("Freeze directory is not writable by application. Please contact administator");
-            }
-
-            // Check if user backend directory already exists
-            if (file_exists($this->data_dir['freeze_bundle'])) {
-                throw new IngestServiceException('A directory with the name ' . $this->node->title . ' already exists at target location.');
-            }
-
-
-        }
-
-
-
-
-    public function moveData($type)    {
-
-
-            $collection = $this->wrapper->upload_collection->value();
-            $collection_directory = $this->data_dir['freeze'] . $this->user->name .  "/$collection/";
-
-            if ($type == 'freeze'){
-
-                // create collection sub-directory if needed
-                if (!file_exists($collection_directory)){drupal_mkdir($collection_directory, NULL, TRUE);}
-
-                // Determine source and target
-                $source = $this->data_dir['bundle_source'];
-
-                $target = $this->data_dir['freeze_bundle'];
-
-            } else {
-
-                $source = $this->data_dir['freeze_bundle'];
-
-                $target = $this->data_dir['bundle_source'];
-
-            }
-
-            $this->AddEntryLogFile(t('Moving data from source from %source to $target', array ('!source' => $source, '!target' => $target)));
-            $moved = rename($source, $target);
-
-            // clean up : remove collection directory if empty
-            module_load_include('php', 'flat_deposit', 'inc/php_functions');
-            if (is_dir_empty($collection_directory)){
-
-                rmdir($collection_directory);
-
-            }
-
-            // throw exception on error
-            if (!$moved) {
-
-                throw new IngestServiceException(t("Data could not be moved from %source to $target", array ( '!source'=> $source, '!target' => $target)));
-
-            }
-
-
-        }
 
     /**
-     * Method for loading an existing meta data file, and adding resources to it. Resouces can be either found in the freeze directory or,
-     * in case this option is chosen at a different location. Root path for alternate location is set in admin/config/flat_deposit/customize .
+     * Method for getting the pid of the parent collection.
      *
      * @throws IngestServiceException
      */
-    public function addResourcesToCMDI(){
+    public function getParentID(){
 
-
-        $this->AddEntryLogFile('Adding resources to bundle info file');
-
-        // Load existing xml file
-        module_load_include('php','flat_deposit','Helpers/CMDI_Handler');
-        $profile = $this->wrapper->upload_cmdi->value();
-        $cmd = new CMDI_Handler($this->node,$profile);
-
-        // check and prepare xml
-        if (!$cmd->projectCmdiFileExists()){
-            throw new IngestServiceException ('No file with meta data found');
-        }
-
-        $cmd->getXML();
-
-        $isInconsistent = $cmd->checkProfileConsistency();
-        if ($isInconsistent){
-            throw new IngestServiceException ($isInconsistent);
-        }
-
-        // clean up all resources before current resources are added
-        // Removal existing resources from ResourceProxy child
-        $nResources = $cmd->xml->Resources->ResourceProxyList->ResourceProxy->count();
-        for ($i = 0; $i < $nResources; $i++) {
-            unset($cmd->xml->Resources->ResourceProxyList->ResourceProxy[0]);
-        }
-
-        // Add 'Resources'-child to Components->profile if not existing
-        if (!isset($cmd->xml->Components->{$cmd->profile}->Resources)){
-            $cmd->xml->Components->{$cmd->profile}->addChild('Resources');
-        }
-
-        // Removal exitsing resources from Components->{profile}->Resources child
-        $nResources = $cmd->xml->Components->{$cmd->profile}->Resources->count();
-        for ($i = 0; $i < $nResources; $i++) {
-            unset($cmd->xml->Components->{$cmd->profile}->Resources->MediaFile[0]);
-        }
-
-        // scan all files of the bundle freeze directory and add theses as resources to the CMDI;
-        $resource_directory =  $this->data_dir['freeze_bundle'] . '/data' ;
-        $cmd->resources = $cmd->searchDir($resource_directory);
-
-
-        if (empty($cmd->resources)){
-            throw new IngestServiceException ('Data directory of upload bundle is empty (' . $resource_directory . ')');
-        }
-
-        $cmd->addResourcesToXml();
-        $cmd->xml->asXML($cmd->export_file);
-
-        //count number of added resources
-        $count = $cmd->xml->Resources->ResourceProxyList->ResourceProxy->count();
-        $this->nResources = $count;
-
-
-    }
-
-    /**
-     * Method for loading an existing meta data file, and adding the parent relationship to the CMDI, which can be used
-     * later to be translated into rel-ext info of the corresponding foxml object. In foxml, rel-ext will be extended by
-     * isMemberofCollection attribute, which will point to the pid of the parent collection.
-     *
-     * @throws IngestServiceException
-     */
-    public function addIsPartOfToCMDI(){
-
-        $this->AddEntryLogFile('Adding isPartOf property to info file');
-
-        $bundle = $this->node->title;
         $collection = $this->wrapper->upload_collection->value();
-
-        // Load existing xml file
-        module_load_include('php','flat_deposit','Helpers/CMDI_Handler');
-        $cmd = new CMDI_Handler($this->node);
-
-        if (!$cmd->projectCmdiFileExists()){
-            throw new IngestServiceException ('No file with meta data found');
-        }
-
-        $cmd->getXML();
-
-        // clean up all references to parents
-        if(!isset($cmd->xml->Resources->IsPartOfList)){
-            $cmd->xml->Resources->addChild('IsPartOfList');
-        }
-
-        $c = $cmd->xml->Resources->IsPartOfList->IsPartOf->count();
-        for ($i = 0; $i < $c; $i++) {
-            unset($cmd->xml->Resources->IsPartOfList->IsPartOf[0]);
-        }
-
 
         // retrieve pid of parent collection
         $collection_node = db_select('flat_collection','p')
@@ -315,12 +125,240 @@ class Ingestor
 
         if (!$collection_node){
             throw new IngestServiceException ('No entry found for user in flat_collection table. Contact administrator.');
+        } else {
+
+            return $collection_node;
+        }
+    }
+
+
+    /**
+     * Helper Method for adding an additional string text to the logfile
+     * @param $entry
+     */
+    public function AddEntryLogFile($entry) {
+
+        if ($this->log) {
+
+            file_put_contents($this->logfile, $entry . PHP_EOL, FILE_APPEND);
+        }
+    }
+
+    /**
+     * Function checking whether status of the flat_bundle with the nid is set to processing or validating
+     * @throws IngestServiceException
+     *
+     */
+    public function validateNodeStatus()
+    {
+
+        $status = $this->wrapper->upload_status->value();
+
+        if ($status == 'processing' OR $status == 'validating'){
+            throw new IngestServiceException(t('Invalid node status'));
+        }
+    }
+
+
+    /**
+     * Method for updating the node status
+     * @param $status
+     */
+    public function updateNodeStatus($status)
+    {
+
+        $this->wrapper->upload_status->set($status);
+        $this->wrapper->save();
+
+        $this->AddEntryLogFile('set status to ' . $status);
+    }
+
+
+
+    public function validate_backend_directory()
+    {
+
+            $this->AddEntryLogFile(t('Validating backend (!freeze) and source directory (!source)', array(
+                '!freeze' => $this->dir['freeze_bundle'],
+                '!source'=>$this->dir['origin_data'])));
+
+            // Check if data source is accessible
+            if (!is_writable($this->dir['origin_data'])) {
+
+                    throw new IngestServiceException(t('The data source directory is not accessible (!dir))',array(
+                        '!dir' => $this->dir['origin_data'])));
+            }
+
+            // Check if freeze directory exists
+            if (!file_exists($this->dir['freeze'])) {
+                throw new IngestServiceException("No backend freeze directory exists. Please contact administator");
+            }
+
+            // Check if freeze directory is owned by apache_user and writable
+            if (!is_writable($this->dir['freeze'])) {
+                throw new IngestServiceException("Freeze directory is not writable by application. Please contact administator");
+            }
+
+            // Check if user backend directory already exists
+            if (!file_exists($this->dir['freeze_bundle'])) {
+                throw new IngestServiceException('No freeze directory with the name ' . $this->node->title . ' at target location.');
+            }
+
+
         }
 
-        // write pid to cmdi file
-        $parent_pid = $collection_node['collection_pid'];
-        $cmd->xml->Resources->IsPartOfList->addChild('IsPartOf',$parent_pid);
-        $cmd->xml->asXML($cmd->export_file);
+
+    /**
+     * Data freeze method moving the data from private data and metadata directories to the freeze location
+     * @param $type
+     * @throws IngestServiceException
+     */
+    public function moveData($type)    {
+
+
+        $collection = $this->wrapper->upload_collection->value();
+        $collection_directory = $this->dir['freeze'] . $this->user->name .  "/$collection/";
+
+        $metadata_file_info =$this->wrapper->upload_cmdi->value();
+
+        // Determine source and target
+        if ($type == 'freeze'){
+
+            $source_data = $this->dir['origin_data'];
+            $target_data = $this->dir['freeze_bundle'] . '/data';
+
+            $target_meta = $this->dir['freeze_meta'] . '/metadata';
+
+
+        } else {
+
+            $source_data = $this->dir['freeze_bundle'] . '/data';
+            $target_data = $this->dir['origin_data'];
+
+            $target_meta = $this->dir['origin_meta'];
+
+        }
+
+        $this->AddEntryLogFile(t('Moving data from source from %source to !target', array ('%source' => $source_data, '!target' => $target_data)));
+
+        // move resources and throw exception on error
+        $data_is_moved = rename($source_data, $target_data);
+
+        if (!$data_is_moved) {
+
+            throw new IngestServiceException(t("Data could not be moved from %source to !target", array ( '%source'=> $source_data, '!target' => $target_data)));
+
+        }
+
+        //keep track that files have been moved
+        $this->finished_actions[] = 'moved';
+
+
+        //move metadata and throw exception on error
+        $file= file_load($metadata_file_info['fid']);
+
+        $new_file = file_move($file,$target_meta, FILE_EXISTS_REPLACE);
+
+        if (!$new_file) {
+
+            throw new IngestServiceException(t("Metadata could not be moved to !target", array ('!target' => $target_meta)));
+
+        }
+
+
+    }
+
+    /**
+     * Method for loading an existing meta data file, and adapting resources. In case of CMDIs created by flat,
+     * all resources are removed and subsequently added as localURI-attribute to the resourceproxylist.
+     * Externally created cmdis will undergo a removal of the resourceproxy ResourceRef-value.
+     * The local-URI attribute will undergo a transformation from relative paths to absolute paths.
+     *
+     * @throws IngestServiceException
+     */
+    public function adaptCMDIresources($method){
+
+        module_load_include('php','flat_deposit','Helpers/CMDI_Handler');
+        $cmd = new CMDI_Handler($this->node);
+
+        if ($method=='ingest'){
+
+            if ($cmd->flat_created_CMDI){
+
+                $this->AddEntryLogFile('Adding resources to bundle info file');
+                $cmd->remove_all_resources();
+                $cmd->add_all_resources();
+                $cmd->save_updated_xml();
+
+                //keep track that files have been moved
+                $this->finished_actions[] = 'adaptCMDI';
+
+
+            } else {
+
+                $this->AddEntryLogFile('Transform relative paths to absolute paths');
+
+                try {
+                    $cmd->remove_MdSelfLink();
+                    $cmd->remove_resourceRef_value();
+                    $cmd->resourceRel2FreezePathTransform();
+                    $cmd->save_updated_xml();
+                    //keep track that files have been moved
+                    $this->finished_actions[] = 'adaptCMDI';
+
+
+                } catch (CMDIHandlerException $e){
+
+                    throw new IngestServiceException($e->getMessage());
+
+                }
+            }
+
+        } elseif ($method=='rollback' AND is_int(array_search('adaptCMDI', $this->finished_actions))){
+
+
+            if ($cmd->flat_created_CMDI){
+
+                $this->AddEntryLogFile('Cleaning all resources from file');
+                $cmd->remove_all_resources();
+                $cmd->save_updated_xml();
+
+            } else {
+                $this->AddEntryLogFile('Transform relative paths to absolute paths');
+                $cmd->ResourceFreeze2RelPathTransform();
+                $cmd->save_updated_xml();
+            }
+
+        }
+
+    }
+
+
+
+    /**
+     * Method for loading an existing meta data file, and adding the parent relationship to the CMDI, which can be used
+     * later to be translated into rel-ext info of the corresponding foxml object. In foxml, rel-ext will be extended by
+     * isMemberofCollection attribute, which will point to the pid of the parent collection.
+     *
+     * @throws IngestServiceException
+     */
+    public function addIsPartOfToCMDI($parent_id){
+
+        module_load_include('php','flat_deposit','Helpers/CMDI_Handler');
+        $cmd = new CMDI_Handler($this->node);
+
+        $cmd->addIsPartOf($parent_id);
+        $cmd->save_updated_xml();
+    }
+
+
+    public function removeIsPartOfFromCMDI($parent_id=NULL){
+
+        module_load_include('php','flat_deposit','Helpers/CMDI_Handler');
+        $cmd = new CMDI_Handler($this->node);
+
+        $cmd->removeIsPartOf($parent_id);
+        $cmd->save_updated_xml();
     }
 
 
@@ -333,10 +371,9 @@ class Ingestor
     {
         $this->AddEntryLogFile('Creating bag for sword');
 
-        mkdir($this->bag['temp_folder']);
-        mkdir($this->bag['temp_folder'] . '/data');
+        drupal_mkdir($this->bag['temp_folder'] . '/data', NULL, TRUE);
 
-        $command = 'cp -R "' . $this->data_dir['freeze_bundle'] .  '/metadata" "' . $this->bag['temp_folder'] .  '/data"';
+        $command = 'cp -R "' . $this->dir['freeze_bundle'] .  '/metadata" "' . $this->bag['temp_folder'] .  '/data"';
         exec($command, $output, $return);
         if ($return) {
             $message = 'Could not copy metadata to temporary bag directory';
@@ -396,7 +433,7 @@ class Ingestor
 
         $cwd = getcwd();
         $zipname = $this->node->title . '.zip';
-        $path = $this->data_dir['freeze_bundle'];
+        $path = $this->dir['freeze_bundle'];
 
         chdir($path);
 
@@ -697,8 +734,17 @@ class Ingestor
     public function deleteOriginal(){
         # delete original
         module_load_include('php','flat_deposit', '/inc/php_functions');
-        recursiveRmDir($this->freeze_dir);
-        rmdir ($this->freeze_dir);
+        recursiveRmDir($this->dir['freeze_bundle']);
+        rmdir ($this->dir['freeze_bundle']);
+
+        $collection = $this->wrapper->upload_collection->value();
+        $collection_directory = $this->dir['freeze'] . $this->user->name .  "/$collection/";
+        if (is_dir_empty($collection_directory)){
+
+            rmdir($collection_directory);
+
+        }
+
     }
 
 
@@ -708,7 +754,7 @@ class Ingestor
         // delete bag metafiles
         $bagfiles = array('bag-info', 'bagit', 'manifest-md5', 'tagmanifest-md5');
         foreach ($bagfiles as $f) {
-            $fname = $this->freeze_dir . '/' . $f . ".txt";
+            $fname = $this->dir['freeze_bundle'] . '/' . $f . ".txt";
             if (file_exists($fname)) {
                 unlink($fname);
             }
@@ -730,7 +776,7 @@ class Ingestor
     {
         // delete zip file
 
-        $zip = $this->data_dir['freeze_bundle'] . '/' . $this->node->title . ".zip";
+        $zip = $this->dir['freeze_bundle'] . '/' . $this->node->title . ".zip";
         if (file_exists($zip)) {
             unlink($zip);
         }
@@ -816,18 +862,24 @@ class Ingestor
     {
         $this->AddEntryLogFile('Rollback');
 
-        $this->deleteTempBag();
-        $this->deleteZipfile();
-        $this->deleteBagDirectory();
+
+        $this->cleanup();
+
         $this->deleteFOs();
-        $this->moveData('unfreeze');
+
+        if (is_int(array_search('moved', $this->finished_actions))){
+            $this->moveData('unfreeze');
+        }
+
     }
 
     public function cleanup(){
+        /*
         $this->deleteTempBag();
         $this->deleteZipfile();
         $this->deleteBagDirectory();
         #$this->deleteOriginal();
+        */
     }
 
 

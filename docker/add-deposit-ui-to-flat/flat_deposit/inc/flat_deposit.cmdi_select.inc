@@ -84,7 +84,7 @@ function flat_deposit_cmdi_select_form($form, &$form_state)
 
             // Search for available template data files in a certain data directory (e.g. Templates). // In case data files are available
             // a checkbox is added allowing to fill
-            $template_dir = 'public://flat_deposit/' . $user->name . '/Templates/';
+            $template_dir = 'private://flat_deposit/' . $user->name . '/Templates/';
             $listing = array_diff(scandir($template_dir), array('..', '.'));
             $templates = [];
 
@@ -138,7 +138,7 @@ function flat_deposit_cmdi_select_form_submit($form, &$form_state){
     $node = $form_state['values']['node'];
     $wrapper = entity_metadata_wrapper('node', $node);
 
-    $list_allowed_profiles = list_allowed_values(field_info_field('upload_cmdi'));
+    $list_allowed_profiles = array('AAAA','BBBB','CCCC');
     $profile_key = $form_state['values']['cmdi_select'];
     $profile_value = $list_allowed_profiles[$form_state['values']['cmdi_select']];
 
@@ -148,10 +148,7 @@ function flat_deposit_cmdi_select_form_submit($form, &$form_state){
     drupal_set_message(t('Metadata profile has been saved'));
 
     // Redirect to creation form if no record.cmdi exists
-    module_load_include('php','flat_deposit','Helpers/CMDI_Handler');
-    $cmd = new CMDI_Handler($node, $profile_value);
-
-    if (!$cmd->projectCmdiFileExists() AND $profile_key !== 'manual'){
+    if (!$wrapper->upload_cmdi->value()){
 
         if (isset($form_state['values']['select_data_file'])){
             $md = '/' . $form_state['values']['select_data_file'];

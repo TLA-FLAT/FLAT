@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * Class IngestServiceException is an exception class
+ */
+class CMDIHandlerException extends Exception {}
+
 
 class CMDI_Handler
 
@@ -14,9 +19,9 @@ class CMDI_Handler
 
     public $resources; // files to add as resources to CMDI
 
-    public $export_file; // path and name of the xml file storing the cmdi metadata
     public $resource_directory; // path where all resources can be found
 
+    public $flat_created_CMDI;
 
 
 
@@ -25,140 +30,116 @@ class CMDI_Handler
      * @param $node stdClass node object
      * @param $rpofile
      */
-    public function __construct($node, $profile='default')
+    public function __construct($node)
     {
-        $this->profile = $profile;
-
-        $wrapper = entity_metadata_wrapper('node', $node);
-        $this->bundle = $node->title;
-        $this->collection = $wrapper->upload_collection->value();
-
         $this->user = user_load($node->uid);
+        $this->wrapper = entity_metadata_wrapper('node', $node);
 
-        $this->determine_export_file($wrapper);
-        
-    }
+        $this->bundle = $node->title;
+        $this->collection = $this->wrapper->upload_collection->value();
+
+        $this->flat_created_CMDI = $this->wrapper->upload_cmdi_creator->value();
+
+        $file_field = $this->wrapper->upload_cmdi->value();
+        try
+        {
+            $this->file = file_load($file_field['fid']);
+
+            $this->load_xml();
+
+            $this->profile = $this->xml->Components->children()[0]->getName();
+
+            $this->set_resource_directory();
 
 
-    /**
-     * Function dertermining location of CMDI. Depending on the bundles status this can be either the freeze directory or either the drupal data directory or an external directory
-     * @param $wrapper
-     * @return string
-     */
-    public function determine_export_file($wrapper){
 
-        $status = $wrapper->upload_status->value();
-
-        if ($status == 'open' || $status == 'failed'){
-
-            $external = $wrapper->upload_external->value();
-
-            if ($external) {
-
-                $config = variable_get('flat_deposit_ingest_service');
-                $location = $wrapper->upload_location->value();
-                $path = $config['alternate_dir'] . $this->user->name . $config['alternate_subdir'] . "/$location";
+            if ($this->flat_created_CMDI){
 
             } else {
 
-                $path = 'public://flat_deposit/' . $this->user->name . "/$this->collection/$this->bundle";
-
             }
 
-        } else {
-
-            $freeze =  variable_get('flat_deposit_paths')['freeze'];
-            $path = $freeze . '/' . $this->user->name . "/$this->collection/$this->bundle";
+        }
+        catch (CMDIHandlerException $e){
 
         }
 
-        $this->export_file = $path . '/metadata/record.cmdi';
-        $this->resource_directory = $path . '/data/';
-
-        return true;
-    }
-
-    /**
-     * Methods checking whether a cmdi file is found at a certain location
-     *
-     * @param $fileName null if a additional parameter is provided the method looks at differnent than standard location
-     *
-     * @return bool
-     */
-    function projectCmdiFileExists ($fileName=NULL){
-        $checkfile = (is_null($fileName)) ? $this->export_file : $fileName;
-        return file_exists($checkfile);
     }
 
 
-    /**
-     * This method either loads a simpleXML object from an existing CMDI file or generates a CMDI tree with only the basic nodes.
-     */
-    function getXML(){
+    public function load_xml(){
 
-        if ($this->projectCmdiFileExists()){
+        $this->xml = simplexml_load_file(drupal_realpath($this->file->uri));
+        return $this->xml;
+    }
 
-            $this->xml = simplexml_load_file($this->export_file);
+
+    // clean up all CMDI resources
+    public function set_resource_directory(){
+
+        $status = $this->wrapper->upload_status->value();
+
+        // Determine paths
+
+        $freeze_directory = 'freeze://' . "/" . $this->user->name . "/" . $this->wrapper->upload_collection->value() . '/' . $this->bundle . '/data';
+        $drupal_directory = 'private://flat_deposit/data/' . $this->user->name . "/" . $this->wrapper->upload_collection->value() . '/' . $this->bundle;
+
+
+        if ($status == 'failed' OR $status == 'open') {
+
+            $this->resource_directory = $drupal_directory;
 
         } else {
 
-            $this->initiateNewCMDI();
+            $this->resource_directory = $freeze_directory;
         }
 
     }
 
-
-    function checkProfileConsistency(){
-
-        $message = FALSE;
-
-        if (!isset($this->xml)){
-            $message = 'xml file has not been loaded';
-
-        } elseif (!isset($this->xml->Components->{$this->profile})){
-
-            $message = 'Metadata profile of loaded xml file does not match with profile specified in FLAT deposit';
+    // clean up all CMDI resources
+    public function remove_all_resources()
+    {
+        // Removal existing resources from ResourceProxy child
+        $nResources = $this->xml->Resources->ResourceProxyList->ResourceProxy->count();
+        for ($i = 0; $i < $nResources; $i++) {
+            unset($this->xml->Resources->ResourceProxyList->ResourceProxy[0]);
         }
 
-        return $message;
+        // Removal exitsing resources from Components->{profile}->Resources child
+        $nResources = $this->xml->Components->{$this->profile}->Resources->count();
+        for ($i = 0; $i < $nResources; $i++) {
+            unset($this->xml->Components->{$this->profile}->Resources->MediaFile[0]);
+        }
+
     }
 
+    // master function for searching data directory, add resources to xml variable and update record.cmdi file
+    public function add_all_resources(){
+
+        // Add 'Resources'-child to Components->profile if not existing
+        if (!isset($this->xml->Components->{$this->profile}->Resources)){
+            $this->xml->Components->{$this->profile}->addChild('Resources');
+        }
+
+        // scan all files of the bundle freeze directory and add theses as resources to the CMDI;
+        $this->resources = $this->searchDir($this->resource_directory);
+
+        // Add resources to simplexml variable
+        $this->addResourcesToXml();
+
+
+    }
+
+
+    // Update drupal managed file (i.e. record.cmdi)
+    public function save_updated_xml()
+    {
+        file_save_data($this->xml->asXML(), $this->file->uri, FILE_EXISTS_REPLACE);
+
+    }
 
     /**
-     * This method fills the resources section of the cmdi file with all files found in the open bundle data directory
-     *
-     * <ResourceRef>../data/Write_me.txt</ResourceRef>
-     */
-    function addResourcesToXml(){
-
-
-        foreach ($this->resources as $fid => $file) {
-
-            $file_mime = mime_content_type(drupal_realpath($file)) ;
-            $file_size = filesize(drupal_realpath($file));
-
-            // Add Resources to resource proxy list
-            $data = $this->xml->Resources->ResourceProxyList->addChild('ResourceProxy');
-            $data->addAttribute('id', $fid);
-
-            $data->addChild('ResourceType', 'Resource');
-            $data->addChild('ResourceRef', $file);
-
-            $data->ResourceType->addAttribute('mimetype', $file_mime);
-
-            // Add Resources to Components->resource proxy list
-            $data2 = $this->xml->Components->{$this->profile}->Resources->addChild('MediaFile');
-            $data2->addAttribute('ref', $fid);
-            $data2->addChild('Type', 'document');
-            $data2->addChild('Format', $file_mime);
-            $data2->addChild('Size', $file_size);
-        }
-    }
-
-
-
-    /**
-     * This function recursively    searches for files in the user data directory
+     * This function recursively    searches for files in the data directory
      *
      * @param $directory string     path where to search for files
      *
@@ -179,7 +160,7 @@ class CMDI_Handler
 
             $c++;
             $fid = "d$c";
-            $resources[$fid] = $file->getPathname();
+            $resources[$fid] = drupal_realpath($file->getPathname());
 
         }
 
@@ -189,8 +170,163 @@ class CMDI_Handler
     }
 
 
+    /**
+     * This method fills the resources section of the cmdi file with all files found in the open bundle data directory
+     *
+     * <ResourceRef>../data/Write_me.txt</ResourceRef>
+     */
+    function addResourcesToXml(){
+
+
+        foreach ($this->resources as $fid => $file_name) {
+
+            $file_mime = mime_content_type(drupal_realpath($file_name)) ;
+            $file_size = filesize(drupal_realpath($file_name));
+
+            // Add Resources to resource proxy list
+            $data = $this->xml->Resources->ResourceProxyList->addChild('ResourceProxy');
+            $data->addAttribute('id', $fid);
+
+            $data->addAttribute('localURI', $file_name, 'lat');
+            $data->addChild('ResourceType', 'Resource');
+
+            $data->ResourceType->addAttribute('mimetype', $file_mime);
+
+
+            // Add Resources to Components->resource proxy list
+            $data2 = $this->xml->Components->{$this->profile}->Resources->addChild('MediaFile');
+            $data2->addAttribute('ref', $fid);
+            $data2->addChild('Type', 'document');
+            $data2->addChild('Format', $file_mime);
+            $data2->addChild('Size', $file_size);
+        }
+
+    }
+
+
+
+    // clean up all CMDI resources
+    public function remove_resourceRef_value()
+    {
+        // Removal existing resources from ResourceProxy child
+        foreach ( $this->xml->Resources->ResourceProxyList->children() as $child) {
+            if(isset($child->ResourceRef)) {
+                $child->ResourceRef="";
+            }
+        }
+
+    }
+
+
 
     /**
+     * Transforms the relative path of all resources to an absolute path
+     *
+     * <ResourceRef>./Write_me.txt</ResourceRef>
+     */
+    function resourceRel2FreezePathTransform(){
+
+
+        foreach ( $this->xml->Resources->ResourceProxyList->children() as $child) {
+
+            $rel_path = (string)$child->ResourceRef->attributes('lat', TRUE)->localURI;
+            $abs_path = drupal_realpath('freeze://'. $this->user->name . '/' . $this->collection . '/' . $this->bundle) . '/data/'. $rel_path ;
+
+
+            if (file_exists($abs_path)){
+
+                unset($child->ResourceRef->attributes('lat', TRUE)->localURI);
+                $child->ResourceRef = $abs_path;
+
+            } else {
+
+                throw new CMDIHandlerException (t('Specified resource not found (!name'), array('!name'=>$rel_path));
+
+            }
+        }
+
+    }
+
+    /**
+     * Transforms the absolute path of all resources to an absolute path
+     * Replaces the <freeze-base>/<user-name>/<collection>/<bundle> from absolut path with empty string
+     *
+     */
+    function ResourceFreeze2RelPathTransform(){
+
+
+        foreach ( $this->xml->Resources->ResourceProxyList->children() as $child) {
+
+            $abs_path = (string)$child->ResourceRef;
+            $rel_path = str_replace(drupal_realpath('freeze://'. $this->user->name . '/' . $this->collection . '/' . $this->bundle) . '/data/', '' , $abs_path);
+
+            if ($rel_path){
+
+                $child->ResourceRef->addAttribute('lat:localURI', $rel_path, "http://lat.mpi.nl/");
+                $child->ResourceRef = "";
+
+
+            } else {
+
+                throw new CMDIHandlerException ('Unable to create absolute path for resource');
+
+            }
+        }
+    }
+
+
+
+
+
+
+    /**
+     *  Method for cleaning up isPartOf information
+     *
+     * @param null $parent_pid if specified only the specified child will be removed, otherwise all children will be removed
+     */
+    function removeIsPartOf($parent_pid=NULL)
+    {
+        // clean up all references to parents
+        if (isset($this->xml->Resources->IsPartOfList)) {
+
+            if ($parent_pid) {
+                unset($this->xml->Resources->IsPartOfList->IsPartOf->{$parent_pid});
+            } else {
+
+                $c = $this->xml->Resources->IsPartOfList->IsPartOf->count();
+                for ($i = 0; $i < $c; $i++) {
+                    unset($this->xml->Resources->IsPartOfList->IsPartOf[0]);
+                }
+            }
+        }
+
+    }
+
+    function addIsPartOf($parent_pid)
+    {
+
+        // Add isPartOf property to xml
+        if(!isset($this->xml->Resources->IsPartOfList)){
+            $this->xml->Resources->addChild('IsPartOfList') ;
+        }
+        $this->xml->Resources->IsPartOfList->addChild('IsPartOf',$parent_pid);
+
+    }
+
+
+    function remove_MdSelfLink()
+    {
+        if (isset($this->xml->Header->MdSelfLink)) {
+
+            unset($this->xml->Header->MdSelfLink);
+        }
+    }
+
+
+
+
+
+/**
      * Methods that generates a new, valid CMDI file including processing instructions, empty data fields and attributes
      */
     function initiateNewCMDI(){
@@ -320,6 +456,7 @@ class CMDI_Handler
         $data = $this->xml->Components->{$value};
         array_to_xml($this->form_data, $data);
     }
+
 
 }
 
