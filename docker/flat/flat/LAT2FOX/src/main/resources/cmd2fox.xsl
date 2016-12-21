@@ -84,7 +84,7 @@
 					$from/from,
 					$to/dst,
 					$to/to))[normalize-space(.) != '']"/>
-				<xsl:variable name="hdl" select="$refs[starts-with(., 'hdl:')]"/>
+				<xsl:variable name="hdl" select="$refs[starts-with(cmd:hdl(.), 'hdl:')]"/>
 				<xsl:choose>
 					<xsl:when test="count($hdl) eq 0">
 						<xsl:message>
@@ -263,14 +263,14 @@
 			<xsl:text>]</xsl:text>
 		</xsl:message>
 		<!--<xsl:message use-when="$debug">DBG: [<xsl:value-of select="$rels-doc/key('rels-from',$pid)[1]/src"/>]!=[<xsl:value-of select="base-uri()"/>] => [<xsl:value-of select="$rels-doc/key('rels-from',$pid)[1]/src!=base-uri()"/>]</xsl:message>-->
-		<xsl:if test="$rels-doc/key('rels-from', $pid)[1]/src != $base">
+		<xsl:if test="exists(($rels-doc/key('rels-from', $pid)[normalize-space(src)!=''])[1][src!=cmd:hdl($base)])">
 			<xsl:message>
 				<xsl:text>ERR: record[</xsl:text>
 				<xsl:value-of select="$base"/>
 				<xsl:text>] has an already used PID URI[</xsl:text>
 				<xsl:value-of select="$pid"/>
 				<xsl:text>][</xsl:text>
-				<xsl:value-of select="(key('rels-from', $pid))[1]/src"/>
+				<xsl:value-of select="($rels-doc/key('rels-from', $pid)[normalize-space(src)!=''])[1]/src"/>
 				<xsl:text>]!</xsl:text>
 			</xsl:message>
 			<xsl:message terminate="yes">
@@ -285,9 +285,7 @@
 		<xsl:variable name="collections" select="cmd:collections()"/>
 		<xsl:variable name="parents" as="xs:string*">
 			<xsl:message use-when="$debug">DBG: look for relations (rels-to:dst|to) of [<xsl:value-of select="$pid"/>] or [<xsl:value-of select="$base"/>] </xsl:message>
-			<xsl:variable name="rels" select="
-				distinct-values($rels-doc/key('rels-to', ($pid,
-				$base))[type = 'Metadata']/from)"/>
+			<xsl:variable name="rels" select="distinct-values($rels-doc/key('rels-to', ($pid,cmd:hdl($base)))[type = 'Metadata']/from)"/>
 			<xsl:choose>
 				<xsl:when test="exists($rels)">
 					<xsl:message use-when="$debug">DBG: relations.xml[<xsl:value-of select="string-join($rels,',')"/>]</xsl:message>
@@ -619,14 +617,14 @@
 					<xsl:variable name="resMIME" select="cmd:getMIME($res/cmd:ResourceType/@mimetype,$resURI)"/>
 					<xsl:variable name="createFOX" as="xs:boolean">
 						<xsl:choose>
-							<xsl:when test="(key('rels-to', $resPID))[1]/resolve-uri(dst, src) != $resURI">
+							<xsl:when test="exists(($rels-doc/key('rels-to', $resPID)[normalize-space(resolve-uri(dst, src))!=''])[1][resolve-uri(dst, src)!= cmd:hdl($resURI)])">
 								<xsl:message>
 									<xsl:text>ERR: resource[</xsl:text>
 									<xsl:value-of select="$resURI"/>
 									<xsl:text>] has an already used PID URI[</xsl:text>
 									<xsl:value-of select="$resPID"/>
 									<xsl:text>][</xsl:text>
-									<xsl:value-of select="(key('rels-to', $resPID))[1]/resolve-uri(dst, src)"/>
+									<xsl:value-of select="($rels-doc/key('rels-to', $resPID)[normalize-space(resolve-uri(dst, src))!=''])[1]/resolve-uri(dst, src)"/>
 									<xsl:text>]!</xsl:text>
 								</xsl:message>
 								<xsl:message>
@@ -636,14 +634,14 @@
 								</xsl:message>
 								<xsl:sequence select="false()"/>
 							</xsl:when>
-							<xsl:when test="exists(key('rels-from', $resPID)[Type = 'Resource'])">
+							<xsl:when test="exists($rels-doc/key('rels-from', $resPID)[Type = 'Resource'])">
 								<xsl:message>
 									<xsl:text>ERR: resource[</xsl:text>
 									<xsl:value-of select="$resURI"/>
 									<xsl:text>] has a PID[</xsl:text>
 									<xsl:value-of select="$resPID"/>
 									<xsl:text>] already used by one or more CMDI records[</xsl:text>
-									<xsl:value-of select="string-join(key('rels-from', $resPID)[Type = 'Resource']/src, ', ')"/>
+									<xsl:value-of select="string-join($rels-doc/key('rels-from', $resPID)[Type = 'Resource']/src, ', ')"/>
 									<xsl:text>]!</xsl:text>
 								</xsl:message>
 								<xsl:message>
@@ -653,7 +651,7 @@
 								</xsl:message>
 								<xsl:sequence select="false()"/>
 							</xsl:when>
-							<xsl:when test="not(sx:checkURL(replace($resPID, '^hdl:', 'http://hdl.handle.net/')))">
+							<xsl:when test="not(sx:checkURL(replace($resPID, '^hdl:', 'https://hdl.handle.net/')))">
 								<xsl:message>
 									<xsl:text>ERR: resource[</xsl:text>
 									<xsl:value-of select="$resURI"/>
@@ -767,9 +765,7 @@
 											<rdf:RDF xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:fedora-model="info:fedora/fedora-system:def/model#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 												<rdf:Description rdf:about="info:fedora/{$resID}">
 													<!-- relationships to (parent) compounds -->
-													<xsl:variable name="compounds" select="
-															distinct-values($rels-doc/key('rels-to', ($resPID,
-															$resURI))[type = 'Resource']/from)"/>
+													<xsl:variable name="compounds" select="distinct-values($rels-doc/key('rels-to', ($resPID,cmd:hdl($resURI)))[type = 'Resource']/from)"/>
 													<xsl:choose>
 														<xsl:when test="exists($compounds)">
 															<xsl:for-each select="$compounds">
@@ -826,7 +822,7 @@
 													<xsl:attribute name="REF" select="replace($resURI, $conversion-base, $import-base)"/>
 												</xsl:when>
 												<xsl:otherwise>
-													<xsl:attribute name="REF" select="replace($resURI, '^hdl:', 'http://hdl.handle.net/')"/>
+													<xsl:attribute name="REF" select="replace($resURI, '^hdl:', 'https://hdl.handle.net/')"/>
 												</xsl:otherwise>
 											</xsl:choose>
 										</foxml:contentLocation>
@@ -969,7 +965,7 @@
 			<xsl:apply-templates select="cmd:ResourceProxy[not(cmd:ResourceType = ('LandingPage','Metadata'))]" mode="#current"/>
 			<xsl:message use-when="$debug">DBG: - create landing page</xsl:message>
 			<cmd:ResourceProxy id="home-{replace($fid,'lat:','')}">
-				<cmd:ResourceType>LandingPage</cmd:ResourceType>
+				<cmd:ResourceType mimetype="text/html">LandingPage</cmd:ResourceType>
 				<cmd:ResourceRef>
 					<xsl:value-of select="concat($repository,'/islandora/object/',encode-for-uri($fid),'#',if ($fid eq cmd:lat('lat:', $pid)) then () else concat('?pid=',encode-for-uri($pid)))"/>
 				</cmd:ResourceRef>
@@ -989,7 +985,7 @@
 					</cmd:ResourceProxy>
 				</xsl:for-each>
 			</xsl:variable>
-			<xsl:variable name="children" select="$rels-doc/key('rels-from', ($pid,$base))[type = 'Metadata']"/>
+			<xsl:variable name="children" select="$rels-doc/key('rels-from', ($pid,cmd:hdl($base)))[type = 'Metadata']"/>
 			<!-- legimate children -->
 			<xsl:message use-when="$debug">DBG: - legimate children</xsl:message>
 			<xsl:comment>legimate metadata children</xsl:comment>

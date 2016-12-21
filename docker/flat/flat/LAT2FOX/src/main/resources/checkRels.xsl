@@ -16,7 +16,7 @@
 			<xsl:if test="count($recs)!=1">
 				<xsl:message>WRN: handle[<xsl:value-of select="current-grouping-key()"/>] is used for multiple records[<xsl:value-of select="string-join($recs,', ')"/>]!</xsl:message>
 			</xsl:if>
-			<xsl:if test="not(sx:checkURL(replace(current-grouping-key(),'^hdl:','http://hdl.handle.net/')))">
+			<xsl:if test="not(sx:checkURL(replace(current-grouping-key(),'^hdl:','https://hdl.handle.net/')))">
 				<xsl:message>WRN: malformed URL[<xsl:value-of select="current-grouping-key()"/>] appears in [<xsl:value-of select="string-join(distinct-values(current-group()/src),', ')"/>]!</xsl:message>
 			</xsl:if>
 			<xsl:if test="exists($rels-doc/key('rels-to',current-grouping-key())[type='Resource'])">
@@ -28,7 +28,7 @@
 			<xsl:if test="count($res) gt 1">
 				<xsl:message>WRN: handle[<xsl:value-of select="current-grouping-key()"/>] is used for multiple resources[<xsl:value-of select="count($res)"/>][<xsl:value-of select="string-join($res,', ')"/>]!</xsl:message>
 			</xsl:if>
-			<xsl:if test="not(sx:checkURL(replace(current-grouping-key(),'^hdl:','http://hdl.handle.net/')))">
+			<xsl:if test="not(sx:checkURL(replace(current-grouping-key(),'^hdl:','https://hdl.handle.net/')))">
 				<xsl:message>WRN: malformed URL[<xsl:value-of select="current-grouping-key()"/>] appears in [<xsl:value-of select="string-join(distinct-values(current-group()/src),', ')"/>]!</xsl:message>
 			</xsl:if>
 		</xsl:for-each-group>

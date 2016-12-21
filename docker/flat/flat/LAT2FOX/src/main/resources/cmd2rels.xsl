@@ -9,6 +9,11 @@
 	<xsl:param name="dir" select="'./'"/>
     <xsl:param name="ext" select="'cmdi'"/>
 	
+	<xsl:function name="cmd:hdl">
+		<xsl:param name="pid"/>
+		<xsl:sequence select="replace(replace($pid, '^http(s?)://hdl.handle.net/', 'hdl:'), '@format=[a-z]+', '')"/>
+	</xsl:function>
+	
 	<xsl:template name="main">
 		<relations>
 			<xsl:for-each select="collection(concat($dir,concat('?select=*.',$ext,';recurse=yes;on-error=warning')))">
@@ -21,8 +26,8 @@
 							<xsl:message>WRN: using base URI instead.</xsl:message>
 							<xsl:sequence select="$src"/>
 						</xsl:when>
-						<xsl:when test="starts-with($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink,'hdl:') or starts-with($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink,'http://hdl.handle.net/')">
-							<xsl:sequence select="replace(replace($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink,'http://hdl.handle.net/','hdl:'),'@format=.+','')"/>
+						<xsl:when test="starts-with(cmd:hdl($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink),'hdl:')">
+							<xsl:sequence select="cmd:hdl($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink)"/>
 						</xsl:when>
 						<xsl:otherwise>
 							<xsl:sequence select="normalize-space($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink)"/>
@@ -39,8 +44,8 @@
 						</from>
 						<to>
 							<xsl:choose>
-								<xsl:when test="starts-with(cmd:ResourceRef,'hdl:') or starts-with(cmd:ResourceRef,'http://hdl.handle.net/')">
-									<xsl:value-of select="replace(replace(cmd:ResourceRef,'http://hdl.handle.net/','hdl:'),'@format=.+','')"/>
+								<xsl:when test="starts-with(cmd:hdl(cmd:ResourceRef),'hdl:')">
+									<xsl:value-of select="cmd:hdl(cmd:ResourceRef)"/>
 								</xsl:when>
 								<xsl:otherwise>
 									<xsl:value-of select="resolve-uri(cmd:ResourceRef,$src)"/>
@@ -54,16 +59,16 @@
 										<xsl:message>WRN: no local URI for ResourceRef[<xsl:value-of select="cmd:ResourceRef"/>] in CMD record[<xsl:value-of select="$src"/>], using ResourceRef instead.</xsl:message>
 									</xsl:if>
 									<xsl:choose>
-										<xsl:when test="starts-with(cmd:ResourceRef,'hdl:') or starts-with(cmd:ResourceRef,'http://hdl.handle.net/')">
-											<xsl:value-of select="replace(replace(cmd:ResourceRef,'http://hdl.handle.net/','hdl:'),'@format=.+','')"/>
+										<xsl:when test="starts-with(cmd:hdl(cmd:ResourceRef),'hdl:')">
+											<xsl:value-of select="cmd:hdl(cmd:ResourceRef)"/>
 										</xsl:when>
 										<xsl:otherwise>
 											<xsl:value-of select="resolve-uri(cmd:ResourceRef,$src)"/>
 										</xsl:otherwise>
 									</xsl:choose>
 								</xsl:when>
-								<xsl:when test="starts-with(cmd:ResourceRef/@lat:localURI,'hdl:')">
-									<xsl:value-of select="cmd:ResourceRef/@lat:localURI"/>
+								<xsl:when test="starts-with(cmd:hdl(cmd:ResourceRef/@lat:localURI),'hdl:')">
+									<xsl:value-of select="cmd:hdl(cmd:ResourceRef/@lat:localURI)"/>
 								</xsl:when>
 								<xsl:otherwise>
 									<xsl:value-of select="resolve-uri(cmd:ResourceRef/@lat:localURI,$src)"/>
@@ -82,16 +87,16 @@
 								<xsl:when test="normalize-space(@lat:localURI)=''">
 									<xsl:message>WRN: no local URI for IsPartOf[<xsl:value-of select="."/>] in CMD record[<xsl:value-of select="$src"/>], using ref instead.</xsl:message>
 									<xsl:choose>
-										<xsl:when test="starts-with(.,'hdl:') or starts-with(.,'http://hdl.handle.net/')">
-											<xsl:value-of select="replace(replace(.,'http://hdl.handle.net/','hdl:'),'@format=.+','')"/>
+										<xsl:when test="starts-with(cmd:hdl(.),'hdl:')">
+											<xsl:value-of select="cmd:hdl(.)"/>
 										</xsl:when>
 										<xsl:otherwise>
 											<xsl:value-of select="resolve-uri(.,$src)"/>
 										</xsl:otherwise>
 									</xsl:choose>
 								</xsl:when>
-								<xsl:when test="starts-with(@lat:localURI,'hdl:')">
-									<xsl:value-of select="@lat:localURI"/>
+								<xsl:when test="starts-with(cmd:hdl(@lat:localURI),'hdl:')">
+									<xsl:value-of select="cmd:hdl(@lat:localURI)"/>
 								</xsl:when>
 								<xsl:otherwise>
 									<xsl:value-of select="resolve-uri(@lat:localURI,$src)"/>
@@ -100,8 +105,8 @@
 						</src>
 						<from>
 							<xsl:choose>
-								<xsl:when test="starts-with(.,'hdl:') or starts-with(.,'http://hdl.handle.net/')">
-									<xsl:value-of select="replace(replace(.,'http://hdl.handle.net/','hdl:'),'@format=.+','')"/>
+								<xsl:when test="starts-with(cmd:hdl(.),'hdl:')">
+									<xsl:value-of select="cmd:hdl(.)"/>
 								</xsl:when>
 								<xsl:otherwise>
 									<xsl:value-of select="resolve-uri(.,$src)"/>
