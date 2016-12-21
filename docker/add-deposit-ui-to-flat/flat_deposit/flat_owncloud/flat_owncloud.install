@@ -22,8 +22,8 @@ function flat_owncloud_install()
         'cardinality' => 1,
         'settings' => array(
             'allowed_values'=> array(
-                0 => "Unavailable",
-                1 => "Available"),
+                0 => "Disabled",
+                1 => "Activated"),
         ),
 
     );
@@ -39,7 +39,8 @@ function flat_owncloud_install()
             'type' => 'options_button', // or whatever widget type you want
         ),
         'default_value' => array(
-            0 => array('value'=> '0'))
+            0 => array('value'=> 0)),
+        'required' => TRUE,
     );
     field_create_instance($instance);
 

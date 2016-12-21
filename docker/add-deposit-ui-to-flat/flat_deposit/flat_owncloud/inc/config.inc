@@ -4,9 +4,10 @@
 function flat_owncloud_set_owncloud($updated_values=NULL){
 
     $defaults =  array(
-        'activated' => TRUE,
+        'activated' => FALSE,
         'admin_name' => 'admin',
         'admin_pass' => 'admin',
+        'schema' => 'https',
         'host' => $_SERVER['HTTP_HOST'],
         'root_dir'=> '/var/www/owncloud/',
         'temp_dir'=> '/tmp/',

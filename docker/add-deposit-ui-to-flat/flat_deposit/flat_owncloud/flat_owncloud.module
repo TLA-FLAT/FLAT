@@ -26,3 +26,120 @@ function flat_owncloud_menu()
     return $items;
 }
 
+
+
+function flat_owncloud_form_user_profile_form_alter(&$form, &$form_state, $form_id)
+{
+
+    $form['#validate'][] = 'flat_owncloud_user_profile_owncloud_validate';
+    $form['#submit'][] = 'flat_owncloud_user_profile_owncloud_submit';
+
+}
+
+
+
+function flat_owncloud_user_profile_owncloud_validate (&$form, &$form_state)
+{
+    $original_value = $form['mount_owncloud']['und']['#default_value'];
+    $entered_value = $form_state['values']['mount_owncloud']['und'][0]['value'];
+
+    if ($original_value != $entered_value AND $entered_value === "1") {
+
+        module_load_include('inc', 'flat_owncloud', 'Helpers/owncloud_api');
+        $oc = new OwnCloud();
+
+        // Unmount first if owncloud is set to available and it is already available
+        $oc->GetUserMount();
+        if ($oc->mounted) {
+            $oc->UnmountUserMount();
+        }
+
+        // initiate user directories if necessary
+        module_load_include('inc', 'imce', 'inc/imce.page');
+        global $user;
+        imce_initiate_profile ($user);
+
+        // Mount and Verify Drupal folder
+        $oc->MountDataFolder();
+        $oc->GetUserMount();
+        $oc->VerifyMount();
+        if (!$oc->verified) {
+            form_set_error('owncloud_mount', 'Owncloud mount cannot be verified.');
+            return $form;
+        } else{
+            $oc->UnmountUserMount();
+        }
+    }
+
+    return $form;
+
+}
+
+
+function flat_owncloud_user_profile_owncloud_submit (&$form, &$form_state)
+{
+    $original_value = $form['mount_owncloud']['und']['#default_value'];
+    $entered_value = $form_state['values']['mount_owncloud']['und'][0]['value'];
+
+    module_load_include('inc', 'flat_owncloud', 'Helpers/owncloud_api');
+    $oc = new OwnCloud();
+
+    if ($original_value != $entered_value AND $entered_value === "1") {
+
+        // Mount and Verify Drupal folder
+        $oc->MountDataFolder();
+
+        drupal_set_message('Owncloud can be used to upload data to archive');
+
+    }  elseif ($original_value != $entered_value AND $entered_value === "0") {
+
+        // Unmount first if owncloud is set to available and it is already available
+        $oc->GetUserMount();
+
+        if ($oc->mounted) {
+            $oc->UnmountUserMount();
+        }
+
+        drupal_set_message('Owncloud integration has been deactivated');
+
+    }
+}
+
+
+function flat_owncloud_form_flat_bundle_node_form_alter(&$form, &$form_state, $form_id){
+
+    $user_data = user_load($form['uid']['#value']);
+    $mounted = $user_data->mount_owncloud['und']['0']['value'];
+
+    if ($mounted){
+        $form['#submit'][] = "flat_owncloud_form_flat_bundle_node_form_submit";
+    }
+}
+
+
+    function flat_owncloud_form_flat_bundle_node_form_submit($form, &$form_state){
+
+        global $user;
+
+        module_load_include('inc', 'flat_owncloud', 'Helpers/owncloud_api');
+        $oc = new OwnCloud();
+
+        $oc->UpdateUserFiles();
+
+
+    }
+
+function flat_owncloud_node_view_alter($node, $view_mode) {
+
+    $user_data = user_load($node['#node']->uid);
+    $mounted = $user_data->mount_owncloud['und']['0']['value'];
+
+    if ($mounted AND $node['#bundle'] == 'flat_bundle' AND $node['#view_mode'] == 'full'){
+            module_load_include('inc', 'flat_owncloud', 'Helpers/owncloud_api');
+            $oc = new OwnCloud();
+
+            $oc->UpdateUserFiles();
+
+        }
+
+}

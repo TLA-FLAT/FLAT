@@ -70,7 +70,7 @@ class OwnCloud
             }
         }
 
-        $this->inUse = variable_get('owncloud_settings', array())['activated'];
+        $this->inUse = variable_get('flat_owncloud', array())['activated'];
 
         // if owncloud is used check for existence account; else always true
         $this->noErrors = $this->inUse ? self::owncloud_account_exists() : TRUE;
@@ -108,7 +108,7 @@ class OwnCloud
         try {
             $code = $this->call_user_provision_api('get', TRUE);
             if ($code != 200) {
-                throw new OwnCloudConnectionException('Owncloud server error code ( HTTP code ' . $code . ')');
+                throw new OwnCloudConnectionException('Error calling owncloud user provision api ( HTTP code ' . $code . ')');
             }
 
             $content = $this->call_user_provision_api('get');
@@ -135,17 +135,17 @@ class OwnCloud
     }
 
     /**
-     * Compares the naming of owncloud directories mounts as specified in $mount->configuration->dir with naming of standard drupal data directory
+     * Compares the directory naming of owncloud mounts (as specified in $mount->configuration->dir) with naming of user drupal data directory
      * @return array of all drupal user directory mounts
      */
     public function ListAllDrupalMounts($test=FALSE)
     {
+        // grap all user mount configurations
+        $res = $this->GetOwncloudMounts();
+        $mounts = json_decode(implode($res));
 
         $drupal_mounts = [];
 
-        // grap mount configurations
-        $res = $this->GetOwncloudMounts();
-        $mounts = json_decode(implode($res));
 
         // convert path strings of drupal data directory and each owncloud mount into arrays and count overlap between both
         $d_path = explode("/",drupal_realpath('private://flat_deposit'));
@@ -158,7 +158,7 @@ class OwnCloud
         }
 
         if ($test){
-            drupal_set_message(t('Owncloud listing drupal mounts test passed. ' . (string)count($mounts) . ' mounts found'));
+            drupal_set_message(t('Owncloud listing drupal mounts test passed. ' . (string)count($mounts) . ' mounts found with ' . (string)count($drupal_mounts) . ' drupal mounts'));
         }
 
         return $drupal_mounts;
@@ -166,13 +166,16 @@ class OwnCloud
 
     public function MountDataFolder($test=FALSE)
     {
+        global $user;
         if ($test){
             $datadir = OC_TEMP;
             $mpoint = "/MPI_Archive_TEST";
+            $message = 'Trying to create owncloud test mount';
         } else {
             global $user;
-            $datadir =drupal_realpath('private://flat_deposit/'. $user->name);
+            $datadir =drupal_realpath('private://flat_deposit/data/'. $user->name);
             $mpoint = "/MPI_Archive_" . $user->name;
+            $message = 'Trying to create owncloud user mount';
         }
 
         $fname = OC_TEMP . "/owncloud_mount_" . $user->name . ".json";
@@ -196,16 +199,13 @@ class OwnCloud
             ));
 
         file_put_contents($fname, json_encode($mount_config));
-        exec(OC_ROOT . "/occ files_external:import $fname", $res, $code);
+        $cmd = OC_ROOT . "/occ files_external:import $fname";
+        exec($cmd, $res, $code);
 
 
-        if ($code){
-            throw new OwnCloudConnectionException("Could not create new owncloud mount. Please ask administrator to check owncloud settings");
-        }
 
-        if ($test){
-            drupal_set_message(t('Owncloud test mount created'));
-        }
+#        drupal_set_message(t($message));
+
 
         return $code;
 
@@ -221,7 +221,7 @@ class OwnCloud
             $datadir = OC_TEMP;
         } else {
             global $user;
-            $datadir =drupal_realpath('private://flat_deposit/'. $user->name);
+            $datadir =drupal_realpath('private://flat_deposit/data/'. $user->name);
         }
 
         $res = $this->GetOwncloudMounts();
