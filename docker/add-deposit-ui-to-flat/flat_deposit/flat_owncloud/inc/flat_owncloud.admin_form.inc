@@ -11,6 +11,9 @@
 
 /**
  * Implements hook_form().
+ *
+ * flat_owncloud admin menu which can be used to adapt the default settings.
+ *
  */
 function flat_owncloud_admin_form($form, &$form_state)
 {
@@ -103,7 +106,7 @@ function flat_owncloud_admin_form($form, &$form_state)
 }
 
 /**
- * keeps the default password in case no
+ * keeps the default password in case no password has been entered
  */
 function keep_default_password($form, &$form_state) {
 
@@ -114,16 +117,19 @@ function keep_default_password($form, &$form_state) {
 
 }
 
-
+/**
+ * function call to check if owncloud is reachable using the owncloud command line tool (occ).
+ *
+ *
+ * @return array|bool if successfully status of occ otherwise FALSE
+ */
 function check_owncloud_status()
 {
     $status = FALSE;
 
-    $drupal_dir = getcwd();
     $config = variable_get('flat_owncloud');
-    chdir($config['root_dir']);
 
-    $cmd = 'php occ status --output=json';
+    $cmd = $config['root_dir'] . '/occ status --output=json';
     exec($cmd, $output, $return_val);
 
     if (!$return_val) {
@@ -131,56 +137,65 @@ function check_owncloud_status()
 
         if ($formatted['installed']){
 
-            chdir($drupal_dir);
+
             return $formatted;
         }
 
     }
-    chdir($drupal_dir);
+
     return $status;
 }
 
-function check_owncloud_external_files_plugin($enable=FALSE)
+
+/**
+ * function call to check if owncloud external files extension (files_external app) is enabled using the owncloud command line tool (occ).
+ *
+ * @param $enable bool If true function tries to enable the extension
+ *
+ * @return bool
+ */
+function owncloud_external_files_plugin_enabled($enable=FALSE)
 {
     $enabled = FALSE;
 
-    $drupal_dir = getcwd();
+
+    // occ needs to be called from owncloud root directory as apache user
     $config = variable_get('flat_owncloud');
-    chdir($config['root_dir']);
 
-    $cmd = 'php occ app:list --output=json';
+    $cmd = $config['root_dir'] . '/occ app:list --output=json';
     exec ( $cmd , $output, $return_val);
 
-    // Activate files_external plugin if status of plugin is disabled
-    if (!$return_val AND $enable){
-      $formatted = (array)json_decode($output[0]);
-        if (array_key_exists('files_external',$formatted['disabled'])){
-
-            $cmd = 'php occ app:enable files_external';
-            exec ( $cmd , $output, $return_val);
-
-        }
-    }
-
-    // Check if files_external plugin is enabled
-    $cmd = 'php occ app:list --output=json';
-    exec ( $cmd , $output, $return_val);
-
-    // check status of files_external plugin
-    if ($output){
+    // In case of positive return value (0 = no errors), check on shell output the status of the plugin
+    if (!$return_val) {
 
         $formatted = (array)json_decode($output[0]);
 
-        if (array_key_exists('files_external',$formatted['enabled'])){
+        // in case bool is set and plugin is disabled, enable the plugin and rerun listing of plugin status
+        if (array_key_exists('files_external', $formatted['disabled']) AND $enable) {
+
+            $cmd = $config['root_dir'] . '/occ app:enable files_external';
+            exec($cmd, $output, $return_val);
+
+            $cmd = $config['root_dir'] . '/occ app:list --output=json';
+            exec ( $cmd , $output, $return_val);
+
+            if ($output) {
+
+                $formatted = (array)json_decode($output[0]);
+
+            }
+
+        }
+
+        if (array_key_exists('files_external', $formatted['enabled'])) {
 
             $enabled = TRUE;
-
         }
     }
 
-    chdir($drupal_dir);
     return $enabled;
 }
+
 
 
 function flat_owncloud_admin_form_validate ($form, &$form_state)
@@ -189,15 +204,23 @@ function flat_owncloud_admin_form_validate ($form, &$form_state)
 
     switch ($button) {
         case 'Save': {
+
             $status = check_owncloud_status();
+
             if (!$status) {
+
                 form_set_error('activated', 'Owncloud status failed');
+
             }
 
             if ($form_state['values']['owncloud']['activated']){
-                $activated = check_owncloud_external_files_plugin(TRUE);
+
+                $activated = owncloud_external_files_plugin_enabled(TRUE);
+
                 if (!$activated){
+
                     form_set_error('activated','Owncloud external plugin is not / could not be activated');
+
                 }
             }
 
@@ -208,18 +231,26 @@ function flat_owncloud_admin_form_validate ($form, &$form_state)
             break;
         }
         case 'Check owncloud connection': {
+
             $status = check_owncloud_status();
+
             if (!$status) {
+
                 form_set_error('activated', 'Owncloud status failed');
+
             } else {
 
                 $form_state['values']['status'] = $status;
             }
 
-            $activated = check_owncloud_external_files_plugin();
+            $activated = owncloud_external_files_plugin_enabled();
+
             if (!$activated){
+
                 form_set_error('activated','Owncloud external plugin is not / could not be activated');
+
             }
+
             break;
         }
 
@@ -256,6 +287,7 @@ function flat_owncloud_admin_form_submit ($form, &$form_state)
 
             drupal_set_message(print_r($form_state['values']['status'],TRUE));
             drupal_set_message(t('Owncloud plugin is enabled'));
+
             try {
 
                 module_load_include('inc', 'flat_owncloud', 'Helpers/owncloud_api');

@@ -27,22 +27,59 @@ function flat_owncloud_menu()
 }
 
 
-
+/**
+ * Show extra field 'mount_owncloud' in user profile form if owncloud is activated.
+ * In case user activates owncloud integration (mount_owncloud ==TRUE) extra validation and submission handlers are added
+ *
+ */
 function flat_owncloud_form_user_profile_form_alter(&$form, &$form_state, $form_id)
 {
+    $activated = variable_get('flat_owncloud', array())['activated'];
 
-    $form['#validate'][] = 'flat_owncloud_user_profile_owncloud_validate';
-    $form['#submit'][] = 'flat_owncloud_user_profile_owncloud_submit';
+    if ($activated)
 
+    {
+        $form['#validate'][] = 'flat_owncloud_user_profile_owncloud_validate';
+        $form['#submit'][] = 'flat_owncloud_user_profile_owncloud_submit';
+
+    } else {
+
+        hide($form['mount_owncloud']);
+
+    }
 }
 
+/**
+ * Implements hook_user_view().
+ *
+ * Hide mount setting if owncloud is not activated
+ *
+ *
+ */
+function flat_owncloud_user_view($account, $view_mode, $langcode){
 
+    $activated = variable_get('flat_owncloud', array())['activated'];
 
+       if (!$activated){
+
+           $account->content['mount_owncloud']= NULL;
+
+           unset($account->content['mount_owncloud']);
+
+    }
+}
+
+/**
+ * In case the value of mount_owncloud has changed, validate that data directory specified in drupal can be mounted in owncloud
+ * Drupal user mounts will be unmounted and mounted again to see if this can be done. Result will be the outcome of the mounting process,
+ * the mount, however will be removed in the end.
+ */
 function flat_owncloud_user_profile_owncloud_validate (&$form, &$form_state)
 {
     $original_value = $form['mount_owncloud']['und']['#default_value'];
     $entered_value = $form_state['values']['mount_owncloud']['und'][0]['value'];
 
+    // in case the value of mount_owncloud has changed
     if ($original_value != $entered_value AND $entered_value === "1") {
 
         module_load_include('inc', 'flat_owncloud', 'Helpers/owncloud_api');
@@ -75,7 +112,10 @@ function flat_owncloud_user_profile_owncloud_validate (&$form, &$form_state)
 
 }
 
-
+/**
+ * In case the value of mount_owncloud has changed, this submission handler either mounts or unmounts the user drupal data
+ * directory mount
+ */
 function flat_owncloud_user_profile_owncloud_submit (&$form, &$form_state)
 {
     $original_value = $form['mount_owncloud']['und']['#default_value'];
@@ -106,40 +146,66 @@ function flat_owncloud_user_profile_owncloud_submit (&$form, &$form_state)
 }
 
 
-function flat_owncloud_form_flat_bundle_node_form_alter(&$form, &$form_state, $form_id){
+/**
+ * Implements hook_node_insert().
+ *
+ * Updates the user file entries in owncloud database when a new node is created
+ */
+function flat_owncloud_node_insert($node)
+{
+    $activated = variable_get('flat_owncloud', array())['activated'];
 
-    $user_data = user_load($form['uid']['#value']);
+    $user_data = user_load($node->uid);
     $mounted = $user_data->mount_owncloud['und']['0']['value'];
 
-    if ($mounted){
-        $form['#submit'][] = "flat_owncloud_form_flat_bundle_node_form_submit";
-    }
-}
-
-
-    function flat_owncloud_form_flat_bundle_node_form_submit($form, &$form_state){
-
-        global $user;
-
+    if ($mounted AND $node->type == 'flat_bundle' AND $activated){
         module_load_include('inc', 'flat_owncloud', 'Helpers/owncloud_api');
         $oc = new OwnCloud();
 
         $oc->UpdateUserFiles();
 
-
     }
 
+}
+/**
+ * update user file entries on owncloud database when a bundle is being viewed
+ *
+ */
 function flat_owncloud_node_view_alter($node, $view_mode) {
+
+    $activated = variable_get('flat_owncloud', array())['activated'];
 
     $user_data = user_load($node['#node']->uid);
     $mounted = $user_data->mount_owncloud['und']['0']['value'];
 
-    if ($mounted AND $node['#bundle'] == 'flat_bundle' AND $node['#view_mode'] == 'full'){
+    if ($mounted AND $node['#bundle'] == 'flat_bundle' AND $node['#view_mode'] == 'full' AND $activated){
             module_load_include('inc', 'flat_owncloud', 'Helpers/owncloud_api');
             $oc = new OwnCloud();
 
             $oc->UpdateUserFiles();
 
         }
+
+}
+
+
+/**
+ * Implements hook_node_delete().
+ * update user file entries on owncloud database when a bundle is being deleted
+ */
+function flat_owncloud_node_delete($node)
+{
+    $activated = variable_get('flat_owncloud', array())['activated'];
+
+    $user_data = user_load($node->uid);
+    $mounted = $user_data->mount_owncloud['und']['0']['value'];
+
+    if ($mounted AND $node->type == 'flat_bundle' AND $activated){
+        module_load_include('inc', 'flat_owncloud', 'Helpers/owncloud_api');
+        $oc = new OwnCloud();
+
+        $oc->UpdateUserFiles();
+
+    }
 
 }
