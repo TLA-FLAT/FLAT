@@ -50,6 +50,9 @@ function flat_deposit_permission()
         'use deposit module' => array(
             'title' => t('Usage of the deposit module'),
             'description' => t('Make use of the FLAT deposit')),
+        'ingest bundles' => array(
+            'title' => t('Ingest bundles'),
+            'description' => t('Allow to do ingest after validation')),
         'view collection' => array(
             'title' => t('View collections'),
             'description' => t('See overview collections')),

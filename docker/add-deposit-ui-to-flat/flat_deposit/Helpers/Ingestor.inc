@@ -144,6 +144,42 @@ class Ingestor
         }
     }
 
+
+    /**
+     * Function checking whether status of the flat_bundle with the nid is set to processing or validating
+     * @throws IngestServiceException
+     *
+     */
+    public function authenticateUser()
+    {
+        global $user;
+
+        // only bundle owner, editors and admins might validate the bundle
+        if ($this->type == 'validating'){
+
+            $user_id = $user->uid;
+            $bundle_id = $this->node->uid;
+            if($user_id !== $bundle_id AND !user_has_role(4,$user) AND !user_has_role(3,$user)) {
+
+                throw new IngestServiceException(t('Invalid node status'));
+
+            }
+
+            return TRUE;
+
+        // only editors and admins might ingest the bundle
+        } else {
+
+            if(!user_has_role(4,$user)) {
+
+                throw new IngestServiceException(t('Invalid node status'));
+
+            }
+            return TRUE;
+        }
+
+    }
+
     /**
      * Function checking whether status of the flat_bundle with the nid is set to processing or validating
      * @throws IngestServiceException

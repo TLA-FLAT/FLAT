@@ -43,6 +43,9 @@ try {
     $header  = "Ingest service log file - "  . $ingest->type . " on ".date("F j, Y, g:i a").PHP_EOL. "-------------------------";
     $ingest->AddEntryLogFile($header);
 
+
+    $ingest->authenticateUser();
+
     $ingest->validateNodeStatus();
     $ingest->updateNodeStatus($ingest->type);
 
