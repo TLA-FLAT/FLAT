@@ -312,6 +312,10 @@ function flat_deposit_install()
     variable_set('file_default_scheme','private');
     variable_set('imce_settings_disable_private',0);
 
+
+
+    flat_deposit_set_custom_roles();
+
 }
 
 

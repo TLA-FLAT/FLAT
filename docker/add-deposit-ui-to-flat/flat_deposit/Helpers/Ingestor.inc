@@ -78,7 +78,7 @@ class Ingestor
         if ($this->wrapper->upload_external->value()) {
 
             $config = variable_get('flat_deposit_paths');
-            $this->dir['origin_data'] = $config['alternate_dir'] . $this->user->name . $config['alternate_subdir'] . "/" . $this->wrapper->upload_external->value();
+            $this->dir['origin_data'] = $config['alternate_dir'] . $this->user->name . $config['alternate_subdir'] . "/" . $this->wrapper->upload_location->value();
 
         } else {
 
@@ -150,32 +150,51 @@ class Ingestor
      * @throws IngestServiceException
      *
      */
-    public function authenticateUser()
+    public function authenticateUser($sid)
     {
-        global $user;
+
+        $result = db_select('sessions', 's')
+            ->fields('s', array('uid'))
+            ->condition('s.sid', $sid)
+            ->execute();
+
+
+        if ($result){
+
+            $user_id = $result->fetchAssoc()['uid'];
+        } else {
+
+            $user_id = 0;
+        }
+
+
+        $bundle_id = $this->node->uid;
 
         // only bundle owner, editors and admins might validate the bundle
         if ($this->type == 'validating'){
 
-            $user_id = $user->uid;
-            $bundle_id = $this->node->uid;
-            if($user_id !== $bundle_id AND !user_has_role(4,$user) AND !user_has_role(3,$user)) {
+            if($user_id === $bundle_id OR user_access('validate bundles', user_load($user_id))) {
 
-                throw new IngestServiceException(t('Invalid node status'));
+                return TRUE;
+
+            } else {
+
+                throw new IngestServiceException('User has not enough privileges to perform requested action');
 
             }
 
-            return TRUE;
-
-        // only editors and admins might ingest the bundle
         } else {
+        // only certified users and corpmanager might ingest the bundle
 
-            if(!user_has_role(4,$user)) {
+            if (($user_id === $bundle_id AND user_access('certified user', user_load($user_id))) OR user_access('ingest bundles', user_load($user_id))) {
 
-                throw new IngestServiceException(t('Invalid node status'));
+                return TRUE;
+
+            } else {
+
+                throw new IngestServiceException('User has not enough privileges to perform requested action');
 
             }
-            return TRUE;
         }
 
     }
@@ -903,7 +922,7 @@ class Ingestor
 
         $this->deleteFOs();
 
-        if (is_int(array_search('moved', $this->finished_actions))){
+        if (is_int(array_search('moved', $this->finished_actions)) OR $this->type == 'processing'){
             $this->moveData('unfreeze');
         }
 

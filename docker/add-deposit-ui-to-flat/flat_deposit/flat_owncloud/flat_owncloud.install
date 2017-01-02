@@ -60,8 +60,6 @@ function flat_owncloud_uninstall()
     $t = get_t();
 
     module_load_include('inc', 'flat_owncloud', 'Helpers/owncloud_api');
-    variable_del('flat_owncloud');
-
 
     // Unmount all user drupal data directory mounts
     $oc = new OwnCloud();
@@ -74,6 +72,8 @@ function flat_owncloud_uninstall()
         };
 
     }
+
+    variable_del('flat_owncloud');
 
     drupal_set_message($t('All user drupal data directory mounts have been unmounted'));
 

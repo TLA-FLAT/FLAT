@@ -190,18 +190,76 @@ function flat_bundle_action_form_validate($form, &$form_state){
             if (!$xml) {
 
                 form_set_error('validate_bundle', t("Attached file is no valid xml file"));
+                return $form;
+            }
+
+
+            // Check existence external location
+            $node_wrapper = entity_metadata_wrapper('node', $node);
+            $external = $node_wrapper->upload_external->value();
+            $location = $node_wrapper->upload_location->value();
+            if ($external ){
+                $config = variable_get('flat_deposit_paths');
+                $root = $config['alternate_dir'];
+                $sub = $config['alternate_subdir'];
+
+                global $user;
+                $full_path = $root . $user->name . $sub . "/$location";
+
+                if (!file_exists($full_path)){
+
+                    form_set_error('validate_bundle',t('External location does not exist (:path) ' , array(':path' => $full_path)));
+                    return $form;
+
+                }
             }
 
 
 
+            // Check user permissions
+            global $user;
+            $user_id = $user->uid;
+
+            $bundle_id = $node->uid;
+
+            if($user_id === $bundle_id OR user_access('validate bundles')) {
+
+
+            } else {
+
+                form_set_error('validate_bundle', t('User has not enough privileges to perform requested action'));
+            }
+
             break;
 
+        }
+
+        case 'Archive bundle':{
+
+            // Check user permissions
+            global $user;
+            $user_id = $user->uid;
+
+            $bundle_id = $node->uid;
+
+            if (($user_id === $bundle_id AND user_access('certified user')) OR user_access('ingest bundles')) {
+
+                return TRUE;
+
+            } else {
+
+                form_set_error('archive_bundle', t('User has not enough privileges to perform requested action'));
+                return FALSE;
+            }
+            break;
         }
 
         case 'Re-open bundle':{
 
             break;
         }
+
+        return $form;
     }
 }
 
@@ -227,40 +285,47 @@ function flat_bundle_action_form_submit($form, &$form_state){
         case 'Validate bundle':
         case 'Archive bundle':{
 
+            global $user;
 
+            // background service http request settings
+            $host = variable_get('flat_deposit_ingest_service')['host_name'];
+            $sid = $user->sid;
+            $name = array_search($sid,$_COOKIE);
 
             // create array containing data needed by the ingest service
             $data_to_post = array();
             $data_to_post['drupal_path'] = DRUPAL_ROOT;
             $data_to_post['nid'] = $node->nid;
+            $data_to_post['sid'] = $sid;
 
 
-            // background service http request settings
-            $host = variable_get('flat_deposit_ingest_service')['host_name'];
-            $options = array(
+
+        $options = array(
                 'method' => 'POST',
                 'data' => $data_to_post,
                 'blocking' => FALSE,
                 'headers' => array(
                     // Set the Host header to self.
                     'Host' => $host,
-                    ),
+                ),
             );
 
-            $url = httprl_build_url_self(drupal_get_path('module', 'flat_deposit') . "/Helpers/Ingest_service.php");
+
+            $url = httprl_build_url_self(drupal_get_path('module', 'flat_deposit') . '/Helpers/Ingest_service.php'); #?user='.$user->name. '&pass='.$user->pass
 
             // Debug mode
-            global $user;
             $wrapper = entity_metadata_wrapper('node', $node);
             $status = $wrapper->upload_status->value();
 
             if ($form_state['values']['serial']) {
 
 
+
                 $ch = curl_init();
                 curl_setopt_array($ch, array(
 
                     CURLOPT_URL => $url,
+
                     CURLOPT_COOKIE => "XDEBUG_SESSION=PHPSTORM",
                     CURLOPT_POST => sizeof($data_to_post),
                     CURLOPT_POSTFIELDS => $data_to_post));

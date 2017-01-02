@@ -33,8 +33,8 @@ RUN cd /var/www/html/flat/ &&\
     /var/www/composer/vendor/drush/drush/drush en httprl -y  &&\
     /var/www/composer/vendor/drush/drush/drush dl -y filefield_paths
     /var/www/composer/vendor/drush/drush/drush en -y filefield_paths
-#    /var/www/composer/vendor/drush/drush/drush -y dl content_access  &&\
-#    /var/www/composer/vendor/drush/drush/drush -y en content_access  &&\
+    /var/www/composer/vendor/drush/drush/drush -y dl content_access  &&\
+    /var/www/composer/vendor/drush/drush/drush -y en content_access  &&\
     /etc/init.d/postgresql stop 
 
 	

@@ -44,7 +44,7 @@ try {
     $ingest->AddEntryLogFile($header);
 
 
-    $ingest->authenticateUser();
+    $ingest->authenticateUser($_POST['sid']);
 
     $ingest->validateNodeStatus();
     $ingest->updateNodeStatus($ingest->type);

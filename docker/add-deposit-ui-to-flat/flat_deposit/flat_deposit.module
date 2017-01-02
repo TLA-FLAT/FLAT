@@ -50,6 +50,9 @@ function flat_deposit_permission()
         'use deposit module' => array(
             'title' => t('Usage of the deposit module'),
             'description' => t('Make use of the FLAT deposit')),
+        'validate bundles' => array(
+            'title' => t('Validate bundles'),
+            'description' => t('Allow to validate new bundles')),
         'ingest bundles' => array(
             'title' => t('Ingest bundles'),
             'description' => t('Allow to do ingest after validation')),
@@ -91,8 +94,7 @@ function flat_deposit_menu()
 
     // Admin configuration - Upload settings
     $items['admin/config/flat_deposit/customize'] = array(
-        'title' => 'Customize deposit settings',
-        'description' => 'Administer FLAT deposit settings such as temporal storage folders and used plugins',
+        'title' => 'Configure deposit settings',
         'page callback' => 'drupal_get_form',
         'page arguments' => array( 'flat_deposit_admin_form'),
         'file' => 'inc/flat_deposit.admin.inc',
@@ -135,8 +137,6 @@ function flat_deposit_menu()
         'file' => 'inc/flat_deposit.cmdi_create.inc',
         'access arguments' => array('use deposit module'),
     );
-
-
 
     //FLAT_COLLECTION
     // flat_collection entity rendering
@@ -350,7 +350,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
     $form['upload_location']['#attributes']['id'] = array('upload-location-container');
 
     // 3. set access value (show or not) depending on checkbox value
-    $checked = isset($form_state['values']['upload_external']['und'][0]['value']) ? $form_state['values']['upload_external']['und'][0]['value'] : 0;
+    $checked = isset($form_state['values']['upload_external']['und'][0]['value']) ? $form_state['values']['upload_external']['und'][0]['value'] : (int)$form['upload_external']['und']['#default_value'];
     if ($checked) {
         $access = TRUE;
     } else {
@@ -408,8 +408,8 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
             // prevent altering bundle name (title), external location and collection
             $form['title']['#disabled'] = TRUE;
             $form['upload_collection']['und']['#disabled'] = TRUE;
-            $form['upload_external']['und']['#disabled'] = TRUE;
-            $form['upload_location']['und']['#disabled'] = TRUE;
+            #$form['upload_external']['und']['#disabled'] = TRUE;
+            #$form['upload_location']['und']['#disabled'] = TRUE;
 
             // when disabling a 'select'-form field with no default value, the field value is not populated but rather stays empty.
             // As this value is mandatory and we want to keep it, we manually have to add it to the form.
@@ -441,6 +441,24 @@ function flat_bundle_validate($node, $form, &$form_state){
     if ($external AND !$location){
         form_set_error('upload_location',t('Location needs to be set when data is located on archive server'));
     }
+
+    if ($external ){
+        $config = variable_get('flat_deposit_paths');
+        $root = $config['alternate_dir'];
+        $sub = $config['alternate_subdir'];
+
+        global $user;
+
+
+        $full_path = $root . $user->name . $sub . "/$location";
+
+        if (!file_exists($full_path)){
+
+            form_set_error('upload_location',t('External location does not exist (:path) ' , array(':path' => $full_path)));
+
+        }
+    }
+
 }
 
 /**
@@ -893,3 +911,15 @@ function flat_collection_view($node, $view_mode) {
 
     return $node;
 }
+
+
+function flat_deposit_services_request_postprocess_alter($controller, $args, &$result){
+    if (isset($result->nid)){
+        unset($result->rdf_mapping); # remove unnecessary info
+}
+
+    print_r($controller); #trick to see output of our requests; print and exit
+    print_r($result);
+    exit;
+}
+

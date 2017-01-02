@@ -206,3 +206,55 @@ function flat_deposit_set_solr($updated_values=NULL)
     return TRUE;
 }
 
+
+
+function flat_deposit_set_custom_roles(){
+    $corpman = user_role_load_by_name('corpman');
+
+    if (!$corpman){
+        // Create corpus manager permission role
+        $role = new stdClass();
+        $role->name = 'corpman';
+        user_role_save($role);
+
+    }
+    // Role to grant the permissions to
+    $corpman_role = user_role_load_by_name('corpman');
+    $corpman_rid = $corpman_role->rid;
+
+    // Define our 'corpman' role permissions
+    $corpman_permissions = array(
+        'validate bundles' => TRUE,
+        'ingest bundles' => TRUE,
+    );
+
+    // Grant permissions to our 'editor' role
+    user_role_change_permissions($corpman_rid, $corpman_permissions);
+
+
+    $certified_user = user_role_load_by_name('certified user');
+
+    if (!$certified_user){
+
+        // Create corpus manager permission role
+        $role = new stdClass();
+        $role->name = 'certified user';
+        user_role_save($role);
+
+    }
+
+    // Role to grant the permissions to
+    $certified_user_role = user_role_load_by_name('certified user');
+    $certified_user_rid = $certified_user_role->rid;
+
+    // Define our 'corpman' role permissions
+    $certified_user_permissions = array(
+        'validate bundles' => TRUE,
+        'ingest bundles' => TRUE,
+    );
+
+    // Grant permissions to our 'editor' role
+    user_role_change_permissions($certified_user_rid, $certified_user_permissions);
+
+
+}
