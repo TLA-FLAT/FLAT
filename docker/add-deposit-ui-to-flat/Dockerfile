@@ -31,8 +31,8 @@ RUN cd /var/www/html/flat/ &&\
     /var/www/composer/vendor/drush/drush/drush en imce_wysiwyg -y   &&\
     /var/www/composer/vendor/drush/drush/drush dl httprl -y  &&\
     /var/www/composer/vendor/drush/drush/drush en httprl -y  &&\
-    /var/www/composer/vendor/drush/drush/drush dl -y filefield_paths
-    /var/www/composer/vendor/drush/drush/drush en -y filefield_paths
+    /var/www/composer/vendor/drush/drush/drush dl -y filefield_paths  &&\
+    /var/www/composer/vendor/drush/drush/drush en -y filefield_paths  &&\
     /var/www/composer/vendor/drush/drush/drush -y dl content_access  &&\
     /var/www/composer/vendor/drush/drush/drush -y en content_access  &&\
     /etc/init.d/postgresql stop 
@@ -65,8 +65,8 @@ RUN cd /var/www/html/flat/ &&\
     cd /var/www/html/flat/ &&\
     /var/www/composer/vendor/drush/drush/drush sql-query "$(cat /tmp/wysiwyg.sql)" -y &&\
     /var/www/composer/vendor/drush/drush/drush php-script settings_imce --script-path=/tmp &&\
-    /var/www/composer/vendor/drush/drush/drush dl imce_mkdir -y  &&\
-    /var/www/composer/vendor/drush/drush/drush en imce_mkdir -y  &&\
+    /var/www/composer/vendor/drush/drush/drush dl imce_mkdir -y &&\
+    /var/www/composer/vendor/drush/drush/drush en imce_mkdir -y &&\
     /etc/init.d/postgresql stop
 
 # add owncloud to version
