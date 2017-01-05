@@ -336,6 +336,9 @@ class Ingestor
         module_load_include('php','flat_deposit','Helpers/CMDI_Handler');
         $cmd = new CMDI_Handler($this->node);
 
+
+
+
         if ($method=='ingest'){
 
             if ($cmd->flat_created_CMDI){
@@ -356,6 +359,7 @@ class Ingestor
                 try {
                     $cmd->remove_MdSelfLink();
                     $cmd->remove_resourceRef_value();
+                    $cmd->checkResources($this->dir['freeze_bundle'].'/data/');
                     $cmd->resourceRel2FreezePathTransform();
                     $cmd->save_updated_xml();
                     //keep track that files have been moved
@@ -863,7 +867,7 @@ class Ingestor
     }
 
 
-    public function create_blog_entry ($entry_type){
+    public function create_blog_entry ($entry_type, $additonal_message = NULL){
 
         $this->AddEntryLogFile('Creating blog entry');
 
@@ -883,18 +887,12 @@ class Ingestor
 
         $bundle = $this->node->title;
         $collection = $this->wrapper->upload_collection->value();
-        $link_node = array(
-            'theme' => 'link',
-            'text' => 'here',
-            'path' => $url_link,
-            'options' => array(
-                'attributes' => array(),
-                'html' => FALSE
-            ));
 
         $summary = sprintf("<p>Archiving of %s %s</p>",$bundle, $entry_type);
-        $body = sprintf("<p>%s %s</p><p>Archiving of %s belonging to %s %s. Check ". theme_link($link_node) . '</p>',$bundle, $collection,$bundle, $collection, $entry_type);
+        $body = sprintf("<p>%s %s</p><p>Archiving of %s belonging to %s %s. Check bundle ". l('here', $url_link) . '</p>',$bundle, $collection,$bundle, $collection, $entry_type);
         $body = preg_replace(array('/lat_/') , array('lat%3A'), $body);
+
+        if ($additonal_message){ $body .=  '</p>Exception message:</p>' . $additonal_message ;};
 
         $new_node = new stdClass();
         $new_node->type = 'blog';
@@ -958,4 +956,89 @@ class Ingestor
     #$ingest->wrapper->save();
 
 
+}
+
+
+
+/**
+ * @file
+ * DrupalSquare module.
+ */
+
+/**
+ * Implementation of hook_services_resources().
+ */
+function drupalsquare_services_resources() {
+    $resources = array();
+    $resources['drupalsquare'] = array(
+        'operations' => array(
+            'retrieve' => array(
+                'help' => 'Retrieve users checked in status.',
+                'file' => array('type' => 'inc', 'module' => 'drupalsquare', 'name' => 'resources/drupalsquare.resource'),
+                'callback' => '_drupalsquare_resource_retrieve',
+                'args' => array(
+                    array(
+                        'name' => 'uid',
+                        'optional' => FALSE,
+                        'source' => array('path' => 0),
+                        'type' => 'int',
+                        'description' => 'The uid of the user to retrieve status for.',
+                    ),
+                ),
+                'access callback' => '_drupalsquare_resource_access',
+            ),
+        ),
+        'actions' => array(
+            'checkin' => array(
+                'help'   => 'Checkin the specified user..',
+                'file' => array('type' => 'inc', 'module' => 'drupalsquare', 'name' => 'resources/drupalsquare.resource'),
+                'callback' => '_drupalsquare_resource_checkin',
+                'access callback' => '_drupalsquare_resource_access',
+                'args' => array(
+                    array(
+                        'name' => 'uid',
+                        'optional' => FALSE,
+                        'source' => array('data' => 'uid'),
+                        'description' => t('The uid of the user to check in.'),
+                        'type' => 'int',
+                    ),
+                    array(
+                        'name' => 'date',
+                        'optional' => TRUE,
+                        'source' => array('data' => 'date'),
+                        'description' => t('The current timestamp for check in or leave blank to default to the current time.'),
+                        'type' => 'string',
+                    ),
+                ),
+            ),
+        ),
+    );
+    return $resources;
+}
+
+
+function _drupalsquare_resource_access() {
+    return TRUE;
+}
+
+function _drupalsquare_resource_retrieve($uid) {
+    $account = user_load($uid);
+
+    if (isset($account->data['checked_in'])) {
+        return array(
+            'uid' => $account->uid,
+            'name' => $account->name,
+            'last_checkin' => $account->data['checked_in'],
+        );
+    }
+    else {
+        return FALSE;
+    }
+}
+
+function _drupalsquare_resource_checkin($uid, $date = NULL) {
+    $account = user_load($uid);
+    $account->data['checked_in'] = is_null($date) ? REQUEST_TIME : $date;
+    user_save($account);
+    return TRUE;
 }

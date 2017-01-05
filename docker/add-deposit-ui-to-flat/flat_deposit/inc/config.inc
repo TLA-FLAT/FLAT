@@ -208,6 +208,40 @@ function flat_deposit_set_solr($updated_values=NULL)
 
 
 
+function flat_deposit_set_anonymous_user_permissions(){
+
+// Define authenticated user role permissions
+    $anonymous_user_permissions = array(
+        'access content' => FALSE,
+
+    );
+
+    // Grant permissions to our 'corpman' role
+    user_role_change_permissions(DRUPAL_ANONYMOUS_RID, $anonymous_user_permissions);
+
+}
+
+function flat_deposit_set_authenticated_user_permissions(){
+
+// Define authenticated user role permissions
+    $authenticated_user_permissions = array(
+        'validate bundles' => TRUE,
+        'create flat_bundle content' => TRUE,
+        'edit own flat_bundle content' => TRUE,
+        'delete own flat_bundle content' => TRUE,
+        'use deposit module' => TRUE,
+        'access content' => TRUE,
+
+    );
+
+    // Grant permissions to our 'corpman' role
+    user_role_change_permissions(DRUPAL_AUTHENTICATED_RID, $authenticated_user_permissions);
+
+}
+
+
+
+
 function flat_deposit_set_custom_roles(){
     $corpman = user_role_load_by_name('corpman');
 
@@ -224,11 +258,14 @@ function flat_deposit_set_custom_roles(){
 
     // Define our 'corpman' role permissions
     $corpman_permissions = array(
-        'validate bundles' => TRUE,
+        'edit any flat_bundle content' => TRUE,
+        'delete any flat_bundle content' => TRUE,
         'ingest bundles' => TRUE,
+        'view collection' => TRUE,
+        'admin collection' => TRUE,
     );
 
-    // Grant permissions to our 'editor' role
+    // Grant permissions to our 'corpman' role
     user_role_change_permissions($corpman_rid, $corpman_permissions);
 
 
@@ -249,12 +286,40 @@ function flat_deposit_set_custom_roles(){
 
     // Define our 'corpman' role permissions
     $certified_user_permissions = array(
-        'validate bundles' => TRUE,
+        'edit any flat_bundle content' => FALSE,
+        'delete any flat_bundle content' => FALSE,
         'ingest bundles' => TRUE,
+        'view collection' => TRUE,
+        'admin collection' => TRUE,
     );
 
-    // Grant permissions to our 'editor' role
+    // Grant permissions to our 'certified user' role
     user_role_change_permissions($certified_user_rid, $certified_user_permissions);
 
 
 }
+
+
+function flat_deposit_set_content_access(){
+
+
+    $admin = user_role_load_by_name('administrator');
+    $corpman = user_role_load_by_name('corpman');
+
+
+    $permissions =  array(
+        'view_own' => array(
+                0 => DRUPAL_AUTHENTICATED_RID,
+                1 => (int)$admin->rid,
+            ),
+        'view' =>
+            array(
+                0 => (int)$admin->rid,
+                1 => $corpman->rid,
+            ),
+        );
+
+
+    variable_set('content_access_flat_bundle', $permissions);
+
+    }

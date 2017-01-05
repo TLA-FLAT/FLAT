@@ -306,15 +306,23 @@ function flat_deposit_install()
 
 
     variable_set('file_private_path','sites/default/files/private');
-    if (!file_exists(DRUPAL_ROOT . '/' . variable_get('file_private_path'))){
-        drupal_mkdir(DRUPAL_ROOT . '/' . variable_get('file_private_path'), NULL, TRUE);}
+
 
     variable_set('file_default_scheme','private');
     variable_set('imce_settings_disable_private',0);
 
 
-
     flat_deposit_set_custom_roles();
+
+    // Install our custom block visibility settings per node type
+    $query = db_insert('block_node_type')
+        ->fields(array('type', 'module', 'delta'))
+        ->values(array(
+            'module' => 'flat_deposit',
+            'delta' => 'node_actions', // block name
+            'type' => 'flat_bundle', // content type
+        ))
+        ->execute();
 
 }
 

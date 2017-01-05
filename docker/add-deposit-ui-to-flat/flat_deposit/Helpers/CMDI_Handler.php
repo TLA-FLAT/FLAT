@@ -218,6 +218,34 @@ class CMDI_Handler
     }
 
 
+    function checkResources($data_dir){
+
+        $nResources_cmdi = $this->xml->Resources->ResourceProxyList->count();
+
+        $nResources_directory = 0;
+
+        $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($data_dir,RecursiveDirectoryIterator::FOLLOW_SYMLINKS));
+
+        foreach ($rii as $file) {
+            if ($file->isDir()) {
+                continue;
+            }
+
+            $nResources_directory++;
+
+        }
+
+
+        if ($nResources_cmdi != $nResources_directory){
+
+            throw new CMDIHandlerException (t('Specified resource(s) in cmdi do not match with files found in data directory '));
+
+        }
+
+    }
+
+
+
 
     /**
      * Transforms the relative path of all resources to an absolute path
@@ -240,7 +268,7 @@ class CMDI_Handler
 
             } else {
 
-                throw new CMDIHandlerException (t('Specified resource not found (!name'), array('!name'=>$rel_path));
+                throw new CMDIHandlerException ('Specified resource(s) in cmdi do not match with files found in data directory ');
 
             }
         }

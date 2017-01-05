@@ -20,22 +20,27 @@ RUN echo 'root:root' | chpasswd  &&\
 	sed -e 's/#PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
 
 # add devel and admin modules
+
+COPY drush/Create_test_user.php /tmp/Create_test_user.php
+
 RUN cd /var/www/html/flat/ &&\
     export PGPASSWORD=fedora &&\
-	/etc/init.d/postgresql start &&\
-	/var/www/fedora/tomcat/bin/startup.sh &&\
-	bash -c "timeout 60 grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-    sleep 10 &&\
+    /etc/init.d/postgresql start &&\
+    /var/www/fedora/tomcat/bin/startup.sh &&\
+    bash -c "timeout 60 grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
+    sleep 25 &&\
     /var/www/composer/vendor/drush/drush/drush dl admin_menu -y &&\
-#    /var/www/composer/vendor/drush/drush/drush en admin_menu -y &&\
     /var/www/composer/vendor/drush/drush/drush -y dl devel  &&\
-#    /var/www/composer/vendor/drush/drush/drush -y en devel  &&\
     /var/www/composer/vendor/drush/drush/drush -y dl feeds  &&\
- #   /var/www/composer/vendor/drush/drush/drush -y en feeds  &&\
-  #  /var/www/composer/vendor/drush/drush/drush -y en feeds_ui  &&\
+    /var/www/composer/vendor/drush/drush/drush en -y admin_menu &&\
+    /var/www/composer/vendor/drush/drush/drush -y en devel  &&\
+    /var/www/composer/vendor/drush/drush/drush -y en feeds  &&\
+    /var/www/composer/vendor/drush/drush/drush -y en feeds_ui  &&\
+    /var/www/composer/vendor/drush/drush/drush php-script Create_test_user.php --script-path=/tmp &&\
 
     /etc/init.d/postgresql stop 
-	
+
+
 
 #Clean up when done.
 RUN apt-get clean

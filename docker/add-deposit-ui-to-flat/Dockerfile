@@ -35,6 +35,8 @@ RUN cd /var/www/html/flat/ &&\
     /var/www/composer/vendor/drush/drush/drush en -y filefield_paths  &&\
     /var/www/composer/vendor/drush/drush/drush -y dl content_access  &&\
     /var/www/composer/vendor/drush/drush/drush -y en content_access  &&\
+    /var/www/composer/vendor/drush/drush/drush -y dl job_scheduler &&\
+    /var/www/composer/vendor/drush/drush/drush -y dl token &&\
     /etc/init.d/postgresql stop
 
 

@@ -43,6 +43,7 @@ function flat_bundle_action_form($form, &$form_state, $variables)
     $form['actions']['validate_bundle'] = array(
         '#type' => 'submit',
         '#value' => t('Validate bundle'),
+        '#validate' => array('flat_bundle_action_form_validate_validate'),
         #'#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
         '#description' => t('Validated bundles will be transferred to different location and can not be altered'),
         '#disabled' => TRUE,
@@ -51,6 +52,7 @@ function flat_bundle_action_form($form, &$form_state, $variables)
     $form['actions']['archive_bundle'] = array(
         '#type' => 'submit',
         '#value' => t('Archive bundle'),
+        '#validate' => array('flat_bundle_action_form_archive_validate'),
         #    '#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
         '#disabled' => TRUE,
     );
@@ -145,122 +147,105 @@ function flat_bundle_action_form($form, &$form_state, $variables)
 
 
 
-
-
-
-function flat_bundle_action_form_validate($form, &$form_state){
+function flat_bundle_action_form_validate_validate($form, &$form_state){
 
     $node = $form_state['values']['node'];
-    $action = $form_state['clicked_button']['#value'];
     $wrapper = entity_metadata_wrapper('node',$node);
 
-    switch ($action){
-        case 'Validate bundle': {
 
-            // In case no cmdi file exists
-            if (!$wrapper->upload_cmdi->value()) {
-                form_set_error('validate_bundle', t("No metadata file has been specified"));
-
-                return $form;
-            }
-
-            // In case of wrong naming
-            $exploded_uri = explode('/', $wrapper->upload_cmdi->value()['uri']);
-            $file_name = end($exploded_uri);
-
-            if ($file_name !== 'record.cmdi') {
-                form_set_error('validate_bundle', t("Metadata file has wrong file name"));
-
-                return $form;
-            }
-
-            // Check if target freeze directory exists
-            global $user;
-            if (!file_exists(drupal_realpath('freeze://' . $user->name .'/' . $wrapper->upload_collection->value() . '/' . $node->title . '/metadata'))){
-
-                form_set_error('validate_bundle', t("Target directory for metafile does not exist"));
-                return $form;
-            }
-
-
-            // Check cmdi valid xml
-            $file_field = $wrapper->upload_cmdi->value();
-            $attached_file = file_load($file_field['fid']);
-            $xml = simplexml_load_file(drupal_realpath($attached_file->uri));
-            if (!$xml) {
-
-                form_set_error('validate_bundle', t("Attached file is no valid xml file"));
-                return $form;
-            }
-
-
-            // Check existence external location
-            $node_wrapper = entity_metadata_wrapper('node', $node);
-            $external = $node_wrapper->upload_external->value();
-            $location = $node_wrapper->upload_location->value();
-            if ($external ){
-                $config = variable_get('flat_deposit_paths');
-                $root = $config['alternate_dir'];
-                $sub = $config['alternate_subdir'];
-
-                global $user;
-                $full_path = $root . $user->name . $sub . "/$location";
-
-                if (!file_exists($full_path)){
-
-                    form_set_error('validate_bundle',t('External location does not exist (:path) ' , array(':path' => $full_path)));
-                    return $form;
-
-                }
-            }
-
-
-
-            // Check user permissions
-            global $user;
-            $user_id = $user->uid;
-
-            $bundle_id = $node->uid;
-
-            if($user_id === $bundle_id OR user_access('validate bundles')) {
-
-
-            } else {
-
-                form_set_error('validate_bundle', t('User has not enough privileges to perform requested action'));
-            }
-
-            break;
-
-        }
-
-        case 'Archive bundle':{
-
-            // Check user permissions
-            global $user;
-            $user_id = $user->uid;
-
-            $bundle_id = $node->uid;
-
-            if (($user_id === $bundle_id AND user_access('certified user')) OR user_access('ingest bundles')) {
-
-                return TRUE;
-
-            } else {
-
-                form_set_error('archive_bundle', t('User has not enough privileges to perform requested action'));
-                return FALSE;
-            }
-            break;
-        }
-
-        case 'Re-open bundle':{
-
-            break;
-        }
+    // In case no cmdi file exists
+    if (!$wrapper->upload_cmdi->value()) {
+        form_set_error('validate_bundle', t("No metadata file has been specified"));
 
         return $form;
     }
+
+    // In case of wrong naming
+    $exploded_uri = explode('/', $wrapper->upload_cmdi->value()['uri']);
+    $file_name = end($exploded_uri);
+
+    if ($file_name !== 'record.cmdi') {
+        form_set_error('validate_bundle', t("Metadata file has wrong file name"));
+
+    }
+
+    // Check if target freeze directory exists
+    global $user;
+    if (!file_exists(drupal_realpath('freeze://' . $user->name .'/' . $wrapper->upload_collection->value() . '/' . $node->title . '/metadata'))){
+
+        form_set_error('validate_bundle', "Target directory for metafile does not exist");
+    }
+
+
+    // Quick and dirty Check cmdi valid xml
+    $file_field = $wrapper->upload_cmdi->value();
+    $attached_file = file_load($file_field['fid']);
+    $xml = simplexml_load_file(drupal_realpath($attached_file->uri));
+    if (!$xml) {
+
+        form_set_error('validate_bundle', t("Attached file is no valid xml file"));
+        return $form;
+    }
+
+    // Check existence external location
+
+    $external = $wrapper->upload_external->value();
+    $location = $wrapper->upload_location->value();
+    if ($external ){
+        $config = variable_get('flat_deposit_paths');
+        $root = $config['alternate_dir'];
+        $sub = $config['alternate_subdir'];
+
+        global $user;
+        $full_path = $root . $user->name . $sub . "/$location";
+
+        if (!file_exists($full_path)){
+
+            form_set_error('validate_bundle',t('External location does not exist (:path) ' , array(':path' => $full_path)));
+
+        }
+    }
+
+    // Check user permissions
+    global $user;
+    $user_id = $user->uid;
+
+    $bundle_id = $node->uid;
+
+    if($user_id === $bundle_id OR user_access('validate bundles')) {
+
+
+    } else {
+
+        form_set_error('validate_bundle', t('User has not enough privileges to perform requested action'));
+    }
+
+    return $form;
+}
+
+
+
+function flat_bundle_action_form_archive_validate($form, &$form_state){
+
+    $node = $form_state['values']['node'];
+
+    // Check user permissions
+    global $user;
+    $user_id = $user->uid;
+
+    $bundle_id = $node->uid;
+
+    if (($user_id === $bundle_id AND user_access('certified user')) OR user_access('ingest bundles')) {
+
+        return $form;
+
+    } else {
+
+        form_set_error('archive_bundle', t('User has not enough privileges to perform requested action'));
+
+    }
+    return $form;
+
 }
 
 
@@ -317,7 +302,8 @@ function flat_bundle_action_form_submit($form, &$form_state){
             $wrapper = entity_metadata_wrapper('node', $node);
             $status = $wrapper->upload_status->value();
 
-            if ($form_state['values']['serial']) {
+        $form_state['values']['serial'] =2;
+            if (isset($form_state['values']['serial'])) {
 
 
 

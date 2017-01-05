@@ -72,11 +72,45 @@ function flat_deposit_permission()
  */
 function flat_deposit_enable(){
 
-    // give authenticated users the right to use the deposit module
-    user_role_change_permissions(DRUPAL_AUTHENTICATED_RID, array('use deposit module' => TRUE));
+    // Set correct permissions
+    module_load_include('inc', 'flat_deposit', 'inc/config');
+    flat_deposit_set_custom_roles();
+    flat_deposit_set_anonymous_user_permissions();
+    flat_deposit_set_authenticated_user_permissions();
+    flat_deposit_set_content_access();
+
     // enable blog functionality in order to allow the backend to create ingest reports
     module_enable(array('blog','flat_views'));
 
+
+    $directories = array (DRUPAL_ROOT . '/' . variable_get('file_private_path') .'/flat_deposit/data',
+        DRUPAL_ROOT . '/' . variable_get('file_private_path') .'/flat_deposit/metadata');
+
+    foreach ($directories as $directory)
+    {
+
+        if (!file_exists($directory)){
+
+            drupal_mkdir($directory, NULL, TRUE);
+
+            if (!file_exists($directory)){
+
+                drupal_set_message(t('Private directory for storing bundles (!directory) does not exist and cannot be created. 
+                Please change the variable file_private_path by visiting admin/config/media/file-system or create the directory manually. 
+                Make sure also to adapt profile User-1 in admin/config/media/imce/profile',
+                    array('!directory'=> $directory)),'warning');
+
+            } elseif (posix_getpwuid(fileowner($directory)) !== variable_get('flat_deposit_names')['apache_user']){
+
+                drupal_set_message(t('Private directory (!directory) is not owned by apache user. Please change manually ownership of the directory. 
+                Make sure also to adapt profile User-1 in admin/config/media/imce/profile',
+                    array('!directory'=> $directory)),'warning');
+
+            }
+
+        }
+
+    }
 
 }
 
@@ -111,6 +145,7 @@ function flat_deposit_menu()
         'access arguments' => array('use deposit module'),
     );
 
+    /*
     // flat bundle cmdi file menu item
     $items['node/%node/cmdi_info'] = array(
         'title' => 'Metadata file',
@@ -119,6 +154,8 @@ function flat_deposit_menu()
         'file' => 'inc/flat_deposit.cmdi.inc',
         'access arguments' => array('use deposit module')
     );
+
+    */
 
     // bundle cmdi file selection form
     $items['node/%node/cmdi/select'] = array(
@@ -558,20 +595,42 @@ function flat_bundle_node_form_add_submit($form, &$form_state){
  */
 function flat_bundle_view($node, $view_mode) {
 
+/*
+
+// switch off promotion of new entries to front
+    $node_options = variable_get('node_options_flat_bundle', array());
+    $promote_key = array_search('promote', $node_options);
+    if ($promote_key !== false) {
+        unset($node_options[$promote_key]);
+        variable_set('node_options_flat_bundle', $node_options);
+    }
+
+
+
+ */
+
+    #flat_deposit_enable();
+    $config = variable_get('content_access_flat_bundle');
+
 
     if ($view_mode == 'full' && node_is_page($node)) {
         // Breadcrumb navigation.  l() escapes title, so we should not escape !name.
         drupal_set_breadcrumb(array(
             l(t('Home'), NULL),
             l(t("!name's bundles", array(
-                '!name' => format_username($node))), 'flat_bundle/' . $node->uid)));
+                '!name' => format_username($node))), 'node/')));
 
         $exception = field_get_items('node', $node, 'upload_exception')[0]['value'];
         if ($exception) {
             $node->content["upload_exception"] = field_view_field('node', $node, 'upload_exception');
         }
     }
-
+    /*
+     module_load_include('inc', 'flat_deposit', 'inc/config');
+    flat_deposit_set_anonymous_user_permissions();
+    flat_deposit_set_authenticated_user_permissions();
+    flat_deposit_set_custom_roles();
+*/
     return $node;
 }
 
@@ -636,17 +695,13 @@ function flat_deposit_block_info()
     $blocks['node_actions'] = array(
         'info' => t('FLAT deposit upload bundle actions '),
         'status' => TRUE,
+        'weight' => -999,
         'region' => 'content',
         'visibility' => BLOCK_VISIBILITY_PHP,
-        'pages' => '<?php 
-        if ( arg(0) == "node" AND is_numeric(arg(1)) AND arg(2) == FALSE ) {
-            $node = node_load(arg(1)); 
-            if ($node->type == "flat_bundle"){
-                return TRUE;
-            }
-        }
-        return FALSE;
-        ?>');
+        'pages' => '<?php $val = (is_numeric(arg(1)) AND arg(2) == FALSE ) ? TRUE :  FALSE; return $val; ?>'
+    );
+
+
 
     $blocks['flat_deposit_menu'] = array(
         'info' => t('FLAT deposit main menu'),
@@ -913,13 +968,4 @@ function flat_collection_view($node, $view_mode) {
 }
 
 
-function flat_deposit_services_request_postprocess_alter($controller, $args, &$result){
-    if (isset($result->nid)){
-        unset($result->rdf_mapping); # remove unnecessary info
-}
-
-    print_r($controller); #trick to see output of our requests; print and exit
-    print_r($result);
-    exit;
-}
 
