@@ -39,7 +39,9 @@ vim /app/flat/deposit/flat-deposit.xml
 vim /app/flat/deposit/policies/rules.sch
 ```
 
+## Known issues ##
 
+The IMCE path is not set correctly. Need to add $user->name after (.) dot 
 
 ## When not using docker ##
 All configurations are specified in the inc/config.inc file. If you don't use docker, you definitely need to adapt this file to your needs. As, most likely, problems might particularly relate to the ingest function, also consult the Helpers/Ingest_service.php and Helpers/Fedora_REST_API.inc.
