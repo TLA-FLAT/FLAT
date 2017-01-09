@@ -24,3 +24,24 @@ docker build --rm=true -t flat add-develtools-to-flat/
 ```
 
 
+=======
+### optional configuration ###
+
+## SSH () ##
+
+In order to ssh to the ssh server on a running container, you need to run following command
+
+```ssh
+/usr/sbin/sshd
+```
+
+
+## Fedora web gui ##
+In order to see data on the fedora server(e.g. Foxml), we need to change a parameter in our native fedora config file.
+
+
+```ssh
+vim /var/www/fedora/server/config/fedora.fcfg
+# change value of ENFORCE MODE to permit all requests: <param name="ENFORCE-MODE" value="permit-all-requests"/>
+```
+
