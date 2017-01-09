@@ -23,13 +23,21 @@ Also make sure that the bag folder is writeable by the apache-user
 In order to see ingested data, start the indexing scripts 
 
 
-=======
-
 ```ssh
 ./do-3-config-cmd-gsearch.sh
 ./do-4-index.sh
 ```
 
+## Parameter change ##
+
+To derive dublin core information from cmdi file, we need to adapt parameters in the flat-deposit.xml file. Moreover, we need to specify locally which cmdi profiles to accept. Therefore we need to adapt the policies.
+
+
+
+```ssh
+vim /app/flat/deposit/flat-deposit.xml
+vim /app/flat/deposit/policies/rules.sch
+```
 
 
 
