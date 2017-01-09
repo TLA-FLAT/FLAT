@@ -25,9 +25,9 @@ docker build --rm=true -t flat add-develtools-to-flat/
 
 
 =======
-### optional configuration ###
+### Optional configuration ###
 
-## SSH () ##
+## SSH tunnel ##
 
 In order to ssh to the ssh server on a running container, you need to run following command
 
