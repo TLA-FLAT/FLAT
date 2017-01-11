@@ -7,9 +7,8 @@
  */
 
 
-function flat_bundle_action_form($form, &$form_state, $variables)
+function flat_bundle_action_form($form, &$form_state)
 {
-
 
     $form['actions']['bundle_image'] = array(
         '#type' => 'image_button',
@@ -24,10 +23,12 @@ function flat_bundle_action_form($form, &$form_state, $variables)
         '#attributes' => array('class' => array('container-inline')),
     );
 
+
     $form['actions']['describe_bundle'] = array(
         '#type' => 'submit',
         '#value' => t('Create info file for bundle'),
         #'#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
+        '#validate' => array('flat_bundle_action_form_describe_validate'),
         '#description' => t('Bundles are obliged to be accompanied by a info file'),
         '#disabled' => TRUE,
     );
@@ -97,7 +98,8 @@ function flat_bundle_action_form($form, &$form_state, $variables)
     );
 
 // Specify which handlers to become active and which bundle_image to display
-    $status = $variables['status'];
+
+    $status = $wrapper->upload_status->value();
 
     switch ($status) {
         case 'open': {
@@ -145,7 +147,13 @@ function flat_bundle_action_form($form, &$form_state, $variables)
 
 }
 
+function flat_bundle_action_form_describe_validate($form, &$form_state){
 
+
+        form_set_error('describe_bundle', "This feature will be available in a future release");
+
+    }
+    // In case no cmdi file exists
 
 function flat_bundle_action_form_validate_validate($form, &$form_state){
 
@@ -255,25 +263,28 @@ function flat_bundle_action_form_submit($form, &$form_state){
     $action = $form_state['clicked_button']['#value'];
 
     switch ($action){
-        case 'Bundle image':{
+        case 'Bundle image':
             global $user;
             $form_state['redirect'] = array('user/' . $user->uid  . '/imce');
             break;
-        }
 
-        case 'Create info file for bundle':{
+
+        case 'Create info file for bundle':
             $url = array('node/' . $node->nid  . '/cmdi/select');
             $form_state['redirect'] = $url;
             break;
-        }
+
 
         case 'Validate bundle':
-        case 'Archive bundle':{
+        case 'Archive bundle':
 
             global $user;
 
             // background service http request settings
             $host = variable_get('flat_deposit_ingest_service')['host_name'];
+            $scheme = $GLOBALS['_SERVER']['REQUEST_SCHEME'];
+            $base = $GLOBALS['base_path'];
+
             $sid = $user->sid;
             $name = array_search($sid,$_COOKIE);
 
@@ -296,15 +307,17 @@ function flat_bundle_action_form_submit($form, &$form_state){
             );
 
 
-            $url = httprl_build_url_self(drupal_get_path('module', 'flat_deposit') . '/Helpers/Ingest_service.php'); #?user='.$user->name. '&pass='.$user->pass
+            $url = $scheme . '://' . $host . $base . drupal_get_path('module', 'flat_deposit') . '/Helpers/Ingest_service.php'; #?user='.$user->name. '&pass='.$user->pass
 
-            // Debug mode
-            $wrapper = entity_metadata_wrapper('node', $node);
-            $status = $wrapper->upload_status->value();
 
-        $form_state['values']['serial'] =2;
-            if (isset($form_state['values']['serial'])) {
+        // Debug mode
+        $wrapper = entity_metadata_wrapper('node', $node);
+        $status = $wrapper->upload_status->value();
 
+
+        if (isset($form_state['values']['serial'])) {
+
+            if ($form_state['values']['serial']) {
 
 
                 $ch = curl_init();
@@ -318,7 +331,7 @@ function flat_bundle_action_form_submit($form, &$form_state){
 
                 $result = curl_exec($ch);
 
-                if($errno = curl_errno($ch)) {
+                if ($errno = curl_errno($ch)) {
                     $error_message = curl_strerror($errno);
                     echo "cURL error ({$errno}):\n {$error_message}";
                 }
@@ -327,35 +340,34 @@ function flat_bundle_action_form_submit($form, &$form_state){
             } else {
 
                 // normal background mode
-                $request =  httprl_request($url, $options);
+                $request = httprl_request($url, $options);
 
                 // Execute request.
                 $response = httprl_send_request();
             }
-
-
-
-            $form_state['redirect'] = '<front>';
-            drupal_set_message('Bundle is being processed');
-
-
-            break;
-
-
         }
 
-        case 'Edit bundle':{
+
+        $form_state['redirect'] = '<front>';
+        drupal_set_message('Bundle is being processed');
+
+
+        break;
+
+
+
+        case 'Edit bundle':
             $url = array('node/' . $node->nid  . '/edit');
             $form_state['redirect'] = $url;
             break;
-        }
 
-        case 'Delete bundle':{
+
+        case 'Delete bundle':
             $url = array('node/' . $node->nid  . '/delete');
             $form_state['redirect'] = $url;
             break;
-        }
-        case 'Re-open bundle':{
+
+        case 'Re-open bundle':
             module_load_include('inc','flat_deposit', '/Helpers/Ingestor');
 
             $ingest = new Ingestor($node->nid);
@@ -371,7 +383,7 @@ function flat_bundle_action_form_submit($form, &$form_state){
             drupal_set_message('Bundle is open and can be modified');
 
             break;
-        }
+
 
     }
 
