@@ -3,6 +3,7 @@
 
   <namespaces>
     <namespace ns="cmd" uri="http://www.clarin.eu/cmd/"/>
+    <namespace ns="cmdp" uri="http://www.clarin.eu/cmd/"/>
   </namespaces>
 
   <mappings>
