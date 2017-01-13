@@ -8,3 +8,5 @@ dependencies[] = imce
 dependencies[] = views
 dependencies[] = feeds
 dependencies[] = php
+dependencies[] = filefield_paths
+dependencies[] = token

@@ -7,32 +7,44 @@
  * @param $extra string path variable extending the ordinary registered path which will be used as additional variable in functions' logic
  * @return array
  */
-function flat_deposit_cmdi(){
+function flat_deposit_cmdi()
+{
 
     $node = menu_get_object();
-    $wrapper = entity_metadata_wrapper('node',$node);
+    $wrapper = entity_metadata_wrapper('node', $node);
 
-    $profile = $wrapper->upload_cmdi->value();
+    $file_info = $wrapper->upload_cmdi->value();
+    if ($file_info) {
 
-    // check existence info file
-    module_load_include('php','flat_deposit','Helpers/CMDI_Handler');
-    $cmd = new CMDI_Handler($node);
+        module_load_include('php', 'flat_deposit', 'Helpers/CMDI_Handler');
+        $cmd = new CMDI_Handler($this->node);
 
-    if(!$cmd->projectCmdiFileExists()) {
+        $message_chosen = t('The chosen profile is %profile. ', array('%profile' => $cmd->profile));
 
-        drupal_set_message(t('No info file found. Please upload a file or create a new one'));
-        drupal_goto('node/' . $node->nid . '/cmdi/select');
+    } else {
 
-    } elseif(!$profile) {
-
-        drupal_set_message(t('Profile has not been set please set.'));
-        drupal_goto('node/' . $node->nid . '/cmdi/select');
-
-
-    } else{
-
-    //TODO add edit option for existing cmdi's
-    return 'hello';
+        $message_chosen = 'No metadata file available for this bundle';
     }
+    $content = array();
+
+    $content['cmdi']['profile']['chosen'] = array(
+        '#type' => 'markup',
+        '#markup' => $message_chosen,
+        '#prefix' => '<p>',
+    );
+
+    $content['cmdi']['profile']['change'] = array(
+        '#theme' => 'link',
+        '#text' => 'Change metadata profile',
+        '#path' => 'node/' . $node->nid . '/cmdi/select',
+        '#options' => array(
+            'attributes' => array(),
+            'html' => FALSE,
+        ),
+    );
+
+
+    return $content;
+
 
 }
