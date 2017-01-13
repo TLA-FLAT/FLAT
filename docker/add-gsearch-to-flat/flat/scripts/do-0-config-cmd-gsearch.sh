@@ -11,5 +11,9 @@ cp lat-gsearch-transformer.xsl \
     $GSEARCH_HOME/foxmlToSolr.xslt
 cp lat-gsearch-schema.xml \
     $FEDORA_HOME/solr/collection1/conf/schema.xml
+if [ ! -f /app/flat/cmd2fox.xsl ] && [ -f lat-gsearch-cmd2dc.xsl ]; then
+    cp lat-gsearch-cmd2dc.xsl \
+        /app/flat/cmd2fox.xsl
+fi
     
 wget -O do-solr-reload.html  "http://localhost:8080/solr/admin/cores?action=RELOAD&core=collection1"

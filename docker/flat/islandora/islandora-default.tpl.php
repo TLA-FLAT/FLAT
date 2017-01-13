@@ -91,7 +91,9 @@ function check_ds_access($ds) {
     </dl>
   <?php endif; ?>
   <div class="islandora-default-metadata">
-    <?php print $description; ?>
+    <p>
+      <?php print preg_replace("/\n\s*\n/","</p><p>",$description); ?>
+    </p>
     <?php print $metadata; ?>
   </div>
 </div>

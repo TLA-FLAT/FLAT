@@ -12,18 +12,20 @@ EOF
 show_help() {
 	show_welcome
 	cat << EOF
-Usage: ${0##*/} [-hv] [-c CLFACET] [-g GSMAP] [-p CACHEDIR] [-r REGURL] [-i INDIR] [-x EXTGLOB] [-o OUTFILE]
-Determine the mappings for the CMD records in INDIR and write them to OUTFILE.
+Usage: ${0##*/} [-hv] [-c CLFACET] [-g GSMAP] [-t GSTRANS] [-s GSSCHEMA] [-d DCTRANS]  [-p CACHEDIR] [-r REGURL] [-i INDIR] [-x EXT] [-o OUTPREF]
+Determine the mappings for the CMD records in INDIR and write them to a set of output files with OUTPREF.
 
     -h          display this help and exit
     -c CLFACET  location of the CLARIN facet mapping (URL)
-                (default: https://lux17.mpi.nl/isocat/clarin/vlo/mapping/facetConcepts.xml)
+                (default: https://raw.githubusercontent.com/clarin-eric/VLO/master/vlo-commons/src/main/resources/facetConcepts.xml)
     -g GSMAP    location of the GSearch facet mapping template
                 (default: ./gsearch-mapping-template.xml)
     -t GSTRANS  location of the GSearch transformer
                 (default: ./fedoragsearch-2.6/fedoragsearch/FgsConfig/generated_gsearch_config_for_islandora/fgsconfigFinal/index/FgsIndex/foxmlToSolr.xslt)
     -s GSSCHEMA location of the GSearch Solr schema
                 (default: ./fedoragsearch-2.6/fedoragsearch/FgsConfig/generated_gsearch_config_for_islandora/fgsconfigFinal/index/FgsIndex/conf/schema-4.2.0-for-fgs-2.6.xml)
+    -d DCTRANS  location of the CMD2DC transformer template
+                (default: ./cmd2dc-template.xsl)
     -p CACHEDIR location of the CMD profile cache
                 (default: ./.profile-cache)
     -r REGURL   URL of profiles endpoint of the CLARIN Component Registry
@@ -43,6 +45,7 @@ clarin_fc="https://raw.githubusercontent.com/clarin-eric/VLO/master/vlo-commons/
 gsearch_fc="./gsearch-mapping-template.xml"
 gsearch_xsl="./fedoragsearch-2.6/fedoragsearch/FgsConfig/generated_gsearch_config_for_islandora/fgsconfigFinal/index/FgsIndex/foxmlToSolr.xslt"
 gsearch_solr="./fedoragsearch-2.6/fedoragsearch/FgsConfig/generated_gsearch_config_for_islandora/fgsconfigFinal/index/FgsIndex/conf/schema-4.2.0-for-fgs-2.6.xml"
+cmd2dc_xsl="./cmd2dc-template.xsl"
 profile_cache="./.profile-cache"
 registry="http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles"
 input_dir="."
@@ -71,6 +74,9 @@ while getopts "h?c:g:t:s:p:r:i:x:o:v" opt; do
 			;;
 		s)
 			gsearch_solr=$OPTARG
+			;;
+		d)
+			cmd2dc_xsl=$OPTARG
 			;;
 		p)
 			profile_cache=$OPTARG
@@ -175,7 +181,7 @@ fi
 ./xsl2.sh -xsl:${my_dir}/createTransformer.xsl -s:$gsearch_xsl mapping-location=${output_prefix}-mapping.xml > ${output_prefix}-transformer.xsl
 
 if [ $verbose -ne 0 ]; then
-	echo "Output transformer file: ${output_prefix}-transformer.xsl"
+	echo "Output GSearch transformer file: ${output_prefix}-transformer.xsl"
 	#echo "Output transformer:"
 	#cat ${output_prefix}-transformer.xsl
 fi
@@ -190,4 +196,20 @@ if [ $verbose -ne 0 ]; then
 	echo "Output SOLR schema file: ${output_prefix}-schema.xml"
 	#echo "Output SOLR schema:"
 	#cat ${output_prefix}-schema.xml
+fi
+
+if [ -n "$cmd2dc_xsl" ] && [ -f "$cmd2dc_xsl" ]; then
+
+    if [ $verbose -ne 0 ]; then
+    	echo "CMD2DC transformer template: $cmd2dc_xsl"
+    fi
+    
+    ./xsl2.sh -xsl:${my_dir}/createDublinCore.xsl -s:$cmd2dc_xsl mapping-location=${output_prefix}-mapping.xml > ${output_prefix}-cmd2dc.xsl
+    
+    if [ $verbose -ne 0 ]; then
+    	echo "Output CMD2DC transformer file: ${output_prefix}-cmd2dc.xsl"
+    	#echo "Output transformer:"
+    	#cat ${output_prefix}-transformer.xsl
+    fi
+
 fi

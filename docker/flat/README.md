@@ -9,7 +9,7 @@ Quick installation link: https://docs.docker.com/installation/#installation
 
 ## Provides ##
 
-On OSX you can find our your docker IP via the "docker-machine ip default" command. On unix machines you can use localhost.
+When using docker-toolbox on OSX you can determine your docker IP via the "docker-machine ip default" command. On unix machines or using the native OSX docker you can just use localhost.
 
  * Islandora, accessible via: http://IP/flat
  * Fedora Commons, accessible via: https://IP:8443/fedora/admin
@@ -49,7 +49,8 @@ The Dockerfile contains some global environment variables, which might have to b
 ### CMD to Dublin Core ###
 
 CMD is a very flexible metadata format and there is no generic mapping to Dublin Core. Fedora Commons does require Dublin Core. Place a
-``cmd2dc.xsl`` in /app/flat with the mapping for your CMDI files. (See [cmd2dc](../add-imdi-conversion-to-flat/flat/scripts/cmd2dc.xsl) for an example.)
+``cmd2fox.xsl`` in /app/flat which overwrites the default Dublin Core mapping for your CMDI files. (See [cmd2fox.xsl](../add-imdi-conversion-to-flat/flat/scripts/cmd2fox.xsl) for an example.)
+The [FLAT search image](../add-gsearch-to-flat) does also provide a way to derive the Dublin Core mapping based on the available VLO facet mappings.
 
 ### Importing metadata and resources ###
 
