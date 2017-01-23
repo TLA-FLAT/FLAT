@@ -33,7 +33,8 @@ RUN a2enmod ssl &&\
 	a2enmod rewrite &&\
 	a2enmod proxy &&\
 	a2enmod proxy_http &&\
-	a2enmod sed
+	a2enmod sed &&\
+	sed -i "s|DRUPAL_PROJECT|${DRUPAL_PROJECT}|g" /etc/apache2/apache2.conf
 
 #
 # Configure postgres
