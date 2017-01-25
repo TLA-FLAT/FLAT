@@ -61,9 +61,13 @@
 global $user;
 
 $show_ds = array("OBJ","CMD");
-
 if (in_array("data manager",$user->roles)) {
   $show_ds[] = "MGMT";
+}
+
+$available_ds = array();
+foreach($datastreams as $key => $value) {
+  $available_ds[] = $value['id'];
 }
 
 function check_ds_access($ds) {
@@ -97,27 +101,29 @@ function check_ds_access($ds) {
     <?php print $metadata; ?>
   </div>
 </div>
-<h2 style="display: block; clear:both"><?php print t('File details'); ?></h2>
-<div id="fs" style="display: block; clear:both">
-  <table>
-    <tr>
-      <th><?php print t('File'); ?></th>
-      <th><?php print t('Size'); ?></th>
-      <th><?php print t('Mimetype'); ?></th>
-      <th><?php print t('Created'); ?></th>
-    </tr>
-    <?php foreach($datastreams as $key => $value): ?>
-      <?php if (isset($value['id']) and in_array($value['id'], $show_ds)): ?>
-        <tr>
-            <td><?php if(isset($value['label_link']) and check_ds_access($islandora_object[$value['id']])): ?><?php print $value['label_link']; ?><?php else: ?><?php print $value['label']; ?><?php endif; ?></td>
-            <td><?php if(isset($value['size'])): ?><?php print $value['size']; ?><?php endif; ?></td>
-            <td><?php if(isset($value['mimetype'])): ?><?php print $value['mimetype']; ?><?php endif; ?></td>
-            <td><?php if(isset($value['created_date'])): ?><?php print $value['created_date']; ?><?php endif; ?></td>
-        </tr>
-      <?php endif; ?>
-    <?php endforeach; ?>
-  </table>
-</div>
+<?php if (count(array_intersect($available_ds,$show_ds)) > 0): ?>
+  <h2 style="display: block; clear:both"><?php print t('File details'); ?></h2>
+  <div id="fs" style="display: block; clear:both">
+    <table>
+      <tr>
+        <th><?php print t('File'); ?></th>
+        <th><?php print t('Size'); ?></th>
+        <th><?php print t('Mimetype'); ?></th>
+        <th><?php print t('Created'); ?></th>
+      </tr>
+      <?php foreach($datastreams as $key => $value): ?>
+        <?php if (isset($value['id']) and in_array($value['id'], $show_ds)): ?>
+          <tr>
+              <td><?php if(isset($value['label_link']) and check_ds_access($islandora_object[$value['id']])): ?><?php print $value['label_link']; ?><?php else: ?><?php print $value['label']; ?><?php endif; ?></td>
+              <td><?php if(isset($value['size'])): ?><?php print $value['size']; ?><?php endif; ?></td>
+              <td><?php if(isset($value['mimetype'])): ?><?php print $value['mimetype']; ?><?php endif; ?></td>
+              <td><?php if(isset($value['created_date'])): ?><?php print $value['created_date']; ?><?php endif; ?></td>
+          </tr>
+        <?php endif; ?>
+      <?php endforeach; ?>
+    </table>
+  </div>
+<?php endif; ?>
 <?php if ($parent_collections): ?>
   <div>
     <h2><?php print t('In collections'); ?></h2>
