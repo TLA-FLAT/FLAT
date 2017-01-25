@@ -17,10 +17,6 @@ RUN chmod +x /app/flat/*.sh
 
 ADD proai/proai.properties /var/www/fedora/tomcat/webapps/oaiprovider/WEB-INF/classes/proai.properties
 
-ADD flat/lib/xercesImpl-patched-2.11.0.jar /tmp/xercesImpl-patched-2.11.0.jar
-RUN cd /tmp &&\
-    mvn install:install-file -Dfile=xercesImpl-patched-2.11.0.jar -DgroupId=xerces -DartifactId=xercesImpl-patched -Dversion=2.11.0 -Dpackaging=jar
- 
 RUN cd /tmp &&\
     git clone https://github.com/TheLanguageArchive/ISLE2CLARIN.git ISLE2CLARIN &&\
     cd /tmp/ISLE2CLARIN &&\
