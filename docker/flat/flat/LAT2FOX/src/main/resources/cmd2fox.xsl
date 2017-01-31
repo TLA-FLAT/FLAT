@@ -945,7 +945,7 @@
 			<cmd:MdSelfLink>
 				<xsl:copy-of select="cmd:MdSelfLink/@* except @lat:localURI"/>
 				<xsl:attribute name="lat:localURI" select="cmd:lat('lat:', $pid)"/>
-				<xsl:value-of select="$pid"/>
+				<xsl:value-of select="replace($pid,'hdl:','https://hdl.handle.net/')"/>
 			</cmd:MdSelfLink>
 			<xsl:apply-templates select="node() except (cmd:MdCreator | cmd:MdCreationDate | cmd:MdSelfLink)" mode="#current"/>
 		</xsl:copy>
