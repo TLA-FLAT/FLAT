@@ -685,7 +685,7 @@
     <xsl:template match="cmd:CMD" mode="other">
     	<xsl:param name="pid" tunnel="yes"/>
     	<xsl:param name="base" tunnel="yes"/>
-    	<xsl:if test="cmd:Header/cmd:MdProfile=('clarin.eu:cr1:p_1407745712035','clarin.eu:cr1:p_1417617523856')">
+    	<xsl:if test="cmd:Header/cmd:MdProfile=('clarin.eu:cr1:p_1407745712035','clarin.eu:cr1:p_1417617523856','clarin.eu:cr1:p_1407745712064')">
     		<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="OLAC" STATE="A" CONTROL_GROUP="X">
     			<foxml:datastreamVersion ID="OLAC.0" FORMAT_URI="cf" LABEL="OLAC Record for this object" MIMETYPE="application/xml">
     				<foxml:xmlContent>
