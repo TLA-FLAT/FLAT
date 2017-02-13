@@ -7,7 +7,7 @@
  * collection tree the exact path from the archive root to the place where the collection should be placed
  * member is the name of the user (acronym) that will become member of this collection
  */
-function flat_collection_form($form, $form_state, $entity){
+function flat_supercollection_form($form, $form_state, $entity){
 
     $form = array();
 
@@ -45,9 +45,9 @@ function flat_collection_form($form, $form_state, $entity){
 }
 
 /**
- * flat_collection_form validation
+ * flat_supercollection_form validation
  * */
-function flat_collection_form_validate($form, &$form_state){
+function flat_supercollection_form_validate($form, &$form_state){
 
     //Checks collection name
     // sanity
@@ -61,7 +61,7 @@ function flat_collection_form_validate($form, &$form_state){
     }
 
     // uniqueness of path
-    $collections = db_select('flat_collection','p')
+    $collections = db_select('flat_supercollection','p')
         ->fields('p',array('collection_name','collection_tree','member'))
         ->condition('member', $form_state['values']['member'])
         ->execute()
@@ -94,7 +94,7 @@ function flat_collection_form_validate($form, &$form_state){
  * Flat_collection Submission handler. Will generate values for mandatory fields (label, pid and date created).
  * As pid is a value retrieved from fedora this submission handler has to communicate with fedora as well.
  */
-function flat_collection_form_submit($form, &$form_state){
+function flat_supercollection_form_submit($form, &$form_state){
 
     // In fedora the field with the name of a collection is called 'label'
     $labels = explode('/',$form_state['values']['collection_tree']);
@@ -109,7 +109,7 @@ function flat_collection_form_submit($form, &$form_state){
     $entity->save();
 
     // Redirect to the management page.
-    $form_state['redirect'] = 'admin/collections';
+    $form_state['redirect'] = 'admin/supercollections';
 
     #drupal_set_message(sprintf("%s is now member of collection %s ", $member,$collection));
 

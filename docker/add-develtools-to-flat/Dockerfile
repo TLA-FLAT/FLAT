@@ -40,7 +40,10 @@ RUN cd /var/www/html/flat/ &&\
 
     /etc/init.d/postgresql stop 
 
+#RUN mv /app/flat/lib/doorkeeper.jar /app/flat/lib/doorkeeper.jar.bkp &&\
+#    mv  /app/flat/deposit/flat-deposit.xml /app/flat/deposit/flat-deposit.xml.bkp
 
+#EXPOSE 5005
 
 #Clean up when done.
 RUN apt-get clean

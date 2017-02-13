@@ -12,7 +12,7 @@ $view = new view();
 $view->name = 'FLAT collection';
 $view->description = 'The FLAT collection-member relationships';
 $view->tag = 'default';
-$view->base_table = 'flat_collection';
+$view->base_table = 'flat_supercollection';
 $view->human_name = 'FLAT collection';
 $view->core = 7;
 $view->api_version = '3.0';
@@ -91,19 +91,19 @@ $handler->display->display_options['style_options']['info'] = array(
 );
 /* Field: Collection: Collection ID */
 $handler->display->display_options['fields']['collection_id']['id'] = 'collection_id';
-$handler->display->display_options['fields']['collection_id']['table'] = 'flat_collection';
+$handler->display->display_options['fields']['collection_id']['table'] = 'flat_supercollection';
 $handler->display->display_options['fields']['collection_id']['field'] = 'collection_id';
 /* Field: Collection: Collection_name */
 $handler->display->display_options['fields']['collection_name']['id'] = 'collection_name';
-$handler->display->display_options['fields']['collection_name']['table'] = 'flat_collection';
+$handler->display->display_options['fields']['collection_name']['table'] = 'flat_supercollection';
 $handler->display->display_options['fields']['collection_name']['field'] = 'collection_name';
 /* Field: Collection: Member */
 $handler->display->display_options['fields']['member']['id'] = 'member';
-$handler->display->display_options['fields']['member']['table'] = 'flat_collection';
+$handler->display->display_options['fields']['member']['table'] = 'flat_supercollection';
 $handler->display->display_options['fields']['member']['field'] = 'member';
 /* Field: Collection: Date created */
 $handler->display->display_options['fields']['date_created']['id'] = 'date_created';
-$handler->display->display_options['fields']['date_created']['table'] = 'flat_collection';
+$handler->display->display_options['fields']['date_created']['table'] = 'flat_supercollection';
 $handler->display->display_options['fields']['date_created']['field'] = 'date_created';
 /* Field: Collection: Action buttons
 Note: This view has additional fields that are not included in the database table.
@@ -111,16 +111,16 @@ To get these action buttons to the table we need to add fields to the data by ca
 from flat_views.views.inc
 */
 $handler->display->display_options['fields']['actions']['id'] = 'actions';
-$handler->display->display_options['fields']['actions']['table'] = 'flat_collection';
+$handler->display->display_options['fields']['actions']['table'] = 'flat_supercollection';
 $handler->display->display_options['fields']['actions']['field'] = 'actions';
 
 /* Sort criterion: Collection: Collection_name */
 $handler->display->display_options['sorts']['collection_name']['id'] = 'collection_name';
-$handler->display->display_options['sorts']['collection_name']['table'] = 'flat_collection';
+$handler->display->display_options['sorts']['collection_name']['table'] = 'flat_supercollection';
 $handler->display->display_options['sorts']['collection_name']['field'] = 'collection_name';
 /* Sort criterion: Collection: date_created */
 $handler->display->display_options['sorts']['date_created']['id'] = 'date_created';
-$handler->display->display_options['sorts']['date_created']['table'] = 'flat_collection';
+$handler->display->display_options['sorts']['date_created']['table'] = 'flat_supercollection';
 $handler->display->display_options['sorts']['date_created']['field'] = 'date_created';
 /* Sort criterion: Collection: Member */
 $handler->display->display_options['sorts']['member']['id'] = 'member';
@@ -129,7 +129,7 @@ $handler->display->display_options['sorts']['member']['field'] = 'member';
 
 /* Filter criterion: Collection: Collection_name */
 $handler->display->display_options['filters']['collection_name']['id'] = 'collection_name';
-$handler->display->display_options['filters']['collection_name']['table'] = 'flat_collection';
+$handler->display->display_options['filters']['collection_name']['table'] = 'flat_supercollection';
 $handler->display->display_options['filters']['collection_name']['field'] = 'collection_name';
 $handler->display->display_options['filters']['collection_name']['exposed'] = TRUE;
 $handler->display->display_options['filters']['collection_name']['expose']['operator_id'] = 'collection_name_op';
@@ -152,7 +152,7 @@ $handler->display->display_options['filters']['collection_name']['group_info']['
 );
 /* Filter criterion: Collection: Member */
 $handler->display->display_options['filters']['member']['id'] = 'member';
-$handler->display->display_options['filters']['member']['table'] = 'flat_collection';
+$handler->display->display_options['filters']['member']['table'] = 'flat_supercollection';
 $handler->display->display_options['filters']['member']['field'] = 'member';
 $handler->display->display_options['filters']['member']['exposed'] = TRUE;
 $handler->display->display_options['filters']['member']['expose']['operator_id'] = 'member_op';

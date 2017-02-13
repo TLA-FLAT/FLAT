@@ -61,7 +61,7 @@ function flat_deposit_permission()
             'description' => t('See overview collections')),
         'admin collection' => array(
             'title' => t('Admin collections'),
-            'description' => t('Admin flat_collections')),
+            'description' => t('Admin flat_supercollections')),
     );
 }
 
@@ -176,10 +176,10 @@ function flat_deposit_menu()
     );
 
     //FLAT_COLLECTION
-    // flat_collection entity rendering
-    $items['flat_collection/%entity_object'] = array(
-        'load arguments' => array('flat_collection'),
-        'title callback' => 'flat_collection_page_title',
+    // flat_supercollection entity rendering
+    $items['flat_supercollection/%entity_object'] = array(
+        'load arguments' => array('flat_supercollection'),
+        'title callback' => 'flat_supercollection_page_title',
         'title arguments' => array(1),
         'page callback' => 'entity_ui_entity_page_view',
         'page arguments' => array(1),
@@ -824,12 +824,12 @@ function theme_node_actions_block($variables)
 /**
  * Implements hook_entity_info
  *
- * makes custom entity type flat_collection available
+ * makes custom entity type flat_supercollection available
  */
 function flat_deposit_entity_info() {
     $entities = array();
 
-    $entities['flat_collection'] = array(
+    $entities['flat_supercollection'] = array(
 
         // Define basic information.
         'label' => t('FLAT Collection'),
@@ -837,7 +837,7 @@ function flat_deposit_entity_info() {
         'fieldable' => FALSE,
 
         // Provide information about the database table.
-        'base table' => 'flat_collection',
+        'base table' => 'flat_supercollection',
         'entity keys' => array(
             'id' => 'collection_id',
             'label' => 'label',
@@ -851,14 +851,14 @@ function flat_deposit_entity_info() {
         // Have Entity API set up an administrative UI.
         'admin ui' => array(
             'path' => 'admin/collections',
-            'file' => 'inc/flat_collections.inc'
+            'file' => 'inc/flat_supercollections.inc'
         ),
         'module' => 'flat_deposit',
-        'access callback' => 'flat_collection_access',
+        'access callback' => 'flat_supercollection_access',
 
         // For content-type entities only, define the callback that
         // returns the URL for the entity.
-        'uri callback' => 'flat_collection_uri',
+        'uri callback' => 'flat_supercollection_uri',
     );
 
     return $entities;
@@ -866,17 +866,17 @@ function flat_deposit_entity_info() {
 
 
 /*
- * Sets the page title of flat_collections to collection name
+ * Sets the page title of flat_supercollections to collection name
  */
-function flat_collection_page_title($entity){
+function flat_supercollection_page_title($entity){
     return $entity->collection_name;
 }
 
 
 // For content-type entities, return the URI for an entity.
-function flat_collection_uri($entity) {
+function flat_supercollection_uri($entity) {
     return array(
-        'path' => 'flat_collection/' . $entity->collection_id,
+        'path' => 'flat_supercollection/' . $entity->collection_id,
     );
 }
 
@@ -896,7 +896,7 @@ function flat_collection_uri($entity) {
  * @return bool
  *   TRUE to allow access; FALSE to deny access.
  */
-function flat_collection_access($op, $entity, $account = NULL) {
+function flat_supercollection_access($op, $entity, $account = NULL) {
     if ($op == 'view') {
         return user_access('view collection', $account);
     }
@@ -948,7 +948,7 @@ function flat_deposit_external_location_is_accessible($location)
 /**
  * Implements hook_view().
  */
-function flat_collection_view($node, $view_mode) {
+function flat_supercollection_view($node, $view_mode) {
 
 
     if ($view_mode == 'full' && node_is_page($node)) {

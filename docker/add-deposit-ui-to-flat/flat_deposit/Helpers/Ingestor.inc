@@ -116,7 +116,7 @@ class Ingestor
         $collection = $this->wrapper->upload_collection->value();
 
         // retrieve pid of parent collection
-        $collection_node = db_select('flat_collection','p')
+        $collection_node = db_select('flat_supercollection','p')
             ->fields('p',array('collection_name','collection_pid'))
             ->condition('member', $this->user->name)
             ->condition('collection_name', $collection)
@@ -124,7 +124,7 @@ class Ingestor
             ->fetchAll(PDO::FETCH_ASSOC)[0];
 
         if (!$collection_node){
-            throw new IngestServiceException ('No entry found for user in flat_collection table. Contact administrator.');
+            throw new IngestServiceException ('No entry found for user in flat_supercollection table. Contact administrator.');
         } else {
 
             return $collection_node;

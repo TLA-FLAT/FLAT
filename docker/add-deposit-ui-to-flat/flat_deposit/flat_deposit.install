@@ -11,31 +11,47 @@ function flat_deposit_install()
 {
     $t = get_t();
 
-    // CREATE FLAT BUNDLE CONTENT TYPE
-    // This content type is the core entity that will contain information about each upload
-    $content_type = array(
-        'type' => 'flat_bundle',
-        'name' => $t('FLAT Upload bundle'),
-        'description' => $t('A bundle of one or more data files upload entity'),
-        'title_label' => $t('Name of the upload bundle'),
-        'base' => 'flat_bundle', #declare to be able to use content type hooks
-        'custom' => TRUE
+    // CREATE FLAT BUNDLE and FLAT COLLECTION CONTENT TYPE
+    // This content types are the core entities that will contain upload data and metadata and upload information
+    $content_types = array(
+        'flat_bundle' => array(
+            'type' => 'flat_bundle',
+            'name' => $t('FLAT Upload bundle'),
+            'description' => $t('A bundle of one or more data files upload entity'),
+            'title_label' => $t('Name of the upload bundle'),
+            'base' => 'flat_bundle', #declare to be able to use content type hooks
+            'custom' => TRUE
+        ),
+        'flat_collection' => array(
+            'type' => 'flat_collection',
+            'name' => $t('FLAT collection'),
+            'description' => $t('A collection of data bundles'),
+            'title_label' => $t('Name of the collection'),
+            'base' => 'flat_collection', #declare to be able to use content type hooks
+            'custom' => TRUE
+        ),
     );
 
-    // Set remaining definitions with defaults
-    $node_type = node_type_set_defaults($content_type);
-    node_type_save($node_type);
+    foreach ($content_types as $key => $content_type){
+        // Set remaining definitions with defaults
+        $node_type = node_type_set_defaults($content_type);
+        node_type_save($node_type);
 
-    // switch off comments for content type _flat_bundle
-    variable_set('comment_flat_bundle', '0');
 
-    // switch off promotion of new entries to front
-    $node_options = variable_get('node_options_flat_bundle', array());
-    $promote_key = array_search('promote', $node_options);
-    if ($promote_key !== false) {
-        unset($node_options[$promote_key]);
-        variable_set('node_options_flat_bundle', $node_options);
+        // switch off comments for content type _flat_bundle
+        variable_set('comment_' . $key, '0');
+        $node_options = variable_get('node_options_' . $key, array());
+
+        // switch off promotion of new entries to front
+        $promote_key = array_search('promote', $node_options);
+        if ($promote_key !== false) {
+            unset($node_options[$promote_key]);
+            variable_set('node_options_'. $key, $node_options);
+        }
     }
+
+
+
 
     // Attach fields to the flat bundle content type by creating fields and instances of these fields
     $fields = array();
@@ -334,7 +350,7 @@ function flat_deposit_install()
 function flat_deposit_schema() {
 
     // Table keeping track of existing collections
-    $schema['flat_collection'] = array(
+    $schema['flat_supercollection'] = array(
         'description' => 'Collection-member relation in FLAT.',
         'fields' => array(
             'collection_id'  => array(
@@ -444,10 +460,10 @@ function flat_deposit_uninstall(){
     variable_del('flat_deposit_solr');
 
 
-    // Delete all flat_bundle content type and notification nodes
+    // Delete all flat_bundle and flat_collection content
     $nids = db_select('node','n')
         ->fields('n', array('nid'))
-        ->condition('type', array('flat_collection_name', 'flat_member', 'flat_bundle', 'blog'), 'IN')
+        ->condition('type', array('flat_collection', 'flat_member', 'flat_bundle', 'blog'), 'IN')
         ->execute()
         ->fetchCol();
 
@@ -459,7 +475,7 @@ function flat_deposit_uninstall(){
     
     //Remove all custom content type fields and field instances and clean up entries in field_config / field_config_instance tables
     field_attach_delete_bundle('node','flat_bundle');
-
+    field_attach_delete_bundle('node','flat_collection');
 
     db_delete('field_config_instance')
         ->condition('deleted', 1)
@@ -471,6 +487,7 @@ function flat_deposit_uninstall(){
 
     // Delete custom content type
     node_type_delete('flat_bundle');
+    node_type_delete('flat_collection');
     drupal_set_message($t('Custom content type has been removed'));
 
 

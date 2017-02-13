@@ -16,7 +16,7 @@
 function flat_views_views_data_alter(&$data) {
 
   // changes the data that will be rendered
-  $data['flat_collection']['actions'] = array(
+  $data['flat_supercollection']['actions'] = array(
       'title' => t('Action buttons'),
       'help' => t('Produces links to actions a user may perform on a collection entity.'),
       'field' => array(
@@ -25,7 +25,7 @@ function flat_views_views_data_alter(&$data) {
           'click sortable' => FALSE,
       ),
   );
-  $data['flat_collection']['date_created'] = array(
+  $data['flat_supercollection']['date_created'] = array(
       'title' => t('Created date'),
       'help' => t('The date the relationship was created.'),
       'field' => array(
