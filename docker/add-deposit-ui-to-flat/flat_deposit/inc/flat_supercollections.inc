@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Flat_collection entity form. Necessary to create new collection member relations
+ * Flat_supercollection entity form. Necessary to create new collection member relations
  *
  * collection name is a pragmatic name for the collection,
  * collection tree the exact path from the archive root to the place where the collection should be placed

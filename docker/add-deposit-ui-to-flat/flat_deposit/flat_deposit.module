@@ -124,7 +124,7 @@ function flat_deposit_menu()
     $items['admin/config/flat_deposit'] = array(
         'title' => 'FLAT deposit user interface',
         'description' => 'Administer FLAT deposit user interface',
-        'access callback' => TRUE);
+        'access arguments' => array('admin deposit module'));
 
     // Admin configuration - Upload settings
     $items['admin/config/flat_deposit/customize'] = array(
@@ -206,7 +206,7 @@ function flat_deposit_menu_local_tasks_alter(&$data, $router_item, $root_path)
                 $pid_parent = end($pid_parent);
 
                 module_load_include('php', 'flat_deposit', 'inc/drupal_queries');
-                $collections = query_user_collections(array( $pid_parent));
+                $collections = query_user_supercollections(array( $pid_parent));
 
                 if (empty($collections)) {
                     $data['tabs'][0]['output'][$index]['#link']['access'] = FALSE;
@@ -327,7 +327,7 @@ function flat_bundle_node_form_fixed_collection($pid)
 {
 
     module_load_include('php', 'flat_deposit', 'inc/drupal_queries');
-    $collections = query_user_collections(array($pid->id), TRUE);
+    $collections = query_user_supercollections(array($pid->id), TRUE);
 
     if (empty($collections)) {
 
@@ -423,7 +423,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
                 $form['upload_collection']['und']['#disabled'] = TRUE;
             } else {
                 module_load_include('php', 'flat_deposit', 'inc/drupal_queries');
-                $collections = query_user_collections(NULL);
+                $collections = query_user_supercollections(NULL);
             }
 
             foreach ($collections as $index => $collection) {
@@ -832,8 +832,8 @@ function flat_deposit_entity_info() {
     $entities['flat_supercollection'] = array(
 
         // Define basic information.
-        'label' => t('FLAT Collection'),
-        'plural label' => t('FLAT Collections'),
+        'label' => t('FLAT Supercollection'),
+        'plural label' => t('FLAT Supercollections'),
         'fieldable' => FALSE,
 
         // Provide information about the database table.
@@ -850,7 +850,7 @@ function flat_deposit_entity_info() {
 
         // Have Entity API set up an administrative UI.
         'admin ui' => array(
-            'path' => 'admin/collections',
+            'path' => 'admin/supercollections',
             'file' => 'inc/flat_supercollections.inc'
         ),
         'module' => 'flat_deposit',
@@ -952,7 +952,7 @@ function flat_supercollection_view($node, $view_mode) {
 
 
     if ($view_mode == 'full' && node_is_page($node)) {
-        // Breadcrumb navigation.  l() escapes title, so we should not escape !name.
+        // Breadcrumb navigation.  l() escapes title, so we should not escape !name.manage
         drupal_set_breadcrumb(array(
             l(t('Home'), NULL),
             l(t("!name's bundles", array(

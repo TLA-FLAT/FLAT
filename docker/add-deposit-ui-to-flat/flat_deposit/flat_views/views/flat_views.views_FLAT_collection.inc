@@ -9,18 +9,18 @@
  *
  */
 $view = new view();
-$view->name = 'FLAT collection';
-$view->description = 'The FLAT collection-member relationships';
+$view->name = 'FLAT supercollection';
+$view->description = 'The FLAT supercollection-member relationships';
 $view->tag = 'default';
 $view->base_table = 'flat_supercollection';
-$view->human_name = 'FLAT collection';
+$view->human_name = 'FLAT supercollection';
 $view->core = 7;
 $view->api_version = '3.0';
 $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
 
 /* Display: Master */
 $handler = $view->new_display('default', 'Master', 'default');
-$handler->display->display_options['title'] = 'FLAT collections';
+$handler->display->display_options['title'] = 'FLAT supercollections';
 $handler->display->display_options['use_more'] = TRUE;
 $handler->display->display_options['use_more_always'] = FALSE;
 $handler->display->display_options['access']['type'] = 'none';
@@ -168,7 +168,7 @@ $handler->display->display_options['filters']['member']['expose']['remember_role
 
 /* Display: Page */
 $handler = $view->new_display('page', 'Page', 'page');
-$handler->display->display_options['path'] = 'admin/collections/managecollections';
+$handler->display->display_options['path'] = 'admin/supercollections/managecollections';
 $handler->display->display_options['menu']['type'] = 'tab';
 $handler->display->display_options['menu']['title'] = 'Admin Collections';
 $handler->display->display_options['menu']['weight'] = '0';
