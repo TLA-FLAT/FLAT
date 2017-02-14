@@ -369,14 +369,14 @@ function flat_bundle_node_form_fixed_collection($pid)
 function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $form_id)
 {
     // Hide unwanted buttons anf fields
-    hide($form['upload_status']);
-    hide($form['upload_exception']);
-    hide($form['upload_cmdi_creator']);
+    hide($form['flat_bundle_status']);
+    hide($form['flat_exception']);
+    hide($form['flat_create_cmdi']);
     hide($form['actions']['preview']);
 
     // Conditionally hide field. To do that:
     // 1. Create ajax trigger out of checkbox to hide location where data is stored if checkbox (external) is unchecked
-    $form['upload_external']['und']['#ajax'] = array(
+    $form['flat_external']['und']['#ajax'] = array(
         'callback' => 'select_external_trigger_ajax_callback',
         'wrapper' => 'upload-location-container',
         'method' => 'replace',
@@ -384,16 +384,16 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
     );
 
     // 2. assign wrapper to location container such that AJAX can update this part when triggered
-    $form['upload_location']['#attributes']['id'] = array('upload-location-container');
+    $form['flat_location']['#attributes']['id'] = array('upload-location-container');
 
     // 3. set access value (show or not) depending on checkbox value
-    $checked = isset($form_state['values']['upload_external']['und'][0]['value']) ? $form_state['values']['upload_external']['und'][0]['value'] : (int)$form['upload_external']['und']['#default_value'];
+    $checked = isset($form_state['values']['flat_external']['und'][0]['value']) ? $form_state['values']['flat_external']['und'][0]['value'] : (int)$form['flat_external']['und']['#default_value'];
     if ($checked) {
         $access = TRUE;
     } else {
         $access = FALSE;
     }
-    $form['upload_location']['und'][0]['value']['#access'] = $access;
+    $form['flat_location']['und'][0]['value']['#access'] = $access;
 
 
     // Adapt description of external location such that it contains the root of the external path
@@ -401,7 +401,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
 
     $config = variable_get('flat_deposit_paths');
     $root = $config['alternate_dir'];
-    $form['upload_location']['und'][0]['value']['#description'] .= " (specific folder name located in" . $root . $user->name . ")";
+    $form['flat_location']['und'][0]['value']['#description'] .= " (specific folder name located in" . $root . $user->name . ")";
 
 
     // Form alterations depending on node status
@@ -419,15 +419,15 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
 
             if (isset($args[1])) {
                 $collections[0]['collection_name'] = $args[1];
-                $form['upload_collection']['und']['#default_value'] = array($collections[0]['collection_name']);
-                $form['upload_collection']['und']['#disabled'] = TRUE;
+                $form['flat_parent_title']['und']['#default_value'] = array($collections[0]['collection_name']);
+                $form['flat_parent_title']['und']['#disabled'] = TRUE;
             } else {
                 module_load_include('php', 'flat_deposit', 'inc/drupal_queries');
                 $collections = query_user_supercollections(NULL);
             }
 
             foreach ($collections as $index => $collection) {
-                $form ['upload_collection']['und']['#options'][$collection['collection_name']] = $collection['collection_name'];
+                $form ['flat_parent_title']['und']['#options'][$collection['collection_name']] = $collection['collection_name'];
             }
 
 
@@ -444,18 +444,18 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
 
             // prevent altering bundle name (title), external location and collection
             $form['title']['#disabled'] = TRUE;
-            $form['upload_collection']['und']['#disabled'] = TRUE;
-            #$form['upload_external']['und']['#disabled'] = TRUE;
-            #$form['upload_location']['und']['#disabled'] = TRUE;
+            $form['flat_parent_title']['und']['#disabled'] = TRUE;
+            #$form['flat_external']['und']['#disabled'] = TRUE;
+            #$form['flat_location']['und']['#disabled'] = TRUE;
 
             // when disabling a 'select'-form field with no default value, the field value is not populated but rather stays empty.
             // As this value is mandatory and we want to keep it, we manually have to add it to the form.
 
             $node_wrapper = entity_metadata_wrapper('node', $node);
-            $selected_collection = $node_wrapper->upload_collection->value();
+            $selected_collection = $node_wrapper->flat_parent_title->value();
 
-            $form['upload_collection']['und']['#default_value'][] = $selected_collection;
-            $form ['upload_collection']['und']['#options'][$selected_collection] = $selected_collection;
+            $form['flat_parent_title']['und']['#default_value'][] = $selected_collection;
+            $form ['flat_parent_title']['und']['#options'][$selected_collection] = $selected_collection;
 
             break;
         }
@@ -467,16 +467,16 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
  */
 function select_external_trigger_ajax_callback ($form, &$form_state)
 {
-    return $form['upload_location'];
+    return $form['flat_location'];
 }
 
 
 function flat_bundle_validate($node, $form, &$form_state){
     $node_wrapper = entity_metadata_wrapper('node', $node);
-    $external = $node_wrapper->upload_external->value();
-    $location = $node_wrapper->upload_location->value();
+    $external = $node_wrapper->flat_external->value();
+    $location = $node_wrapper->flat_location->value();
     if ($external AND !$location){
-        form_set_error('upload_location',t('Location needs to be set when data is located on archive server'));
+        form_set_error('flat_location',t('Location needs to be set when data is located on archive server'));
     }
 
     if ($external ){
@@ -491,7 +491,7 @@ function flat_bundle_validate($node, $form, &$form_state){
 
         if (!file_exists($full_path)){
 
-            form_set_error('upload_location',t('External location does not exist (:path) ' , array(':path' => $full_path)));
+            form_set_error('flat_location',t('External location does not exist (:path) ' , array(':path' => $full_path)));
 
         }
     }
@@ -504,7 +504,7 @@ function flat_bundle_validate($node, $form, &$form_state){
 function flat_bundle_node_form_add_validate($form, &$form_state){
     #dpm ($form_state);
     $bundle_name = $form_state['values']['title'];
-    $collection = $form_state['values']['upload_collection']['und'][0]['value'];
+    $collection = $form_state['values']['flat_parent_title']['und'][0]['value'];
 
     //Validate bundle name
     if (!preg_match('/^[a-zA-Z0-9\_]{2,40}+$/', $bundle_name)) {
@@ -517,7 +517,7 @@ function flat_bundle_node_form_add_validate($form, &$form_state){
     $query->entityCondition('entity_type', 'node')
         ->entityCondition('bundle', 'flat_bundle')
         ->propertyCondition('uid', $user_id)
-        ->fieldCondition('upload_collection', 'value', "$collection", '=');
+        ->fieldCondition('flat_parent_title', 'value', "$collection", '=');
 
     $user_node_nids_in_collection = $query->execute();
 
@@ -537,13 +537,13 @@ function flat_bundle_node_form_add_validate($form, &$form_state){
     }
 
     // Check if external location is accessible by drupal
-    $external = $form_state['values']['upload_external']['und'][0]['value']; #wrapper can't be used during initiation. If this doesn't work use node_presave
+    $external = $form_state['values']['flat_external']['und'][0]['value']; #wrapper can't be used during initiation. If this doesn't work use node_presave
 
     if ($external){
-        $location = $form_state['values']['upload_location']['und'][0]['value'];
+        $location = $form_state['values']['flat_location']['und'][0]['value'];
         $is_accessible = flat_deposit_external_location_is_accessible($location);
         if ($is_accessible !== TRUE){
-            form_set_error('upload_external', t($is_accessible));
+            form_set_error('flat_external', t($is_accessible));
         }
     }
 
@@ -557,7 +557,7 @@ function flat_bundle_node_form_add_validate($form, &$form_state){
 function flat_bundle_node_form_add_submit($form, &$form_state){
 
     $bundle = $form_state['values']['title'];
-    $collection = $form_state['values']['upload_collection']['und'][0]['value'];
+    $collection = $form_state['values']['flat_parent_title']['und'][0]['value'];
 
     // initiate user directories if necessary
     module_load_include('inc', 'imce', 'inc/imce.page');
@@ -565,13 +565,13 @@ function flat_bundle_node_form_add_submit($form, &$form_state){
     imce_initiate_profile ($user);
 
     // Specify directories for new metadata, resources and freezelocation
-    $external = $form_state['values']['upload_external']['und'][0]['value'];
+    $external = $form_state['values']['flat_external']['und'][0]['value'];
 
     if ($external) {
 
         $config = variable_get('flat_deposit_ingest_service');
 
-        $location = $form_state['values']['upload_location']['und'][0]['value'];
+        $location = $form_state['values']['flat_location']['und'][0]['value'];
         $resource_dir = $config['alternate_dir'] . $user->name . $config['alternate_subdir'] . "/" . $location;
 
     } else {
@@ -620,9 +620,9 @@ function flat_bundle_view($node, $view_mode) {
             l(t("!name's bundles", array(
                 '!name' => format_username($node))), 'node/')));
 
-        $exception = field_get_items('node', $node, 'upload_exception')[0]['value'];
+        $exception = field_get_items('node', $node, 'flat_exception')[0]['value'];
         if ($exception) {
-            $node->content["upload_exception"] = field_view_field('node', $node, 'upload_exception');
+            $node->content["flat_exception"] = field_view_field('node', $node, 'flat_exception');
         }
     }
     /*
@@ -642,7 +642,7 @@ function flat_bundle_delete($node){
     global $user;
     $bundle = $node->title;
     $wrapper = entity_metadata_wrapper('node',$node);
-    $collection = $wrapper->upload_collection->value();
+    $collection = $wrapper->flat_parent_title->value();
 
     $collection_resources_directory = drupal_realpath('private://flat_deposit/data/' . $user->name . "/$collection");
     $bundle_resources_directory = "$collection_resources_directory/$bundle";
@@ -726,7 +726,7 @@ function flat_deposit_block_view($delta = '')
 
         $node = menu_get_object();
         $node_wrapper = entity_metadata_wrapper('node', $node);
-        $status = $node_wrapper->upload_status->value();
+        $status = $node_wrapper->flat_bundle_status->value();
 
         $block = array
         (
@@ -958,9 +958,9 @@ function flat_supercollection_view($node, $view_mode) {
             l(t("!name's bundles", array(
                 '!name' => format_username($node))), 'flat_bundle/' . $node->uid)));
 
-        $exception = field_get_items('node', $node, 'upload_exception')[0]['value'];
+        $exception = field_get_items('node', $node, 'flat_exception')[0]['value'];
         if ($exception) {
-            $node->content["upload_exception"] = field_view_field('node', $node, 'upload_exception');
+            $node->content["flat_exception"] = field_view_field('node', $node, 'flat_exception');
         }
     }
 

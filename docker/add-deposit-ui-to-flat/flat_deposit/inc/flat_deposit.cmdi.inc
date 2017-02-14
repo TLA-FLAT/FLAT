@@ -13,7 +13,7 @@ function flat_deposit_cmdi()
     $node = menu_get_object();
     $wrapper = entity_metadata_wrapper('node', $node);
 
-    $file_info = $wrapper->upload_cmdi->value();
+    $file_info = $wrapper->flat_cmdi_file->value();
     if ($file_info) {
 
         module_load_include('php', 'flat_deposit', 'Helpers/CMDI_Handler');

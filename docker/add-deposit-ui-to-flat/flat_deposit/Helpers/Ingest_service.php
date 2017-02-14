@@ -104,7 +104,7 @@ try {
     $ingest->AddEntryLogFile('Catching IngestServiceException');
     $ingest->updateNodeStatus('failed');
     $ingest->AddEntryLogFile('Error message: ' . $e->getMessage());
-    $ingest->wrapper->upload_exception->set(get_class($e));
+    $ingest->wrapper->flat_exception->set(get_class($e));
     $ingest->wrapper->save();
     $ingest->create_blog_entry('failed', $e->getMessage());
 

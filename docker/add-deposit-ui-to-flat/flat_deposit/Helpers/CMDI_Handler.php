@@ -36,11 +36,11 @@ class CMDI_Handler
         $this->wrapper = entity_metadata_wrapper('node', $node);
 
         $this->bundle = $node->title;
-        $this->collection = $this->wrapper->upload_collection->value();
+        $this->collection = $this->wrapper->flat_parent_title->value();
 
-        $this->flat_created_CMDI = $this->wrapper->upload_cmdi_creator->value();
+        $this->flat_created_CMDI = $this->wrapper->flat_create_cmdi->value();
 
-        $file_field = $this->wrapper->upload_cmdi->value();
+        $file_field = $this->wrapper->flat_cmdi_file->value();
         try
         {
             $this->file = file_load($file_field['fid']);
@@ -77,12 +77,12 @@ class CMDI_Handler
     // clean up all CMDI resources
     public function set_resource_directory(){
 
-        $status = $this->wrapper->upload_status->value();
+        $status = $this->wrapper->flat_bundle_status->value();
 
         // Determine paths
 
-        $freeze_directory = 'freeze://' . "/" . $this->user->name . "/" . $this->wrapper->upload_collection->value() . '/' . $this->bundle . '/data';
-        $drupal_directory = 'private://flat_deposit/data/' . $this->user->name . "/" . $this->wrapper->upload_collection->value() . '/' . $this->bundle;
+        $freeze_directory = 'freeze://' . "/" . $this->user->name . "/" . $this->wrapper->flat_parent_title->value() . '/' . $this->bundle . '/data';
+        $drupal_directory = 'private://flat_deposit/data/' . $this->user->name . "/" . $this->wrapper->flat_parent_title->value() . '/' . $this->bundle;
 
 
         if ($status == 'failed' OR $status == 'open') {

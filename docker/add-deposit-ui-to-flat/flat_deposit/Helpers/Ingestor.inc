@@ -52,7 +52,7 @@ class Ingestor
         $this->finished_actions = array();
 
         // Determine processing routine
-        $status = $this->wrapper->upload_status->value();
+        $status = $this->wrapper->flat_bundle_status->value();
         if ($status == 'failed' OR $status == 'open') {
 
             $this->type = 'validating';
@@ -67,22 +67,22 @@ class Ingestor
         $config = variable_get('flat_deposit_paths');
         $this->dir = array(
             'freeze' => $config['freeze'],
-            'freeze_bundle' => $config['freeze'] . "/" . $this->user->name . "/" . $this->wrapper->upload_collection->value() . "/" . $this->node->title,
+            'freeze_bundle' => $config['freeze'] . "/" . $this->user->name . "/" . $this->wrapper->flat_parent_title->value() . "/" . $this->node->title,
          );
 
         // source path of the bundle data and meta data
 
-        $this->dir['origin_meta'] = 'private://flat_deposit/metadata/' . $this->user->name . "/" . $this->wrapper->upload_collection->value() . '/' . $this->node->title;
-        $this->dir['freeze_meta'] = 'freeze://' . "/" . $this->user->name . "/" . $this->wrapper->upload_collection->value() . '/' . $this->node->title;
+        $this->dir['origin_meta'] = 'private://flat_deposit/metadata/' . $this->user->name . "/" . $this->wrapper->flat_parent_title->value() . '/' . $this->node->title;
+        $this->dir['freeze_meta'] = 'freeze://' . "/" . $this->user->name . "/" . $this->wrapper->flat_parent_title->value() . '/' . $this->node->title;
 
-        if ($this->wrapper->upload_external->value()) {
+        if ($this->wrapper->flat_external->value()) {
 
             $config = variable_get('flat_deposit_paths');
-            $this->dir['origin_data'] = $config['alternate_dir'] . $this->user->name . $config['alternate_subdir'] . "/" . $this->wrapper->upload_location->value();
+            $this->dir['origin_data'] = $config['alternate_dir'] . $this->user->name . $config['alternate_subdir'] . "/" . $this->wrapper->flat_location->value();
 
         } else {
 
-            $this->dir['origin_data'] = drupal_realpath('private://flat_deposit/data/' . $this->user->name . "/" . $this->wrapper->upload_collection->value() . '/' . $this->node->title);
+            $this->dir['origin_data'] = drupal_realpath('private://flat_deposit/data/' . $this->user->name . "/" . $this->wrapper->flat_parent_title->value() . '/' . $this->node->title);
 
         }
 
@@ -113,7 +113,7 @@ class Ingestor
      */
     public function getParentID(){
 
-        $collection = $this->wrapper->upload_collection->value();
+        $collection = $this->wrapper->flat_parent_title->value();
 
         // retrieve pid of parent collection
         $collection_node = db_select('flat_supercollection','p')
@@ -207,7 +207,7 @@ class Ingestor
     public function validateNodeStatus()
     {
 
-        $status = $this->wrapper->upload_status->value();
+        $status = $this->wrapper->flat_bundle_status->value();
 
         if ($status == 'processing' OR $status == 'validating'){
             throw new IngestServiceException(t('Invalid node status'));
@@ -222,7 +222,7 @@ class Ingestor
     public function updateNodeStatus($status)
     {
 
-        $this->wrapper->upload_status->set($status);
+        $this->wrapper->flat_bundle_status->set($status);
         $this->wrapper->save();
 
         $this->AddEntryLogFile('set status to ' . $status);
@@ -271,10 +271,10 @@ class Ingestor
     public function moveData($type)    {
 
 
-        $collection = $this->wrapper->upload_collection->value();
+        $collection = $this->wrapper->flat_parent_title->value();
         $collection_directory = $this->dir['freeze'] . $this->user->name .  "/$collection/";
 
-        $metadata_file_info =$this->wrapper->upload_cmdi->value();
+        $metadata_file_info =$this->wrapper->flat_cmdi_file->value();
 
         // Determine source and target
         if ($type == 'freeze'){
@@ -796,7 +796,7 @@ class Ingestor
         recursiveRmDir($this->dir['freeze_bundle']);
         rmdir ($this->dir['freeze_bundle']);
 
-        $collection = $this->wrapper->upload_collection->value();
+        $collection = $this->wrapper->flat_parent_title->value();
         $collection_directory = $this->dir['freeze'] . $this->user->name .  "/$collection/";
         if (is_dir_empty($collection_directory)){
 
@@ -886,7 +886,7 @@ class Ingestor
         }
 
         $bundle = $this->node->title;
-        $collection = $this->wrapper->upload_collection->value();
+        $collection = $this->wrapper->flat_parent_title->value();
 
         $summary = sprintf("<p>Archiving of %s %s</p>",$bundle, $entry_type);
         $body = sprintf("<p>%s %s</p><p>Archiving of %s belonging to %s %s. Check bundle ". l('here', $url_link) . '</p>',$bundle, $collection,$bundle, $collection, $entry_type);
@@ -940,7 +940,7 @@ class Ingestor
         if($this->type== 'validating'){
 
             $this->updateNodeStatus('valid');
-            $this->wrapper->upload_exception->set(NULL);
+            $this->wrapper->flat_exception->set(NULL);
             $this->wrapper->save();
 
         } else {
@@ -952,7 +952,7 @@ class Ingestor
         }
     }
 
-    #$ingest->wrapper->upload_status->set('awaiting');
+    #$ingest->wrapper->flat_bundle_status->set('awaiting');
     #$ingest->wrapper->save();
 
 

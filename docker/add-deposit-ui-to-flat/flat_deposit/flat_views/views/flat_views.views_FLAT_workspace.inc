@@ -33,8 +33,8 @@ $handler->display->display_options['pager']['options']['items_per_page'] = '10';
 $handler->display->display_options['style_plugin'] = 'table';
 $handler->display->display_options['style_options']['columns'] = array(
     'title' => 'title',
-    'upload_collection' => 'upload_collection',
-    'upload_status' => 'upload_status',
+    'flat_parent_title' => 'flat_parent_title',
+    'flat_bundle_status' => 'flat_bundle_status',
     'created' => 'created',
     'edit_node' => 'edit_node',
     'delete_node' => 'delete_node',
@@ -48,14 +48,14 @@ $handler->display->display_options['style_options']['info'] = array(
         'separator' => '',
         'empty_column' => 0,
     ),
-    'upload_collection' => array(
+    'flat_parent_title' => array(
         'sortable' => 0,
         'default_sort_order' => 'asc',
         'align' => '',
         'separator' => '',
         'empty_column' => 0,
     ),
-    'upload_status' => array(
+    'flat_bundle_status' => array(
         'sortable' => 0,
         'default_sort_order' => 'asc',
         'align' => '',
@@ -113,15 +113,15 @@ $handler->display->display_options['fields']['title']['label'] = 'Upload bundle 
 $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
 $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
 /* Field: Content: Name of the collection */
-$handler->display->display_options['fields']['upload_collection']['id'] = 'upload_collection';
-$handler->display->display_options['fields']['upload_collection']['table'] = 'field_data_upload_collection';
-$handler->display->display_options['fields']['upload_collection']['field'] = 'upload_collection';
-$handler->display->display_options['fields']['upload_collection']['label'] = 'Belongs to';
+$handler->display->display_options['fields']['flat_parent_title']['id'] = 'flat_parent_title';
+$handler->display->display_options['fields']['flat_parent_title']['table'] = 'field_data_flat_parent_title';
+$handler->display->display_options['fields']['flat_parent_title']['field'] = 'flat_parent_title';
+$handler->display->display_options['fields']['flat_parent_title']['label'] = 'Belongs to';
 /* Field: Content: Status of the upload */
-$handler->display->display_options['fields']['upload_status']['id'] = 'upload_status';
-$handler->display->display_options['fields']['upload_status']['table'] = 'field_data_upload_status';
-$handler->display->display_options['fields']['upload_status']['field'] = 'upload_status';
-$handler->display->display_options['fields']['upload_status']['label'] = 'Upload status';
+$handler->display->display_options['fields']['flat_bundle_status']['id'] = 'flat_bundle_status';
+$handler->display->display_options['fields']['flat_bundle_status']['table'] = 'field_data_flat_bundle_status';
+$handler->display->display_options['fields']['flat_bundle_status']['field'] = 'flat_bundle_status';
+$handler->display->display_options['fields']['flat_bundle_status']['label'] = 'Upload status';
 
 /* Field: Content: Post date */
 $handler->display->display_options['fields']['created']['id'] = 'created';
@@ -147,18 +147,18 @@ $handler->display->display_options['sorts']['created']['field'] = 'created';
 $handler->display->display_options['sorts']['created']['expose']['label'] = 'Initiation date';
 $handler->display->display_options['sorts']['created']['order'] = 'DESC';
 $handler->display->display_options['sorts']['created']['exposed'] = TRUE;
-/* Sort criterion: Content: Name of the collection (upload_collection) */
-$handler->display->display_options['sorts']['upload_collection_value']['id'] = 'upload_collection_value';
-$handler->display->display_options['sorts']['upload_collection_value']['table'] = 'field_data_upload_collection';
-$handler->display->display_options['sorts']['upload_collection_value']['field'] = 'upload_collection_value';
-$handler->display->display_options['sorts']['upload_collection_value']['exposed'] = TRUE;
-$handler->display->display_options['sorts']['upload_collection_value']['expose']['label'] = 'Collection Name)';
-/* Sort criterion: Content: Status of the upload (upload_status) */
-$handler->display->display_options['sorts']['upload_status_value']['id'] = 'upload_status_value';
-$handler->display->display_options['sorts']['upload_status_value']['table'] = 'field_data_upload_status';
-$handler->display->display_options['sorts']['upload_status_value']['field'] = 'upload_status_value';
-$handler->display->display_options['sorts']['upload_status_value']['exposed'] = TRUE;
-$handler->display->display_options['sorts']['upload_status_value']['expose']['label'] = 'Upload status';
+/* Sort criterion: Content: Name of the collection (flat_parent_title) */
+$handler->display->display_options['sorts']['flat_parent_title_value']['id'] = 'flat_parent_title_value';
+$handler->display->display_options['sorts']['flat_parent_title_value']['table'] = 'field_data_flat_parent_title';
+$handler->display->display_options['sorts']['flat_parent_title_value']['field'] = 'flat_parent_title_value';
+$handler->display->display_options['sorts']['flat_parent_title_value']['exposed'] = TRUE;
+$handler->display->display_options['sorts']['flat_parent_title_value']['expose']['label'] = 'Collection Name)';
+/* Sort criterion: Content: Status of the upload (flat_bundle_status) */
+$handler->display->display_options['sorts']['flat_bundle_status_value']['id'] = 'flat_bundle_status_value';
+$handler->display->display_options['sorts']['flat_bundle_status_value']['table'] = 'field_data_flat_bundle_status';
+$handler->display->display_options['sorts']['flat_bundle_status_value']['field'] = 'flat_bundle_status_value';
+$handler->display->display_options['sorts']['flat_bundle_status_value']['exposed'] = TRUE;
+$handler->display->display_options['sorts']['flat_bundle_status_value']['expose']['label'] = 'Upload status';
 /* Filter criterion: Content: Type */
 $handler->display->display_options['filters']['type']['id'] = 'type';
 $handler->display->display_options['filters']['type']['table'] = 'node';

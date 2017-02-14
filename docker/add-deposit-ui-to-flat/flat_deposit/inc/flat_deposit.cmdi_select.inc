@@ -12,7 +12,7 @@ function flat_deposit_cmdi_select_form($form, &$form_state)
     $node = menu_get_object() ? menu_get_object() : $form_state['values']['node'];
     $bundle = $node->title;
     $wrapper = entity_metadata_wrapper('node', $node);
-    $collection = $wrapper->upload_collection->value();
+    $collection = $wrapper->flat_parent_title->value();
 
     $path = t('!name/!collection/!bundle', array('!name'=>$user->name,'!collection'=>$collection,'!bundle'=>$bundle));
 
@@ -40,13 +40,13 @@ function flat_deposit_cmdi_select_form($form, &$form_state)
             'id' => 'select-cmdi',)
     );
 
-    $list_allowed_profiles = list_allowed_values(field_info_field('upload_cmdi'));
+    $list_allowed_profiles = list_allowed_values(field_info_field('flat_cmdi_file'));
 
     $form['select']['cmdi_select'] = [
         '#type' => 'select',
         '#title' => t('Please select metadata profile'),
         '#options' => $list_allowed_profiles,
-        '#default_value' => array_keys($list_allowed_profiles, $wrapper->upload_cmdi->value()),
+        '#default_value' => array_keys($list_allowed_profiles, $wrapper->flat_cmdi_file->value()),
     ];
 /*
     $form['select']['checkbox_ajax_trigger'] = array(
@@ -142,13 +142,13 @@ function flat_deposit_cmdi_select_form_submit($form, &$form_state){
     $profile_key = $form_state['values']['cmdi_select'];
     $profile_value = $list_allowed_profiles[$form_state['values']['cmdi_select']];
 
-    // Set new upload_cmdi value
-    $wrapper->upload_cmdi->set($profile_value);
+    // Set new flat_cmdi_file value
+    $wrapper->flat_cmdi_file->set($profile_value);
     $wrapper->save();
     drupal_set_message(t('Metadata profile has been saved'));
 
     // Redirect to creation form if no record.cmdi exists
-    if (!$wrapper->upload_cmdi->value()){
+    if (!$wrapper->flat_cmdi_file->value()){
 
         if (isset($form_state['values']['select_data_file'])){
             $md = '/' . $form_state['values']['select_data_file'];

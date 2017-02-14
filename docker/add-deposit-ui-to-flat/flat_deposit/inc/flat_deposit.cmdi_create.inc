@@ -12,7 +12,7 @@ function flat_deposit_cmdi_create_form($form, &$form_state){
     $node = menu_get_object() ? menu_get_object() : $form_state['values']['node'];
     $wrapper = entity_metadata_wrapper('node',$node);
 
-    $profile = $wrapper->upload_cmdi->value();
+    $profile = $wrapper->flat_cmdi_file->value();
 
 
     // load form corresponding to profile
@@ -168,8 +168,8 @@ function flat_deposit_cmdi_create_form_submit($form, &$form_state){
     $wrapper = entity_metadata_wrapper('node', $node);
 
     $bundle = $node->title;
-    $collection = $wrapper->upload_collection->value();
-    $template = $wrapper->upload_cmdi->value();
+    $collection = $wrapper->flat_parent_title->value();
+    $template = $wrapper->flat_cmdi_file->value();
 
     /*
     // Save data as template (if checked)

@@ -99,7 +99,7 @@ function flat_bundle_action_form($form, &$form_state)
 
 // Specify which handlers to become active and which bundle_image to display
 
-    $status = $wrapper->upload_status->value();
+    $status = $wrapper->flat_bundle_status->value();
 
     switch ($status) {
         case 'open': {
@@ -138,7 +138,7 @@ function flat_bundle_action_form($form, &$form_state)
 
 
     // Activate metadata creation button if field value has not been set
-    if (!$wrapper->upload_cmdi->value()) {
+    if (!$wrapper->flat_cmdi_file->value()) {
 
         $form['actions']['describe_bundle']['#disabled'] = FALSE;
     }
@@ -162,14 +162,14 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
 
 
     // In case no cmdi file exists
-    if (!$wrapper->upload_cmdi->value()) {
+    if (!$wrapper->flat_cmdi_file->value()) {
         form_set_error('validate_bundle', t("No metadata file has been specified"));
 
         return $form;
     }
 
     // In case of wrong naming
-    $exploded_uri = explode('/', $wrapper->upload_cmdi->value()['uri']);
+    $exploded_uri = explode('/', $wrapper->flat_cmdi_file->value()['uri']);
     $file_name = end($exploded_uri);
 
     if ($file_name !== 'record.cmdi') {
@@ -179,14 +179,14 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
 
     // Check if target freeze directory exists
     global $user;
-    if (!file_exists(drupal_realpath('freeze://' . $user->name .'/' . $wrapper->upload_collection->value() . '/' . $node->title . '/metadata'))){
+    if (!file_exists(drupal_realpath('freeze://' . $user->name .'/' . $wrapper->flat_parent_title->value() . '/' . $node->title . '/metadata'))){
 
         form_set_error('validate_bundle', "Target directory for metafile does not exist");
     }
 
 
     // Quick and dirty Check cmdi valid xml
-    $file_field = $wrapper->upload_cmdi->value();
+    $file_field = $wrapper->flat_cmdi_file->value();
     $attached_file = file_load($file_field['fid']);
     $xml = simplexml_load_file(drupal_realpath($attached_file->uri));
     if (!$xml) {
@@ -197,8 +197,8 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
 
     // Check existence external location
 
-    $external = $wrapper->upload_external->value();
-    $location = $wrapper->upload_location->value();
+    $external = $wrapper->flat_external->value();
+    $location = $wrapper->flat_location->value();
     if ($external ){
         $config = variable_get('flat_deposit_paths');
         $root = $config['alternate_dir'];
@@ -312,7 +312,7 @@ function flat_bundle_action_form_submit($form, &$form_state){
 
         // Debug mode
         $wrapper = entity_metadata_wrapper('node', $node);
-        $status = $wrapper->upload_status->value();
+        $status = $wrapper->flat_bundle_status->value();
 
 
         if (isset($form_state['values']['serial'])) {

@@ -56,41 +56,23 @@ function flat_deposit_install()
     // Attach fields to the flat bundle content type by creating fields and instances of these fields
     $fields = array();
 
-    $fields['upload_collection'] = array(
-        'field_name' => 'upload_collection',
-        'type' => 'list_text',
+    $fields['flat_parent_nid'] = array(
+        'field_name' => 'flat_parent_nid',
+        'type' => 'number_integer',
         'cardinality' => 1,
         'settings' => array(),
-            'locked' => TRUE,
     );
 
-    $fields['upload_cmdi'] = array(
-        'field_name' => 'upload_cmdi',
-        'settings' => array(
-            'display_field' => 1,
-            'display_default' => 1,
-            'uri_scheme' => 'private',
-        ),
-        'type' => 'file',
-        'entity_types' => array('node'),
-        'cardinality' => 1,
-    );
-
-
-    $fields['upload_cmdi_creator'] = array(
-        'field_name' => 'upload_cmdi_creator',
-        'type' => 'list_boolean',
+    $fields['flat_parent_title'] = array(
+        'field_name' => 'flat_parent_title',
+        'type' => 'list_text',
         'cardinality' => 1,
         'settings' => array(
-            'allowed_values'=> array(
-                0 => "no",
-                1 => "yes"),
-        ),
+            'max_length' => 255)
     );
 
-
-    $fields['upload_status'] = array(
-        'field_name' => 'upload_status',
+    $fields['flat_bundle_status'] = array(
+        'field_name' => 'flat_bundle_status',
         'type' => 'list_text',
         'cardinality' => 1,
         'settings' => array(
@@ -106,8 +88,30 @@ function flat_deposit_install()
         'locked' => TRUE
     );
 
-    $fields['upload_external'] = array(
-        'field_name' => 'upload_external',
+    $fields['flat_exception'] = array(
+        'field_name' => 'flat_exception',
+        'type' => 'text',
+        'cardinality' => 1,
+        'settings' => array(
+            'max_length' => 5000)
+    );
+
+
+    $fields['flat_cmdi_file'] = array(
+        'field_name' => 'flat_cmdi_file',
+        'settings' => array(
+            'display_field' => 1,
+            'display_default' => 1,
+            'uri_scheme' => 'private',
+        ),
+        'type' => 'file',
+        'entity_types' => array('node'),
+        'cardinality' => 1,
+    );
+
+
+    $fields['flat_create_cmdi'] = array(
+        'field_name' => 'flat_create_cmdi',
         'type' => 'list_boolean',
         'cardinality' => 1,
         'settings' => array(
@@ -117,49 +121,146 @@ function flat_deposit_install()
         ),
     );
 
-    $fields['upload_location'] = array(
-        'field_name' => 'upload_location',
+    $fields['flat_external'] = array(
+        'field_name' => 'flat_external',
+        'type' => 'list_boolean',
+        'cardinality' => 1,
+        'settings' => array(
+            'allowed_values'=> array(
+                0 => "no",
+                1 => "yes"),
+        ),
+    );
+
+    $fields['flat_location'] = array(
+        'field_name' => 'flat_location',
         'type' => 'text',
         'cardinality' => 1,
         'settings' => array(
             'max_length' => 255)
     );
 
-    $fields['upload_exception'] = array(
-        'field_name' => 'upload_exception',
+
+    $fields['flat_fid'] = array(
+        'field_name' => 'flat_fid',
         'type' => 'text',
         'cardinality' => 1,
-        'settings' => array(
-            'max_length' => 5000)
+        'settings' => array(),
+        'max_length' => 255,
     );
+
+
+    $fields['flat_collection_status'] = array(
+        'field_name' => 'flat_collection_status',
+        'type' => 'list_text',
+        'cardinality' => 1,
+        'settings' => array(
+            'allowed_values' => array(
+                'active' => 'active',
+                'inactive' => 'inactive',
+                'locked' => 'locked',
+                'error' => 'error',
+            )
+        ),
+        'locked' => TRUE
+    );
+
+    $fields['flat_fid_super'] = array(
+        'field_name' => 'flat_fid_super',
+        'type' => 'text',
+        'cardinality' => 1,
+        'settings' => array(),
+        'max_length' => 255,
+    );
+
 
     foreach ($fields as $field) {
         field_create_field($field);}
 
     $instances = array();
 
-    $instances['upload_collection'] = array(
-        'field_name' => 'upload_collection',
-        'label' => $t('Name of the collection'
-        ),
-        'description' => $t('The collection to which the upload bundle belongs'),
+    $instances['flat_parent_nid_bundle'] = array(
+        'field_name' => 'flat_parent_nid',
+        'bundle' => 'flat_bundle',
+        'label' => $t('NID of the parent of this node'),
         'widget' => array(
-            'type' => 'option_buttons'
+            'type' => 'number',
         ),
-        'required' => TRUE,
-        'settings' => array('text_processing' => 0),
-        'display' => array(
-            'default' => array(
-                'label' => 'inline',
+        'required' => FALSE,
+        'settings' => array(
+            'display' => array(
+                'default' => array(
+                    'label' => 'inline',
+                )
             ),
         ),
     );
 
+    $instances['flat_parent_title'] = array(
+        'field_name' => 'flat_parent_title',
+        'bundle' => 'flat_bundle',
+        'label' => $t('Name of the parent node'),
+        'widget' => array(
+            'type' => 'option_buttons'
+        ),
+        'required' => TRUE,
+        'default_value' => array(
+            0 => array('value'=> 'unassigned')),
+        'settings' => array('text_processing' => 0),
+        'no_ui' => TRUE,
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            )
+        )
+    );
 
-    $instances['upload_cmdi'] = array(
+    $instances['flat_bundle_status'] = array(
+        'field_name' => 'flat_bundle_status',
+        'bundle' => 'flat_bundle',
+        'label' => $t('Status of the upload'),
+        'description' => $t('Is the bundle accessible (open or failed), being processed (validating or processing) or closed (valid or archived)'),
+        'widget' => array(
+            'type' => 'option_buttons',
+        ),
+        'required' => TRUE,
+        'default_value' => array(
+            0 => array('value'=> 'open')),
+        'settings' => array('text_processing' => 0),
+        'no_ui' => TRUE,
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            )
+        )
+    );
 
-        'field_name' => 'upload_cmdi',
-        'entity_type' => 'node',
+
+    $instances['flat_bundle_exception'] = array(
+        'field_name' => 'flat_exception',
+        'bundle' => 'flat_bundle',
+        'label' => $t('Exception'
+        ),
+        'description' => $t('Did any errors occur during upload'),
+        'widget' => array(
+            'type' => 'text_textfield'
+        ),
+        'required' => FALSE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'type' => 'hidden',
+                'label' => 'inline',
+            ),
+            'error' => array(
+                'label' => 'inline',
+            ),
+        )
+    );
+
+    $instances['flat_cmdi_file'] = array(
+
+        'field_name' => 'flat_cmdi_file',
         'bundle' => 'flat_bundle',
         'label' => 'Attached metadata file',
         'description' => $t('The metadata file describing the upload bundle'),
@@ -179,7 +280,7 @@ function flat_deposit_install()
             'filefield_paths' =>
                 array (
                     'file_path' => array (
-                        'value' =>  'flat_deposit/metadata/[current-user:name]/[node:upload_collection]/[node:title]/',
+                        'value' =>  'flat_deposit/metadata/[current-user:name]/[node:flat_parent_title]/[node:title]/',
                         'options' => array(
                             'slashes' => 0,
                             'pathauto' => FALSE,
@@ -207,8 +308,9 @@ function flat_deposit_install()
         ),
     );
 
-    $instances['upload_cmdi_creator'] = array(
-        'field_name' => 'upload_cmdi_creator',
+    $instances['flat_create_cmdi'] = array(
+        'field_name' => 'flat_create_cmdi',
+        'bundle' => 'flat_bundle',
         'label' => $t('CMDI created within FLAT'),
         'description' => $t('CMDI will be created using the Flat deposit cmdi creator'),
         'widget' => array(
@@ -224,28 +326,9 @@ function flat_deposit_install()
         )
     );
 
-    $instances['upload_status'] = array(
-        'field_name' => 'upload_status',
-        'label' => $t('Status of the upload'),
-        'description' => $t('Is the bundle accessible (open or failed), being processed (validating or processing) or closed (valid or archived)'),
-        'widget' => array(
-            'type' => 'option_buttons',
-        ),
-
-        'required' => TRUE,
-        'default_value' => array(
-            0 => array('value'=> 'open')),
-        'settings' => array('text_processing' => 0),
-        'no_ui' => TRUE,
-        'display' => array(
-            'default' => array(
-                'label' => 'inline',
-            )
-        )
-    );
-
-    $instances['upload_external'] = array(
-        'field_name' => 'upload_external',
+    $instances['flat_external'] = array(
+        'field_name' => 'flat_external',
+        'bundle' => 'flat_bundle',
         'label' => $t('Data has alternate storage location'
         ),
         'description' => $t('Check this option if data is available at a different location'),
@@ -263,8 +346,9 @@ function flat_deposit_install()
         )
     );
 
-    $instances['upload_location'] = array(
-        'field_name' => 'upload_location',
+    $instances['flat_location'] = array(
+        'field_name' => 'flat_location',
+        'bundle' => 'flat_bundle',
         'label' => $t('Location where data is stored'
         ),
         'description' => $t('Folder where data to be archived is stored'),
@@ -281,11 +365,59 @@ function flat_deposit_install()
         )
     );
 
-    $instances['upload_exception'] = array(
-        'field_name' => 'upload_exception',
+
+
+    // flat collection field instances
+    $instances['flat_fid'] = array(
+        'field_name' => 'flat_fid',
+        'bundle' => 'flat_collection',
+        'label' => $t('Fedora commons ID'
+        ),
+        'description' => $t('ID assigned by fedora during ingest process'),
+        'widget' => array(
+            'type' => 'text_textfield'
+        ),
+        'required' => FALSE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            ),
+            'error' => array(
+                'label' => 'inline',
+            ),
+        )
+    );
+
+    $instances['flat_collection_status'] = array(
+        'field_name' => 'flat_collection_status',
+        'bundle' => 'flat_collection',
+        'label' => $t('Status of the collection'),
+        'description' => $t('Is the collection active, inactive, erroneous or locked?'),
+        'widget' => array(
+            'type' => 'option_buttons',
+        ),
+
+        'required' => TRUE,
+        'default_value' => array(
+            0 => array('value'=> 'open')),
+        'settings' => array('text_processing' => 0),
+        'no_ui' => TRUE,
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            )
+        )
+    );
+
+
+
+    $instances['flat_collection_exception'] = array(
+        'field_name' => 'flat_exception',
+        'bundle' => 'flat_collection',
         'label' => $t('Exception'
         ),
-        'description' => $t('Did any errors occur during upload'),
+        'description' => $t('Did any errors occur'),
         'widget' => array(
             'type' => 'text_textfield'
         ),
@@ -302,9 +434,45 @@ function flat_deposit_install()
         )
     );
 
+    $instances['flat_parent_nid_collection'] = array(
+        'field_name' => 'flat_parent_nid',
+        'bundle' => 'flat_collection',
+        'label' => $t('NID of the parent of this node'),
+        'description' => $t('In case this node is a subcollection, it is attach to which node?'),
+        'widget' => array(
+            'type' => 'number',
+        ),
+        'required' => FALSE,
+        'settings' => array(
+            'display' => array(
+                'default' => array(
+                    'label' => 'inline',
+                )
+            ),
+        ),
+    );
+
+    $instances['flat_fid_super'] = array(
+        'field_name' => 'flat_fid_super',
+        'bundle' => 'flat_collection',
+        'label' => $t('Fedora commons ID of super collection node'),
+        'widget' => array(
+            'type' => 'text_textfield'
+        ),
+        'required' => FALSE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            ),
+            'error' => array(
+                'label' => 'inline',
+            ),
+        )
+    );
+
     foreach ($instances as $instance){
         $instance['entity_type'] = 'node';
-        $instance['bundle'] = 'flat_bundle';
         field_create_instance($instance);
     }
 
