@@ -40,6 +40,8 @@
 	
 	<xsl:param name="always-compound-eval" select="'false()'"/>
 	
+	<xsl:param name="owner" select="'admin'"/>
+	
 	<xsl:variable name="namespaces">
 		<ns/>
 	</xsl:variable>
@@ -353,6 +355,8 @@
 			<foxml:objectProperties>
 				<!-- [A]ctive state -->
 				<foxml:property NAME="info:fedora/fedora-system:def/model#state" VALUE="A"/>
+				<!-- the owner -->
+				<foxml:property NAME="info:fedora/fedora-system:def/model#ownerId" VALUE="{$owner}"/>
 				<!-- take the first title found in the Dublin Core -->
 				<foxml:property NAME="info:fedora/fedora-system:def/model#label">
 					<xsl:variable name="label" select="($dc//dc:title[normalize-space() != ''])[1]" xmlns:dc="http://purl.org/dc/elements/1.1/"/>

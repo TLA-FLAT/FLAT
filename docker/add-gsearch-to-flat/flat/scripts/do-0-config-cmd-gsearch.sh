@@ -5,7 +5,8 @@ GSEARCH_HOME=$FEDORA_HOME/tomcat/webapps/fedoragsearch/WEB-INF/classes/fgsconfig
 /app/flat/config-cmd-gsearch.sh \
     -t $GSEARCH_HOME/foxmlToSolr.xslt \
     -s $GSEARCH_HOME/conf/flat-solr-schema.xml \
-    -i /app/flat/cmd -x cmdi \
+    -i /app/flat/cmd \
+    -x $CMD_EXTENSION \
     -v
 cp lat-gsearch-transformer.xsl \
     $GSEARCH_HOME/foxmlToSolr.xslt

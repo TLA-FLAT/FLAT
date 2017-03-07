@@ -1,0 +1,8 @@
+<FedoraCommons>
+  <localServer>https://localhost:8443/fedora</localServer>
+  <publicServer>http://localhost/flat</publicServer>
+  <userName>fedoraAdmin</userName>
+  <userPass>fedora</userPass>
+  <trustStore>/opt/jssecacerts</trustStore>
+  <trustStorePass>changeit</trustStorePass>
+</FedoraCommons>

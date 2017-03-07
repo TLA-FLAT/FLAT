@@ -157,8 +157,10 @@ ln -s /lat /app/flat/cmd
 ./do-4-index.sh
 ```
 
-## Publications ##
+## Publications, Presentations & Demonstrations ##
 
+* M. Windhouwer. [Fedora Commons in the CLARIN Infrastructure](http://www.slideshare.net/mwindhouwer/fedora-commons-in-the-clarin-infrastructure). Presentation at [_CLARIN-PLUS workshop: "Facilitating the Creation of National Consortia - Repositories"_](https://www.clarin.eu/event/2017/clarin-plus-workshop-facilitating-creation-national-consortia-repositories). Prague, Czech Republic, February 9 - 10, 2017.
+* P. Trilsbeek, M. Windhouwer. [FLAT: A CLARIN-compatible repository solution based on Fedora Commons](https://www.clarin.eu/content/abstracts-overview-clarin-annual-conference-2016#Z). At the [_CLARIN Annual Conference_](https://www.clarin.eu/event/2016/clarin-annual-conference-2016-aix-en-provence-france). Aix-en-Provence, France, 26-28 October, 2016. 
 * M. Windhouwer, M. Kemps-Snijders, P. Trilsbeek, A. Moreira, B. van der Veen, G. Silva, D. von Rhein. [FLAT: constructing a CLARIN compatible home for language resources](http://www.lrec-conf.org/proceedings/lrec2016/summaries/476.html). In _Proceedings of the Tenth International Conference on Language Resources and Evaluation_ ([LREC 2016](http://lrec2016.lrec-conf.org/en/)), European Language Resources Association ([ELRA](http://www.elra.info/)), Portorož, Slovenia, May 23 - 28, 2016. ([Local updated version](documents/2016-LREC-FLAT.pdf))
 
 ___

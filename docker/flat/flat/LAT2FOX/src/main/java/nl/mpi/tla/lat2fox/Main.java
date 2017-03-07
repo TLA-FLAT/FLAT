@@ -321,7 +321,7 @@ public class Main {
         }
         
         public Source resolve(String href,String base) throws TransformerException {
-            if (href.equals("cmd2fox.xsl")) {
+            if (href.equals("jar:cmd2fox.xsl")) {
                 return new javax.xml.transform.stream.StreamSource(Main.class.getResource("/cmd2fox.xsl").toExternalForm());
             } else
                 return resolver.resolve(href,base);

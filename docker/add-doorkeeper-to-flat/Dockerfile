@@ -12,9 +12,9 @@ RUN apt-get update &&\
 
 RUN mkdir /tmp/fits &&\
     cd /tmp/fits &&\
-    wget http://projects.iq.harvard.edu/files/fits/files/fits-1.0.2.zip &&\
-    unzip fits-1.0.2.zip &&\
-    mv fits-1.0.2 /app/fits &&\
+    wget http://projects.iq.harvard.edu/files/fits/files/fits-1.0.4.zip &&\
+    unzip fits-1.0.4.zip &&\
+    mv fits-1.0.4 /app/fits &&\
     mkdir /app/fits/log-lib &&\
     mv /app/fits/lib/slf4j-log4j12-1.7.12.jar /app/fits/log-lib &&\
     sed -i 's|APPCLASSPATH=""|APPCLASSPATH="${FITS_HOME}/log-lib/slf4j-log4j12-1.7.12.jar"|g' /app/fits/fits-env.sh &&\

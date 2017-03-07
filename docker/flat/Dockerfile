@@ -11,6 +11,7 @@ ENV DRUPAL_PROJECT=flat
 ENV TOMCAT_TIMEOUT=60
 #ENV FLAT_HOST=192.168.99.100
 ENV FLAT_HOST=localhost
+ENV CMD_EXTENSION=cmdi
 
 # Regenerate SSH host keys. baseimage-docker does not contain any, so you
 # have to do that yourself. You may also comment out this instruction; the
@@ -71,7 +72,7 @@ ENV CATALINA_HOME /var/www/fedora/tomcat
 
 RUN mkdir /tmp/fedora &&\
 	cd /tmp/fedora &&\
-	wget "http://downloads.sourceforge.net/project/fedora-commons/fedora/3.8.1/fcrepo-installer-3.8.1.jar"
+	wget "https://github.com/fcrepo3/fcrepo/releases/download/v3.8.1/fcrepo-installer-3.8.1.jar"
 
 ADD fedora/install.properties /tmp/fedora/install.properties
 RUN /etc/init.d/postgresql start &&\

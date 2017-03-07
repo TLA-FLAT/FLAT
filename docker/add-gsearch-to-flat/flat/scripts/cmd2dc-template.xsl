@@ -9,7 +9,7 @@
     xmlns:iso="http://www.iso.org/"
     xmlns:sil="http://www.sil.org/">
 	
-	<xsl:import href="cmd2fox.xsl"/>
+	<xsl:import href="jar:cmd2fox.xsl"/>
 	
 	<!-- DUBLIN CORE -->
     

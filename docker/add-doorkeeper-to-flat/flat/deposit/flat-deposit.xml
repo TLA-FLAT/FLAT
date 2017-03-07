@@ -10,10 +10,6 @@
         <property name="work" value="{flat:findBagBase($bag)}" uniq="true"/>
         <property name="easy" value="{$base}/easy" uniq="true"/>
         <property name="epicPrefix" value="12345"/>
-        <property name="fedoraUser" value="fedoraAdmin"/>
-        <property name="fedoraPassword" value="fedora"/>
-        <property name="fedoraServer" value="https://localhost:8443/fedora"/>
-        <property name="publicFedoraServer" value="http://localhost/flat"/>
         <property name="gsearchUser" value="fgsAdmin"/>
         <property name="gsearchPassword" value="fgsAdmin"/>
         <property name="gsearchServer" value="http://localhost:8080/fedoragsearch"/>
@@ -52,6 +48,7 @@
         <action class="nl.mpi.tla.flat.deposit.action.Versions"/>
         -->
         <action class="nl.mpi.tla.flat.deposit.action.HandleAssignment">
+            <!-- TODO get from epicConfig -->
             <parameter name="prefix" value="{$epicPrefix}"/>
         </action>
         <!--
@@ -62,8 +59,9 @@
             <parameter name="dir" value="{$work}/acl"/>
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.CreateFOX">
-            <parameter name="cmd2dc" value="{$base}/policies/cmd2dc.xsl"/>
-            <parameter name="cmd2fox" value="{$base}/transforms/cmd2fox.xsl"/>
+            <parameter name="owner" value="{$work}/acl/owner.xml"/>
+            <parameter name="cmd2fox" value="{$base}/policies/cmd2fox.xsl"/>
+            <parameter name="jar_cmd2fox" value="{$base}/transforms/cmd2fox.xsl"/>
             <parameter name="dir" value="{$work}/fox"/>
             <parameter name="relations" value="{$base}/dummies/relations.xml"/>
             <parameter name="policies" value="{$work}/acl"/>
@@ -79,16 +77,23 @@
             <parameter name="accessRights" value="..."/>
             -->
         </action>
+        <action class="nl.mpi.tla.flat.deposit.action.FedoraUser">
+            <parameter name="user" value="{$work}/acl/owner.xml"/>
+            <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
+            <parameter name="userFedoraConfig" value="{$work}/acl/fedora-config.xml"/>
+            <parameter name="drupal" value="/var/www/html/flat"/>
+            <parameter name="drush"  value="/var/www/composer/vendor/drush/drush/drush"/>
+        </action>
+        <action class="nl.mpi.tla.flat.deposit.action.UpdateCollections">
+            <parameter name="fedoraConfig" value="{$work}/acl/fedora-config.xml"/>
+            <parameter name="foxes" value="{$work}/fox"/>
+        </action>
         <action class="nl.mpi.tla.flat.deposit.action.Deposit">
-            <parameter name="fedoraServer" value="{$fedoraServer}"/>
-            <parameter name="fedoraUser" value="{$fedoraUser}"/>
-            <parameter name="fedoraPassword" value="{$fedoraPassword}"/>
+            <parameter name="fedoraConfig" value="{$work}/acl/fedora-config.xml"/>
             <parameter name="dir" value="{$work}/fox"/>
-            <parameter name="trustStore" value="/opt/jssecacerts"/>
-            <parameter name="trustStorePass" value="changeit"/>
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.EPICHandleCreation">
-            <parameter name="fedoraServer" value="{$publicFedoraServer}"/>
+            <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
             <parameter name="epicConfig" value="{$base}/policies/epic-config.xml"/>
             <parameter name="trustStore" value="/opt/jssecacerts"/>
             <parameter name="trustStorePass" value="changeit"/>
