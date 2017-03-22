@@ -60,10 +60,10 @@
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.CreateFOX">
             <parameter name="owner" value="{$work}/acl/owner.xml"/>
+            <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
             <parameter name="cmd2fox" value="{$base}/policies/cmd2fox.xsl"/>
             <parameter name="jar_cmd2fox" value="{$base}/transforms/cmd2fox.xsl"/>
             <parameter name="dir" value="{$work}/fox"/>
-            <parameter name="relations" value="{$base}/dummies/relations.xml"/>
             <parameter name="policies" value="{$work}/acl"/>
             <parameter name="policies" value="{$home}/policies"/>
         </action>
