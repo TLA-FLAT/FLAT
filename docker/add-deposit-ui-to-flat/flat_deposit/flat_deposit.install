@@ -58,7 +58,7 @@ function flat_deposit_install()
 
     $fields['flat_parent_nid'] = array(
         'field_name' => 'flat_parent_nid',
-        'type' => 'number_integer',
+        'type' => 'list_integer',
         'cardinality' => 1,
         'settings' => array(),
     );
@@ -184,30 +184,32 @@ function flat_deposit_install()
         'bundle' => 'flat_bundle',
         'label' => $t('NID of the parent of this node'),
         'widget' => array(
-            'type' => 'number',
+            'type' => 'option_buttons'
         ),
-        'required' => FALSE,
+        'required' => TRUE,
         'settings' => array(
+            'text_processing' => 0),
             'display' => array(
                 'default' => array(
                     'label' => 'inline',
+                    #'label' => 'hidden',
                 )
             ),
-        ),
+
     );
 
     $instances['flat_parent_title'] = array(
         'field_name' => 'flat_parent_title',
         'bundle' => 'flat_bundle',
-        'label' => $t('Name of the parent node'),
+        'label' => $t('Is part of collection'),
         'widget' => array(
-            'type' => 'option_buttons'
+            'type' => 'text_textfield',
         ),
-        'required' => TRUE,
+        'required' => FALSE,
+        'disabled' => TRUE,
         'default_value' => array(
             0 => array('value'=> 'unassigned')),
         'settings' => array('text_processing' => 0),
-        'no_ui' => TRUE,
         'display' => array(
             'default' => array(
                 'label' => 'inline',

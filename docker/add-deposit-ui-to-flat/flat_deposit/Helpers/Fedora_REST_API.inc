@@ -11,6 +11,7 @@
 class FedoraRESTAPI{
 
     private $config = array();
+
     /**
      * FedoraRESTAPI constructor.
      * @param array $config host_ip, port and credentials of fedora server

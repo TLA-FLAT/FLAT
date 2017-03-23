@@ -5,14 +5,14 @@ if [ $# -ne 2 ];then
   exit 1
 
 else
- temp_bag_dir=$1
+ bag_dir=$1
  bundle=$2
 fi
 
-nFiles=$(find "$temp_bag_dir/" -type f ! -name 'bag-info.txt' ! -name 'bagit.txt' ! -name '*manifest-md5.txt' | wc -l)
+nFiles=$(find "$bag_dir/" -type f ! -name 'bag-info.txt' ! -name 'bagit.txt' ! -name '*manifest-md5.txt' | wc -l)
 
 if [ $nFiles -eq 0 ];then
-  echo "No files found to be zipped at $temp_bag_dir/"
+  echo "No files found to be zipped at $bag_dir/"
   exit 1
 fi
 
@@ -20,8 +20,8 @@ fi
 echo "nFiles to ingest: $nFiles"
 
 #zip all unhidden files
-rel_dir_name=$(basename "$temp_bag_dir")
-cd "${temp_bag_dir}"/..
+rel_dir_name=$(basename "$bag_dir")
+cd "${bag_dir}"/..
 zip -r ${bundle} $rel_dir_name -x ".*" -x "*/.*"
 
 exit $?

@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+Specifies which form fields will be generate in drupal 
+see https://api.drupal.org/api/drupal/developer%21topics%21forms_api_reference.html/7.x for info about drupal form render api. 
+
+In the fields section you can specify fields. Fields need to have attributes:
+- id: unique id which will become the form field id in drupal
+- name: name of the field in the original  cmdi-profile
+
+and children:
+- type: formatting of the field; implemented values are
+    * textfield
+    * date
+    * dropdown 
+    * (empty) missing values will be rendered as textfield
+
+- title: The title which will appear on top of the field
+
+
+
+- description (optional): a info button which will show the value this field when hovered onto
+- subNode (optional): specifies whether a field is located in a subNode.
+
+Additional fied is data. data fields are hidden in drupal. Required info is the clarin profile ID, to which this transform refers 
+  
+ -->
+
+<profileToDrupal>
+    <subNodes>
+        <subNode>Description</subNode>
+        <subNode>Contributor</subNode>
+        <subNode>Institution</subNode>
+        <subNode>Project</subNode>
+        <subNode>Content_Language</subNode>
+    </subNodes>
+    <fields>
+        <field id="field_01" name="Title">
+            <type>textfield</type>
+            <title>My custom title</title>
+            <required>true</required>
+        </field>
+        <field id="field_02" name="DataType">
+            <type>dropdown</type>
+            <title>Data Type</title>
+            <description>Kind of data that is acquired</description>
+            <required>true</required>
+            <options>
+                <option>DNA sequences</option>
+                <option>EEG data</option>
+                <option>fMRI data</option>
+                <option>Video recordings</option>
+            </options>
+        </field>
+        <field id="field_03" name="ResearchField">
+            <type>dropdown</type>
+            <title>Department</title>
+            <required>true</required>
+            <options>
+                <option>Language Documentation</option>
+                <option>Language Development</option>
+                <option>Language Acquisition</option>
+                <option>Language &amp; Genetics</option>
+                <option>Neurobiology of Language</option>
+            </options>
+        </field>
+        <field id="field_04" name="Date">
+            <type>date</type>
+            <title>Collection creation date</title>
+            <description>Date at which the collection was created</description>
+            <required>true</required>
+        </field>
+        <field id="field_05" name="Description">
+            <title>Description</title>
+            <type>textfield</type>
+            <required>true</required>
+            <subNode>Description</subNode>
+        </field>
+        <field id="field_06" name="Name">
+            <title>Name</title>
+            <type>textfield</type>
+            <required>true</required>
+            <subNode>Contributor</subNode>
+        </field>
+        <field id="field_07" name="Role">
+            <title>Role</title>
+            <type>dropdown</type>
+            <required>true</required>
+            <subNode>Contributor</subNode>
+            <options>
+                <option>annotator</option>
+                <option>author</option>
+                <option>compiler</option>
+                <option>consultant</option>
+                <option>data_inputter</option>
+                <option>depositor</option>
+                <option>developer</option>
+                <option>editor</option>
+                <option>illustrator</option>
+                <option>interpreter</option>
+                <option>interviewer</option>
+                <option>participant</option>
+                <option>performer</option>
+                <option>photographer</option>
+                <option>recorder</option>
+                <option>researcher</option>
+                <option>research_participant</option>
+                <option>responder</option>
+                <option>signer</option>
+                <option>singer</option>
+                <option>speaker</option>
+                <option>sponsor</option>
+                <option>transcriber</option>
+                <option>translator</option>
+            </options>
+        </field>
+        <field id="field_08" name="EmailAddress">
+            <title>Email Address</title>
+            <type>textfield</type>
+                <subNode>Contributor</subNode>
+        </field>
+        <field id="field_09" name="ORCID">
+            <title>ORCID</title>
+            <type>textfield</type>
+            <subNode>Contributor</subNode>
+        </field>
+        <field id="field_10" name="Department">
+            <title>Department</title>
+            <type>textfield</type>
+            <subNode>Institution</subNode>
+        </field>
+        <field id="field_11" name="Organisation">
+            <title>Organisation</title>
+            <type>textfield</type>
+            <required>true</required>
+            <subNode>Institution</subNode>
+        </field>
+        <field id="field_12" name="Url">
+            <title>URL</title>
+            <type>textfield</type>
+            <subNode>Institution</subNode>
+        </field>
+        <field id="field_13" name="ProjectName">
+            <title>Project Name</title>
+            <type>textfield</type>
+            <required>true</required>
+            <subNode>Project</subNode>
+        </field>
+        <field id="field_14" name="ProjectDescription">
+            <title>Project Description</title>
+            <type>textfield</type>
+            <required>true</required>
+            <subNode>Project</subNode>
+        </field>
+        <field id="field_15" name="ProjectID">
+            <title>Project identifier</title>
+            <type>textfield</type>
+            <subNode>Project</subNode>
+        </field>
+        <field id="field_16" name="Url">
+            <title>Project identifier</title>
+            <type>textfield</type>
+            <subNode>Project</subNode>
+        </field>
+        <field id="field_17" name="Name">
+            <title>Name</title>
+            <type>textfield</type>
+            <subNode>Content_Language</subNode>
+        </field>
+        <field id="field_18" name="Id">
+            <title>Id</title>
+            <type>textfield</type>
+            <subNode>Content_Language</subNode>
+        </field>
+        <field id="field_19" name="Continent">
+            <title>Continent</title>
+            <type>textfield</type>
+            <subNode>Location</subNode>
+        </field>
+        <field id="field_20" name="Country">
+            <title>Country</title>
+            <type>textfield</type>
+            <subNode>Location</subNode>
+        </field>
+        <field id="field_21" name="PlaceName">
+            <title>Place Name</title>
+            <type>textfield</type>
+            <subNode>Location</subNode>
+        </field>
+        <field id="field_22" name="Latitute">
+            <title>Latitude</title>
+            <type>textfield</type>
+            <subNode>Location</subNode>
+            <subNode>geoCoordinates</subNode>
+        </field>
+        <field id="field_23" name="Longitude">
+            <title>Longitude</title>
+            <type>textfield</type>
+            <subNode>Location</subNode>
+            <subNode>geoCoordinates</subNode>
+        </field>
+        <field id="field_24" name="Elevation">
+            <title>Elevation</title>
+            <type>textfield</type>
+            <subNode>Location</subNode>
+            <subNode>geoCoordinates</subNode>
+        </field>
+        <field id="field_25" name="Reference">
+            <title>Reference</title>
+            <type>textfield</type>
+            <subNode>Publication</subNode>
+        </field>
+        <field id="field_26" name="Url">
+            <title>URL</title>
+            <type>textfield</type>
+            <subNode>Publication</subNode>
+        </field>
+        <field id="field_27" name="Licence">
+            <title>Licence</title>
+            <type>textfield</type>
+            <subNode>Licence</subNode>
+        </field>
+        <field id="field_28" name="LicenseUrl">
+            <title>Licence URL</title>
+            <type>textfield</type>
+            <subNode>Licence</subNode>
+        </field>
+    </fields>
+    <data>
+        <clarinProfileId>clarin.eu:cr1:p_1475136016239</clarinProfileId>
+    </data>    
+</profileToDrupal>
