@@ -64,7 +64,6 @@ RUN cd /tmp/ServiceFLAT &&\
 RUN mkdir -p /app/flat/deposit/easy
 ADD flat/deposit/flat-deposit.xml /app/flat/deposit/flat-deposit.xml
 ADD flat/deposit/policies /app/flat/deposit/policies
-ADD flat/deposit/dummies /app/flat/deposit/dummies
 ADD flat/deposit/test /app/flat/deposit/test
 RUN mkdir -p /app/flat/deposit/bags &&\
     mkdir -p /app/flat/deposit/transforms &&\
