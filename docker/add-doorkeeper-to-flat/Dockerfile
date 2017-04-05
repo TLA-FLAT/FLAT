@@ -68,7 +68,6 @@ RUN mkdir -p /app/flat/deposit/easy
 RUN mkdir -p /app/flat/data
 ADD flat/deposit/flat-deposit.xml /app/flat/deposit/flat-deposit.xml
 ADD flat/deposit/policies /app/flat/deposit/policies
-ADD flat/deposit/test /app/flat/deposit/test
 RUN mkdir -p /app/flat/deposit/bags &&\
     mkdir -p /app/flat/deposit/transforms &&\
     cd /app/flat/deposit/transforms &&\
