@@ -65,9 +65,9 @@ sleep 10 &&\
 # Add FLAT's own scripts and tools 
 #
 
-RUN mkdir -p /app/flat
-ADD flat/scripts/* /app/flat/
-RUN chmod +x /app/flat/*.sh
+ADD flat/scripts/* /app/flat/bin/
+RUN chmod +x /app/flat/bin/*.sh &&\
+	mv /app/flat/bin/do-*.sh /app/flat/
 
 #Clean up APT when done.
 RUN apt-get clean &&\

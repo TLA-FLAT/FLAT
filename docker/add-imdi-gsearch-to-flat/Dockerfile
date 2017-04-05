@@ -25,12 +25,11 @@ sleep 10 &&\
 	/etc/init.d/postgresql stop
 
 #
-# Add FLAT's own scripts and tools 
+# CMD GSearch mapping
 #
 
-RUN mkdir -p /app/flat
-ADD flat/scripts/* /app/flat/
-RUN chmod +x /app/flat/*.sh
+RUN mkdir -p /app/flat/deposit/policies/
+ADD flat/gsearch-mapping-template.xml /app/flat/deposit/policies/
 
 #Clean up APT when done.
 RUN apt-get clean &&\

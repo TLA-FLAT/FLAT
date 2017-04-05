@@ -2,13 +2,13 @@
 
 date
 
-if [ -f /app/flat/imdi-to-convert.txt ]; then
-	/app/flat/isle2clarin.sh /app/flat/imdi-to-convert.txt
+if [ -f /app/flat/src/imdi-to-convert.txt ]; then
+	isle2clarin.sh /app/flat/src/imdi-to-convert.txt
 else
-	if [ -f /app/flat/imdi-to-skip.txt ]; then
-		/app/flat/isle2clarin.sh -s /app/flat/imdi-to-skip.txt /app/flat/src
+	if [ -f /app/flat/src/imdi-to-skip.txt ]; then
+		isle2clarin.sh -s /app/flat/src/imdi-to-skip.txt /app/flat/src
 	else
-		/app/flat/isle2clarin.sh /app/flat/src
+		isle2clarin.sh /app/flat/src
 	fi
 fi
 

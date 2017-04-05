@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CMD xmlns="http://www.clarin.eu/cmd/"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     CMDVersion="1.1"
+     xsi:schemaLocation="http://www.clarin.eu/cmd/ http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1345561703683/xsd">
+   <Header>
+      <MdCreator>twagoo</MdCreator>
+      <MdCreationDate>2012-09-11+02:00</MdCreationDate>
+      <MdProfile>clarin.eu:cr1:p_1345561703683</MdProfile>
+   </Header>
+   <Resources>
+      <ResourceProxyList>
+         <ResourceProxy id="h1">
+            <ResourceType mimetype="">Resource</ResourceType>
+            <!-- https://archive.org/details/GreenHornetComics3 -->
+            <ResourceRef>../resources/Green Hornet 003.pdf</ResourceRef>
+         </ResourceProxy>
+         <ResourceProxy id="h2">
+            <ResourceType>Resource</ResourceType>
+            <ResourceRef>../resources/secret.txt</ResourceRef>
+         </ResourceProxy>
+      </ResourceProxyList>
+      <JournalFileProxyList/>
+      <ResourceRelationList/>
+      <IsPartOfList>
+         <IsPartOf>lat:collection_comics</IsPartOf>
+      </IsPartOfList>
+   </Resources>
+   <Components>
+      <ComicBook ref="h1">
+         <Title>The Counterplot Affair</Title>
+         <Series xml:lang="eng">The Green Hornet</Series>
+         <PublicationYear>1963</PublicationYear>
+         <NumberOfPages>30</NumberOfPages>
+         <NumberOfChapters>1</NumberOfChapters>
+         <dc-publisher>
+            <publisher>Gold Key Comics</publisher>
+         </dc-publisher>
+         <Language>
+            <LanguageName>English</LanguageName>
+            <ISO639>
+               <iso-639-3-code>eng</iso-639-3-code>
+            </ISO639>
+         </Language>
+         <Format>
+            <ColorPrinting>true</ColorPrinting>
+         </Format>
+         <Author>
+            <Name>Fran Striker</Name>
+            <BirthYear>1906</BirthYear>
+            <Country>
+               <Code>US</Code>
+            </Country>
+         </Author>
+         <Character>
+            <Name>Britt Reid</Name>
+            <Role>primary</Role>
+         </Character>
+         <Character>
+            <Name>Kato</Name>
+            <Role>primary</Role>
+         </Character>
+      </ComicBook>
+   </Components>
+</CMD>

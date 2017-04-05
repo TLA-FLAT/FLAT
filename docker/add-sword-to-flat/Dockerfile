@@ -2,7 +2,8 @@ FROM		flat
 MAINTAINER	Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 
 RUN apt-get update &&\
-	apt-get -y dist-upgrade
+	apt-get -y dist-upgrade &&\
+    apt-get -y install zip unzip
 
 #
 # easy-deposit
@@ -38,15 +39,23 @@ RUN sed -i "s|FLAT_HOST|${FLAT_HOST}|g" /app/flat/deposit/sword/cfg/application.
 ENV EASY_DEPOSIT_HOME /app/flat/deposit/sword
 
 #
+# Add bagit
+#
+
+RUN cd /tmp &&\
+    wget https://github.com/LibraryOfCongress/bagit-java/releases/download/v4.12.3/bagit-v4.12.3.zip &&\
+    cd /app/ &&\
+    unzip /tmp/bagit-v4.12.3.zip &&\
+    ln -s bagit-v4.12.3 bagit &&\
+    ln -s /app/bagit/bin/bagit /app/flat/bin/bag
+
+#
 # Add FLAT's own scripts and tools 
 #
 
-ADD flat/deposit/test/test-sip.zip /app/flat/deposit/test/test-sip.zip
-
-RUN mkdir -p /app/flat
-ADD flat/scripts/* /app/flat/
-RUN sed -i "s|FLAT_HOST|${FLAT_HOST}|g" /app/flat/do-sword-upload.sh
-RUN chmod +x /app/flat/*.sh
+ADD flat/scripts/* /app/flat/bin/
+RUN sed -i "s|FLAT_HOST|${FLAT_HOST}|g" /app/flat/bin/flat-sword-upload.sh
+RUN chmod +x /app/flat/bin/*.sh
 
 #Clean up APT when done.
 RUN apt-get clean &&\

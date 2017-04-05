@@ -25,7 +25,8 @@ RUN mkdir /tmp/fits &&\
     cd /var/www/fedora/tomcat/webapps/fits &&\
     unzip -n ../fits.war &&\
     echo "fits.home=/app/fits" >> $CATALINA_HOME/conf/catalina.properties &&\
-    echo 'shared.loader=${fits.home}/lib/*.jar' >> $CATALINA_HOME/conf/catalina.properties
+    echo 'shared.loader=${fits.home}/lib/*.jar' >> $CATALINA_HOME/conf/catalina.properties &&\
+    ln -s /app/fits/fits.sh /app/flat/bin/fits.sh
 
 #
 # The FLAT Doorkeeper
@@ -44,14 +45,14 @@ RUN cd /tmp &&\
 RUN cd /tmp &&\
     git clone https://github.com/meertensinstituut/EPICify.git epicify &&\
     cd /tmp/epicify &&\
-    mvn clean install
+    mvn clean install &&\
+    cp cli/target/epicify.jar /app/flat/lib/
 
 ADD DoorKeeper /tmp/DoorKeeper
 RUN cd /tmp &&\
     if [ ! -f /tmp/DoorKeeper/pom.xml ]; then rm -rf DoorKeeper;  git clone -b develop https://github.com/TLA-FLAT/DoorKeeper.git DoorKeeper; fi &&\
     cd /tmp/DoorKeeper &&\
-    mvn clean install &&\
-    cp target/doorkeeper.jar /app/flat/lib/
+    mvn clean install
 
 ADD flat/deposit/ServiceFLAT /tmp/ServiceFLAT
 RUN cd /tmp/ServiceFLAT &&\
@@ -61,7 +62,10 @@ RUN cd /tmp/ServiceFLAT &&\
     cd /var/www/fedora/tomcat/webapps/flat &&\
     unzip ../flat.war
     
+ENV CATALINA_OPTS "-Djsse.enableSNIExtension=false ${CATALINA_OPTS}"
+
 RUN mkdir -p /app/flat/deposit/easy
+RUN mkdir -p /app/flat/data
 ADD flat/deposit/flat-deposit.xml /app/flat/deposit/flat-deposit.xml
 ADD flat/deposit/policies /app/flat/deposit/policies
 ADD flat/deposit/test /app/flat/deposit/test
@@ -70,12 +74,10 @@ RUN mkdir -p /app/flat/deposit/bags &&\
     cd /app/flat/deposit/transforms &&\
     jar xf /app/flat/lib/lat2fox.jar cmd2fox.xsl
 
-RUN mkdir -p /app/flat
-ADD flat/scripts/* /app/flat/
-RUN chmod +x /app/flat/*.sh
-
-ENV CATALINA_OPTS "-Djsse.enableSNIExtension=false"
+ADD flat/scripts/* /app/flat/bin/
+RUN chmod +x /app/flat/bin/*.sh
 
 #Clean up APT when done.
 RUN apt-get clean &&\
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    rm -rf /var/lib/apt/lists/* /var/tmp/* 
+# /tmp/* 

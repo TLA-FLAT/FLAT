@@ -16,45 +16,47 @@ Usage: ${0##*/} [-hv] [-c CLFACET] [-g GSMAP] [-t GSTRANS] [-s GSSCHEMA] [-d DCT
 Determine the mappings for the CMD records in INDIR and write them to a set of output files with OUTPREF.
 
     -h          display this help and exit
+	-b DIR      location of the ${0##*/} files
     -c CLFACET  location of the CLARIN facet mapping (URL)
-                (default: https://raw.githubusercontent.com/clarin-eric/VLO/master/vlo-commons/src/main/resources/facetConcepts.xml)
+                (default: https://raw.githubusercontent.com/clarin-eric/VLO-mapping/master/mapping/facetConcepts.xml)
     -g GSMAP    location of the GSearch facet mapping template
-                (default: ./gsearch-mapping-template.xml)
+                (default: $PWD/gsearch-mapping-template.xml)
     -t GSTRANS  location of the GSearch transformer
-                (default: ./fedoragsearch-2.6/fedoragsearch/FgsConfig/generated_gsearch_config_for_islandora/fgsconfigFinal/index/FgsIndex/foxmlToSolr.xslt)
+                (default: $PWD/fedoragsearch-2.6/fedoragsearch/FgsConfig/generated_gsearch_config_for_islandora/fgsconfigFinal/index/FgsIndex/foxmlToSolr.xslt)
     -s GSSCHEMA location of the GSearch Solr schema
-                (default: ./fedoragsearch-2.6/fedoragsearch/FgsConfig/generated_gsearch_config_for_islandora/fgsconfigFinal/index/FgsIndex/conf/schema-4.2.0-for-fgs-2.6.xml)
+                (default: $PWD/fedoragsearch-2.6/fedoragsearch/FgsConfig/generated_gsearch_config_for_islandora/fgsconfigFinal/index/FgsIndex/conf/schema-4.2.0-for-fgs-2.6.xml)
     -d DCTRANS  location of the CMD2DC transformer template
-                (default: ./cmd2dc-template.xsl)
+                (default: $PWD/cmd2dc-template.xsl)
     -p CACHEDIR location of the CMD profile cache
-                (default: ./.profile-cache)
+                (default: $PWD/.profile-cache)
     -r REGURL   URL of profiles endpoint of the CLARIN Component Registry
                 (default: http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles)
     -i INDIR    examine the records in this directory
-                (default: .)
+                (default: $PWD)
     -x EXT      extension of the records in the input directory
                 (default: xml)
     -o OUTPREF  put the resulting mapping, transformer and schema in files with this prefix
-                (default: ./lat-gsearch)
+                (default: $PWD/lat-gsearch)
     -v          be verbose.
 EOF
 }
 
 # Initialize our own variables:
-clarin_fc="https://raw.githubusercontent.com/clarin-eric/VLO/master/vlo-commons/src/main/resources/facetConcepts.xml"
-gsearch_fc="./gsearch-mapping-template.xml"
-gsearch_xsl="./fedoragsearch-2.6/fedoragsearch/FgsConfig/generated_gsearch_config_for_islandora/fgsconfigFinal/index/FgsIndex/foxmlToSolr.xslt"
-gsearch_solr="./fedoragsearch-2.6/fedoragsearch/FgsConfig/generated_gsearch_config_for_islandora/fgsconfigFinal/index/FgsIndex/conf/schema-4.2.0-for-fgs-2.6.xml"
-cmd2dc_xsl="./cmd2dc-template.xsl"
-profile_cache="./.profile-cache"
+cmd_gsearch_home="$PWD"
+clarin_fc="https://raw.githubusercontent.com/clarin-eric/VLO-mapping/master/mapping/facetConcepts.xml"
+gsearch_fc="$PWD/gsearch-mapping-template.xml"
+gsearch_xsl="$PWD/fedoragsearch-2.6/fedoragsearch/FgsConfig/generated_gsearch_config_for_islandora/fgsconfigFinal/index/FgsIndex/foxmlToSolr.xslt"
+gsearch_solr="$PWD/fedoragsearch-2.6/fedoragsearch/FgsConfig/generated_gsearch_config_for_islandora/fgsconfigFinal/index/FgsIndex/conf/schema-4.2.0-for-fgs-2.6.xml"
+cmd2dc_xsl="$PWD/cmd2dc-template.xsl"
+profile_cache="$PWD/.profile-cache"
 registry="http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles"
-input_dir="."
+input_dir="$PWD"
 rec_ext="xml"
-output_prefix="./lat-gsearch"
+output_prefix="$PWD/lat-gsearch"
 verbose=0
 
 OPTIND=1 # Reset
-while getopts "h?c:g:t:s:p:r:i:x:o:v" opt; do
+while getopts "h?vb:c:d:g:i:o:p:s:t:r:x:" opt; do
 	case "$opt" in
 		h|\?)
 			show_help
@@ -63,35 +65,38 @@ while getopts "h?c:g:t:s:p:r:i:x:o:v" opt; do
 		v)
 			verbose=1
 			;;
+		b)
+			cmd_gsearch_home=$OPTARG
+			;;
 		c)
 			clarin_fc=$OPTARG
-			;;
-		g)
-			gsearch_fc=$OPTARG
-			;;
-		t)
-			gsearch_xsl=$OPTARG
-			;;
-		s)
-			gsearch_solr=$OPTARG
 			;;
 		d)
 			cmd2dc_xsl=$OPTARG
 			;;
-		p)
-			profile_cache=$OPTARG
-			;;
-		r)
-			registry=$OPTARG
+		g)
+			gsearch_fc=$OPTARG
 			;;
 		i)
 			input_dir=$OPTARG
 			;;
-		x)
-			rec_ext=$OPTARG
-			;;
 		o)
 			output_prefix=$OPTARG
+			;;
+		p)
+			profile_cache=$OPTARG
+			;;
+		s)
+			gsearch_solr=$OPTARG
+			;;
+		t)
+			gsearch_xsl=$OPTARG
+			;;
+		r)
+			registry=$OPTARG
+			;;
+		x)
+			rec_ext=$OPTARG
 			;;
 		'?')
 			show_help >&2
@@ -107,7 +112,7 @@ if [ $verbose -ne 0 ]; then
 	echo "Input directory: $input_dir"
 fi
 
-profiles="`./findProfiles.sh -e "$rec_ext" $input_dir`"
+profiles="`findProfiles.sh -e "$rec_ext" $input_dir`"
 
 if [ $verbose -ne 0 ]; then
 	echo "Number of profiles: `echo $profiles | wc -w`"
@@ -166,7 +171,7 @@ fi
 #my_dir="${0%%/*}"
 my_dir="$(dirname "$(readlink -f "$0")")"
 # relative to this directory, invoke the xsl transformation
-./xsl2.sh -xsl:${my_dir}/createMapping.xsl -s:$gsearch_fc clarin_fc=$clarin_fc profile_cache=$profile_cache > ${output_prefix}-mapping.xml
+xsl2.sh -xsl:${cmd_gsearch_home}/createMapping.xsl -s:$gsearch_fc clarin_fc=$clarin_fc profile_cache=$profile_cache > ${output_prefix}-mapping.xml
 
 if [ $verbose -ne 0 ]; then
 	echo "Output mapping file: ${output_prefix}-mapping.xml"
@@ -178,7 +183,7 @@ if [ $verbose -ne 0 ]; then
 	echo "GSearch transformer: $gsearch_xsl"
 fi
 
-./xsl2.sh -xsl:${my_dir}/createTransformer.xsl -s:$gsearch_xsl mapping-location=${output_prefix}-mapping.xml > ${output_prefix}-transformer.xsl
+xsl2.sh -xsl:${cmd_gsearch_home}/createTransformer.xsl -s:$gsearch_xsl mapping-location=${output_prefix}-mapping.xml > ${output_prefix}-transformer.xsl
 
 if [ $verbose -ne 0 ]; then
 	echo "Output GSearch transformer file: ${output_prefix}-transformer.xsl"
@@ -190,7 +195,7 @@ if [ $verbose -ne 0 ]; then
 	echo "GSearch SOLR schema: $gsearch_solr"
 fi
 
-./xsl2.sh -xsl:${my_dir}/createSchema.xsl -s:$gsearch_solr mapping-location=${output_prefix}-mapping.xml > ${output_prefix}-schema.xml
+xsl2.sh -xsl:${cmd_gsearch_home}/createSchema.xsl -s:$gsearch_solr mapping-location=${output_prefix}-mapping.xml > ${output_prefix}-schema.xml
 
 if [ $verbose -ne 0 ]; then
 	echo "Output SOLR schema file: ${output_prefix}-schema.xml"
@@ -204,7 +209,7 @@ if [ -n "$cmd2dc_xsl" ] && [ -f "$cmd2dc_xsl" ]; then
     	echo "CMD2DC transformer template: $cmd2dc_xsl"
     fi
     
-    ./xsl2.sh -xsl:${my_dir}/createDublinCore.xsl -s:$cmd2dc_xsl mapping-location=${output_prefix}-mapping.xml > ${output_prefix}-cmd2dc.xsl
+    xsl2.sh -xsl:${cmd_gsearch_home}/createDublinCore.xsl -s:$cmd2dc_xsl mapping-location=${output_prefix}-mapping.xml > ${output_prefix}-cmd2dc.xsl
     
     if [ $verbose -ne 0 ]; then
     	echo "Output CMD2DC transformer file: ${output_prefix}-cmd2dc.xsl"

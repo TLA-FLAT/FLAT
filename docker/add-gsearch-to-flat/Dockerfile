@@ -97,20 +97,33 @@ RUN mkdir /tmp/saxon &&\
     rm -r /tmp/saxon
 
 #
-# Add FLAT's own scripts and tools 
+# FindProfiles
 #
-
-RUN mkdir -p /app/flat
-ADD flat/scripts/* /app/flat/
-RUN chmod +x /app/flat/*.sh
 
 RUN mkdir -p /tmp/FindProfiles
 ADD flat/FindProfiles /tmp/FindProfiles
 RUN cd /tmp/FindProfiles &&\
     mvn package &&\
-    mkdir -p /app/flat/lib &&\
     mv target/findProfiles.jar /app/flat/lib/findProfiles.jar
     
+#
+# CMD GSearch mapper
+# 
+
+RUN mkdir -p /app/flat/lib/cmd-gsearch
+ADD flat/cmd-gsearch/* /app/flat/lib/cmd-gsearch/
+
+RUN mkdir -p /app/flat/deposit/policies/
+ADD flat/gsearch-mapping.xml /app/flat/deposit/policies/
+
+#
+# Add FLAT's own scripts and tools 
+#
+
+ADD flat/scripts/* /app/flat/bin/
+RUN chmod +x /app/flat/bin/*.sh &&\
+    mv /app/flat/bin/do-* /app/flat/
+
 #Clean up APT when done.
 RUN apt-get clean &&\
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

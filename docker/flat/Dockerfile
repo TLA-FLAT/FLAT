@@ -1,17 +1,43 @@
 FROM phusion/baseimage:0.9.19
 MAINTAINER  Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 
-# set local timezone
-RUN mv /etc/localtime /etc/localtime.bak &&\
-    ln -sf /usr/share/zoneinfo/Europe/Amsterdam /etc/localtime
+#
+# Configure FLAT
+#
 
-# Set correct environment variables.
-ENV HOME /root
 ENV DRUPAL_PROJECT=flat
 ENV TOMCAT_TIMEOUT=60
 #ENV FLAT_HOST=192.168.99.100
 ENV FLAT_HOST=localhost
 ENV CMD_EXTENSION=cmdi
+ENV FLAT_ICONS=/app/flat/data/icons
+
+
+#
+# Setup workdir
+#
+
+RUN mkdir -p /app/flat/lib &&\
+	mkdir -p /app/flat/bin &&\
+	mkdir -p /app/flat/tmp
+
+WORKDIR /app/flat
+
+ENV HOME /root
+ENV PATH="/app/flat/bin:${PATH}"
+
+# expose ports
+
+EXPOSE 80
+EXPOSE 8080
+EXPOSE 8443
+
+#
+# set local timezone
+#
+
+RUN mv /etc/localtime /etc/localtime.bak &&\
+    ln -sf /usr/share/zoneinfo/Europe/Amsterdam /etc/localtime
 
 # Regenerate SSH host keys. baseimage-docker does not contain any, so you
 # have to do that yourself. You may also comment out this instruction; the
@@ -228,7 +254,10 @@ sleep 10 &&\
 	bash -c "timeout $TOMCAT_TIMEOUT grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 	/etc/init.d/postgresql stop
 
+#
 # add the generated certificate for localhost
+#
+
 RUN mkdir /tmp/cert
 ADD cert/InstallCert.java /tmp/cert/InstallCert.java
 RUN cd /tmp/cert &&\
@@ -243,7 +272,12 @@ sleep 10 &&\
 	bash -c "timeout $TOMCAT_TIMEOUT grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 	/etc/init.d/postgresql stop
 
+ENV JAVA_OPTS "-Djavax.net.ssl.trustStore=/opt/jssecacerts -Djavax.net.ssl.trustStorePassword=changeit"
+
+#
 # proai
+#
+
 RUN mkdir /tmp/proai &&\
 	cd /tmp/proai &&\
 	wget http://downloads.sourceforge.net/project/fedora-commons/services/3.4/oaiprovider-1.2.2.zip &&\
@@ -256,18 +290,7 @@ ADD proai/proai.properties /var/www/fedora/tomcat/webapps/oaiprovider/WEB-INF/cl
 ADD proai/identify.xml /var/www/html/identify.xml
 
 #
-# Add start script to automatically start required services
-#
-
-ENV JAVA_OPTS "-Djavax.net.ssl.trustStore=/opt/jssecacerts -Djavax.net.ssl.trustStorePassword=changeit"
-
-ADD fedora/tomcat-fedora.sh /var/www/fedora/tomcat/bin/tomcat-fedora.sh
-ADD my_init.d/start.sh /etc/my_init.d/start.sh
-RUN chmod u+x /var/www/fedora/tomcat/bin/tomcat-fedora.sh &&\
-	chmod u+x /etc/my_init.d/start.sh
-
-#
-# Add FLAT's own scripts, tools and icons
+# Add LAT2FOX
 #
 
 ENV MAVEN_OPTS -Xss10M
@@ -283,31 +306,39 @@ RUN mkdir -p /tmp/LAT2FOX
 ADD flat/LAT2FOX /tmp/LAT2FOX
 RUN cd /tmp/LAT2FOX &&\
     mvn clean package &&\
-    mkdir -p /app/flat/lib &&\
     mv target/lat2fox.jar /app/flat/lib/lat2fox.jar
 	
-RUN mkdir -p /app/flat
-ADD flat/scripts/* /app/flat/
-RUN chmod +x /app/flat/*.sh
+#
+# Add FLAT's own scripts, tools and icons
+#
+
+ADD flat/scripts/* /app/flat/bin/
+RUN chmod +x /app/flat/bin/*.sh &&\
+	mv /app/flat/bin/do-*.sh /app/flat/
 
 RUN mkdir -p /app/flat/policies
-ADD flat/policies/default-resource-policy.xml /app/flat/policies/default-resource-policy.xml
+ADD flat/policies/default-resource-policy.xml /app/flat/deposit/policies/default-resource-policy.xml
 
-RUN mkdir -p /app/flat/icons
-ADD flat/icons /app/flat/icons
-ENV FLAT_ICONS /app/flat/icons
+RUN mkdir -p /app/flat/data/icons
+ADD flat/icons $FLAT_ICONS
     
-# Clean up APT and /tmp when done.
-RUN apt-get clean &&\
-	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+#
+# Add start script to automatically start required services
+#
 
-# workdir
-WORKDIR /app/flat
+ADD fedora/tomcat-fedora.sh /var/www/fedora/tomcat/bin/tomcat-fedora.sh
+ADD my_init.d/start.sh /etc/my_init.d/start.sh
+RUN chmod u+x /var/www/fedora/tomcat/bin/tomcat-fedora.sh &&\
+	chmod u+x /etc/my_init.d/start.sh
 
 # Use baseimage-docker's init system.
 ENTRYPOINT ["/sbin/my_init"]
 CMD ["--", "/bin/bash", "-l"]
 
-EXPOSE 80
-EXPOSE 8080
-EXPOSE 8443
+#
+# Cleanup
+#
+
+# clean up APT and /tmp when done.
+RUN apt-get clean &&\
+	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

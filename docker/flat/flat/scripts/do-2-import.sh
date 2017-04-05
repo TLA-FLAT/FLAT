@@ -6,9 +6,11 @@ sleep 10
 
 export FEDORA_HOME="/var/www/fedora"
 
+mkdir -p /app/flat/tmp
+
 echo "START: `date --rfc-3339=seconds`"
-if [ -f /app/flat/log ]; then
-	rm /app/flat/log
+if [ -f /app/flat/tmp/log ]; then
+	rm /app/flat/tmp/log
 fi
 for DIR in `find /app/flat/fox/ -type d | sed '1d'`; do
   if [ -f STOP ]; then
@@ -30,15 +32,15 @@ for DIR in `find /app/flat/fox/ -type d | sed '1d'`; do
   BEGIN="`date --rfc-3339=seconds`"
   echo "BEGIN DIR: $DIR,`date --rfc-3339=seconds`"
   B="`date '+%s'`"
-  $FEDORA_HOME/client/bin/fedora-batch-ingest.sh $DIR /app/flat/log xml info:fedora/fedora-system:FOXML-1.1 localhost:8443 fedoraAdmin fedora https fedora
+  $FEDORA_HOME/client/bin/fedora-batch-ingest.sh $DIR /app/flat/tmp/log xml info:fedora/fedora-system:FOXML-1.1 localhost:8443 fedoraAdmin fedora https fedora
   E="`date '+%s'`"
   RES="FAILED"
   CNT="-1"
-  if [ -f /app/flat/log ]; then
-  	cat /app/flat/log
+  if [ -f /app/flat/tmp/log ]; then
+  	cat /app/flat/tmp/log
 	RES="SUCCESS"
-        CNT="`grep path2object /app/flat/log | wc -l`"
-	rm /app/flat/log
+        CNT="`grep path2object /app/flat/tmp/log | wc -l`"
+	rm /app/flat/tmp/log
   fi
   echo "END DIR: $DIR,$RES,$CNT,$BEGIN,`date --rfc-3339=seconds`,`expr $E - $B`"
 done

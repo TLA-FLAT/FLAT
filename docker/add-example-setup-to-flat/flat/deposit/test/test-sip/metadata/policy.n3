@@ -1,0 +1,22 @@
+@prefix acl: <http://www.w3.org/ns/auth/acl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+
+# make the whole SIP public
+#[acl:accessTo <sip>; acl:mode acl:Read; acl:agentClass foaf:Agent].
+
+# resource h1 is public
+[acl:accessTo <sip#h1>; acl:mode acl:Read; acl:agentClass foaf:Agent].
+
+# resource h2 is shared
+[acl:accessTo <sip#h2>; acl:mode acl:Read;  acl:agent <#other>].
+
+#give the owner read and write access
+[acl:accessTo <sip>; acl:mode acl:Read, acl:Write;  acl:agent <#owner>].
+
+# the owner
+<#owner> a foaf:Person ;
+   foaf:account [foaf:accountServiceHomepage <#flat>; foaf:accountName "john@example.com"].
+
+# a colleague
+<#other> a foaf:Person ;
+   foaf:account [foaf:accountServiceHomepage <#flat>; foaf:accountName "jane@example.com"].

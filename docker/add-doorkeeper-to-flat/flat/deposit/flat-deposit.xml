@@ -35,25 +35,15 @@
         	<parameter name="fitsService" value="{$fitsService}"/>
         	<parameter name="mimetypes" value="{$base}/policies/fits-mimetypes.xml"/>
         </action>
-        <!--
-        <action name="quality assessment" class="nl.mpi.tla.flat.deposit.action.QualityAssessment"/>
-        <action name="manual evaluation" class="nl.mpi.tla.flat.deposit.action.Evaluate"/>
-        -->
-        <action name="persist resources" class="nl.mpi.tla.flat.deposit.action.Persist">
-            <parameter name="resourcesDir" value="{$work}/resources"/>
-            <parameter name="policyFile" value="{$base}/policies/persistence-policy.xml"/>
-            <parameter name="xpathDatasetName" value="replace(//*[name()='MdSelfLink'], 'hdl:{$epicPrefix}/','')"/>
-        </action>
-        <!--
-        <action class="nl.mpi.tla.flat.deposit.action.Versions"/>
-        -->
         <action class="nl.mpi.tla.flat.deposit.action.HandleAssignment">
             <!-- TODO get from epicConfig -->
             <parameter name="prefix" value="{$epicPrefix}"/>
         </action>
-        <!--
-        <action class="nl.mpi.tla.flat.deposit.action.Relate"/>
-        -->
+        <action name="persist resources" class="nl.mpi.tla.flat.deposit.action.Persist">
+            <parameter name="resourcesDir" value="/app/flat/data"/>
+            <parameter name="policyFile" value="{$base}/policies/persistence-policy.xml"/>
+            <parameter name="xpathDatasetName" value="replace(/cmd:CMD/cmd:Header/cmd:MdSelfLink,'.*{$epicPrefix}/','')"/>
+        </action>
         <action class="nl.mpi.tla.flat.deposit.action.ACL">
             <parameter name="policy" value="{$work}/metadata/policy.n3"/>
             <parameter name="dir" value="{$work}/acl"/>
@@ -64,13 +54,14 @@
             <parameter name="cmd2fox" value="{$base}/policies/cmd2fox.xsl"/>
             <parameter name="jar_cmd2fox" value="{$base}/transforms/cmd2fox.xsl"/>
             <parameter name="dir" value="{$work}/fox"/>
+            <parameter name="icons" value="{$env-FLAT_ICONS}"/>
             <parameter name="policies" value="{$work}/acl"/>
-            <parameter name="policies" value="{$home}/policies"/>
+            <parameter name="policies" value="{$base}/policies"/>
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.EasyBag">
             <parameter name="bags" value="{$easy}"/>
             <!-- FOX (to get DC from) needs to be available -->
-            <parameter name="foxes" value="{$work}/fox"/>
+            <parameter name="dir" value="{$work}/fox"/>
             <parameter name="creator" value="{$base}/policies/easy-bag-creator.xml"/>
             <!-- 
             <parameter name="audience" value="..."/>
@@ -85,8 +76,9 @@
             <parameter name="drush"  value="/var/www/composer/vendor/drush/drush/drush"/>
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.UpdateCollections">
+            <parameter name="prefix" value="{$epicPrefix}"/>
             <parameter name="fedoraConfig" value="{$work}/acl/fedora-config.xml"/>
-            <parameter name="foxes" value="{$work}/fox"/>
+            <parameter name="dir" value="{$work}/fox-coll"/>
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.Deposit">
             <parameter name="fedoraConfig" value="{$work}/acl/fedora-config.xml"/>

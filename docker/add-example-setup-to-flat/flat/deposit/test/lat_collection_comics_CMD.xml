@@ -67,7 +67,7 @@
    </foxml:datastream>
    <foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="TN" STATE="A" CONTROL_GROUP="E">
       <foxml:datastreamVersion ID="TN.0" LABEL="icon.png" MIMETYPE="image/png">
-         <foxml:contentLocation TYPE="URL" REF="file:/app/flat/icons/folder.png"/>
+         <foxml:contentLocation TYPE="URL" REF="file:/app/flat/data/icons/folder.png"/>
       </foxml:datastreamVersion>
    </foxml:datastream>
 </foxml:digitalObject>

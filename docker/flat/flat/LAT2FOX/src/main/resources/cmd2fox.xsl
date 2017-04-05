@@ -57,11 +57,19 @@
 	<xsl:function name="cmd:lat">
 		<xsl:param name="prefix"/>
 		<xsl:param name="pid"/>
-		<xsl:variable name="suffix" select="replace(replace(cmd:hdl($pid), '[^a-zA-Z0-9]', '_'), '^hdl_', '')"/>
-		<xsl:variable name="length" select="
-				min((string-length($suffix),
-				(64 - string-length($prefix))))"/>
-		<xsl:sequence select="concat($prefix, substring($suffix, string-length($suffix) - $length + 1))"/>
+		<xsl:choose>
+			<xsl:when test="starts-with($pid,$prefix)">
+				<!-- it's already a lat identifier -->
+				<xsl:sequence select="$pid"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:variable name="suffix" select="replace(replace(cmd:hdl($pid), '[^a-zA-Z0-9]', '_'), '^hdl_', '')"/>
+				<xsl:variable name="length" select="
+					min((string-length($suffix),
+					(64 - string-length($prefix))))"/>
+				<xsl:sequence select="concat($prefix, substring($suffix, string-length($suffix) - $length + 1))"/>
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:function>
 
 	<xsl:function name="cmd:pid">
@@ -138,7 +146,7 @@
 	<xsl:function name="cmd:escFile" as="xs:anyURI">
 		<xsl:param name="uri" as="xs:anyURI"/>
 		<xsl:choose>
-			<xsl:when test="starts-with($uri,'file:')">
+			<xsl:when test="starts-with($uri,'file:') and not(contains($uri,'%'))">
 				<xsl:variable name="paths" as="xs:string*">
 					<xsl:for-each select="tokenize(replace($uri,'file:',''),'/')">
 						<xsl:sequence select="encode-for-uri(.)"/>
@@ -371,10 +379,18 @@
 				</foxml:property>
 			</foxml:objectProperties>
 			<!-- Metadata: Dublin Core -->
-			<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="DC" STATE="A" CONTROL_GROUP="X">
+			<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="DC" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
 				<foxml:datastreamVersion ID="DC.0" FORMAT_URI="http://www.openarchives.org/OAI/2.0/oai_dc/" MIMETYPE="text/xml" LABEL="Dublin Core Record for this object">
 					<foxml:xmlContent>
-						<xsl:copy-of select="$dc"/>
+						<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+							<dc:identifier>
+								<xsl:if test="starts-with($pid,'hdl:')">
+									<xsl:attribute name="type" select="'hdl'"/>
+								</xsl:if>
+								<xsl:value-of select="replace($pid, '^hdl:', 'https://hdl.handle.net/')"/>
+							</dc:identifier>
+							<xsl:copy-of select="$dc/oai_dc:dc/* except dc:identifier[@type='hdl']"/>
+						</oai_dc:dc>						
 					</foxml:xmlContent>
 				</foxml:datastreamVersion>
 			</foxml:datastream>
@@ -409,7 +425,7 @@
 										</foxml:property>
 									</foxml:objectProperties>
 									<!-- Metadata: Dublin Core -->
-									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="DC" STATE="A" CONTROL_GROUP="X">
+									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="DC" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
 										<foxml:datastreamVersion ID="DC.0" FORMAT_URI="http://www.openarchives.org/OAI/2.0/oai_dc/" MIMETYPE="text/xml" LABEL="Dublin Core Record for this object">
 											<foxml:xmlContent>
 												<xsl:copy-of select="$dc"/>
@@ -445,7 +461,7 @@
 											</foxml:xmlContent>
 										</foxml:datastreamVersion>
 									</foxml:datastream>
-									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="CMD" STATE="A" CONTROL_GROUP="X">
+									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="CMD" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
 										<foxml:datastreamVersion ID="CMD.0" FORMAT_URI="{/cmd:CMD/@xsii:schemaLocation}" LABEL="CMD Record for this object" MIMETYPE="application/x-cmdi+xml">
 											<foxml:xmlContent>
 												<xsl:apply-templates mode="cmd">
@@ -456,7 +472,7 @@
 											</foxml:xmlContent>
 										</foxml:datastreamVersion>
 									</foxml:datastream>
-									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="TN" STATE="A" CONTROL_GROUP="E">
+									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="TN" STATE="A" CONTROL_GROUP="E" VERSIONABLE="false">
 										<foxml:datastreamVersion ID="TN.0" LABEL="icon.png" MIMETYPE="image/png">
 											<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/metadata.png"/>
 										</foxml:datastreamVersion>
@@ -476,7 +492,7 @@
 					</xsl:choose>
 				</xsl:when>
 				<xsl:otherwise>
-					<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="CMD" STATE="A" CONTROL_GROUP="X">
+					<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="CMD" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
 						<foxml:datastreamVersion ID="CMD.0" FORMAT_URI="{/cmd:CMD/@xsii:schemaLocation}" LABEL="CMD Record for this object" MIMETYPE="application/x-cmdi+xml">
 							<foxml:xmlContent>
 								<xsl:apply-templates mode="cmd">
@@ -751,13 +767,19 @@
 									<foxml:property NAME="info:fedora/fedora-system:def/model#label" VALUE="{substring($resTitle,1,255)}"/>
 								</foxml:objectProperties>
 								<!-- Metadata: Dublin Core -->
-								<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="DC" STATE="A" CONTROL_GROUP="X">
+								<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="DC" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
 									<foxml:datastreamVersion ID="DC.0" FORMAT_URI="http://www.openarchives.org/OAI/2.0/oai_dc/" MIMETYPE="text/xml" LABEL="Dublin Core Record for this object">
 										<foxml:xmlContent>
 											<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
 												<dc:title>
 													<xsl:value-of select="$resTitle"/>
 												</dc:title>
+												<dc:identifier>
+													<xsl:if test="starts-with($resPID,'hdl:')">
+														<xsl:attribute name="type" select="'hdl'"/>
+													</xsl:if>
+													<xsl:value-of select="replace($resPID, '^hdl:', 'https://hdl.handle.net/')"/>
+												</dc:identifier>
 											</oai_dc:dc>
 										</foxml:xmlContent>
 									</foxml:datastreamVersion>
@@ -805,7 +827,7 @@
 										</foxml:xmlContent>
 									</foxml:datastreamVersion>
 								</foxml:datastream>
-								<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="OBJ" STATE="A">
+								<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="OBJ" STATE="A" VERSIONABLE="true">
 									<!--- CHECK: CONTROL_GROUP indicates the kind of datastream, either
                                                             Externally Referenced Content (E), 
                                                             Redirected Content (R), 
@@ -833,7 +855,7 @@
 									</foxml:datastreamVersion>
 								</foxml:datastream>
 								<!-- add specific thumbnail icons for specific MIME types -->
-								<foxml:datastream ID="TN" STATE="A" CONTROL_GROUP="E">
+								<foxml:datastream ID="TN" STATE="A" CONTROL_GROUP="E" VERSIONABLE="false">
 									<foxml:datastreamVersion ID="TN.0" LABEL="icon.png" MIMETYPE="image/png">
 										<xsl:choose>
 											<xsl:when test="starts-with($resMIME,'audio/')">

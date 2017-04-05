@@ -8,12 +8,8 @@ RUN apt-get update &&\
 	apt-get -y dist-upgrade
 
 #
-# Add FLAT's own scripts and tools 
+# ISLE2CLARIN 
 #
-
-RUN mkdir -p /app/flat
-ADD flat/scripts/* /app/flat/
-RUN chmod +x /app/flat/*.sh
 
 ADD proai/proai.properties /var/www/fedora/tomcat/webapps/oaiprovider/WEB-INF/classes/proai.properties
 
@@ -24,6 +20,14 @@ RUN cd /tmp &&\
     mkdir -p /app/flat/lib &&\
     mv target/isle2clarin.jar /app/flat/lib/isle2clarin.jar
     
+
+RUN mkdir -p /app/flat/deposit/policies/
+ADD flat/*.* /app/flat/deposit/policies/
+
+ADD flat/scripts/* /app/flat/bin/
+RUN chmod +x /app/flat/bin/*.sh &&\
+	mv /app/flat/bin/do-*.sh /app/flat/
+
 #Clean up APT when done.
 RUN apt-get clean &&\
 	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

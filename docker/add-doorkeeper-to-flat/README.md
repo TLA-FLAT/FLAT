@@ -1,5 +1,5 @@
-Add the DoorKeeper to FLAT (*experimental*)
-===========================================
+Add the DoorKeeper to FLAT
+==========================
 
 ## Requirements ##
 This docker file depends on the FLAT base image.
@@ -26,7 +26,7 @@ A test SIP is included:
 
 ## Additional configuration ##
 
-[/app/flat/deposit/flat-deposit.xml](flat/deposit/flat-deposit.xml) contains the set of actions a SIP is pushed through. All actions should succeed to result in a succesful deposit.
+[/app/flat/deposit/flat-deposit.xml](flat/deposit/flat-deposit.xml) contains the set of actions a SIP is pushed through. All actions should succeed to result in a succesful deposit. See the [DoorKeeper documentation](https://github.com/TLA-FLAT/DoorKeeper) for a description of this file and of the available actions.
 
 ## Notes ##
 
