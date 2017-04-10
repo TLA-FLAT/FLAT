@@ -70,7 +70,7 @@ The following commands show how to build a setup that supports FLAT base plus fa
 ```sh
 cd docker
 #start with the FLAT base
-docker build --squash -t flat-base flat/
+docker build --squash -t flat flat/
 #add Fedora gsearch + SOLR
 docker build --squash -t flat add-gsearch-to-flat/
 #add Islandora SOLR module
@@ -118,7 +118,7 @@ If you have native CMD records you need both less and more. You won't need the I
 ```sh
 cd docker
 #start with the FLAT base
-docker build --squash -t flat-base flat/
+docker build --squash -t flat flat/
 #add IMDI conversion
 docker build --squash -t flat add-imdi-conversion-to-flat/
 #add Fedora gsearch + SOLR
