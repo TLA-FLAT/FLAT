@@ -312,6 +312,10 @@
 							</xsl:when>
 							<xsl:otherwise>
 								<xsl:choose>
+									<xsl:when test="starts-with(.,'islandora:')">
+										<xsl:message use-when="$debug">DBG: IsPartOf.islandora[<xsl:value-of select="."/>]</xsl:message>
+										<xsl:sequence select="."/>
+									</xsl:when>
 									<xsl:when test="starts-with(.,'lat:')">
 										<xsl:message use-when="$debug">DBG: IsPartOf.lat[<xsl:value-of select="."/>]</xsl:message>
 										<xsl:sequence select="."/>
