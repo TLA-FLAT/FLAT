@@ -106,7 +106,7 @@
     </exception>
     <final>
         <action name="status" class="nl.mpi.tla.flat.deposit.action.UpdateSwordStatus">
-            <parameter name="props" value="{$work}/../../deposit.properties"/>
+            <parameter name="props" value="{$bag}/deposit.properties"/>
         </action>
         <action name="logTeardown" class="nl.mpi.tla.flat.deposit.action.WorkspaceLogCleanup"/>        
     </final>

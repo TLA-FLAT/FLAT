@@ -22,6 +22,7 @@ cd $_PWD
 cat << EOF
 TODO: flat-create-sip.sh /app/flat/test/test-sip
 TODO: flat-sword-upload.sh test-sip.zip test
-TODO: wget --method=PUT http://localhost:8080/flat/doorkeeper/test
+TODO: wget --method=PUT http://localhost:8080/flat/doorkeeper/test OR
+TODO:   doorkeeper.sh sip=test
 TODO: tail -f deposit/bags/test/bag-test-sip/data/test-sip/logs/devel.log
 EOF
