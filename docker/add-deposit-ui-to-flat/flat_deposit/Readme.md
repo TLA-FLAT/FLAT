@@ -18,36 +18,13 @@ After building the docker image the deposit module will not be enabled automatic
 
 
 
-
-## 3. File and Folder permissions ##
-In order to ingest data, the sudoer file (visudo) needs to be adapted. Please copy/paste the code from the FLAT/docker/add-deposit-ui-to-flat/shell/sudoer.ini file using visudo
-
-=======
-
-```ssh
-sudo /usr/sbin/visudo
-:%d #deletes the whole content
+## 3. Parameter change ##
 
 ```
-
-Also make sure that the bag folder is writeable by the apache-user
-
-
-## 4. Parameter change ##
-
-To derive dublin core information from cmdi file, we need to adapt parameters in the flat-deposit.xml file. Moreover, we need to specify locally which cmdi profiles to accept. Therefore we need to adapt the policies.
-
-
-
-```ssh
-vim /app/flat/deposit/flat-deposit.xml
-# Example for choosing a local xslt to transform cmdi info to dublin core
-# set <parameter name="cmd2dc" value="/app/flat/cmd2dc.xsl"/>
-
 vim /app/flat/deposit/policies/rules.sch
 # adapt cmdi profiles the doorkeeper accepts by changing the 'value'-attribute in the <let>-field 
-# example for lat-session:
-# set <let name="allowed" value="('clarin.eu:cr1:p_1407745712035')"/>
+# example for lat-session and MPI_Collection:
+# set <let name="allowed" value="('clarin.eu:cr1:p_14077457120358', 'clarin.eu:cr1:p_1475136016239')"/>
 
 ```
 
