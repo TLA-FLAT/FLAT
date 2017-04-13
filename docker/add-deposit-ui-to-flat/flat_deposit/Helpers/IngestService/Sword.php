@@ -11,7 +11,7 @@ class Sword
      * @return bool
      * @throws IngestServiceException
      */
-    function postSip(String $pathToSip, String $zipName, String $sipId) : bool {
+    function postSip($pathToSip, $zipName, $sipId) {
         $cwd = getcwd();
 
         chdir($pathToSip);
@@ -64,10 +64,12 @@ class Sword
     /**
      * HTTP GET Request for SWORD REST api
      *
+     * @param String $bagId the bag ID
+     *
      * @param bool $code_only if true method returns only HTTP response code
      * @return mixed
      */
-    function getRequest(String $bagId, bool $code_only=FALSE)
+    function getRequest($bagId, $code_only=FALSE)
     {
         $config = variable_get('flat_deposit_sword');
         $ch = curl_init();
@@ -96,18 +98,18 @@ class Sword
      * @throws IngestServiceException
      */
 
-    function checkStatus(String $bagId)
+    function checkStatus($bagId)
     {
 
         #initial check request
-        $val = $this->GetRequest($bagId);
+        $val = $this->getRequest($bagId);
         $xml =simplexml_load_string($val) ;
         $status = (string)$xml->category['term'];
 
         // loop and wait until SWORD signals end of request
         while ($status == 'FINALIZING') {
             sleep(2);
-            $val = $this->GetRequest($bagId);
+            $val = $this->getRequest($bagId);
             $xml =simplexml_load_string($val) ;
             $status = (string)$xml->category['term'];
         };

@@ -79,7 +79,7 @@ function flat_deposit_cmdi_create_form($form, &$form_state){
 
             global $user;
             $file = $form_state['build_info']['args'][1];
-            $md = include 'private://flat_deposit/' . $user->name . '/Templates/' . $file . '.php';
+            $md = include 'metatdata://' . $user->name . '/Templates/' . $file . '.php';
         }
 
 
@@ -120,7 +120,7 @@ function flat_deposit_cmdi_create_form_validate($form, &$form_state){
 
         // Can directory be created?
         global $user;
-        $template_dir = 'private://flat_deposit/' . $user->name . '/Templates';
+        $template_dir = 'metadata://' . $user->name . '/Templates';
 
         if (!file_exists($template_dir)) {drupal_mkdir($template_dir);}
 

@@ -29,7 +29,6 @@ function flat_bundle_action_form($form, &$form_state, $vars)
         '#type' => 'submit',
         '#value' => t('Create info file for bundle'),
         #'#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
-        '#validate' => array('flat_bundle_action_form_describe_validate'),
         '#description' => t('Bundles are obliged to be accompanied by a info file'),
         '#disabled' => TRUE,
     );
@@ -37,6 +36,7 @@ function flat_bundle_action_form($form, &$form_state, $vars)
     $form['actions']['reopen_bundle'] = array(
         '#type' => 'submit',
         '#value' => t('Re-open bundle'),
+        '#validate' => array('flat_bundle_action_form_reopen_validate'),
         #'#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
         '#description' => t('Click to allow modifications of your bundle'),
         '#disabled' => TRUE,
@@ -103,26 +103,30 @@ function flat_bundle_action_form($form, &$form_state, $vars)
         '#value' => 'node/' . $vars['nid']);
 
 
-// Specify which handlers to become active and which bundle_image to display
 
+    // Specify which handlers to become active and which bundle_image to display
+    $form['actions']['edit_bundle']['#disabled'] = TRUE;
     $status = $wrapper->flat_bundle_status->value();
 
     switch ($status) {
         case 'open': {
             $form['actions']['bundle_image']['#disabled'] = FALSE;
             $form['actions']['validate_bundle']['#disabled'] = FALSE;
+            $form['actions']['edit_bundle']['#disabled'] = FALSE;
             $name = 'open_bundle';
             break;
         }
 
         case 'validating': {
             $name = 'process_bundle';
+            $form['actions']['reopen_bundle']['#disabled'] = FALSE;
             break;
         }
 
         case 'failed': {
             $form['actions']['bundle_image']['#disabled'] = FALSE;
             $form['actions']['validate_bundle']['#disabled'] = FALSE;
+            $form['actions']['edit_bundle']['#disabled'] = FALSE;
             $name = 'closed_bundle_failed';
             break;
         }
@@ -149,6 +153,7 @@ function flat_bundle_action_form($form, &$form_state, $vars)
         $form['actions']['describe_bundle']['#disabled'] = FALSE;
     }
 
+
     return $form;
 
 }
@@ -160,8 +165,40 @@ function flat_bundle_action_form_describe_validate($form, &$form_state){
         drupal_goto($form_state['values']['origin_url']);
         return;
 
+}
+
+function flat_bundle_action_form_reopen_validate($form, &$form_state){
+
+    module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
+
+    $node = $form_state['values']['node'];
+    $wrapper = entity_metadata_wrapper('node', $node);
+
+    $stream = 'private';
+
+    $move = FlatBundle::moveBundleData($node, 'data', $stream);
+    if (!$move){
+        form_set_error('reopen', 'Unable to move bundle data to ' . $stream);
+        drupal_goto($form_state['values']['origin_url']);
     }
-    // In case no cmdi file exists
+
+    if (isset($wrapper->flat_cmdi_file)){
+        $move = FlatBundle::moveBundleData($node, 'metadata', $stream);
+        if (!$move){
+            form_set_error('reopen', 'Unable to move bundle metadata to ' . $stream);
+            drupal_goto($form_state['values']['origin_url']);
+        }
+
+
+    };
+
+    return $form;
+
+}
+
+
+
+
 
 function flat_bundle_action_form_validate_validate($form, &$form_state){
 
@@ -199,6 +236,7 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
         return;
     }
 
+    /*
     // Check if target freeze directory exists
     if (!file_exists(drupal_realpath('freeze://' . $user->name .'/' . $wrapper->flat_parent_title->value() . '/' . $node->title . '/metadata'))){
 
@@ -206,7 +244,7 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
         drupal_goto($form_state['values']['origin_url']);
         return;
     }
-
+*/
 
     // Quick and dirty Check cmdi valid xml
     $file_field = $wrapper->flat_cmdi_file->value();
@@ -276,9 +314,9 @@ function flat_bundle_action_form_archive_validate($form, &$form_state){
 
         form_set_error('archive_bundle', t('User has not enough privileges to perform requested action'));
         drupal_goto($form_state['values']['origin_url']);
-        return;
+        return $form;
     }
-    return $form;
+
 
 }
 
@@ -319,6 +357,7 @@ function flat_bundle_action_form_submit($form, &$form_state){
             $data_to_post['drupal_path'] = DRUPAL_ROOT;
             $data_to_post['nid'] = $node->nid;
             $data_to_post['sid'] = $sid;
+        $data_to_post['test'] = $action;
 
 
 
@@ -394,19 +433,14 @@ function flat_bundle_action_form_submit($form, &$form_state){
             break;
 
         case 'Re-open bundle':
-            module_load_include('inc','flat_deposit', '/Helpers/Ingestor');
 
-            $ingest = new Ingestor($node->nid);
 
-            $ingest->deleteTempBag();
-
-            $ingest->deleteZipfile();
-
-            $ingest->moveData('unfreeze');
-
-            $ingest->updateNodeStatus('open');
-
+            $node = $form_state['values']['node'];
+            $wrapper = entity_metadata_wrapper('node', $node);
+            $wrapper->flat_bundle_status->set('open');
+            $wrapper->save();
             drupal_set_message('Bundle is open and can be modified');
+            $form_state['redirect'] = $form_state['values']['origin_url'];
 
             break;
 

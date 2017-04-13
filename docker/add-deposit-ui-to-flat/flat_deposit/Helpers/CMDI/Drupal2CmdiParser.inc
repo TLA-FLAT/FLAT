@@ -185,7 +185,8 @@ class Drupal2CmdiParser
         switch ($type){
             case 'date':
                 $month = (strlen($values['month']) == 2 ) ? $values['month'] : '0'. $values['month'];
-                $date = $values['year'] . '-' . $month . '-' . $values['day'];
+                $day = (strlen($values['day']) == 2 ) ? $values['day'] : '0'. $values['day'];
+                $date = $values['year'] . '-' . $month . '-' . $day;
                 $converted = array($date);
                 break;
             default :
@@ -199,8 +200,6 @@ class Drupal2CmdiParser
     private function _mergeTreeAndComponents()
     {
 
-        $fName = drupal_get_path('module','flat_deposit') .  '/Helpers/CMDI/Profiles/GENERATED_EXAMPLE.xml';
-
         // convert xml to string without header
         $domComponents = dom_import_simplexml($this->components);
         $string = $domComponents->ownerDocument->saveXML($domComponents->ownerDocument->documentElement);
@@ -212,7 +211,8 @@ class Drupal2CmdiParser
 
         $domTree->documentElement->appendChild($fragment);
 
-        $domTree->save($fName);
+        #$fName = drupal_get_path('module','flat_deposit') .  '/Helpers/CMDI/Profiles/GENERATED_EXAMPLE.xml';
+        #$domTree->save($fName);
         $this->cmdi = simplexml_import_dom($domTree);
 
     }

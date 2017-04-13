@@ -34,9 +34,9 @@ RUN cd /var/www/html/flat/ &&\
     /var/www/composer/vendor/drush/drush/drush -y dl feeds  &&\
     /var/www/composer/vendor/drush/drush/drush en -y admin_menu &&\
     /var/www/composer/vendor/drush/drush/drush -y en devel  &&\
-    /var/www/composer/vendor/drush/drush/drush -y en feeds  &&\
-    /var/www/composer/vendor/drush/drush/drush -y en feeds_ui  &&\
-    /var/www/composer/vendor/drush/drush/drush php-script Create_test_user.php --script-path=/tmp &&\
+#    /var/www/composer/vendor/drush/drush/drush -y en feeds  &&\
+#    /var/www/composer/vendor/drush/drush/drush -y en feeds_ui  &&\
+#    /var/www/composer/vendor/drush/drush/drush php-script Create_test_user.php --script-path=/tmp &&\
 
     /etc/init.d/postgresql stop 
 

@@ -8,6 +8,14 @@ function flat_deposit_set_paths($updated_values=NULL)
 {
 
     $defaults =  array(
+        #directory for locally stored data
+        'local' => '/app/flat/deposit/local/',
+        #subdirectory within $local/$department tree where archive data can be found
+        'local_subfolder' => '/workspaces/archive_deposit',
+        #directory for uploading external data
+        'external' => '/var/www/html/flat/sites/default/files/private/flat_deposit/data',
+        #directory for storing data
+        'metadata' => '/var/www/html/flat/sites/default/files/private/flat_deposit/metadata',
         #backend directory for freeze of data
         'freeze' => '/app/flat/backend/',
         #backend directory where bags will be placed

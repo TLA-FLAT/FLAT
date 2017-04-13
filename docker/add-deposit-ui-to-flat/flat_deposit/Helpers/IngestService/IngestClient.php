@@ -21,27 +21,28 @@ class IngestClient
      *
      * @param String $cmdiFileName fullname of the record.cmdi file
      *
-     * @param String $originalPathResources absolute path where resources can be found
-     *
      * @param String $parentFid Fedora ID of the parent to which SIP should be attached
      *
      * @param bool $test Should ingest be completed or only validated
      */
-    public function __construct(String $sipClassName, String $owner, String $cmdiFileName, String $originalPathResources, String $parentFid, bool $test=FALSE)
+    public function __construct($sipClassName, $owner, $cmdiFileName, $parentFid, $test=FALSE)
     {
         $this->IngestFactory = new IngestFactory();
 
-        $this->sipConcrete = new $sipClassName($owner, $cmdiFileName, $originalPathResources, $parentFid, $test);
+        $this->sipConcrete = new $sipClassName($owner, $cmdiFileName, $parentFid, $test);
 
     }
 
     /**
-     * SIP ingest request to factory
+     * SIP ingest request to factory. For parallel (backend) processing a session id is needed for authentication
+     *
+     * @param $info array (optional) configuration settings for bundle ingest (see also {@link Bundle.php}).
+     *
      * @return mixed
      */
-    public function requestSipIngest(){
+    public function requestSipIngest($info = []){
 
-        $retValue = $this->IngestFactory->RequestSipIngest($this->sipConcrete);
+        $retValue = $this->IngestFactory->RequestSipIngest($this->sipConcrete, $info);
 
         return $retValue;
     }

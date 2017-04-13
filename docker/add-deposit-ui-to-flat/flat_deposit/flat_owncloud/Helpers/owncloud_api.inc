@@ -148,7 +148,7 @@ class OwnCloud
 
 
         // convert path strings of drupal data directory and each owncloud mount into arrays and count overlap between both
-        $d_path = explode("/",drupal_realpath('private://flat_deposit'));
+        $d_path = explode("/",drupal_realpath('external://'));
 
         foreach ($mounts as $mount) {
             $m_path = explode('/',$mount->configuration->datadir); # mounted path is always one field longer (i.e. user acronym) than general drupal data path
@@ -178,7 +178,7 @@ class OwnCloud
         } else {
 
             global $user;
-            $datadir =drupal_realpath('private://flat_deposit/data/'. $user->name);
+            $datadir =drupal_realpath('external://'. $user->name);
             $mpoint = "/MPI_Archive_" . $user->name;
             $message = 'Trying to create owncloud user mount';
         }
@@ -228,7 +228,7 @@ class OwnCloud
             $datadir = $config['temp_dir'];
         } else {
             global $user;
-            $datadir =drupal_realpath('private://flat_deposit/data/'. $user->name);
+            $datadir =drupal_realpath('external://'. $user->name);
         }
 
         $res = $this->GetOwncloudMounts();

@@ -184,7 +184,7 @@ function flat_collection_add_form($form, &$form_state, $parent){
         ),
     );
 
-/*
+
     // Fill form field with loaded data
     if ($load_profile_specific_form){
         // review why it does not work if extra condition is chosen
@@ -196,7 +196,7 @@ function flat_collection_add_form($form, &$form_state, $parent){
             $form['template_container']['elements'] = $result2;
         #}
     }
-*/
+
     return $form;
 
 }
@@ -270,7 +270,7 @@ function flat_collection_add_form_final_validate($form, &$form_state)
 
 
     //validate existence output dir
-    $export_dir = drupal_realpath('private://flat_deposit/metadata/') . $owner . "/.collection/" ;
+    $export_dir = 'metadata://' . '/' . $owner . "/.collection/" ;
     if (!file_exists($export_dir)){
         drupal_mkdir($export_dir, NULL, TRUE);
     }
@@ -309,13 +309,14 @@ function flat_collection_add_form_final_validate($form, &$form_state)
     $userName = $user->name ;
     $sipType = 'Collection';
     $parentFid = $form_state['values']['data']['parentFid'];
-    $pathResources = '.collection';
     $test = FALSE;
 
     module_load_include('php','flat_deposit','Helpers/IngestService/IngestClient');
-    $ingest_client = new IngestClient($sipType, $userName, $recordCmdi, $pathResources, $parentFid, $test);
+    $ingest_client = new IngestClient($sipType, $userName, $recordCmdi, $parentFid, $test);
 
-    $fid = $ingest_client->requestSipIngest();
+    $options = [];
+    $options ['policy'] = $form_state['values']['select_policy'];
+    $fid = $ingest_client->requestSipIngest($options);
 
     // check existence object
     module_load_include('inc','flat_deposit', '/Helpers/Fedora_REST_API');
@@ -325,7 +326,7 @@ function flat_collection_add_form_final_validate($form, &$form_state)
 
     $fObject = $rest_fedora->getObjectData($fid);
     if (!$fObject){
-        form_set_error('error', t('Could not find retrieve object data from fedora common server for object @object',array('@object'=>$fid)));
+        form_set_error('error', t('Check of FID for new collection item did not reveal valid data. Error message:' . $fid));
         return $form;
     }
 

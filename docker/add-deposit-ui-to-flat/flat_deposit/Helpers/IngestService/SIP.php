@@ -10,11 +10,15 @@ abstract class SIP
     // owner of the SIP
     protected $owner;
 
-    // full filename of the cmdi record file
-    protected $cmdiRecord;
+    // name or id for a ingest SIP
+    protected $sipId;
 
-    // original directory where resources can be found
-    protected $resourceDirectory;
+    // Temp directory where SIP is being stored
+    protected $sipDir;
+
+
+    // full filename of the original cmdi record file
+    protected $cmdiRecord;
 
     // FID of the parent fedora Object
     protected $parentFid;
@@ -22,8 +26,6 @@ abstract class SIP
     // boolean indicating whether ingest should be completed or only simulated
     protected $test;
 
-    // name or id for a ingest SIP
-    protected $sipId;
 
     // frozen data directory to be bagged and ingested
     protected $frozenSipDir;
@@ -31,144 +33,40 @@ abstract class SIP
     // fedora id assigned to a ingested SIP
     protected $fid;
 
+    // full file name of copied cmdi file
+    protected $cmdiTarget;
+
+    // Custom ingest set up of a SIP child (Collection, bundle)
+    abstract function init($info);
+
     abstract function authenticateUser();
-
-    abstract function setupIngest();
-
-    abstract function setFrozenSipDir();
 
     abstract function prepareSipData();
 
-    abstract function doFedora();
+    abstract function addResourcesToCmdi();
 
     abstract function finish();
 
-    abstract function rollback(Array $processes);
+    abstract function customRollback($message);
 
-
-    function __construct($owner, $cmdiFileName, $resourceDirectory, $parentFid, $test)
+    function __construct($owner, $cmdiFileName, $parentFid, $test)
     {
-        $this->setOwner($owner);
-        $this->setCmdiRecord($cmdiFileName);
-        $this->setResourceDirectory($resourceDirectory);
-        $this->setParentFid($parentFid);
-        $this->setTest($test);
-
         $uuid = uniqid();
-        $this->setSipId(get_class($this) . '_'. $uuid);
-        $this->setFrozenSipDir();
-    }
 
+        $this->owner =$owner;
 
+        $this->sipId = get_class($this) . '_'. $uuid;
 
-    /**
-     * @return mixed
-     */
-    public function getOwner()
-    {
-        return $this->owner;
-    }
+        $this->cmdiRecord =$cmdiFileName;
 
-    /**
-     * @param mixed $owner
-     */
-    public function setOwner($owner)
-    {
-        $this->owner = $owner;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getCmdiRecord()
-    {
-        return $this->cmdiRecord;
-    }
-
-    /**
-     * @param mixed $cmdiRecord
-     */
-    public function setCmdiRecord($cmdiRecord)
-    {
-        $this->cmdiRecord = $cmdiRecord;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getResourceDirectory()
-    {
-        return $this->resourceDirectory;
-    }
-
-    /**
-     * @param mixed $resourceDirectory
-     */
-    public function setResourceDirectory($resourceDirectory)
-    {
-        $this->resourceDirectory = $resourceDirectory;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getParentFid()
-    {
-        return $this->parentFid;
-    }
-
-    /**
-     * @param mixed $parentFid
-     */
-    public function setParentFid($parentFid)
-    {
         $this->parentFid = $parentFid;
-    }
 
-
-
-    /**
-     * @return mixed
-     */
-    public function getTest()
-    {
-        return $this->test;
-    }
-
-    /**
-     * @param mixed $test
-     */
-    public function setTest($test)
-    {
         $this->test = $test;
-    }
 
+        $this->frozenSipDir = drupal_realpath('freeze://') . '/SIPS/' .  $this->owner . '/' . $this->sipId . '/';
 
+        $this->cmdiTarget = $this->frozenSipDir .  '/data/metadata/record.cmdi';
 
-
-    /**
-     * @return mixed
-     */
-    public function getFrozenSipDir()
-    {
-        return $this->frozenSipDir;
-    }
-
-
-    /**
-     * @return mixed
-     */
-    public function getSipId()
-    {
-        return $this->sipId;
-    }
-
-    /**
-     * @param mixed $sipId
-     */
-    public function setSipId($sipId)
-    {
-        $this->sipId = $sipId;
     }
 
     /**
@@ -179,20 +77,49 @@ abstract class SIP
         return $this->fid;
     }
 
+
+
     /**
-     * @param mixed $fid
+     * Copies the specified record.cmdi to a temporary SIP directory
+     *
+     * @return bool
+     *
+     * @throws IngestServiceException
      */
-    public function setFid($fid)
+    function copyMetadata()
     {
-        $this->fid = $fid;
+
+        $cmdi_source = $this->cmdiRecord;
+
+
+        // create (if necessary) backend directory
+        if (!file_exists(dirname($this->cmdiTarget))) drupal_mkdir(dirname($this->cmdiTarget), NULL, TRUE);
+
+        copy($cmdi_source, $this->cmdiTarget);
+
+        if (!file_exists($this->cmdiTarget)) {
+
+            throw new IngestServiceException('Could not copy cmdi file to target location');
+
+        }
+
+        $resourceDir = dirname($this->cmdiTarget) . "/../resources";
+        drupal_mkdir($resourceDir, NULL, TRUE);
+
+        if (!file_exists($resourceDir)) {
+
+                throw new IngestServiceException('Could not create resource directory at target location');
+        }
+
+        return TRUE;
+
     }
 
 
+    function addIsPartOfProperty(){
 
-    function prepareMetaData(){
-
-        $parentFid = $this->getParentFid();
-        $file_name = $this->getCmdiRecord();
+        $parentFid = $this->parentFid;
+        $file_name = $this->cmdiTarget;
 
         module_load_include('php','flat_deposit','/Helpers/CMDI/CmdiHandler');
         $xml = CmdiHandler::loadXml($file_name);
@@ -209,13 +136,31 @@ abstract class SIP
     }
 
 
+    function generatePolicy()
+    {
+        $policy = $this->info['policy'];
+        $fname = drupal_get_path('module','flat_deposit') . '/Helpers/IngestService/Policies/' . $policy . '.n3';
+
+        $string = file_get_contents($fname);
+        $new_string = preg_replace('/ACCOUNT_NAME/', $this->owner , $string);
+
+        $cmdi_dir = dirname($this->cmdiTarget);
+        $write = file_put_contents( $cmdi_dir . '/policy.n3', $new_string);
+
+        if (!$write) {
+            throw new IngestServiceException('Unable to write policy to target location (' . $cmdi_dir . ')');
+        }
+
+        return TRUE;
+    }
+
 
     function createBag()
     {
 
         $bagit_executable = variable_get('flat_deposit_ingest_service')['bag_exe'];
 
-        $command = $bagit_executable . ' baginplace ' . '"' . $this->getFrozenSipDir() .  '"';
+        $command = $bagit_executable . ' baginplace ' . '"' . $this->frozenSipDir .  '"';
 
         exec($command, $output, $return);
 
@@ -225,7 +170,7 @@ abstract class SIP
             throw new IngestServiceException ($message);
         }
 
-        $command = $bagit_executable . ' update ' . '"' . $this->getFrozenSipDir() .  '"';
+        $command = $bagit_executable . ' update ' . '"' . $this->frozenSipDir .  '"';
 
         exec($command, $output, $return);
 
@@ -235,7 +180,7 @@ abstract class SIP
             throw new IngestServiceException ($message);
         }
 
-        $command = DRUPAL_ROOT . '/'. drupal_get_path('module','flat_deposit') . '/Helpers/scripts/zip_sip.sh "' . $this->getFrozenSipDir() .'" "' . $this->getSipId() .'"';
+        $command = DRUPAL_ROOT . '/'. drupal_get_path('module','flat_deposit') . '/Helpers/scripts/zip_sip.sh "' . $this->frozenSipDir .'" "' . $this->sipId .'"';
 
         exec($command, $output_prep, $return);
 
@@ -249,10 +194,10 @@ abstract class SIP
 
     function doSword()
     {
-        $zipName = $this->getSipId() . '.zip';
-        $path = dirname($this->getFrozenSipDir());
+        $zipName = $this->sipId . '.zip';
+        $path = dirname($this->frozenSipDir);
 
-        $sipId = $this->getSipId();
+        $sipId = $this->sipId;
 
         module_load_include('php', 'flat_deposit', '/Helpers/IngestService/Sword');
 
@@ -276,20 +221,20 @@ abstract class SIP
 
     function doDoorkeeper()
     {
-        $query = $this->getTest() ? 'validate%20resources' : '';
+        $query = $this->test ? 'validate%20resources' : '';
 
 
         module_load_include('php', 'flat_deposit', '/Helpers/IngestService/Doorkeeper');
         $dk = new Doorkeeper();
-        $dk->triggerServlet($this->getSipId(), $query);
-        $fid = $dk->checkStatus($this->getSipId(), 15);
+        $dk->triggerServlet($this->sipId, $query);
+        $fid = $dk->checkStatus($this->sipId, 15);
 
-        $this->setFid($fid);
+        $this->fid =$fid ;
 
         return TRUE;
     }
 
-    public function validateDirectories(array $directories){
+    public function validateDirectories($directories){
 
         $value = TRUE;
 
@@ -308,15 +253,84 @@ abstract class SIP
 
 
 
+    /**
+     * Call to change ownerID of fedora objects using the Fedora REST api.
+     *
+     * @throws IngestServiceException
+     */
+    function doFedora()
+    {
+
+        if ($this->test){
+
+            return TRUE;
+
+        }
+
+        // create object that can do ReST requests
+        module_load_include('inc','flat_deposit', '/Helpers/Fedora_REST_API');
+
+        $accessFedora = variable_get('flat_deposit_fedora');
+        $rest_fedora = new FedoraRESTAPI($accessFedora);
+
+
+        // Change ownership of ingested files
+        $data = array(
+            'ownerId' => $this->owner,
+        );
+
+        $result = $rest_fedora->modifyObject($this->fid, $data);
+
+        if (!$result) {
+            $message = 'Couldn\'t change ownership of files';
+
+
+            throw new IngestServiceException ($message);
+        }
+
+        return TRUE;
+
+    }
+
+
+
+    /**
+     * @param array $message
+     *
+     * @return bool
+     */
+    function rollback($message)
+    {
+        if (file_exists($this->frozenSipDir)){
+         #   $this->removeFrozenZipDir();
+        }
+
+        if (file_exists(dirname($this->frozenSipDir) . '/' . $this->sipId . '.zip')){
+        #    $this->removeFrozenZipDir();
+        }
+        /*if ($processes['doSword']){
+            $this->removeSwordBag();
+        }
+        */
+
+        if($this->fid){
+            #$this->removeIngestedObject();
+        }
+
+        $this->customRollback($message);
+
+        return TRUE;
+    }
 
 
     protected function removeFrozenZipDir(){
 
         // remove directory with SIP data
-        $sip_dir = $this->getFrozenSipDir();
-        module_load_include('php','flat_deposit', '/inc/php_functions');
+        $sip_dir = $this->frozenSipDir;
+        module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
+
         if (file_exists($sip_dir)){
-            recursiveRmDir($sip_dir);
+            FlatBundle::recursiveRmDir($sip_dir);
             rmdir($sip_dir);
         }
     }
@@ -324,8 +338,28 @@ abstract class SIP
     protected function removeSipZip()
     {
         // remove zipped SIP directory
-        drupal_unlink(dirname($this->getFrozenSipDir()) . '/' . $this->getSipId() . '.zip');
+        drupal_unlink(dirname($this->frozenSipDir) . '/' . $this->sipId . '.zip');
 
+    }
+
+
+    protected function removeSwordBag(){
+
+        $basePath = variable_get('flat_deposit_paths')['bag'];
+        $bagDir = $basePath . $this->sipId;
+        recursiveRmDir($bagDir);
+        rmdir($bagDir);
+
+    }
+
+    protected function removeIngestedObject(){
+
+        module_load_include('inc','flat_deposit', '/Helpers/Fedora_REST_API');
+
+        $accessFedora = variable_get('flat_deposit_fedora');
+        $rest_fedora = new FedoraRESTAPI($accessFedora);
+
+        $rest_fedora->deleteObject($this->fid);
     }
 
 }

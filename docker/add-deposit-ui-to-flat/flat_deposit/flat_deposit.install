@@ -71,6 +71,42 @@ function flat_deposit_install()
             'max_length' => 255)
     );
 
+    $fields['flat_source'] = array(
+        'field_name' => 'flat_source',
+        'type' => 'list_text',
+        'cardinality' => 1,
+        'settings' => array(
+            'max_length' => 255,
+            'allowed_values' => array(
+                'local' => 'local',
+                'external' => 'external',
+            ),
+        ),
+        'locked' => TRUE,
+    );
+
+    $fields['flat_policies'] = array(
+        'field_name' => 'flat_policies',
+        'type' => 'list_text',
+        'cardinality' => 1,
+        'settings' => array(
+            'max_length' => 255,
+            'allowed_values' => array(
+                'public' => 'public',
+                'private' => 'private',
+            ),
+        ),
+        'locked' => TRUE,
+    );
+
+    $fields['flat_original_path'] = array(
+        'field_name' => 'flat_original_path',
+        'type' => 'text',
+        'cardinality' => 1,
+        'settings' => array(
+            'max_length' => 5000)
+    );
+
     $fields['flat_bundle_status'] = array(
         'field_name' => 'flat_bundle_status',
         'type' => 'list_text',
@@ -110,14 +146,16 @@ function flat_deposit_install()
     );
 
 
-    $fields['flat_create_cmdi'] = array(
-        'field_name' => 'flat_create_cmdi',
-        'type' => 'list_boolean',
+    $fields['flat_cmdi_option'] = array(
+        'field_name' => 'flat_cmdi_option',
+        'type' => 'list_text',
         'cardinality' => 1,
         'settings' => array(
             'allowed_values'=> array(
-                0 => "no",
-                1 => "yes"),
+                'new' => 'Generate new file',
+                'template' => 'Use existing cmdi file as template (Resources related information will be stripped)',
+                'import' => 'Use existing cmdi file',
+                ),
         ),
     );
 
@@ -198,23 +236,89 @@ function flat_deposit_install()
 
     );
 
-    $instances['flat_parent_title'] = array(
-        'field_name' => 'flat_parent_title',
+    $instances['flat_policies'] = array(
+        'field_name' => 'flat_policies',
         'bundle' => 'flat_bundle',
-        'label' => $t('Is part of collection'),
-        'widget' => array(
-            'type' => 'text_textfield',
+        'label' => $t('Access policies for bundle resources'
         ),
-        'required' => FALSE,
-        'disabled' => TRUE,
+        'widget' => array(
+            'type' => 'option_buttons',
+        ),
         'default_value' => array(
-            0 => array('value'=> 'unassigned')),
+            0 => array('value'=> 'private')),
+        'required' => TRUE,
         'settings' => array('text_processing' => 0),
         'display' => array(
             'default' => array(
                 'label' => 'inline',
-            )
+            ),
         )
+    );
+    $instances['flat_cmdi_option'] = array(
+        'field_name' => 'flat_cmdi_option',
+        'bundle' => 'flat_bundle',
+        'label' => $t('What kind of cmdi file is being used'),
+        'widget' => array(
+            'type' => 'option_buttons',
+        ),
+        'default_value' => array(0 => array('value'=> '0')),
+        'required' => TRUE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            ),
+        )
+    );
+
+    $instances['flat_cmdi_file'] = array(
+
+        'field_name' => 'flat_cmdi_file',
+        'bundle' => 'flat_bundle',
+        'label' => 'Attached metadata file',
+        'description' => $t('The metadata file describing the upload bundle'),
+        'widget' => array(
+            'type' => 'file_generic',
+            'settings' => array (
+                'progress_indicator' => 'throbber',
+                'imce_filefield_on' => 0,
+            )
+        ),
+        'settings' => array(
+            'file_directory' => '',
+            'file_extensions' => 'cmdi',
+            'max_filesize' => '1 MB',
+            'description_field' => 0,
+            'filefield_paths_enabled' => 1,
+            'filefield_paths' =>
+                array (
+                    'file_path' => array (
+                        'value' =>  'metadata://[current-user:name]/[node:flat_parent_title]/[node:title]/',
+                        'options' => array(
+                            'slashes' => 0,
+                            'pathauto' => FALSE,
+                            'transliterate' => 0,
+                        ),
+                        'redirect' => false,
+                        'retroactive_update' => 0,
+                        'active_updating' => 0,
+                    ),
+                    'file_name' =>array (
+                        'value' =>  'record.cmdi',
+                        'options' => array(
+                            'slashes' => 0,
+                            'pathauto' => FALSE,
+                            'transliterate' => 0,
+                        ),
+                    ),
+                ),
+        ),
+        'required' => FALSE,
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            ),
+        ),
     );
 
     $instances['flat_bundle_status'] = array(
@@ -260,65 +364,40 @@ function flat_deposit_install()
         )
     );
 
-    $instances['flat_cmdi_file'] = array(
 
-        'field_name' => 'flat_cmdi_file',
+
+
+    $instances['flat_parent_title'] = array(
+        'field_name' => 'flat_parent_title',
         'bundle' => 'flat_bundle',
-        'label' => 'Attached metadata file',
-        'description' => $t('The metadata file describing the upload bundle'),
+        'label' => $t('Is part of collection'),
         'widget' => array(
-            'type' => 'file_generic',
-            'settings' => array (
-                'progress_indicator' => 'throbber',
-                'imce_filefield_on' => 0,
-                )
+            'type' => 'text_textfield',
         ),
-        'settings' => array(
-            'file_directory' => '',
-            'file_extensions' => 'cmdi',
-            'max_filesize' => '1 MB',
-            'description_field' => 0,
-            'filefield_paths_enabled' => 1,
-            'filefield_paths' =>
-                array (
-                    'file_path' => array (
-                        'value' =>  'flat_deposit/metadata/[current-user:name]/[node:flat_parent_title]/[node:title]/',
-                        'options' => array(
-                            'slashes' => 0,
-                            'pathauto' => FALSE,
-                            'transliterate' => 0,
-                        ),
-                        'redirect' => false,
-                        'retroactive_update' => 0,
-                        'active_updating' => 0,
-                        ),
-                    'file_name' =>array (
-                        'value' =>  'record.cmdi',
-                        'options' => array(
-                            'slashes' => 0,
-                            'pathauto' => FALSE,
-                            'transliterate' => 0,
-                            ),
-                        ),
-                    ),
-            ),
         'required' => FALSE,
+        'disabled' => TRUE,
+        'default_value' => array(
+            0 => array('value'=> 'unassigned')),
+        'settings' => array('text_processing' => 0),
         'display' => array(
             'default' => array(
                 'label' => 'inline',
-            ),
-        ),
+            )
+        )
     );
 
-    $instances['flat_create_cmdi'] = array(
-        'field_name' => 'flat_create_cmdi',
+
+    $instances['flat_source'] = array(
+        'field_name' => 'flat_source',
         'bundle' => 'flat_bundle',
-        'label' => $t('CMDI created within FLAT'),
-        'description' => $t('CMDI will be created using the Flat deposit cmdi creator'),
+        'label' => $t('Source for bundle resources'
+        ),
+        'description' => $t('Check whether data are locally stored or uploaded from external location'),
         'widget' => array(
             'type' => 'option_buttons',
         ),
-        'default_value' => array(0 => array('value'=> '0')),
+        'default_value' => array(
+            0 => array('value'=> 'local')),
         'required' => TRUE,
         'settings' => array('text_processing' => 0),
         'display' => array(
@@ -328,6 +407,44 @@ function flat_deposit_install()
         )
     );
 
+
+    $instances['flat_original_path'] = array(
+        'field_name' => 'flat_original_path',
+        'bundle' => 'flat_bundle',
+        'label' => $t('Original Path of locally stored data'),
+        'widget' => array(
+            'type' => 'text_textfield',
+        ),
+        'required' => FALSE,
+        'disabled' => TRUE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            )
+        )
+    );
+
+
+
+    $instances['flat_location'] = array(
+        'field_name' => 'flat_location',
+        'bundle' => 'flat_bundle',
+        'label' => $t('Location where data is stored'
+        ),
+        'description' => $t('Folder where data to be archived is stored'),
+        'widget' => array(
+            'type' => 'text'
+        ),
+        'required' => FALSE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'hidden',
+            ),
+
+        )
+    );
     $instances['flat_external'] = array(
         'field_name' => 'flat_external',
         'bundle' => 'flat_bundle',
@@ -347,26 +464,6 @@ function flat_deposit_install()
             ),
         )
     );
-
-    $instances['flat_location'] = array(
-        'field_name' => 'flat_location',
-        'bundle' => 'flat_bundle',
-        'label' => $t('Location where data is stored'
-        ),
-        'description' => $t('Folder where data to be archived is stored'),
-        'widget' => array(
-            'type' => 'text'
-        ),
-        'required' => FALSE,
-        'settings' => array('text_processing' => 0),
-        'display' => array(
-            'default' => array(
-                'label' => 'inline',
-            ),
-
-        )
-    );
-
 
 
     // flat collection field instances
@@ -594,7 +691,7 @@ function flat_deposit_uninstall(){
     drupal_uninstall_modules(array('blog', 'flat_owncloud'));
 
     // Delete all user data from drupal user data folder and freeze folder
-    module_load_include('php', 'flat_deposit', 'inc/php_functions');
+    module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
 
     $users = entity_load('user');
 
@@ -602,17 +699,17 @@ function flat_deposit_uninstall(){
 
         if(strlen($user->name) > 0){
 
-            $user_data_directory =  drupal_realpath('private://flat_deposit/' . $user->name);
-            $user_freeze_directory =  variable_get('flat_deposit_paths',array())['freeze'] . "/$user->name";
+            $user_data_directory =  drupal_realpath('external://' . $user->name);
+            $user_freeze_directory =  drupal_realpath('freeze://' . $user->name);
 
             if (file_exists($user_data_directory) && $user_data_directory){
 
-                recursiveRmDir($user_data_directory);
+                FlatBundle::recursiveRmDir($user_data_directory);
                 rmdir ($user_data_directory);}
 
             if (file_exists($user_freeze_directory) && $user_freeze_directory){
 
-                recursiveRmDir($user_freeze_directory);
+                FlatBundle::recursiveRmDir($user_freeze_directory);
                 rmdir ($user_freeze_directory);}
         }
     }
@@ -633,7 +730,7 @@ function flat_deposit_uninstall(){
     // Delete all flat_bundle and flat_collection content
     $nids = db_select('node','n')
         ->fields('n', array('nid'))
-        ->condition('type', array('flat_collection', 'flat_member', 'flat_bundle', 'blog'), 'IN')
+        ->condition('type', array('flat_collection', 'flat_bundle', 'blog'), 'IN')
         ->execute()
         ->fetchCol();
 
@@ -644,6 +741,12 @@ function flat_deposit_uninstall(){
 
     
     //Remove all custom content type fields and field instances and clean up entries in field_config / field_config_instance tables
+ /*   foreach (field_read_fields(array('module' => 'flat_deposit')) as $field) {
+        foreach(field_read_instances(array('field_name' => $field['field_name'])) as $instance) {
+            field_delete_instance($instance);
+        }
+    }
+ */
     field_attach_delete_bundle('node','flat_bundle');
     field_attach_delete_bundle('node','flat_collection');
 

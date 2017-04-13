@@ -23,6 +23,38 @@ function flat_deposit_admin_form($form, &$form_state)
 
     $paths = variable_get('flat_deposit_paths');
 
+    $form['paths']['local'] = array (
+        '#type' => 'textfield',
+        '#title' => t('Workspace folder'),
+        '#description' => t('Directory where all department workspaces can be found'),
+        '#default_value' => $paths ['local'],
+        '#required' => TRUE,
+    );
+
+    $form['paths']['local_subfolder'] = array (
+        '#type' => 'textfield',
+        '#title' => t('Workspace subfolder'),
+        '#description' => t('subdirectory within department workspace where archive data can be found'),
+        '#default_value' => $paths ['local_subfolder'],
+        '#required' => TRUE,
+    );
+
+    $form['paths']['external'] = array (
+        '#type' => 'textfield',
+        '#title' => t('External data folder'),
+        '#description' => t('Directory for uploading external data'),
+        '#default_value' => $paths ['external'],
+        '#required' => TRUE,
+    );
+
+    $form['paths']['metadata'] = array (
+        '#type' => 'textfield',
+        '#title' => t('Metadata folder'),
+        '#description' => t('Directory for temporarily storing metadata'),
+        '#default_value' => $paths ['metadata'],
+        '#required' => TRUE,
+    );
+
     $form['paths']['freeze'] = array (
         '#type' => 'textfield',
         '#title' => t('Freeze folder'),
@@ -354,6 +386,7 @@ function flat_deposit_admin_form($form, &$form_state)
     $form['buttons']['submit'] = array (
         '#type' => 'submit',
         '#value' => t('Save'),
+        '#validate' => array('flat_deposit_admin_form_save_validate',),
         '#submit' => array(
             'keep_default_password',
             'flat_deposit_admin_form_save_submit',
@@ -404,6 +437,25 @@ function keep_default_password($form, &$form_state) {
 
     if (empty($form_state['values']['fedora']['password'])) {
         $form_state['values']['fedora']['password'] = variable_get('flat_deposit_fedora')['password'];
+    }
+
+}
+
+function flat_deposit_admin_form_save_validate($form, &$form_state){
+
+    $excluded = array('local_subfolder', 'alternate_subdir');
+    foreach ( $form_state['values']['paths'] as $key=>$path) {
+
+        if (!is_numeric(array_search($key, $excluded))){
+
+
+            if (!file_exists($path)) drupal_mkdir($path, NULL, TRUE);
+
+            if (!file_exists($path)) {
+                form_set_error($key, 'Directory ('. $path .') does not exist and cannot be created');
+            }
+        }
+
     }
 
 }

@@ -175,17 +175,18 @@ function flat_owncloud_node_view_alter($node, $view_mode) {
 
     $activated = variable_get('flat_owncloud', array())['activated'];
 
-    $user_data = user_load($node['#node']->uid);
-    $mounted = $user_data->mount_owncloud['und']['0']['value'];
+    $account = user_load($node['#node']->uid);
+    $field_items = field_get_items('user', $account, 'mount_owncloud');
+    if ($field_items) {
 
-    if ($mounted AND $node['#bundle'] == 'flat_bundle' AND $node['#view_mode'] == 'full' AND $activated){
+        if ($field_items[0]['value'] AND $node['#bundle'] == 'flat_bundle' AND $node['#view_mode'] == 'full' AND $activated) {
             module_load_include('inc', 'flat_owncloud', 'Helpers/owncloud_api');
             $oc = new OwnCloud();
 
             $oc->UpdateUserFiles();
 
         }
-
+    }
 }
 
 

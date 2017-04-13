@@ -34,94 +34,167 @@ class FlatBundle
         return TRUE;
     }
 
-    /**
-     * FlatBundle constructor.
-     */
-    public function __construct($node)
-    {
-        $this->node = $node;
-        $this->wrapper = entity_metadata_wrapper('node', $node);
-    }
+
+
 
 
     /**
-     * Creates metadata directories to prepare the storage of cmdi files in drupal (private) and freeze location
+     * Moves bundle data and meta data to new location. This can be a different collection or the freeze location
      *
-     * @param bool $collection_name (optional) name of collection different than the one set to which a bundle belongs
-     * @return bool
+     * @param stdClass $node drupal flat_bundle node.
+     *
+     * @param string $data_type type of data to be moved: 'metadata' or 'data'.
+     *
+     * @param string $target_stream Target location. Allowed values are: 'freeze' and 'private'
+     *
+     * @param string $toNewCollection [optional] Name of a new collection
+     *
+     * @return bool|string new location of the bundle data or false
      */
-    public function createBundleDirectories($collection_name = false){
+    static public function moveBundleData($node, $data_type, $target_stream, $toNewCollection = ''){
 
-        $object = user_load($this->node->uid);
-        $user_name = $object->name;
+        $wrapper = entity_metadata_wrapper('node', $node);
 
-        $collection_name = $collection_name ? $collection_name : $this->wrapper->flat_parent_title->value();
-        $bundle_name = $this->node->title;
+        // validate node
+        if ($node->type != 'flat_bundle'){
+            trigger_error("Wrong node type for data move",E_USER_WARNING);
+            return FALSE;
 
-        $resource_dir = 'private://flat_deposit/data/' . $user_name . "/$collection_name";
-        $meta_dir = 'private://flat_deposit/metadata/' . $user_name . "/$collection_name/$bundle_name";
-        $freeze_dir = 'freeze://' . $user_name .  "/$collection_name/$bundle_name/metadata";
+        }
 
-        $dirs = array($resource_dir, $meta_dir, $freeze_dir);
 
-        foreach ($dirs as $dir){
+        if ($data_type == 'metadata'){
 
-            if (!file_exists($dir)) {
-                $check = drupal_mkdir($dir, NULL, TRUE);
-                if (!$check) return FALSE;
+            $metadata_file_info = $wrapper->flat_cmdi_file->value();
+            $file= file_load($metadata_file_info['fid']);
+
+            $original_location = $metadata_file_info['uri'];
+
+        } else {
+
+            $original_location = $wrapper->flat_location->value();
+        }
+
+        // Validate that the files' original location is correct
+        if (!file_exists($original_location)){
+            trigger_error("Source directory does not exist",E_USER_ERROR);
+            return FALSE;
+
+        }
+
+
+        // generate new target path
+        $bundle = $node->title;
+        $collection_name = ($toNewCollection != '') ? $toNewCollection : $wrapper->flat_parent_title->value();
+
+        $usr = user_load($node->uid);
+        $tail = $usr->name . "/$collection_name/$bundle";
+
+
+
+        if ($data_type == 'metadata'){
+
+            $base = ($target_stream == 'freeze') ? 'freeze://metadata' : "metadata://";
+
+            $new_location = "$base/$tail/";
+
+            $new_location .= 'record.cmdi';
+
+        } else{
+            $base = ($target_stream == 'freeze') ? 'freeze://data' : 'external://';
+
+            $new_location = "$base/$tail/";
+
+        }
+
+
+
+        // validate that new location does not exist
+        if(file_exists($new_location)) {
+            trigger_error("Target location already exists", E_USER_ERROR);
+            return false;
+        }
+
+        $collection_dir = dirname($new_location);
+
+        if (!file_exists($collection_dir)){
+            $check = drupal_mkdir($collection_dir, NULL, TRUE);
+
+            if(!$check) {
+                trigger_error("Unable to create folder at target original_location", E_USER_ERROR);
+                return false;
+            }
+        }
+
+        if ($data_type == 'metadata'){
+
+            $new_file = file_move($file, $new_location, FILE_EXISTS_REPLACE);
+
+            if (!$new_file) {
+                trigger_error("Unable to move metadata to new target original_location", E_USER_ERROR);
+                return FALSE;
             }
 
+            /*
+            // Get rid of cached bundle file info
+            $cid = "field:node:" . $node->nid;
+            $cid2 = "field:node:" . $file->fid;
+            $num_deleted = db_delete('cache_field')
+                ->condition('cid', array($cid, $cid2), 'in')
+                ->execute();
+*/
+            // Change node information
+            $metadata_file_info ['uri'] = $new_location;
+            $wrapper->flat_cmdi_file->set($metadata_file_info);
+            $wrapper->save();
+
+
+            if (self::is_dir_empty($original_location)){
+
+                drupal_rmdir($original_location);
+            }
+
+            return $new_location;
+
+        } else {
+
+
+            $moved = rename(drupal_realpath($original_location), drupal_realpath($new_location)); // Unfortunately, rename does not return true on success
+
+            if (!file_exists($new_location)) {
+                trigger_error("Unable to move data to freeze original_location", E_USER_ERROR);
+                return false;
+            }
+
+            // Change node information
+            $wrapper->flat_location->set($new_location);
+            $wrapper->save();
+
+            return $new_location;
         }
 
-        return TRUE;
 
     }
 
-    public function moveBundleToCollection($collection_name){
-
-        $bundle_name = $this->node->title;
-
-        $old_collection = $this->wrapper->flat_parent_title->value();
-        $new_collection = $collection_name;
 
 
-        $object = user_load($this->node->uid);
-
-        $base = 'private://flat_deposit/';
-
-        $resource_source = drupal_realpath($base) . '/data/' . $object->name . "/$old_collection/$bundle_name";
-        $resource_target = drupal_realpath($base) . '/data/' . $object->name . "/$new_collection/$bundle_name";
-        $meta_target = $base . '/metadata/' . $object->name . "/$new_collection/$bundle_name";
-
-        // Check if target directory of resources already exists
-        if (file_exists($resource_target)){
-            return FALSE;
+    static public function recursiveRmDir($dir)
+    {
+        $iterator = new RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS), \RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($iterator as $filename => $fileInfo) {
+            if ($fileInfo->isDir()) {
+                rmdir($filename);
+            } else {
+                unlink($filename);
+            }
         }
-
-
-        // move data
-        $data_is_moved = rename($resource_source, $resource_target);
-
-        if (!$data_is_moved) return FALSE;
-
-        // remove source collection directory if empty
-        if (!(new FilesystemIterator(dirname($resource_source)))->valid()) rmdir (dirname($resource_source));
-
-
-        //if metadata exists move to new location
-        if ($this->wrapper->flat_cmdi_file){
-
-            $metadata_file_info =$this->wrapper->flat_cmdi_file->value();
-            $file= file_load($metadata_file_info['fid']);
-            $new_file = file_move($file, $meta_target, FILE_EXISTS_REPLACE);
-
-            if (!$new_file) return FALSE;
-
-        }
-
-
-        return TRUE;
-
     }
+
+    static public function is_dir_empty($dir) {
+        if (!is_readable($dir)) return NULL;
+        if (!is_dir($dir)) return NULL;
+        return (count(scandir($dir)) == 2);
+    }
+
 
 }

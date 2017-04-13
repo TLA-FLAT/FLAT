@@ -10,3 +10,4 @@ dependencies[] = feeds
 dependencies[] = php
 dependencies[] = filefield_paths
 dependencies[] = token
+dependencies[] = flat_views

@@ -14,9 +14,13 @@ class Doorkeeper
      *
      * triggering is achieved by executing a curl 'put' response to the service IP
      *
+     * @param string $sipId The SIP id
+     *
+     * @param bool $to Modifier for the ingest procedure. Defines until which action the doorkeeper will run
+     *
      * @throws IngestServiceException
      */
-    public function triggerServlet(String $sipId, $to=FALSE){
+    public function triggerServlet($sipId, $to=FALSE){
 
 
         if($to){
@@ -51,10 +55,13 @@ class Doorkeeper
     /**
      * HTTP GET Request for doorkeeper REST api
      *
+     * @param string $sipId The SIP id
+     *
      * @param bool $code_only if true method returns only HTTP response code
+     *
      * @return mixed
      */
-    public function doGetRequest(String $sipId, $code_only=FALSE)
+    public function doGetRequest($sipId, $code_only=FALSE)
     {
 
         $config = variable_get('flat_deposit_doorkeeper');
@@ -76,7 +83,12 @@ class Doorkeeper
     /**
      * Method requesting every 10 seconds doorkeeper status
      *
-     * toDO check return value of doorkeeper
+     *
+     * @param string $sipId the SIP id
+     *
+     * @param int $maxWait number of seconds the client should wait for doorkeeper to finish request
+     *
+     * todo check return value of doorkeeper
      */
     public function checkStatus(String $sipId, int $maxWait = 60){
 

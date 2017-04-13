@@ -1,38 +1,56 @@
 <?php
 
-include_once('IngestFactoryCreator.php');
 include_once('SIP.php');
 
 
-class IngestFactory extends IngestFactoryCreator
+class IngestFactory
 {
 
+    /**
+     * @var SIP a SIP class with basic ingest functionality
+     */
     protected $factorySIP;
 
+    /**
+     * @var array booleans tracking success on each processing step
+     */
+    protected $processLog;
 
-    protected function DoSipIngest(SIP $SIP)
+
+    /**
+     * @param SIP $SIP an instantiation of the SIP class
+     *
+     * @param array $info
+     *
+     * @return mixed|string
+     *
+     */
+    protected function DoSipIngest($SIP, $info)
     {
 
         try{
 
             $this->factorySIP = $SIP;
+            $this->processLog = [];
+            $this->processLog['ingestInitiated'] = $this->factorySIP->init($info);
             $this->processLog['authenticateUser'] = $this->factorySIP->authenticateUser();
-            $this->processLog['setupIngest'] = $this->factorySIP->setupIngest();
-            $this->processLog['prepareMetaData'] = $this->factorySIP->prepareMetaData();
-            $this->processLog['prepareSip'] = $this->factorySIP->prepareSipData();
+            $this->processLog['prepareSipData'] = $this->factorySIP->prepareSipData();
+            $this->processLog['copyMetadata'] = $this->factorySIP->copyMetadata();
+            $this->processLog['addIsPartOfProperty'] = $this->factorySIP->addIsPartOfProperty();
+            $this->processLog['addResourcesToCmdi'] = $this->factorySIP->addResourcesToCmdi();
+            $this->processLog['generatePolicy'] = $this->factorySIP->generatePolicy();
             $this->processLog['createBag'] = $this->factorySIP->createBag();
             $this->processLog['doSword'] = $this->factorySIP->doSword();
             $this->processLog['doDoorkeeper'] = $this->factorySIP->doDoorkeeper();
-            $this->processLog['doFedora'] = $this->factorySIP->doFedora();
+            #$this->processLog['doFedora'] = $this->factorySIP->doFedora();
             $this->processLog['finish'] = $this->factorySIP->finish();
-/*
+            #throw new IngestServiceException('Debug');
 
-*/
             return $this->factorySIP->getFid();
 
         } catch (IngestServiceException $exception){
 
-            $this->factorySIP->rollback($this->processLog);
+            $this->factorySIP->rollback($exception->getMessage());
 
             return ($exception->getMessage());
         }
@@ -40,9 +58,18 @@ class IngestFactory extends IngestFactoryCreator
     }
 
 
-    public function RequestSipIngest($SIP){
+    /**
+     * public request for factory to ingest a sip
+     *
+     * @param $SIP
+     *
+     * @param mixed $session_id (optional) session id of user
+     *
+     * @return mixed|string
+     */
+    public function RequestSipIngest($SIP, $info = []){
 
-        return $this->DoSipIngest($SIP);
+        return $this->DoSipIngest($SIP, $info);
     }
 
 }
