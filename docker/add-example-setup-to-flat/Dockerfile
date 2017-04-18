@@ -2,7 +2,9 @@ FROM		flat
 MAINTAINER	Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 
 RUN apt-get update &&\
-	apt-get -y dist-upgrade
+	apt-get -y dist-upgrade &&\
+	update-ca-certificates -f &&\
+	apt-get install --reinstall ca-certificates-java 
 
 # add sample SIP
 RUN mkdir -p /app/flat/test
@@ -33,7 +35,8 @@ sleep 60 &&\
 ADD flat/scripts/* /app/flat/bin/
 RUN chmod +x /app/flat/bin/*.sh &&\
     mv /app/flat/bin/do-* /app/flat/ &&\
-    mv /app/flat/bin/do.sh /app/flat/do.sh
+    mv /app/flat/bin/do.sh /app/flat/do.sh &&\
+	mkdir -p /app/flat/deposit/cache/schemas
 
 #Clean up APT when done.
 RUN apt-get clean &&\

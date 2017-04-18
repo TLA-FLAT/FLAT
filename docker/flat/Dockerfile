@@ -219,7 +219,7 @@ RUN export PGPASSWORD=fedora &&\
 	bash -c "timeout $TOMCAT_TIMEOUT grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 sleep 10 &&\
 	cd /var/www/html/$DRUPAL_PROJECT/ &&\
-	/var/www/composer/vendor/drush/drush/drush vset islandora_base_url https://localhost:8443/fedora &&\
+	/var/www/composer/vendor/drush/drush/drush vset islandora_base_url http://localhost:8080/fedora &&\
 	/var/www/composer/vendor/drush/drush/drush en islandora -y &&\
 	/var/www/composer/vendor/drush/drush/drush en islandora_basic_collection -y &&\
 	/var/www/composer/vendor/drush/drush/drush en islandora_compound_object -y &&\
@@ -253,26 +253,6 @@ sleep 10 &&\
 	/var/www/fedora/tomcat/bin/shutdown.sh &&\
 	bash -c "timeout $TOMCAT_TIMEOUT grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
 	/etc/init.d/postgresql stop
-
-#
-# add the generated certificate for localhost
-#
-
-RUN mkdir /tmp/cert
-ADD cert/InstallCert.java /tmp/cert/InstallCert.java
-RUN cd /tmp/cert &&\
-    javac InstallCert.java &&\
-	cd /opt &&\
-	/etc/init.d/postgresql start &&\
-	/var/www/fedora/tomcat/bin/startup.sh &&\
-	bash -c "timeout $TOMCAT_TIMEOUT grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-sleep 10 &&\
-    java -cp /tmp/cert InstallCert localhost:8443 changeit 1 &&\
-	/var/www/fedora/tomcat/bin/shutdown.sh &&\
-	bash -c "timeout $TOMCAT_TIMEOUT grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-	/etc/init.d/postgresql stop
-
-ENV JAVA_OPTS "-Djavax.net.ssl.trustStore=/opt/jssecacerts -Djavax.net.ssl.trustStorePassword=changeit"
 
 #
 # proai

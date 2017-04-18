@@ -19,10 +19,27 @@ fi
 
 cd $_PWD
 
+# restart the tomcat, as some step above kills SSL (e.g., to the CR)
+/var/www/fedora/tomcat/bin/shutdown.sh &&\
+  bash -c "timeout $TOMCAT_TIMEOUT grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
+/var/www/fedora/tomcat/bin/startup.sh &&\
+ bash -c "timeout $TOMCAT_TIMEOUT grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
+
+
 cat << EOF
-TODO: flat-create-sip.sh /app/flat/test/test-sip
-TODO: flat-sword-upload.sh test-sip.zip test
-TODO: wget --method=PUT http://localhost:8080/flat/doorkeeper/test OR
+TODO: 1. bag the test SIP directory:
+TODO:   flat-create-sip.sh /app/flat/test/test-sip
+TODO: 2. upload it via sword:
+TODO:   flat-sword-upload.sh test-sip.zip test
+TODO: 3. check enything went fine:
+TODO    curl -u flat:sword http://localhost/flat/easy-deposit/statement/test | xmllint --format -
+TODO: 4. trigger the doorkeeper:
+TODO:   curl -X PUT http://localhost/flat/doorkeeper/test
+TODO: OR
 TODO:   doorkeeper.sh sip=test
-TODO: tail -f deposit/bags/test/bag-test-sip/data/test-sip/logs/devel.log
+TODO: 5. check the progress:
+TODO:   curl http://localhost/flat/doorkeeper/test
+TODO:   (repeat)
+TODO: OR
+TODO:   tail -f deposit/bags/test/bag-test-sip/data/test-sip/logs/devel.log
 EOF

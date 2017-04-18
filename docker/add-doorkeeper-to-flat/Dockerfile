@@ -61,8 +61,11 @@ RUN cd /tmp/ServiceFLAT &&\
     mkdir /var/www/fedora/tomcat/webapps/flat &&\
     cd /var/www/fedora/tomcat/webapps/flat &&\
     unzip ../flat.war
-    
-ENV CATALINA_OPTS "-Djsse.enableSNIExtension=false ${CATALINA_OPTS}"
+
+# Add proxy to Apache
+
+RUN echo '# open up access to the DoorKeeper' >> /etc/apache2/apache2.conf &&\ 
+    echo 'ProxyPass "/'${DRUPAL_PROJECT}'/doorkeeper" "http://localhost:8080/flat/doorkeeper"' >> /etc/apache2/apache2.conf
 
 RUN mkdir -p /app/flat/deposit/easy
 RUN mkdir -p /app/flat/data
@@ -78,5 +81,4 @@ RUN chmod +x /app/flat/bin/*.sh
 
 #Clean up APT when done.
 RUN apt-get clean &&\
-    rm -rf /var/lib/apt/lists/* /var/tmp/* 
-# /tmp/* 
+    rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/* 

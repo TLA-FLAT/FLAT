@@ -32,7 +32,7 @@ for DIR in `find /app/flat/fox/ -type d | sed '1d'`; do
   BEGIN="`date --rfc-3339=seconds`"
   echo "BEGIN DIR: $DIR,`date --rfc-3339=seconds`"
   B="`date '+%s'`"
-  $FEDORA_HOME/client/bin/fedora-batch-ingest.sh $DIR /app/flat/tmp/log xml info:fedora/fedora-system:FOXML-1.1 localhost:8443 fedoraAdmin fedora https fedora
+  $FEDORA_HOME/client/bin/fedora-batch-ingest.sh $DIR /app/flat/tmp/log xml info:fedora/fedora-system:FOXML-1.1 localhost:8080 fedoraAdmin fedora http fedora
   E="`date '+%s'`"
   RES="FAILED"
   CNT="-1"

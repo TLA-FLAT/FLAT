@@ -74,9 +74,9 @@ public class DoorKeeperServlet {
                 return Response.status(Status.INTERNAL_SERVER_ERROR).entity(ex.getMessage()).type("text/plain").build();
             }
             if (doorkeeperContext.execute(sip,flow))
-                return Response.status(Status.ACCEPTED).entity("sip["+sip+"] directory["+sipDir+"]").type("text/plain").build();
+                return Response.status(Status.ACCEPTED).entity("sip["+sip+"] directory["+sipDir+"]\n").type("text/plain").build();
         }
-        return Response.status(Status.CONFLICT).entity("ERROR: sip["+sip+"] is already being executed!"+(flow.getStatus()!=null?(flow.getStatus().booleanValue()?" And succeeded.":" And failed."):"")).type("text/plain").build();
+        return Response.status(Status.CONFLICT).entity("ERROR: sip["+sip+"] is already being executed!"+(flow.getStatus()!=null?(flow.getStatus().booleanValue()?" And succeeded.\n":" And failed.\n"):"\n")).type("text/plain").build();
     }
 
     @GET

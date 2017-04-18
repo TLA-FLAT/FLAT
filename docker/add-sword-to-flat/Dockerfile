@@ -34,9 +34,15 @@ RUN mkdir -p /app/flat/deposit/sword/cfg &&\
     
 ADD sword/logback.xml /app/flat/deposit/sword/cfg/logback.xml
 ADD sword/application.properties /app/flat/deposit/sword/cfg/application.properties
-RUN sed -i "s|FLAT_HOST|${FLAT_HOST}|g" /app/flat/deposit/sword/cfg/application.properties
+RUN sed -i "s|FLAT_HOST|${FLAT_HOST}|g" /app/flat/deposit/sword/cfg/application.properties &&\
+    sed -i "s|DRUPAL_PROJECT|${DRUPAL_PROJECT}|g" /app/flat/deposit/sword/cfg/application.properties
     
 ENV EASY_DEPOSIT_HOME /app/flat/deposit/sword
+
+# Add proxy to Apache
+
+RUN echo '# open up access to SWORD' >> /etc/apache2/apache2.conf &&\ 
+    echo 'ProxyPass "/'${DRUPAL_PROJECT}'/easy-deposit" "http://localhost:8080/easy-deposit"' >> /etc/apache2/apache2.conf
 
 #
 # Add bagit
@@ -54,7 +60,6 @@ RUN cd /tmp &&\
 #
 
 ADD flat/scripts/* /app/flat/bin/
-RUN sed -i "s|FLAT_HOST|${FLAT_HOST}|g" /app/flat/bin/flat-sword-upload.sh
 RUN chmod +x /app/flat/bin/*.sh
 
 #Clean up APT when done.

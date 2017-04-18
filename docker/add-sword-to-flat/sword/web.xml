@@ -24,6 +24,7 @@
     <display-name>EASY Deposit Service</display-name>
     
     <!-- always go via HTTPS -->
+    <!--
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>HTTPSOnly</web-resource-name>
@@ -33,6 +34,7 @@
             <transport-guarantee>CONFIDENTIAL</transport-guarantee>
         </user-data-constraint>
     </security-constraint>
+    -->
 
     <context-param>
         <param-name>config-impl</param-name>

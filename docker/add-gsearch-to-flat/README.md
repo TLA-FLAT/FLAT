@@ -5,8 +5,11 @@ Add GSearch to FLAT
 This docker file depends on the FLAT base image and the FLAT Islandora SOLR image.
 
 ## Provides ##
- * GSearch, accessible via: http://IP:8080/fedoragsearch/rest
- * Solr, accessible via: http://IP:8080/solr/
+
+The following endpoints come available:
+
+ * GSearch, accessible via: http://localhost:8080/fedoragsearch/rest (__dev only__)
+ * Solr, accessible via: http://localhost:8080/solr/ (__dev only__)
 
 The following accounts are created: 
 

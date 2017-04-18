@@ -18,6 +18,7 @@
         </rule>   
     </pattern>
     
+<!-- not yet ingested CMD records don't have a MdSelfLink yet ...
     <pattern>
         <rule  role="warning" context="cmd11:Header">
             <assert test="string-length(cmd11:MdSelfLink/text()) &gt; 0">
@@ -32,6 +33,7 @@
             </assert>
         </rule>   
     </pattern>
+-->
     
     <!--
         Rules contributed by Menzo Windhouwer <Menzo.Windhouwer@mpi.nl>
