@@ -29,7 +29,7 @@ sleep 10 &&\
 #
 
 RUN mkdir -p /app/flat/deposit/policies/
-ADD flat/gsearch-mapping-template.xml /app/flat/deposit/policies/
+ADD flat/gsearch-mapping-template.xml /app/flat/deposit/policies/gsearch-mapping.xml
 
 #Clean up APT when done.
 RUN apt-get clean &&\

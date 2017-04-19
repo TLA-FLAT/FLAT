@@ -60,7 +60,7 @@ ADD solr/solrcore.properties $FEDORA_HOME/solr/collection1/conf/solrcore.propert
 
 RUN mkdir -p /tmp &&\
     cd /tmp &&\
-    git clone https://github.com/discoverygarden/dgi_gsearch_extensions.git &&\
+    git clone -b v0.1.1 https://github.com/discoverygarden/dgi_gsearch_extensions.git &&\
     cd dgi_gsearch_extensions &&\
     mvn package && cp target/gsearch_extensions-0.1.1-jar-with-dependencies.jar $FEDORA_HOME/tomcat/webapps/fedoragsearch/WEB-INF/lib &&\
     rm -r /tmp/dgi_gsearch_extensions

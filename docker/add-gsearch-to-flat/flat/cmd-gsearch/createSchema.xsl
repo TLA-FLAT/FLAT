@@ -23,7 +23,7 @@
 		<xsl:for-each select="$mapping/mapping-table/mappings/field">
 			<field name="cmd.{@name}" indexed="true" stored="true">
 				<xsl:attribute name="type" select="if (exists(@type)) then (@type) else ('text_general')"/>
-				<xsl:attribute name="multiValued" select="not(../@multiValued eq 'false')"/>
+				<xsl:attribute name="multiValued" select="not(@multiValued eq 'false')"/>
 			</field>
 		</xsl:for-each>
 	</xsl:template>

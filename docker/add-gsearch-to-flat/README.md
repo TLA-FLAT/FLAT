@@ -28,7 +28,7 @@ docker run -p 80:80 -p 8443:8443 -p 8080:8080 -v ~/my-resources:/lat -t -i flat
 ## Additional configuration ##
 
 FLAT uses the Component Metadata (CMD) Infrastructure and allows arbitary CMD profiles. For the Solr facets a mapping from these profiles to the wanted facets needs to be created.
-This mapping is specified in the [/app/flat/gsearch-mapping-template.xml](flat/scripts/gsearch-mapping-template.xml) file. The core of the mapping is a facet (or field) specification like
+This mapping is specified in the [/app/flat/deposit/policies/gsearch-mapping-template.xml](flat/gsearch-mapping-template.xml) file. The core of the mapping is a facet (or field) specification like
 
 ```xml
 <field name="Language">

@@ -57,7 +57,7 @@
       <cmd:facet>country</cmd:facet>
     </field>
 
-    <field name="title" allowMultiple="true">
+    <field name="title" multiValued="false">
       <xpath>/cmd:CMD/cmd:Components/cmd:Session/cmd:Title</xpath>
       <xpath>/cmd:CMD/cmd:Components/cmd:Session/cmd:Name</xpath>
       <xpath>/cmd:CMD/cmd:Components/cmd:imdi-corpus/cmd:Corpus/cmd:Title</xpath>
@@ -75,7 +75,7 @@
       <cmd:facet>description</cmd:facet>
     </field>
 
-    <field name="Subject" allowMultiple="true">
+    <field name="Subject" multiValued="true">
       <cmd:facet>subject</cmd:facet>
     </field>
 
