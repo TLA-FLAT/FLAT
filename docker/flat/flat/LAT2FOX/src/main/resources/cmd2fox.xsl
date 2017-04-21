@@ -530,7 +530,7 @@
 									<fedora-model:hasModel rdf:resource="info:fedora/islandora:compoundCModel"/>
 								</xsl:if>
 								<!-- if the CMD has references to other metadata files it's a collection -->
-								<xsl:if test="sx:evaluate($rec, $always-collection-eval, $NS) or exists(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType = 'Metadata'])">
+								<xsl:if test="sx:evaluate($rec, $always-collection-eval, $NS) or exists(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType = 'Metadata']) or exists($rels-doc/key('rels-from', ($pid,cmd:hdl($base)))[type = 'Metadata'])">
 									<fedora-model:hasModel rdf:resource="info:fedora/islandora:collectionCModel"/>
 								</xsl:if>
 								<!-- if the CMD is part of the compound FOXML it uses the cmdi content model and is member of the cmdi collection -->
