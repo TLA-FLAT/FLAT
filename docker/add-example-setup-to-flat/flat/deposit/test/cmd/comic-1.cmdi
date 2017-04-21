@@ -19,7 +19,7 @@
       <JournalFileProxyList/>
       <ResourceRelationList/>
       <IsPartOfList>
-         <IsPartOf>lat:collection_comics</IsPartOf>
+         <IsPartOf>collection_comics.cmdi</IsPartOf>
       </IsPartOfList>
    </Resources>
    <Components>

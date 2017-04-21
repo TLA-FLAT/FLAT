@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cmd:CMD xmlns:cmd="http://www.clarin.eu/cmd/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.clarin.eu/cmd/ https://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1440426460262/xsd" CMDVersion="1.1">
+   <cmd:Header>
+      <cmd:MdCreator>MAW</cmd:MdCreator>
+      <cmd:MdCreationDate>2016-10-03</cmd:MdCreationDate>
+      <MdSelfLink xmlns="http://www.clarin.eu/cmd/" xmlns:lat="http://lat.mpi.nl/" lat:localURI="lat:collection_comics">lat:collection_comics</MdSelfLink>
+      <cmd:MdProfile>clarin.eu:cr1:p_1440426460262</cmd:MdProfile>
+      <cmd:MdCollectionDisplayName>Comic Collection</cmd:MdCollectionDisplayName>
+   </cmd:Header>
+   <cmd:Resources>
+      <cmd:ResourceProxyList/>
+      <cmd:JournalFileProxyList/>
+      <cmd:ResourceRelationList/>
+   </cmd:Resources>
+   <cmd:Components>
+      <cmd:MeertensCollection>
+         <cmd:CoreCollectionInformation>
+            <cmd:title xml:lang="en">Comic Collection</cmd:title>
+            <cmd:description xml:lang="en"/>
+            <cmd:collectionID>42</cmd:collectionID>
+         </cmd:CoreCollectionInformation>
+      </cmd:MeertensCollection>
+   </cmd:Components>
+</cmd:CMD>
