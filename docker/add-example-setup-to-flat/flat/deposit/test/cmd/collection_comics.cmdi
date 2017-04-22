@@ -3,12 +3,21 @@
    <cmd:Header>
       <cmd:MdCreator>MAW</cmd:MdCreator>
       <cmd:MdCreationDate>2016-10-03</cmd:MdCreationDate>
-      <MdSelfLink xmlns="http://www.clarin.eu/cmd/" xmlns:lat="http://lat.mpi.nl/" lat:localURI="lat:collection_comics">lat:collection_comics</MdSelfLink>
+      <cmd:MdSelfLink>hdl:12345/comic_collection</cmd:MdSelfLink>
       <cmd:MdProfile>clarin.eu:cr1:p_1440426460262</cmd:MdProfile>
       <cmd:MdCollectionDisplayName>Comic Collection</cmd:MdCollectionDisplayName>
    </cmd:Header>
    <cmd:Resources>
-      <cmd:ResourceProxyList/>
+      <cmd:ResourceProxyList>
+         <cmd:ResourceProxy id="c1">
+            <cmd:ResourceType>Metadata</cmd:ResourceType>
+            <cmd:ResourceRef>hdl:12345/comic-1</cmd:ResourceRef>
+         </cmd:ResourceProxy>
+         <cmd:ResourceProxy id="c2">
+            <cmd:ResourceType>Metadata</cmd:ResourceType>
+            <cmd:ResourceRef>hdl:12345/comic-2</cmd:ResourceRef>
+         </cmd:ResourceProxy>
+      </cmd:ResourceProxyList>
       <cmd:JournalFileProxyList/>
       <cmd:ResourceRelationList/>
    </cmd:Resources>

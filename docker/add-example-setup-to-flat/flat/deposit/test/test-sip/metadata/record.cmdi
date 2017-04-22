@@ -23,7 +23,7 @@
       <JournalFileProxyList/>
       <ResourceRelationList/>
       <IsPartOfList>
-         <IsPartOf>lat:collection_comics</IsPartOf>
+         <IsPartOf lat:flatURI="lat:12345_comic_collection" xmlns:lat="http://lat.mpi.nl/">hdl:12345/comic_collection</IsPartOf>
       </IsPartOfList>
    </Resources>
    <Components>

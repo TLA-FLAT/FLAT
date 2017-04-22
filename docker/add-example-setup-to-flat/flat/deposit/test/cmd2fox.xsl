@@ -11,10 +11,10 @@
 			xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 			xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
 			<dc:name>
-				<xsl:value-of select="//cmd:ComicBook/cmd:Title"/>
+				<xsl:value-of select="(//cmd:ComicBook/cmd:Title)|(//cmd:CoreCollectionInformation/cmd:title)"/>
 			</dc:name>
 			<dc:title>
-				<xsl:value-of select="//cmd:ComicBook/cmd:Title"/>
+				<xsl:value-of select="(//cmd:ComicBook/cmd:Title)|(//cmd:CoreCollectionInformation/cmd:title)"/>
 			</dc:title>
 		</oai_dc:dc>
 	</xsl:template>

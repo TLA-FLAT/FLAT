@@ -11,3 +11,7 @@ for REC in `find /app/flat/test/cmd -type f -name '*.cmdi'`; do
 done
 
 cp -r /app/flat/test/data/* /app/flat/data/
+
+if [ ! -f /app/flat/deposit/policies/cmd2fox.xsl ]; then
+    ln -s /app/flat/test/cmd2fox.xsl /app/flat/deposit/policies/cmd2fox.xsl
+fi
