@@ -39,17 +39,17 @@ class IngestFactory
             $this->processLog['addIsPartOfProperty'] = $this->factorySIP->addIsPartOfProperty();
             $this->processLog['addResourcesToCmdi'] = $this->factorySIP->addResourcesToCmdi();
             $this->processLog['generatePolicy'] = $this->factorySIP->generatePolicy();
+            #throw new IngestServiceException('Debug');
             $this->processLog['createBag'] = $this->factorySIP->createBag();
             $this->processLog['doSword'] = $this->factorySIP->doSword();
             $this->processLog['doDoorkeeper'] = $this->factorySIP->doDoorkeeper();
-            #$this->processLog['doFedora'] = $this->factorySIP->doFedora();
             $this->processLog['finish'] = $this->factorySIP->finish();
-            #throw new IngestServiceException('Debug');
 
             return $this->factorySIP->getFid();
 
         } catch (IngestServiceException $exception){
 
+            $this->factorySIP->logging('IngestServiceException: ' . $exception->getMessage());
             $this->factorySIP->rollback($exception->getMessage());
 
             return ($exception->getMessage());

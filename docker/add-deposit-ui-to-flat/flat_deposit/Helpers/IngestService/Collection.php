@@ -20,6 +20,7 @@ class Collection extends SIP
      */
     public function init($info){
 
+        $this->logging('Starting init');
         $required = array(
             'policy',
         );
@@ -33,6 +34,7 @@ class Collection extends SIP
 
         $this->info = $info;
 
+        $this->logging('Finishing init');
         return TRUE;
 
 
@@ -76,6 +78,7 @@ class Collection extends SIP
 
     function finish()
     {
+        $this->logging('Starting finish');
         $this->removeFrozenZipDir();
         $this->removeSipZip();
         #$this->removeSwordBag();
@@ -83,6 +86,7 @@ class Collection extends SIP
 
 
                 */
+        $this->logging('Stop finish');
         return TRUE;
 
     }

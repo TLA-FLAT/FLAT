@@ -36,6 +36,10 @@ abstract class SIP
     // full file name of copied cmdi file
     protected $cmdiTarget;
 
+    // configuration parameters necessary for successful processing of a bundle
+    protected $info;
+
+
     // Custom ingest set up of a SIP child (Collection, bundle)
     abstract function init($info);
 
@@ -53,9 +57,22 @@ abstract class SIP
     {
         $uuid = uniqid();
 
-        $this->owner =$owner;
+        $this->owner = $owner;
 
         $this->sipId = get_class($this) . '_'. $uuid;
+
+        $this->logProcess = variable_get('flat_deposit_ingest_service')['log_errors'];
+        $base_name = variable_get('flat_deposit_ingest_service')['error_log_file'];
+        $this->logFile = $base_name . "/" . $this->sipId . '_' . $owner . '_' . date("Y-m-d\TH-i-s") . '.log';
+
+        $this->logging(t("Starting SIP constructor with following parameters: \nowner: !owner\ncmdi file: !cmdiFileName\nparent Fid: !parentFid\ntest: !test\n", array(
+            '!owner'=> $owner,
+            '!cmdiFileName' => $cmdiFileName,
+            '!parentFid' => $parentFid,
+            '!test' => ($test ? 'TRUE' : 'FALSE'),
+                    )
+            )
+        );
 
         $this->cmdiRecord =$cmdiFileName;
 
@@ -66,6 +83,8 @@ abstract class SIP
         $this->frozenSipDir = drupal_realpath('freeze://') . '/SIPS/' .  $this->owner . '/' . $this->sipId . '/';
 
         $this->cmdiTarget = $this->frozenSipDir .  '/data/metadata/record.cmdi';
+
+        $this->logging('Finishing SIP constructor');
 
     }
 
@@ -88,6 +107,7 @@ abstract class SIP
      */
     function copyMetadata()
     {
+        $this->logging('Starting copyMetadata');
 
         $cmdi_source = $this->cmdiRecord;
 
@@ -111,6 +131,7 @@ abstract class SIP
                 throw new IngestServiceException('Could not create resource directory at target location');
         }
 
+        $this->logging('Finishing copyMetadata');
         return TRUE;
 
     }
@@ -118,6 +139,7 @@ abstract class SIP
 
     function addIsPartOfProperty(){
 
+        $this->logging('Starting addIsPartOfProperty');
         $parentFid = $this->parentFid;
         $file_name = $this->cmdiTarget;
 
@@ -132,12 +154,14 @@ abstract class SIP
             throw new IngestServiceException($check);
         }
 
+        $this->logging('Finishing addIsPartOfProperty');
         return TRUE;
     }
 
 
     function generatePolicy()
     {
+        $this->logging('Starting generatePolicy');
         $policy = $this->info['policy'];
         $fname = drupal_get_path('module','flat_deposit') . '/Helpers/IngestService/Policies/' . $policy . '.n3';
 
@@ -150,13 +174,14 @@ abstract class SIP
         if (!$write) {
             throw new IngestServiceException('Unable to write policy to target location (' . $cmdi_dir . ')');
         }
-
+        $this->logging('Finishing generatePolicy');
         return TRUE;
     }
 
 
     function createBag()
     {
+        $this->logging('Starting createBag');
 
         $bagit_executable = variable_get('flat_deposit_ingest_service')['bag_exe'];
 
@@ -189,11 +214,13 @@ abstract class SIP
             throw new IngestServiceException ($message);
         }
 
+        $this->logging('Finishing createBag');
         return TRUE;
     }
 
     function doSword()
     {
+        $this->logging('Starting doSword');
         $zipName = $this->sipId . '.zip';
         $path = dirname($this->frozenSipDir);
 
@@ -211,16 +238,17 @@ abstract class SIP
             throw new IngestServiceException ($message);
 
         } else {
-
+            $this->logging('Finishing doSword');
             return TRUE;
 
         }
 
     }
 
-
     function doDoorkeeper()
     {
+        $this->logging('Starting doDoorkeeper');
+
         $query = $this->test ? 'validate%20resources' : '';
 
 
@@ -231,67 +259,10 @@ abstract class SIP
 
         $this->fid =$fid ;
 
-        return TRUE;
-    }
-
-    public function validateDirectories($directories){
-
-        $value = TRUE;
-
-        foreach ($directories as $directory) {
-            if (!file_exists($directory)) {
-                $value = FALSE;
-                break;
-            }
-            if (!is_writable($directory)) {
-                $value = FALSE;
-                break;
-            }
-        }
-        return $value;
-    }
-
-
-
-    /**
-     * Call to change ownerID of fedora objects using the Fedora REST api.
-     *
-     * @throws IngestServiceException
-     */
-    function doFedora()
-    {
-
-        if ($this->test){
-
-            return TRUE;
-
-        }
-
-        // create object that can do ReST requests
-        module_load_include('inc','flat_deposit', '/Helpers/Fedora_REST_API');
-
-        $accessFedora = variable_get('flat_deposit_fedora');
-        $rest_fedora = new FedoraRESTAPI($accessFedora);
-
-
-        // Change ownership of ingested files
-        $data = array(
-            'ownerId' => $this->owner,
-        );
-
-        $result = $rest_fedora->modifyObject($this->fid, $data);
-
-        if (!$result) {
-            $message = 'Couldn\'t change ownership of files';
-
-
-            throw new IngestServiceException ($message);
-        }
+        $this->logging('Finishing doDoorkeeper');
 
         return TRUE;
-
     }
-
 
 
     /**
@@ -301,6 +272,8 @@ abstract class SIP
      */
     function rollback($message)
     {
+        $this->logging('Starting rollback');
+
         if (file_exists($this->frozenSipDir)){
          #   $this->removeFrozenZipDir();
         }
@@ -318,6 +291,8 @@ abstract class SIP
         }
 
         $this->customRollback($message);
+
+        $this->logging('Finishing rollback');
 
         return TRUE;
     }
@@ -347,7 +322,8 @@ abstract class SIP
 
         $basePath = variable_get('flat_deposit_paths')['bag'];
         $bagDir = $basePath . $this->sipId;
-        recursiveRmDir($bagDir);
+        module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
+        FlatBundle::recursiveRmDir($bagDir);
         rmdir($bagDir);
 
     }
@@ -360,6 +336,17 @@ abstract class SIP
         $rest_fedora = new FedoraRESTAPI($accessFedora);
 
         $rest_fedora->deleteObject($this->fid);
+    }
+
+    public function logging($message){
+
+        if ($this->logProcess){
+
+            error_log ( date(DATE_ATOM) . "\t" . $message ."\n", $message_type = 3 , $this->logFile );
+
+        }
+
+
     }
 
 }

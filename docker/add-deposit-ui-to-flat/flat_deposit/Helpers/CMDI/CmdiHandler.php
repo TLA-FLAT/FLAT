@@ -42,6 +42,21 @@ class CmdiHandler
         }
     }
 
+    static public function getAvailableTemplates($content_type)
+    {
+        $templates = [];
+        foreach (glob(drupal_get_path('module', 'flat_deposit') . self::FORM_TEMPLATES_PATH . "*.xml") as $filename) {
+            $xml = CmdiHandler::loadXml($filename);
+            $ct = (string)$xml->header->content_type;
+
+            if ($ct === $content_type){
+                $templates [] = (string)$xml->header->template_name;
+            }
+
+        }
+        return drupal_map_assoc($templates);
+    }
+
     /**
      * Generates the drupal input form for a specified profile
      *
@@ -285,3 +300,42 @@ class CmdiHandler
 
 
 }
+
+function select_profile_name_ajax_callback ($form, $form_state)
+{
+
+    return $form['template_container'];
+}
+
+
+/**
+ * Recursively exchanges array keys with an numeric value with '#default_value'.
+ * @param $array
+ *
+ * @return array|void
+ *
+ */
+function exchange_numeric_key_with_default_value_property($array) {
+    if (!is_array($array)) return;
+
+    $helper = array();
+
+    foreach ($array as $key => $value) {
+
+        if (is_array($value)) {
+
+            $helper[$key] = exchange_numeric_key_with_default_value_property($value);
+
+        } else {
+            if (is_numeric($key)){
+
+                $helper['#default_value' ] = $value;
+
+            } else{
+                $helper[$key] = $value;
+            }
+        }
+    }
+    return $helper;
+}
+

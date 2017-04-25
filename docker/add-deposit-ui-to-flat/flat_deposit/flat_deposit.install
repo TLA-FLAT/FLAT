@@ -224,7 +224,7 @@ function flat_deposit_install()
         'widget' => array(
             'type' => 'option_buttons'
         ),
-        'required' => TRUE,
+        'required' => FALSE,
         'settings' => array(
             'text_processing' => 0),
             'display' => array(

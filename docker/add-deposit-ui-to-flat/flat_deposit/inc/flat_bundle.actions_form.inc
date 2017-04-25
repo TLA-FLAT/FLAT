@@ -16,7 +16,6 @@ function flat_bundle_action_form($form, &$form_state, $vars)
         '#value' => t('Bundle image'),
         '#disabled' => TRUE,
         '#prefix' => '</p>'
-
     );
 
     $form['actions']['container'] = array(
@@ -30,6 +29,7 @@ function flat_bundle_action_form($form, &$form_state, $vars)
         '#value' => t('Create info file for bundle'),
         #'#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
         '#description' => t('Bundles are obliged to be accompanied by a info file'),
+        '#validate' => array('flat_bundle_action_form_describe_validate'),
         '#disabled' => TRUE,
     );
 
@@ -104,6 +104,7 @@ function flat_bundle_action_form($form, &$form_state, $vars)
 
 
 
+
     // Specify which handlers to become active and which bundle_image to display
     $form['actions']['edit_bundle']['#disabled'] = TRUE;
     $status = $wrapper->flat_bundle_status->value();
@@ -147,8 +148,8 @@ function flat_bundle_action_form($form, &$form_state, $vars)
     $form['actions']['bundle_image']['#src'] = drupal_get_path('module', 'flat_deposit') . '/Images/' . $name . '.jpg';
 
 
-    // Activate metadata creation button if field value has not been set
-    if (!$wrapper->flat_cmdi_file->value()) {
+    // Activate metadata creation button only if cmdi option is 'new' and status is either open or failed
+    if ($wrapper->flat_cmdi_option->value() == 'new' AND ($status == 'open' OR $status == 'failed')) {
 
         $form['actions']['describe_bundle']['#disabled'] = FALSE;
     }
@@ -160,10 +161,18 @@ function flat_bundle_action_form($form, &$form_state, $vars)
 
 function flat_bundle_action_form_describe_validate($form, &$form_state){
 
+    $node = $form_state['values']['node'];
+    $wrapper = entity_metadata_wrapper('node', $node);
 
-        form_set_error('describe_bundle', "This feature will be available in a future release");
+    $parent_nid = $wrapper->flat_parent_nid->value();
+    if ($parent_nid === '0'){
+        form_set_error('describe_bundle', "To generate or edit a cmdi file, you need to select a collection first");
         drupal_goto($form_state['values']['origin_url']);
         return;
+
+    }
+
+    return $form;
 
 }
 
@@ -334,7 +343,7 @@ function flat_bundle_action_form_submit($form, &$form_state){
 
 
         case 'Create info file for bundle':
-            $url = array('node/' . $node->nid  . '/cmdi/select');
+            $url = array('node/' . $node->nid  . '/cmdi');
             $form_state['redirect'] = $url;
             break;
 
@@ -346,7 +355,7 @@ function flat_bundle_action_form_submit($form, &$form_state){
 
             // background service http request settings
             $host = variable_get('flat_deposit_ingest_service')['host_name'];
-            $scheme = $GLOBALS['_SERVER']['REQUEST_SCHEME'];
+            $scheme = variable_get('flat_deposit_ingest_service')['host_scheme'];
             $base = $GLOBALS['base_path'];
 
             $sid = $user->sid;

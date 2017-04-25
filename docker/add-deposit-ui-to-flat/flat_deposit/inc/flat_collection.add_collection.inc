@@ -13,19 +13,13 @@ function flat_collection_add_form($form, &$form_state, $parent){
 
     // get all available template xml
     module_load_include('php','flat_deposit','Helpers/CMDI/CmdiHandler');
-    $available_profiles = [];
-    foreach (glob(drupal_get_path('module', 'flat_deposit') . CmdiHandler::FORM_TEMPLATES_PATH ."*.xml") as $filename) {
-        $fName = basename( $filename);
-        $available_profiles [] = str_replace('.xml','', $fName);
+    $available_profiles = CmdiHandler::getAvailableTemplates('flat_collection');
 
-    }
-
-    // set boolean '$load_profile_specific_form' which will trigger loading of container with form elements
-    $load_profile_specific_form = is_numeric(array_search($selected_profile, $available_profiles));
+    // set '$load_profile_specific_form' which will trigger loading of container with form elements
+    $load_profile_specific_form = array_search($selected_profile, $available_profiles);
 
 
     // Add option to import a external file
-    $available_profiles = drupal_map_assoc($available_profiles);
     $available_profiles ['Import'] = 'I want to import an existing CMDI file';
 
 
@@ -71,9 +65,6 @@ function flat_collection_add_form($form, &$form_state, $parent){
 
     // load form element container if profile with available template is chosen
     if ($load_profile_specific_form){
-
-        module_load_include('php','flat_deposit','Helpers/CMDI/CmdiClient');
-        module_load_include('php','flat_deposit','Helpers/CMDI/CmdiHandler');
 
         $fields = CmdiHandler::generateDrupalForm($selected_profile);
 
@@ -201,43 +192,7 @@ function flat_collection_add_form($form, &$form_state, $parent){
 
 }
 
-/**
- * Recursively exchanges array keys with an numeric value with '#default_value'.
- * @param $array
- *
- * @return array|void
- *
- */
-function exchange_numeric_key_with_default_value_property($array) {
-    if (!is_array($array)) return;
 
-    $helper = array();
-
-    foreach ($array as $key => $value) {
-
-        if (is_array($value)) {
-
-            $helper[$key] = exchange_numeric_key_with_default_value_property($value);
-
-        } else {
-            if (is_numeric($key)){
-
-            $helper['#default_value' ] = $value;
-
-            } else{
-                $helper[$key] = $value;
-            }
-        }
-    }
-    return $helper;
-}
-
-
-function select_profile_name_ajax_callback ($form, $form_state)
-{
-
-    return $form['template_container'];
-}
 
 
 function flat_collection_add_form_validate($form, &$form_state){
@@ -316,6 +271,7 @@ function flat_collection_add_form_final_validate($form, &$form_state)
 
     $options = [];
     $options ['policy'] = $form_state['values']['select_policy'];
+
     $fid = $ingest_client->requestSipIngest($options);
 
     // check existence object

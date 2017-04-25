@@ -174,6 +174,14 @@ function flat_deposit_admin_form($form, &$form_state)
         '#required' => TRUE,
     );
 
+    $form['ingest_service']['host_scheme'] = array (
+        '#type' => 'textfield',
+        '#title' => t('Host Scheme '),
+        '#description' => t('HTTP or HTTPS'),
+        '#default_value' => $service['host_scheme'],
+        '#required' => TRUE,
+    );
+
     $form['ingest_service']['bag_exe'] = array (
         '#type' => 'textfield',
         '#title' => t('Bagit executable'),

@@ -27,8 +27,8 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
 
 <profileToDrupal>
     <header>
-        <template_name>MPI_Collection</template_name>
-        <content_type>flat_collection</content_type>
+        <content_type>flat_bundle</content_type>
+        <template_name>MPI_Bundle</template_name>
     </header>
     <subNodes>
         <subNode>Description</subNode>
@@ -40,7 +40,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
     <fields>
         <field id="field_01" name="Title">
             <type>textfield</type>
-            <title>My custom title</title>
+            <title>Bundle title</title>
             <required>true</required>
         </field>
         <field id="field_02" name="DataType">
@@ -48,6 +48,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <title>Data Type</title>
             <description>Kind of data that is acquired</description>
             <required>true</required>
+            <inherited>true</inherited>
             <options>
                 <option>DNA sequences</option>
                 <option>EEG data</option>

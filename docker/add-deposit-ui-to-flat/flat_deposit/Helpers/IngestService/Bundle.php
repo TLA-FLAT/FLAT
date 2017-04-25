@@ -4,9 +4,6 @@ include_once('SIP.php');
 
 class Bundle extends SIP
 {
-    // configuration parameters necessary for successful processing of a bundle
-    protected $info;
-
     // the node containing most of the important information
     protected $node;
 
@@ -28,7 +25,7 @@ class Bundle extends SIP
      * @throws IngestServiceException
      */
     public function init($info){
-
+        $this->logging('Starting init');
         $required = array(
             'session_id',
             'nid',
@@ -55,6 +52,7 @@ class Bundle extends SIP
         $this->wrapper->flat_bundle_status->set($status);
         $this->wrapper->save();
 
+        $this->logging('Finishing init');
         return TRUE;
     }
 
@@ -68,6 +66,8 @@ class Bundle extends SIP
      */
     public function authenticateUser()
     {
+        $this->logging('Starting authentication');
+
         $result = db_select('sessions', 's')
             ->fields('s', array('uid'))
             ->condition('s.sid', $this->info['session_id'])
@@ -90,6 +90,7 @@ class Bundle extends SIP
 
             if($user_id === $bundle_id OR user_access('validate bundles', user_load($user_id))) {
 
+                $this->logging('Finishing authentication');
                 return TRUE;
 
             } else {
@@ -103,6 +104,7 @@ class Bundle extends SIP
 
             if (($user_id === $bundle_id AND user_access('certified user', user_load($user_id))) OR user_access('ingest bundles', user_load($user_id))) {
 
+                $this->logging('Finishing authentication');
                 return TRUE;
 
             } else {
@@ -125,10 +127,10 @@ class Bundle extends SIP
      */
     function prepareSipData()
     {
-
+        $this->logging('Starting prepareSipData');
 
         if (!$this->test){
-
+            $this->logging('Finishing prepareSipData');
             return TRUE;
 
         } else {
@@ -162,12 +164,15 @@ class Bundle extends SIP
 
         };
 
+        $this->logging('Finishing prepareSipData; Data has been moved');
         return TRUE;
 
     }
 
 
     function addResourcesToCmdi(){
+
+        $this->logging('Starting addResourcesToCmdi');
 
         module_load_include('php','flat_deposit','/Helpers/CMDI/CmdiHandler');
 
@@ -211,8 +216,9 @@ class Bundle extends SIP
         if ($check !== TRUE){
             throw new IngestServiceException($check);
         }
-        $check = $xml->asXML('/lat/test.xml');
+        #$check = $xml->asXML('/lat/test.xml');
 
+        $this->logging('Finishing addResourcesToCmdi');
         return TRUE;
     }
 
@@ -220,6 +226,7 @@ class Bundle extends SIP
 
     function finish()
     {
+        $this->logging('Starting finish');
         $this->removeFrozenZipDir();
         $this->removeSipZip();
         #$this->removeSwordBag();
@@ -238,12 +245,14 @@ class Bundle extends SIP
             // TODO remove comment when working
 
             node_delete_multiple(array($this->info['nid']));
-            flat_bundle_delete($this->node);
+
 
 
         }
 
         $this->createBlogEntry(TRUE);
+
+        $this->logging('Stop finish');
 
         return TRUE;
 
@@ -259,11 +268,14 @@ class Bundle extends SIP
      */
     protected function createBlogEntry ($succeeded, $additonal_message = NULL){
 
+        $this->logging('Starting createBlogEntry');
+
         $host = variable_get('flat_deposit_ingest_service')['host_name'];
+        $scheme = variable_get('flat_deposit_ingest_service')['host_scheme'];
         if (!$this->test AND $succeeded){
 
 
-            $url_link = 'http://' . $host . '/flat/islandora/object/' . $this->fid ;
+            $url_link = $scheme . '://' . $host . '/flat/islandora/object/' . $this->fid ;
 
         } else {
 
@@ -297,11 +309,15 @@ class Bundle extends SIP
         $new_node->body['und'][0]['summary'] = $summary;
         $new_node->body['und'][0]['value'] = $body;
         node_save($new_node);
+
+        $this->logging('Finishing createBlogEntry; Blog entry created');
     }
 
 
 
     function customRollback($message){
+
+        $this->logging('Starting customRollback');
 
         // bundles need to unfreeze (if frozen) during rollback
         module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
@@ -317,7 +333,7 @@ class Bundle extends SIP
         $this->wrapper->flat_bundle_status->set('failed');
         $this->wrapper->save();
 
-
+        $this->logging('Finishing customRollback');
         return;
 
 

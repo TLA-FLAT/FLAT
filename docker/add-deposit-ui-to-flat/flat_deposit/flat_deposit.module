@@ -371,18 +371,7 @@ function flat_deposit_menu()
     );
 
 
-
-    /*
-    // flat bundle cmdi file menu item
-    $items['node/%node/cmdi_info'] = array(
-        'title' => 'Metadata file',
-        'type' => MENU_LOCAL_TASK,
-        'page callback' => 'flat_deposit_cmdi',
-        'file' => 'inc/flat_deposit.cmdi.inc',
-        'access arguments' => array('use deposit module')
-    );
-
-    */
+/*
 
     // bundle cmdi file selection form
     $items['node/%node/cmdi/select'] = array(
@@ -393,14 +382,17 @@ function flat_deposit_menu()
         'access arguments' => array('use deposit module'),
     );
 
+*/
     // bundle cmdi file creator form
-    $items['node/%node/cmdi/create'] = array(
+    $items['node/%node/cmdi'] = array(
+        'title' => 'Flat bundle cmdi generation',
         'type' => MENU_CALLBACK,
         'page callback' => 'drupal_get_form',
-        'page arguments' => array('flat_deposit_cmdi_create_form',1),
-        'file' => 'inc/flat_deposit.cmdi_create.inc',
-        'access arguments' => array('use deposit module'),
+        'page arguments' => array('flat_deposit_cmdi_form',1),
+        'file' => 'inc/flat_deposit.cmdi_form.inc',
+        'access arguments' => array('use deposit module', 1),
     );
+
 /*
     //FLAT_COLLECTION
     // flat_supercollection entity rendering
@@ -419,6 +411,7 @@ function flat_deposit_menu()
 
     return $items;
 }
+
 
 
 function flat_supercollection_admin(AbstractObject $object){
@@ -619,6 +612,8 @@ function flat_bundle_node_form_fixed_collection($pid)
  */
 function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $form_id)
 {
+    $form['flat_parent_nid']['und']['#required'] = false; //remove after next install
+
     global $user;
     // Hide unwanted buttons anf fields
     hide($form['flat_bundle_status']);
