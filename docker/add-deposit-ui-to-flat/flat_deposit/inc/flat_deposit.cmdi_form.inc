@@ -4,9 +4,9 @@
 function flat_deposit_cmdi_form($form, &$form_state){
 
     // exit form generation if no parent collection has been selected
-    if (isset($form_state['values']['data']['parentFid'])){
+    if (isset($form_state['values']['data']['parent_nid'])){
 
-        $parent_nid = $form_state['values']['data']['parentFid'];
+        $parent_nid = $form_state['values']['data']['parent_nid'];
 
     } else {
 
@@ -22,8 +22,17 @@ function flat_deposit_cmdi_form($form, &$form_state){
 
     }
 
+    if (!empty($node->flat_cmdi_file))
+    {
+        drupal_set_message('Cannot generate CMDI because file is already attached', 'error');
+        return $form;
+
+    }
+
+
+
     // Set selected profile as this is updated on every AJAX request
-    $selected_profile = !empty($form_state['values']['select_profile_name']) ? $form_state['values']['select_profile_name'] : "";
+    $selected_profile = !empty($form_state['values']['select_profile_name']) ? $form_state['values']['select_profile_name'] : "MPI_Bundle";
 
     // get all available template xml
     module_load_include('php','flat_deposit','Helpers/CMDI/CmdiHandler');
@@ -76,7 +85,7 @@ function flat_deposit_cmdi_form($form, &$form_state){
     $form['data'] = array(
         '#type' => 'value',
         '#value' => array(
-            'parentFid' => $parent_nid,
+            'parent_nid' => $parent_nid,
         ),
     );
 
@@ -114,16 +123,39 @@ function flat_deposit_cmdi_form($form, &$form_state){
 
 
     // Fill form field with loaded data
-    $data =  json_decode(file_get_contents(drupal_realpath(drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormTemplates/Example_MPI_Collection.json')), TRUE);
-    unset($data['data']);
+    if ($load_profile_specific_form) {
+        $parent = node_load($parent_nid);
+        $pwrapper = entity_metadata_wrapper('node', $parent);
+        $pFid = $pwrapper->flat_fid->value();
+        $parentCmdi = CmdiHandler::getCmdiFromDatastream($pFid);
+
+        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/Cmdi2FormParser');
+        $parser = new Cmdi2FormParser;
+        try {
+            $result = $parser->getDefaultValuesFromCmdi($selected_profile, $parentCmdi);
+            $formPlusDefaults = array_merge_recursive($form['template_container']['elements'], $result);
+            $form['template_container']['elements'] = $formPlusDefaults;
+
+        } catch (Cmdi2FormParserException $exception) {
+
+            drupal_set_message($exception->getMessage(), 'warning');
+        }
+    }
+
+
+
+
+
+    #$data =  json_decode(file_get_contents(drupal_realpath(drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormTemplates/Example_MPI_Collection.json')), TRUE);
+
+
     if ($load_profile_specific_form){
         // review why it does not work if extra condition is chosen
         #if (isset ($form_state['values']['import_trigger']) AND $form_state['values']['import_trigger'] === 1) {
 
-        $result = array_merge_recursive($form['template_container']['elements'], $data);
-        $result2 = exchange_numeric_key_with_default_value_property($result);
+        #$result2 = exchange_numeric_key_with_default_value_property($result);
 
-        $form['template_container']['elements'] = $result2;
+        #$form['template_container']['elements'] = $result2;
         #}
     }
 
@@ -147,11 +179,21 @@ function flat_deposit_cmdi_form_validate($form, &$form_state)
         return $form;
     };
 
-    form_set_error(NULL,'Debug');
-    return $form;
+    // Validate chosen option
+    if ($form_state['values']['select_profile_name'] === '-- Select --') {
+        form_set_error('select_profile_name', 'Please choose correct option');
+        return $form;
+    }
 
     //validate existence output dir
-    $export_dir = 'metadata://' . '/' . $owner . "/.collection/";
+    $node = menu_get_object();
+    $wrapper = entity_metadata_wrapper('node', $node);
+
+    $title = $node->title;
+    $collection = $wrapper->flat_parent_title->value();
+
+
+    $export_dir = 'metadata://' . '/' . $owner . "/$collection/$title";
     if (!file_exists($export_dir)) {
         drupal_mkdir($export_dir, NULL, TRUE);
     }
@@ -162,55 +204,65 @@ function flat_deposit_cmdi_form_validate($form, &$form_state)
     }
 
 
-    // Validate chosen option
-    if ($form_state['values']['select_profile_name'] === '-- Select --') {
-        form_set_error('select_profile_name', 'Please choose correct option');
-        return $form;
-    }
-
-
     // set cmdi filename
     $profile = $form_state['values']['select_profile_name'];
     $recordCmdi = $export_dir . '/' . $profile . '_' . uniqid() . '.cmdi';
+    $form_state['values']['recordCmdi'] = $recordCmdi;
 
     // Get cmdi
-    $import = $form_state['values']['select_profile_name'] === 'Import' ? TRUE : FALSE;
-    $msg = get_cmdi($form_state, $recordCmdi, $import);
+    $import =  FALSE;
+
+    module_load_include('php','flat_deposit','Helpers/CMDI/CmdiHandler');
+
+    $msg = get_cmdi($form_state['values'], $recordCmdi, $import);
 
 
-    if ($msg !== TRUE) {
+    if ($msg !== TRUE){
         form_set_error('error', $msg);
         return $form;
     }
 
-    /// do INGEST
-    global $user;
-    $userName = $user->name;
-    $sipType = 'Collection';
-    $parentFid = $form_state['values']['data']['parentFid'];
-    $test = FALSE;
 
-    module_load_include('php', 'flat_deposit', 'Helpers/IngestService/IngestClient');
-    $ingest_client = new IngestClient($sipType, $userName, $recordCmdi, $parentFid, $test);
+/*
 
-    $options = [];
-    $options ['policy'] = $form_state['values']['select_policy'];
-    $fid = $ingest_client->requestSipIngest($options);
-
-    // check existence object
-    module_load_include('inc', 'flat_deposit', '/Helpers/Fedora_REST_API');
-
-    $accessFedora = variable_get('flat_deposit_fedora');
-    $rest_fedora = new FedoraRESTAPI($accessFedora);
-
-    $fObject = $rest_fedora->getObjectData($fid);
-    if (!$fObject) {
-        form_set_error('error', t('Check of FID for new collection item did not reveal valid data. Error message:' . $fid));
-        return $form;
-    }
-
-    $form_state['values']['data']['fid'] = (string)$fid;
-    $form_state['values']['data']['label'] = $fObject['objLabel'];
-    $form_state['values']['data']['owner'] = $fObject['objOwnerId'];
+    form_set_error('Debug','Debug2');
     return $form;
+
+*/
+
+}
+
+
+
+function flat_deposit_cmdi_form_submit($form, &$form_state){
+
+
+    $node = menu_get_object();
+    $wrapper = entity_metadata_wrapper('node', $node);
+
+    $new_file = file_save((object)array(
+        'filename' => 'record.cmdi',
+        'uri' => $form_state['values']['recordCmdi'],
+        'status' => FILE_STATUS_PERMANENT,
+        'filemime' => file_get_mimetype($form_state['values']['recordCmdi']),
+        'display' => '1',
+        'description' =>'',
+    ));
+
+
+
+    $original_flat_location = $wrapper->flat_location->value();
+    $wrapper->flat_cmdi_file->file->set($new_file);
+    $wrapper->save();
+
+    // for some unknown reason flat_location is messed up by attaching the newly created cmdi file, so we need to restore it
+    $node = menu_get_object();
+    $wrapper = entity_metadata_wrapper('node', $node);
+    $wrapper->flat_location->set($original_flat_location);
+    $wrapper->save();
+
+    $form_state['redirect'] = 'node/' .$node->nid;
+    drupal_set_message('Flat bundle cmdi has been generated');
+
+
 }

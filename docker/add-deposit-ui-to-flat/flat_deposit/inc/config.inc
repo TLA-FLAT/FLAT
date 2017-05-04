@@ -39,6 +39,16 @@ function flat_deposit_set_paths($updated_values=NULL)
     $values = $updated_values ? array_merge($values_stored_in_database, $updated_values) : $defaults;
     variable_set('flat_deposit_paths', $values );
 
+
+    // warn if directory does not exist
+    $checks = ['local','external', 'metadata', 'freeze','bag', 'sword_tmp_dir', 'alternate_dir' ];
+    $paths = variable_get('flat_deposit_paths');
+    foreach ($checks as $check){
+        if (!file_exists($paths[$check])){
+            drupal_set_message(t('%check directory (%dir) as specified in flat_deposit module settings does not exist', array('%check'=> $check, '%dir'=> $paths[$check])), 'error');
+        }
+    }
+
     return TRUE;
 }
 

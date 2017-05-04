@@ -138,7 +138,7 @@ function flat_deposit_install()
         'settings' => array(
             'display_field' => 1,
             'display_default' => 1,
-            'uri_scheme' => 'private',
+            'uri_scheme' => 'metadata',
         ),
         'type' => 'file',
         'entity_types' => array('node'),
@@ -293,7 +293,7 @@ function flat_deposit_install()
             'filefield_paths' =>
                 array (
                     'file_path' => array (
-                        'value' =>  'metadata://[current-user:name]/[node:flat_parent_title]/[node:title]/',
+                        'value' =>  '[current-user:name]/[node:flat_parent_title]/[node:title]/',
                         'options' => array(
                             'slashes' => 0,
                             'pathauto' => FALSE,

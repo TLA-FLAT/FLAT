@@ -1,7 +1,7 @@
 <?php
 
 module_load_include('inc','flat_deposit','Helpers/CMDI/Template2FormParser');
-module_load_include('inc','flat_deposit','Helpers/CMDI/Drupal2CmdiParser');
+module_load_include('inc','flat_deposit','Helpers/CMDI/Form2CmdiParser');
 
 
 class CmdiHandlerException extends Exception {}
@@ -42,7 +42,21 @@ class CmdiHandler
         }
     }
 
-    static public function getAvailableTemplates($content_type)
+    static public function getCmdiFromDatastream($fid)
+    {
+        $ds = islandora_datastream_load('CMD', $fid);
+
+        if ($ds) {
+
+            return(simplexml_load_string($ds->content));
+
+        }
+
+        return false;
+    }
+
+
+        static public function getAvailableTemplates($content_type)
     {
         $templates = [];
         foreach (glob(drupal_get_path('module', 'flat_deposit') . self::FORM_TEMPLATES_PATH . "*.xml") as $filename) {
@@ -56,6 +70,40 @@ class CmdiHandler
         }
         return drupal_map_assoc($templates);
     }
+
+
+    static public function request_cmdi_from_fedora_object_datastream($fid){
+
+
+        $host = variable_get('flat_deposit_ingest_service')['host_name'];
+        $scheme = variable_get('flat_deposit_ingest_service')['host_scheme'];
+        $base = $GLOBALS['base_path'];
+
+
+        $object_url = $scheme . '://' . $host . $base . "islandora/object/" . $fid . '/datastream/CMD/';
+
+        $ch = curl_init();
+        curl_setopt_array($ch, array(
+                CURLOPT_URL => $object_url,
+                CURLOPT_RETURNTRANSFER => 1,
+                CURLOPT_CONNECTTIMEOUT => 5,
+                CURLOPT_TIMEOUT => 5,
+            )
+        );
+
+
+        $result = curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        return ($httpcode >= 200 && $httpcode < 300) ? $result : false;
+
+
+
+    }
+
+
+
 
     /**
      * Generates the drupal input form for a specified profile
@@ -81,6 +129,9 @@ class CmdiHandler
 
     }
 
+
+
+
     /**
      * Generates a new cmdi file based on an xml parser file
      *
@@ -101,7 +152,7 @@ class CmdiHandler
             return $template;
         }
 
-        $parser = new Drupal2CmdiParser();
+        $parser = new Form2CmdiParser();
         $cmdi = $parser->buildCmdi($profile, $template, $user_name, $form_data);
 
         return $cmdi;
@@ -174,6 +225,9 @@ class CmdiHandler
             case 'clarin.eu:cr1:p_1475136016239' :
                 $name = 'MPI_Collection';
                 break;
+            case 'clarin.eu:cr1:p_1475136016242' :
+                $name = 'MPI_Bundle';
+                break;
             default :
 
                 $url ="https://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/1.x/profiles/$id";
@@ -213,10 +267,6 @@ class CmdiHandler
      */
     static public function addResources(&$xml, $profile, $directory){
 
-        // Add 'Resources'-child to Components->profile if not existing
-        if (!isset($xml->Components->{$profile}->Resources)){
-            $xml->Components->{$profile}->addChild('Resources');
-        }
 
         // scan all files of the bundle freeze directory and add theses as resources to the CMDI;
         if (!is_dir($directory)) return false;
@@ -254,8 +304,24 @@ class CmdiHandler
             $resourceProxy->ResourceRef->addAttribute('lat:localURI', 'file:' . $file_name, "http://lat.mpi.nl/");
 
             // Add Resources to Components->Resources
-            $refType = ($profile == 'lat-session') ? 'MediaFile' : 'Resource';
-            $resource = $xml->Components->{$profile}->Resources->addChild($refType);
+            if ($profile == 'lat-session'){
+
+                // Add 'Resources'-child to Components->profile if not existing
+                if (!isset($xml->Components->{$profile}->Resources)){
+                    $xml->Components->{$profile}->addChild('Resources');
+                }
+
+
+                $refType = 'MediaFile';
+                $resource = $xml->Components->{$profile}->Resources->addChild($refType);
+
+            } else{
+
+                $refType = 'Resource';
+                $resource = $xml->Components->{$profile}->addChild($refType);
+
+            }
+
             $resource->addAttribute('ref', $fid);
 
             if ($profile == 'lat-session'){
@@ -267,10 +333,7 @@ class CmdiHandler
             $resource->addChild('Format', $file_mime);
             $resource->addChild('Size', $file_size);
 
-
         }
-
-
 
     }
 
@@ -338,4 +401,72 @@ function exchange_numeric_key_with_default_value_property($array) {
     }
     return $helper;
 }
+
+
+
+function get_cmdi($data, $fName, $import)
+{
+    // Import file in case this option was selected
+    if ($import) {
+
+        $file = file_save_upload('cmdi_file', array(
+
+            // Validate extensions.
+            'file_validate_extensions' => array('cmdi'),
+        ));
+
+        // If the file did not passed validation:
+        if (!$file) {
+            $message  = 'File was not specified or has not correct extension (.cmdi)';
+            return $message;
+        }
+        // Validate valid xml file
+        if (!@simplexml_load_file($file->uri)){
+            $message  = 'File is not a valid xml file';
+            return $message;
+        }
+
+        copy(drupal_realpath($file->uri), $fName);
+
+        if (!file_exists($fName)) {
+
+            $message = 'Unable to copy specified file to target location';
+            return $message;
+        }
+
+        return TRUE;
+
+    } else {
+
+        $profile = $data['select_profile_name'];
+        $form_data = $data['template_container']['elements'];
+        $user_name = $data['owner'];
+
+        $cmdi = CmdiHandler::generateCmdi($profile, $user_name, $form_data);
+
+        if (is_string($cmdi)){
+
+            return $cmdi;
+
+        }
+
+
+        $export = $cmdi->asXML($fName);
+
+        if (!$export) {
+            return 'Unable to create cmdi record in users\' metadata directory';
+
+        }
+
+        return TRUE;
+
+
+
+    }
+
+
+
+}
+
+
 

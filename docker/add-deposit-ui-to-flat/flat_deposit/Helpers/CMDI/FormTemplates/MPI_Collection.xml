@@ -161,7 +161,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <subNode>Project</subNode>
         </field>
         <field id="field_16" name="Url">
-            <title>Project identifier</title>
+            <title>Project URL</title>
             <type>textfield</type>
             <subNode>Project</subNode>
         </field>

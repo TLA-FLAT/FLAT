@@ -1,10 +1,29 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: danrhe
- * Date: 23/02/16
- * Time: 11:44
- */
+
+
+function query_existing_labels_in_collection($collection_pid){
+
+
+    $query = "
+PREFIX fm: <info:fedora/fedora-system:def/model#>
+PREFIX relex: <info:fedora/fedora-system:def/relations-external#>
+
+SELECT ?pid ?label
+FROM <#ri>
+WHERE {
+    ?object <http://purl.org/dc/elements/1.1/identifier> ?pid;
+    fm:label ?label;
+    fm:state fm:Active;
+    relex:isMemberOfCollection <info:fedora/COLLECTION_PID>;
+    }
+";
+
+    $query = str_replace('COLLECTION_PID',$collection_pid,$query);
+
+    return $query;
+
+}
+
 
 /**
  * Gets a list of all data ingested since last login

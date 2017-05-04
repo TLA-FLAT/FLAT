@@ -69,10 +69,7 @@ class Template2FormParser {
 
 
     /**
-     * This function 1) orders form fields by '#required'-property 2) create triggers for optional fields 3) adds a
-     * conditional '#states'-property to optional element in order to display them only if triggered by checking a checkbox
-     * and 3) conditionally show control panel with triggers and optional fieldset with fields only if any optional fields
-     * are included in profile.
+     * This function places form elements in form fields
      */
     private function _structureForm()
     {
@@ -84,21 +81,21 @@ class Template2FormParser {
 
                 $subNode = $this->additional_field_info[$key]['#subNode'][0];
 
+                // create fieldset if not existing
+                if (!isset($this->form[$subNode])){
+                    $this->form[$subNode] = array(
+                        '#type' => 'fieldset',
+                        '#title' => t($subNode),
+                        '#collapsible' => TRUE,
+                    );
+                };
+
+                $this->form[$subNode][$key] = $field;
+
             } else {
 
-                $subNode = 'Core';
+                $this->form[$key] = $field;
             }
-
-            // create fieldset if not existing
-            if (!isset($this->form[$subNode])){
-                $this->form[$subNode] = array(
-                    '#type' => 'fieldset',
-                    '#title' => t($subNode),
-                    '#collapsible' => TRUE,
-                );
-            };
-            // Add field to fieldset
-            $this->form[$subNode][$key] = $field;
 
         }
     }

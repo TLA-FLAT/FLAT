@@ -60,6 +60,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <type>dropdown</type>
             <title>Department</title>
             <required>true</required>
+            <inherited>true</inherited>
             <options>
                 <option>Language Documentation</option>
                 <option>Language Development</option>
@@ -73,6 +74,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <title>Collection creation date</title>
             <description>Date at which the collection was created</description>
             <required>true</required>
+            <inherited>true</inherited>
         </field>
         <field id="field_05" name="Description">
             <title>Description</title>
@@ -84,12 +86,14 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <title>Name</title>
             <type>textfield</type>
             <required>true</required>
+            <inherited>true</inherited>
             <subNode>Contributor</subNode>
         </field>
         <field id="field_07" name="Role">
             <title>Role</title>
             <type>dropdown</type>
             <required>true</required>
+            <inherited>true</inherited>
             <subNode>Contributor</subNode>
             <options>
                 <option>annotator</option>
@@ -121,79 +125,94 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
         <field id="field_08" name="EmailAddress">
             <title>Email Address</title>
             <type>textfield</type>
-                <subNode>Contributor</subNode>
+            <inherited>true</inherited>
+            <subNode>Contributor</subNode>
         </field>
         <field id="field_09" name="ORCID">
             <title>ORCID</title>
             <type>textfield</type>
             <subNode>Contributor</subNode>
+            <inherited>true</inherited>
         </field>
         <field id="field_10" name="Department">
             <title>Department</title>
             <type>textfield</type>
+            <inherited>true</inherited>
             <subNode>Institution</subNode>
         </field>
         <field id="field_11" name="Organisation">
             <title>Organisation</title>
             <type>textfield</type>
+            <inherited>true</inherited>
             <required>true</required>
             <subNode>Institution</subNode>
         </field>
         <field id="field_12" name="Url">
             <title>URL</title>
             <type>textfield</type>
+            <inherited>true</inherited>
             <subNode>Institution</subNode>
         </field>
         <field id="field_13" name="ProjectName">
             <title>Project Name</title>
             <type>textfield</type>
             <required>true</required>
+            <inherited>true</inherited>
             <subNode>Project</subNode>
         </field>
         <field id="field_14" name="ProjectDescription">
             <title>Project Description</title>
             <type>textfield</type>
             <required>true</required>
+            <inherited>true</inherited>
             <subNode>Project</subNode>
         </field>
         <field id="field_15" name="ProjectID">
             <title>Project identifier</title>
             <type>textfield</type>
+            <inherited>true</inherited>
             <subNode>Project</subNode>
         </field>
         <field id="field_16" name="Url">
-            <title>Project identifier</title>
+            <title>URL</title>
             <type>textfield</type>
+            <inherited>true</inherited>
             <subNode>Project</subNode>
         </field>
         <field id="field_17" name="Name">
             <title>Name</title>
             <type>textfield</type>
+            <inherited>true</inherited>
             <subNode>Content_Language</subNode>
         </field>
         <field id="field_18" name="Id">
             <title>Id</title>
             <type>textfield</type>
+            <inherited>true</inherited>
             <subNode>Content_Language</subNode>
         </field>
         <field id="field_19" name="Continent">
             <title>Continent</title>
             <type>textfield</type>
+            <inherited>true</inherited>
             <subNode>Location</subNode>
         </field>
         <field id="field_20" name="Country">
             <title>Country</title>
             <type>textfield</type>
+            <inherited>true</inherited>
             <subNode>Location</subNode>
         </field>
         <field id="field_21" name="PlaceName">
             <title>Place Name</title>
             <type>textfield</type>
+            <inherited>true</inherited>
             <subNode>Location</subNode>
         </field>
         <field id="field_22" name="Latitute">
             <title>Latitude</title>
             <type>textfield</type>
+            <inherited>true</inherited>
             <subNode>Location</subNode>
             <subNode>geoCoordinates</subNode>
         </field>
@@ -202,12 +221,14 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <type>textfield</type>
             <subNode>Location</subNode>
             <subNode>geoCoordinates</subNode>
+            <inherited>true</inherited>
         </field>
         <field id="field_24" name="Elevation">
             <title>Elevation</title>
             <type>textfield</type>
             <subNode>Location</subNode>
             <subNode>geoCoordinates</subNode>
+            <inherited>true</inherited>
         </field>
         <field id="field_25" name="Reference">
             <title>Reference</title>
@@ -221,16 +242,18 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
         </field>
         <field id="field_27" name="Licence">
             <title>Licence</title>
+            <inherited>true</inherited>
             <type>textfield</type>
             <subNode>Licence</subNode>
         </field>
         <field id="field_28" name="LicenseUrl">
             <title>Licence URL</title>
+            <inherited>true</inherited>
             <type>textfield</type>
             <subNode>Licence</subNode>
         </field>
     </fields>
     <data>
-        <clarinProfileId>clarin.eu:cr1:p_1475136016239</clarinProfileId>
+        <clarinProfileId>clarin.eu:cr1:p_1475136016242</clarinProfileId>
     </data>
 </profileToDrupal>

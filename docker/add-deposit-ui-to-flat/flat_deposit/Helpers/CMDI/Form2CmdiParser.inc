@@ -1,11 +1,12 @@
 <?php
 
 
-class Drupal2CmdiParserException extends Exception{}
+class Form2CmdiParserException extends Exception{}
+
 /**
- *
+ * Class for building a CMDI xml based on drupal form data and a form template
  */
-class Drupal2CmdiParser
+class Form2CmdiParser
 {
 
 
@@ -131,17 +132,19 @@ class Drupal2CmdiParser
             $id = (string)$field['id'];
             $name = (string)$field['name'];
 
-            // get array key where data can be found
+            // get data from form
             if (isset($field->subNode)){
                 $arrayKey = (string)$field->subNode[0];
+                $field_data =  $data[$arrayKey][$id];
+
             } else {
-                $arrayKey = 'Core';
+                $field_data =  $data[$id];
             }
 
 
             // get data from form
-            if ($data[$arrayKey][$id] !== ''){
-                $values = (array)$data[$arrayKey][$id]; // convert to array in order to unify input
+            if ($field_data !== ''){
+                $values = (array)$field_data; // convert to array in order to unify input
                 $converted_values = $this->convertValues($field->type, $values); // convert values into xml - compatible format
             } else {
 

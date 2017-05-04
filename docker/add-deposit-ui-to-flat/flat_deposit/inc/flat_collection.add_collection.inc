@@ -203,17 +203,52 @@ function flat_collection_add_form_validate($form, &$form_state){
 
 function flat_collection_add_form_final_validate($form, &$form_state)
 {
+    module_load_include('php','flat_deposit','Helpers/CMDI/CmdiHandler');
 
     //Validate title
+    // Special characters
     if ($form_state['values']['select_profile_name'] == 'MPI_Collection'){
 
-        $title = $form_state['values']['template_container']['elements']['Core']['field_01'];
+        $title = $form_state['values']['template_container']['elements']['field_01'];
         if (!preg_match('/^[a-zA-Z0-9\_\s]{2,40}+$/', $title)) {
             form_set_error('title', t('Allowed are all letters, numbers and underscores (max length 40)'));
         }
 
         // todo Validate imported cmdi titles
     }
+
+    // Existing collection with same label as title
+// Validate chosen option
+
+    // Validate chosen option
+    if ($form_state['values']['select_profile_name'] === ''){
+        form_set_error('select_profile_name','Please choose correct option');
+        return $form;
+    }
+
+    if ($form_state['values']['select_profile_name'] !== 'Import'){
+
+        // Validate that collection name is unique im this collection
+        $collection_pid = $form_state['values']['data']['parentFid'];
+        $labelNewCollection = $form_state['values']['template_container']['elements']['field_01'];
+        $connection = islandora_get_tuque_connection();
+
+        module_load_include('php','flat_deposit', 'inc/fedora_queries');
+
+        $query = query_existing_labels_in_collection($collection_pid);
+        $results = $connection->repository->ri->sparqlQuery($query);
+        foreach ($results as $result) {
+            if ($labelNewCollection === $result['label']['value']){
+
+                form_set_error('title',t("Found existing collection with this collection with same title (%title)",array('%title' => $labelNewCollection)));
+                return $form;
+            };
+
+        }
+
+
+    }
+
 
     // Validate owner.
     $owner =  $form_state['values']['owner'];
@@ -236,22 +271,13 @@ function flat_collection_add_form_final_validate($form, &$form_state)
     }
 
 
-
-
-    // Validate chosen option
-    if ($form_state['values']['select_profile_name'] === '-- Select --'){
-        form_set_error('select_profile_name','Please choose correct option');
-        return $form;
-    }
-
-
     // set cmdi filename
     $profile = $form_state['values']['select_profile_name'];
     $recordCmdi = $export_dir . '/' . $profile . '_' . uniqid() . '.cmdi';
 
     // Get cmdi
     $import = $form_state['values']['select_profile_name'] === 'Import' ? TRUE : FALSE;
-    $msg = get_cmdi($form_state, $recordCmdi, $import);
+    $msg = get_cmdi($form_state['values'], $recordCmdi, $import);
 
 
     if ($msg !== TRUE){
@@ -274,93 +300,22 @@ function flat_collection_add_form_final_validate($form, &$form_state)
 
     $fid = $ingest_client->requestSipIngest($options);
 
-    // check existence object
-    module_load_include('inc','flat_deposit', '/Helpers/Fedora_REST_API');
+    $fObject = islandora_object_load($fid);
 
-    $accessFedora = variable_get('flat_deposit_fedora');
-    $rest_fedora = new FedoraRESTAPI($accessFedora);
-
-    $fObject = $rest_fedora->getObjectData($fid);
     if (!$fObject){
         form_set_error('error', t('Check of FID for new collection item did not reveal valid data. Error message:' . $fid));
         return $form;
     }
 
+
     $form_state['values']['data']['fid'] = (string)$fid;
-    $form_state['values']['data']['label']=  $fObject['objLabel'];
-    $form_state['values']['data']['owner']=  $fObject['objOwnerId'];
+    $form_state['values']['data']['label']=  $fObject->label;
+    $form_state['values']['data']['owner']=  $fObject->owner;
     return $form;
 
 }
 
 
-function get_cmdi($form_state, $fName, $import)
-{
-    // Import file in case this option was selected
-    if ($import) {
-
-        $file = file_save_upload('cmdi_file', array(
-
-        // Validate extensions.
-        'file_validate_extensions' => array('cmdi'),
-        ));
-
-        // If the file did not passed validation:
-        if (!$file) {
-            $message  = 'File was not specified or has not correct extension (.cmdi)';
-            return $message;
-        }
-        // Validate valid xml file
-        if (!@simplexml_load_file($file->uri)){
-            $message  = 'File is not a valid xml file';
-            return $message;
-        }
-
-        copy(drupal_realpath($file->uri), $fName);
-
-        if (!file_exists($fName)) {
-
-            $message = 'Unable to copy specified file to target location';
-            return $message;
-        }
-
-        return TRUE;
-
-    } else {
-
-        $profile = $form_state['values']['select_profile_name'];
-        $form_data = $form_state['values']['template_container']['elements'];
-
-        global $user;
-        $user_name = $user->name;
-
-        module_load_include('php', 'flat_deposit', 'Helpers/CMDI/CmdiHandler');
-
-        $cmdi = CmdiHandler::generateCmdi($profile, $user_name, $form_data);
-
-        if (is_string($cmdi)){
-
-            return $cmdi;
-
-        }
-
-
-        $export = $cmdi->asXML($fName);
-
-        if (!$export) {
-            return 'Unable to create cmdi record in users\' collection directory';
-
-        }
-
-        return TRUE;
-
-
-
-    }
-
-
-
-}
 
 
 /**

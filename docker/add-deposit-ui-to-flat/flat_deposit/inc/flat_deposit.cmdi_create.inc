@@ -9,6 +9,7 @@
  */
 function flat_deposit_cmdi_create_form($form, &$form_state){
 
+
     $node = menu_get_object() ? menu_get_object() : $form_state['values']['node'];
     $wrapper = entity_metadata_wrapper('node',$node);
 

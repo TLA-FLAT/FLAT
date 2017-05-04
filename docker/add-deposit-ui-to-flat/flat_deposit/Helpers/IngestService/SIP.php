@@ -255,7 +255,7 @@ abstract class SIP
         module_load_include('php', 'flat_deposit', '/Helpers/IngestService/Doorkeeper');
         $dk = new Doorkeeper();
         $dk->triggerServlet($this->sipId, $query);
-        $fid = $dk->checkStatus($this->sipId, 15);
+        $fid = $dk->checkStatus($this->sipId, 120);
 
         $this->fid =$fid ;
 
@@ -328,16 +328,7 @@ abstract class SIP
 
     }
 
-    protected function removeIngestedObject(){
-
-        module_load_include('inc','flat_deposit', '/Helpers/Fedora_REST_API');
-
-        $accessFedora = variable_get('flat_deposit_fedora');
-        $rest_fedora = new FedoraRESTAPI($accessFedora);
-
-        $rest_fedora->deleteObject($this->fid);
-    }
-
+    
     public function logging($message){
 
         if ($this->logProcess){

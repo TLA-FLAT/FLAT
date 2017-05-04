@@ -809,7 +809,7 @@ function flat_bundle_edit_node_form_validate($form, &$form_state){
     }
 
     // Move files to new location
-    $stream = 'private';
+    $stream = 'external';
     $new_location = FlatBundle::moveBundleData($node, 'data', $stream, $new_collection_name);
 
     if(!$new_location) {
@@ -1003,6 +1003,8 @@ function flat_collection_view($node, $view_mode) {
  * Implements hook_view().
  */
 function flat_bundle_view($node, $view_mode) {
+
+    $info = field_info_field('flat_cmdi_file');
 
 /*
 

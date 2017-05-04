@@ -148,8 +148,9 @@ function flat_bundle_action_form($form, &$form_state, $vars)
     $form['actions']['bundle_image']['#src'] = drupal_get_path('module', 'flat_deposit') . '/Images/' . $name . '.jpg';
 
 
-    // Activate metadata creation button only if cmdi option is 'new' and status is either open or failed
-    if ($wrapper->flat_cmdi_option->value() == 'new' AND ($status == 'open' OR $status == 'failed')) {
+    // Activate metadata creation button only if 1) cmdi option is 'new' 2) status is either open or failed and 3) no cmdi has been created
+
+    if ($wrapper->flat_cmdi_option->value() == 'new' AND ($status == 'open' OR $status == 'failed') AND (empty($node->flat_cmdi_file))) {
 
         $form['actions']['describe_bundle']['#disabled'] = FALSE;
     }
