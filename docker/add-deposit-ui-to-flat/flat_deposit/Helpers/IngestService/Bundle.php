@@ -206,7 +206,17 @@ class Bundle extends SIP
             default :{
                 CmdiHandler::removeMdSelfLink($xml);
                 CmdiHandler::stripResources($xml, $profile_name);
-                CmdiHandler::addResources($xml, $profile_name, $directory);
+
+                try{
+
+                    CmdiHandler::addResources($xml, $profile_name, $directory);
+
+                } catch (CmdiHandlerException $exception){
+
+                    throw new IngestServiceException($exception->getMessage());
+
+                }
+
                 break;
             }
 

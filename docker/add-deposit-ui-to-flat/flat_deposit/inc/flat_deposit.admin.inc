@@ -114,45 +114,30 @@ function flat_deposit_admin_form($form, &$form_state)
         '#required' => TRUE,
     );
 
-    // METADATA
-    $form['metadata'] = array(
+    // FITS
+    $form['fits'] = array(
         '#type' => 'fieldset',
-        '#title' => t('Metadata'),
+        '#title' => t('FITS'),
         '#collapsible' => TRUE,
         '#collapsed' => TRUE,
         '#tree' => TRUE,
     );
 
-    $metadata = variable_get('flat_deposit_metadata');
+    $fits = variable_get('flat_deposit_fits');
 
-    $form['metadata']['site'] = array (
+    $form['fits']['url'] = array (
         '#type' => 'textfield',
-        '#title' => t('Archive site'),
-        '#default_value' => $metadata['site'],
+        '#title' => t('URL of FITS service'),
+        '#default_value' => $fits['url'],
         '#required' => TRUE,
     );
 
-    $form['metadata']['type'] = array (
+    $form['fits']['port'] = array (
         '#type' => 'textfield',
-        '#title' => t('Metadata file format'),
-        '#default_value' => $metadata['type'],
+        '#title' => t('Port of FITS service'),
+        '#default_value' => $fits['port'],
         '#required' => TRUE,
     );
-
-    $form['metadata']['prefix'] = array (
-        '#type' => 'textfield',
-        '#title' => t('Namespace for handles'),
-        '#default_value' => $metadata['prefix'],
-        '#required' => TRUE,
-    );
-
-    $form['metadata']['MdProfile'] = array (
-        '#type' => 'textfield',
-        '#title' => t('Clarin metadata profile'),
-        '#default_value' => $metadata['MdProfile'],
-        '#required' => TRUE,
-    );
-
 
 
     // INGEST SERVICE
@@ -484,7 +469,7 @@ function flat_deposit_admin_form_save_submit ($form, &$form_state)
 
     flat_deposit_set_paths($form_state['values']['paths']);
     flat_deposit_set_names($form_state['values']['names']);
-    flat_deposit_set_metadata($form_state['values']['metadata']);
+    flat_deposit_set_fits($form_state['values']['fits']);
     flat_deposit_set_ingest_service($form_state['values']['ingest_service']);
     flat_deposit_set_sword($form_state['values']['sword']);
     flat_deposit_set_doorkeeper($form_state['values']['doorkeeper']);
@@ -501,7 +486,7 @@ function flat_deposit_admin_form_reset_submit ($form, &$form_state){
 
     flat_deposit_set_paths();
     flat_deposit_set_names();
-    flat_deposit_set_metadata();
+    flat_deposit_set_fits();
     flat_deposit_set_ingest_service();
     flat_deposit_set_sword();
     flat_deposit_set_doorkeeper();
@@ -518,7 +503,7 @@ function flat_deposit_admin_form_export_submit()
     $config = array(
         'paths' =>  variable_get('flat_deposit_paths'),
         'names' => variable_get('flat_deposit_names'),
-        'metadata' => variable_get('flat_deposit_metadata'),
+        'fits' => variable_get('flat_deposit_fits'),
         'ingest_service' => variable_get('flat_deposit_ingest_service'),
         'sword' => variable_get('flat_deposit_sword'),
         'doorkeeper' => variable_get('flat_deposit_doorkeeper'),
@@ -588,7 +573,7 @@ function flat_deposit_admin_form_import_validate ($form, &$form_state)
     }
 
     // validate that unserialization of imported string results in arrays corresponding to the drupal 'flat_deposit'-variables
-    $checks = array('paths', 'names', 'metadata', 'ingest_service', 'sword', 'doorkeeper', 'fedora', 'solr');
+    $checks = array('paths', 'names', 'fits', 'ingest_service', 'sword', 'doorkeeper', 'fedora', 'solr');
 
     foreach ($checks as $check) {
         if (!empty(array_diff_key($imported_values[$check], $form_state['values'][$check]))) {
@@ -611,7 +596,7 @@ function flat_deposit_admin_form_import_submit ($form, &$form_state){
 
     variable_set('flat_deposit_paths', $form_state['values']['imported_values']['paths']);
     variable_set('flat_deposit_names', $form_state['values']['imported_values']['names']);
-    variable_set('flat_deposit_metadata', $form_state['values']['imported_values']['metadata']);
+    variable_set('flat_deposit_fits', $form_state['values']['imported_values']['fits']);
     variable_set('flat_deposit_ingest_service', $form_state['values']['imported_values']['ingest_service']);
     variable_set('flat_deposit_sword', $form_state['values']['imported_values']['sword']);
     variable_set('flat_deposit_doorkeeper', $form_state['values']['imported_values']['doorkeeper']);

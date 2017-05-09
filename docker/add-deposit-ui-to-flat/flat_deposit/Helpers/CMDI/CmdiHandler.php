@@ -290,7 +290,11 @@ class CmdiHandler
         // Add resources to simplexml variable
         foreach ($resources as $fid => $file_name) {
 
-            $file_mime = mime_content_type(drupal_realpath($file_name)) ;
+            $file_mime = self::fits_mimetype_check(drupal_realpath($file_name)) ;
+            if (!$file_mime){
+                throw new CmdiHandlerException('Unable to get fits mime type for specified file');
+            }
+
             $file_size = filesize(drupal_realpath($file_name));
 
             // Add Resource to Resources->ResourceProxyList
@@ -327,10 +331,10 @@ class CmdiHandler
             if ($profile == 'lat-session'){
 
                 $resource->addChild('Type', 'document');
+                $resource->addChild('Format', $file_mime);
 
             }
 
-            $resource->addChild('Format', $file_mime);
             $resource->addChild('Size', $file_size);
 
         }
@@ -360,7 +364,60 @@ class CmdiHandler
 
     }
 
+    /**
+     * Call to fits REST API allowing to determine the mime type of a specified file.
+     * Returns false if file is not accessible, FITS service returns wrong response code or the format attribute within
+     * the xml file returned by fits service is not set.
+     *
+     * @param string $filename name of the file to be checked
+     *
+     * @return bool|string
+     *
+     */
+    static public function fits_mimetype_check($filename){
 
+        $fName = str_replace("\\\\", "\\", $filename);
+        if (!file_exists($fName) OR !is_readable($fName)){
+
+            return false;
+
+        }
+
+        $config = variable_get('flat_deposit_fits');
+        $url = $config['url'] . '/examine?file=' .$fName;
+        $port = $config['port'];
+
+        $ch = curl_init();
+        curl_setopt_array($ch, array(
+                CURLOPT_URL => $url,
+                CURLOPT_PORT => $port,
+                CURLOPT_RETURNTRANSFER => 1,
+                CURLOPT_CONNECTTIMEOUT => 5,
+                CURLOPT_TIMEOUT => 5,
+            )
+        );
+
+        $result = curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpcode < 200 OR $httpcode >= 300){
+
+            return false;
+
+        }
+
+        $xml = simplexml_load_string($result);
+
+        if (!isset($xml->identification->identity['mimetype'])){
+
+            return false;
+
+        }
+
+        return (string)$xml->identification->identity['mimetype'];
+
+    }
 
 }
 

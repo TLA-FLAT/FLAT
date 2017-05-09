@@ -71,28 +71,27 @@ function flat_deposit_set_names($updated_values=NULL)
     return TRUE;
 }
 
-function flat_deposit_set_metadata($updated_values=NULL)
+function flat_deposit_set_fits($updated_values=NULL)
 {
     $defaults = array(
-        'site' => 'MPI',
-        'type' => 'cmdi',
-        'prefix' => 'lat',
-        'MdProfile' => 'clarin.eu:cr1:p_1407745712035',
-
+        'url' => 'http://127.0.0.1/fits',
+        'port' => 8080,
     );
 
     //clean up stored values
-    $values_stored_in_database = variable_get('flat_deposit_metadata', array());
+    $values_stored_in_database = variable_get('flat_deposit_fits', array());
 
     //already installed
-    if (!empty($values_stored_in_database[0])) {variable_del('flat_deposit_metadata'); }
+    if (!empty($values_stored_in_database[0])) {variable_del('flat_deposit_fits'); }
 
     // set or update values
     $values = $updated_values ? array_merge($values_stored_in_database, $updated_values) : $defaults;
-    variable_set('flat_deposit_metadata', $values );
+    variable_set('flat_deposit_fits', $values );
 
     return TRUE;
+
 }
+
 
 function flat_deposit_set_ingest_service($updated_values=NULL)
 {
