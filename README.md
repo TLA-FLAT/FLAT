@@ -63,8 +63,6 @@ CMDI records can vary a lot. Based on the VLO configuration a mapping to Dublin 
 
 __NOTE__: simple passwords are included in the setup, they should not be take along to a production environment!
 
-This introductionary example uses CMDIfied IMDI as it allows some more pre-defined configuration. See below for some hints when you don't have IMDI records.
-
 The following commands show how to build a setup that supports FLAT base plus facetted search and the DoorKeeper:
 
 ```sh
@@ -88,7 +86,7 @@ docker build --squash -t flat add-example-setup-to-flat/
 Now the FLAT docker image can be run:
 
 ```sh
-docker run -p 80:80 -p 8443:8443 -p 8080:8080 -it flat
+docker run -p 80:80 -it flat
 ```
 
 In the container shell run: 
@@ -96,7 +94,7 @@ In the container shell run:
 ```sh
 #run all the steps to batch import the example comic book collection
 do.sh
-#add the example SIP
+#and add the example SIP
 #- packup the SIP directory
 flat-create-sip.sh /app/flat/test/test-sip
 #- upload the SIP via SWORD
@@ -113,7 +111,7 @@ Now visit FLAT in your [browser](http://localhost/flat).
 
 ## Building a FLAT docker image if you have IMDI records ##
 
-If you have native CMD records you need both less and more. You won't need the IMDI conversion and the configuration for CMDIfied IMDI search.
+If you have IMDI records you can add the conversion to CMDI and the configuration for CMDIfied IMDI search.
 
 ```sh
 cd docker
@@ -138,7 +136,7 @@ docker build --squash -t flat add-doorkeeper-to-flat/
 Now the FLAT docker image can be run:
 
 ```
-docker run -p 80:80 -p 8443:8443 -p 8080:8080 -v ./some-directory:/lat -t -i flat
+docker run -p 80:80 -v ./some-directory:/lat -it flat
 ```
 
 Run the various ```do-*.sh``` scripts in their natural order. And visit FLAT in your [browser](http://localhost/flat).
