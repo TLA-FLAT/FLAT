@@ -13,7 +13,7 @@ docker build -t flat ./add-imdi-gsearch-to-flat
 
 ## Running the image ##
 ```sh
-docker run -p 80:80 -p 8443:8443 -p 8080:8080 -v ~/my-resources:/lat -t -i flat
+docker run -p 80:80 -v ~/my-resources:/lat -it flat
 ```
 
 ## Additional configuration ##

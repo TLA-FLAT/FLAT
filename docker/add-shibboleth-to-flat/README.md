@@ -15,7 +15,7 @@ docker build -t flat ./add-shibboleth-to-flat
 
 ## Running the image ##
 ```sh
-docker run -p 80:80 -p 8443:8443 -p 8080:8080 -i -t flat
+docker run -p 80:80 -it flat
 ```
 
 ## Additional configuration ##

@@ -18,9 +18,9 @@ The following endpoints come available:
 
 The following accounts are created: 
 
- * Drupal account: admin:admin
- * Fedora Commons account: fedoraAdmin:fedora
- * PostgreSQL account: fedora:fedora
+ * Drupal account: admin:admin  (CHANGE and DISABLE in production!)
+ * Fedora Commons account: fedoraAdmin:fedora  (CHANGE in production!)
+ * PostgreSQL account: fedora:fedora  (preferably CHANGE in production)
 
 ## Building the image ##
 

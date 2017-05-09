@@ -20,7 +20,7 @@ docker build -t flat ./add-imdi-conversion-to-flat
 1. Start your docker environment
 2. Run
 ```sh 
-docker run -p 80:80 -p 8443:8443 -p 8080:8080 -v ~/my-resources:/lat -t -i flat
+docker run -p 80:80 -v ~/my-resources:/lat -it flat
 ```
 
 ## Additional configuration ##

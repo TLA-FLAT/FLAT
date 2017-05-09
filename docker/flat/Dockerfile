@@ -30,7 +30,6 @@ ENV PATH="/app/flat/bin:${PATH}"
 
 EXPOSE 80
 EXPOSE 8080
-EXPOSE 8443
 
 #
 # set local timezone
