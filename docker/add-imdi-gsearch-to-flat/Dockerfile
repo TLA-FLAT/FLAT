@@ -19,7 +19,9 @@ RUN service supervisor start &&\
 	/var/www/composer/vendor/drush/drush/drush en flat_imdi_search -y &&\
 	/var/www/composer/vendor/drush/drush/drush vset islandora_solr_limit_result_fields 1 &&\
 	/var/www/composer/vendor/drush/drush/drush vset islandora_solr_query_fields 'dc.title^5 dc.subject^2 dc.description^2 cmd.fulltext^2 dc.creator^2 dc.contributor^1 dc.type' &&\
-	service supervisor stop
+	supervisorctl stop all &&\
+	service supervisor stop &&\
+	sleep 1
 
 #
 # CMD GSearch mapping

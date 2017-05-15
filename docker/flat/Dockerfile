@@ -75,14 +75,17 @@ RUN a2enmod ssl &&\
 # Configure postgres
 #   - initialise databases for fedora and drupal
 ADD postgresql/wait-postgres.sh /wait-postgres.sh
+ADD postgresql/wait-sergtsop.sh /wait-sergtsop.sh
 RUN chmod u+x /wait-postgres.sh &&\
+	chmod u+x /wait-sergtsop.sh &&\
     /etc/init.d/postgresql start &&\
 	/wait-postgres.sh &&\
 	su -c "psql -c \"CREATE USER fedora WITH PASSWORD 'fedora'\"" postgres &&\
 	su -c "createdb -O fedora fedora" postgres &&\
 	su -c "createdb -O fedora proai" postgres &&\
 	su -c "createdb -O fedora --encoding=UNICODE -T template0 drupal" postgres &&\
-	/etc/init.d/postgresql stop
+	/etc/init.d/postgresql stop &&\
+	/wait-sergtsop.sh
 
 #
 # Download packages for the islandora setup
@@ -105,7 +108,8 @@ RUN /etc/init.d/postgresql start &&\
 	/wait-postgres.sh &&\
 	cd /tmp/fedora &&\
 	java -jar fcrepo-installer-3.8.1.jar install.properties &&\
-	/etc/init.d/postgresql stop
+	/etc/init.d/postgresql stop &&\
+	/wait-sergtsop.sh
 
 # tell fedora about CMDI
 RUN sed -i 's|</mappings>|<mime-mapping><mime-type>application/x-cmdi+xml</mime-type><extension>cmdi</extension></mime-mapping></mappings>|g' /var/www/fedora/server/config/mime-to-extensions.xml
@@ -133,7 +137,11 @@ RUN chmod u+x /wait-tomcat.sh &&\
 	/wait-postgres.sh &&\
 	supervisorctl start tomcat &&\
 	/wait-tomcat.sh &&\
-	service supervisor stop
+	supervisorctl stop all &&\
+	service supervisor stop &&\
+	/wait-sergtsop.sh
+
+# policies
 RUN rm -v /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/deny-purge-*
 ADD fedora/permit-anything-to-localhost.xml /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/permit-anything-to-localhost.xml
 ADD fedora/deny-unallowed-file-resolution.xml /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/deny-unallowed-file-resolution.xml
@@ -142,6 +150,8 @@ RUN cd /var/www/fedora/data/fedora-xacml-policies/repository-policies/ &&\
 	unzip master.zip &&\
 	rm master.zip &&\
 	mv islandora-xacml-policies-master islandora
+
+# authorisation filter
 RUN cd /var/www/fedora/tomcat/webapps/fedora/WEB-INF/lib &&\
 	wget "https://github.com/Islandora/islandora_drupal_filter/releases/download/v7.1.3/fcrepo-drupalauthfilter-3.8.1.jar"
 ADD fedora/jaas.conf /var/www/fedora/server/config/jaas.conf
@@ -165,7 +175,9 @@ RUN service supervisor start &&\
 	cd /var/www/html/$FLAT_NAME &&\
 	export PHP_OPTIONS="-d sendmail_path=`which true`" &&\
 	/var/www/composer/vendor/drush/drush/drush site-install standard --site-name=FLAT --account-name=admin --account-pass=admin --db-su=fedora --db-su-pw=fedora --db-url=pgsql://fedora:fedora@localhost/drupal -y &&\
-	service supervisor stop
+	supervisorctl stop all &&\
+	service supervisor stop &&\
+	/wait-sergtsop.sh
 
 RUN mkdir -p /var/www/html/$FLAT_NAME/sites/all/modules/custom &&\
 	chown www-data:www-data /var/www/html/$FLAT_NAME/sites/default/files &&\
@@ -244,7 +256,9 @@ RUN service supervisor start &&\
 	/var/www/composer/vendor/drush/drush/drush en bootstrap -y &&\
 	/var/www/composer/vendor/drush/drush/drush en flat_bootstrap_theme -y &&\
 	/var/www/composer/vendor/drush/drush/drush vset theme_default flat_bootstrap_theme &&\
-	service supervisor stop
+	supervisorctl stop all &&\
+	service supervisor stop &&\
+	/wait-sergtsop.sh
     
 # security patch for islandora
 RUN	service supervisor start &&\
@@ -259,7 +273,9 @@ RUN	service supervisor start &&\
 	cd /var/www/html/$FLAT_NAME/ &&\
 	/var/www/composer/vendor/drush/drush/drush en disable_dl_clip -y &&\
 	/var/www/composer/vendor/drush/drush/drush en disable_print_endpoint -y &&\
-	service supervisor stop
+	supervisorctl stop all &&\
+	service supervisor stop &&\
+	/wait-sergtsop.sh
 
 #
 # proai

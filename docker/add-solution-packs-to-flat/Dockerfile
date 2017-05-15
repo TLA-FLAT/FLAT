@@ -56,7 +56,9 @@ RUN service supervisor start &&\
 	/var/www/composer/vendor/drush/drush/drush en objective_forms -y &&\
 	/var/www/composer/vendor/drush/drush/drush en xml_form_builder -y &&\
 	/var/www/composer/vendor/drush/drush/drush en islandora_batch_derivative_trigger -y &&\
-	service supervisor stop
+	supervisorctl stop all &&\
+	service supervisor stop &&\
+	sleep 1
 
 #
 # Add FLAT's own scripts and tools 

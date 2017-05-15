@@ -18,12 +18,14 @@ ADD flat/deposit/test/test-sip /app/flat/test/test-sip
 RUN	service supervisor start &&\
 	/wait-postgres.sh &&\
 	supervisorctl start tomcat &&\
-	FLAT_TIMEOUT="600" /wait-tomcat.sh &&\
+	FLAT_TIMEOUT=`expr 10 \* $FLAT_TIMEOUT` /wait-tomcat.sh &&\
 	cd /var/www/html/$FLAT_NAME/ &&\
 	export PGPASSWORD=fedora &&\
 	/var/www/composer/vendor/drush/drush/drush user-create "john@example.com" --mail="john@example.com" --password="password" -y &&\
 	/var/www/composer/vendor/drush/drush/drush user-create "jane@example.com" --mail="jane@example.com" --password="password" -y &&\
-	service supervisor stop
+	supervisorctl stop all &&\
+	service supervisor stop &&\
+	sleep 1
 
 #
 # Add FLAT's own scripts and tools 

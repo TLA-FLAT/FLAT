@@ -21,7 +21,9 @@ RUN service supervisor start &&\
 	/var/www/composer/vendor/drush/drush/drush vset shib_auth_enable_custom_mail "1" &&\
 	/var/www/composer/vendor/drush/drush/drush vset shib_auth_login_url "/islandora" &&\
 	/var/www/composer/vendor/drush/drush/drush sqlq "INSERT INTO shib_auth (field,regexpression,role,sticky) VALUES ('REMOTE_USER','.%2B','a:1:{i:0;s:1:"'"2"'";}',1);" &&\
-	service supervisor stop
+	supervisorctl stop all &&\
+	service supervisor stop &&\
+	sleep 1
     
 RUN echo "/etc/init.d/shibd start" >> /etc/my_init.d/start.sh
 

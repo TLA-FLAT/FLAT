@@ -24,7 +24,9 @@ RUN	service supervisor start &&\
     /var/www/composer/vendor/drush/drush/drush vset islandora_basic_collection_display_backend islandora_solr_query_backend -y &&\
     /var/www/composer/vendor/drush/drush/drush vset islandora_compound_object_thumbnail_child 0 -y &&\
     /var/www/composer/vendor/drush/drush/drush vset islandora_compound_object_show_compound_parents_in_breadcrumbs 1 -y &&\
- 	service supervisor stop
+	supervisorctl stop all &&\
+	service supervisor stop &&\
+	sleep 1
 
 #Clean up APT when done.
 RUN apt-get clean &&\

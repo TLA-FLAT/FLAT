@@ -17,9 +17,9 @@ echo "<Tomcat log[/var/www/fedora/tomcat/logs/catalina.out] tail";
 echo "Fedora log[/var/www/fedora/server/logs/fedora.log tail>";
 tail /var/www/fedora/server/logs/fedora.log
 echo "<Fedora log[/var/www/fedora/server/logs/fedora.log] tail";
-echo "Postgres log[/var/log/postgresql/postgresql.log] tail>";
-tail /var/log/postgresql/postgresql.log
-echo "<Postgres log[/var/log/postgresql/postgresql.log] tail";
+#echo "Postgres log[/var/log/postgresql/postgresql.log] tail>";
+#tail /var/log/postgresql/postgresql.log
+#echo "<Postgres log[/var/log/postgresql/postgresql.log] tail";
 
 
 

@@ -100,10 +100,12 @@
         <listener-class>nl.knaw.dans.api.sword2.LoggingInitializer</listener-class>
     </listener>
 
+    <!--
     <servlet>
         <servlet-name>HelloWorld</servlet-name>
         <servlet-class>nl.knaw.dans.api.sword2.HelloServlet</servlet-class>
     </servlet>
+    -->
 
     <servlet>
         <servlet-name>servicedocument</servlet-name>
@@ -130,10 +132,12 @@
         <servlet-class>org.swordapp.server.servlets.StatementServletDefault</servlet-class>
     </servlet>
 
+    <!--
     <servlet-mapping>
         <servlet-name>HelloWorld</servlet-name>
         <url-pattern>/hello</url-pattern>
     </servlet-mapping>
+    -->
 
     <servlet-mapping>
         <servlet-name>servicedocument</servlet-name>
