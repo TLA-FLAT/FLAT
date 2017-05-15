@@ -109,9 +109,15 @@ function flat_bundle_action_form($form, &$form_state, $vars)
     $form['actions']['edit_bundle']['#disabled'] = TRUE;
     $status = $wrapper->flat_bundle_status->value();
 
+
+    # deactivate link to file browser for local bundles
+    $source = $wrapper->flat_source->value();
+    $disable_file_browser = $source == 'local' ? TRUE : FALSE;
+
+
     switch ($status) {
         case 'open': {
-            $form['actions']['bundle_image']['#disabled'] = FALSE;
+            $form['actions']['bundle_image']['#disabled'] = $disable_file_browser;
             $form['actions']['validate_bundle']['#disabled'] = FALSE;
             $form['actions']['edit_bundle']['#disabled'] = FALSE;
             $name = 'open_bundle';
@@ -125,7 +131,7 @@ function flat_bundle_action_form($form, &$form_state, $vars)
         }
 
         case 'failed': {
-            $form['actions']['bundle_image']['#disabled'] = FALSE;
+            $form['actions']['bundle_image']['#disabled'] = $disable_file_browser;
             $form['actions']['validate_bundle']['#disabled'] = FALSE;
             $form['actions']['edit_bundle']['#disabled'] = FALSE;
             $name = 'closed_bundle_failed';

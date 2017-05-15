@@ -621,19 +621,12 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
     hide($form['flat_create_cmdi']);
     hide($form['flat_external']);
     hide($form['flat_location']);
+    hide($form['flat_original_path']);
 
     hide($form['actions']['preview']);
 
-    // Conditionally hide field. To do that:
-    // 1. Create ajax trigger out of checkbox to hide location where data is stored if checkbox (external) is unchecked
-    $form['flat_external']['und']['#ajax'] = array(
-        'callback' => 'select_external_trigger_ajax_callback',
-        'wrapper' => 'upload-location-container',
-        'method' => 'replace',
-        'effect' => 'fade',
-    );
 
-
+    // Conditionally hide cmdi file field.
     $form['flat_cmdi_file']['und'][0]['#states'] = array(
         'visible' => array(
             array(
@@ -652,31 +645,6 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
     );
 
 
-    // 2. assign wrapper to location container such that AJAX can update this part when triggered
-    $form['flat_location']['#attributes']['id'] = array('upload-location-container');
-
-    // 3. set access value (show or not) depending on checkbox value
-    /*
-
-    $checked = isset($form_state['values']['flat_external']['und'][0]['value']) ? $form_state['values']['flat_external']['und'][0]['value'] : (int)$form['flat_external']['und']['#default_value'];
-    if ($checked) {
-        $access = TRUE;
-    } else {
-        $access = FALSE;
-    }
-    $form['flat_location']['und'][0]['value']['#access'] = $access;
-
-
-    // Adapt description of external location such that it contains the root of the external path
-
-
-    $config = variable_get('flat_deposit_paths');
-    $root = $config['alternate_dir'];
-    $form['flat_location']['und'][0]['value']['#description'] .= " (specific folder name located in" . $root . $user->name . ")";
-
-    */
-
-
     // Query all flat_collection nodes that are owned by the user and have no empty fedora_fid (flat_fid) value.
     // Resulting nodes will be added as options with the node's nid as option-key and node's title as option-labels.
     $options = [];
@@ -688,8 +656,6 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
         ->execute();
 
     if (!empty($entities['node'])) {
-
-
         foreach ($entities['node'] as $entity) {
             $nid = $entity->nid;
             $collection_node = node_load($nid);
@@ -699,7 +665,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
         }
     }
 
-    // Adapt settings of parent node
+    // Adapt parent node related fields
     $form['flat_parent_title']['und']['#disabled'] = TRUE;
     $form ['flat_parent_nid']['und']['#empty_value'] = 0;
     $form ['flat_parent_nid']['und']['#empty_option'] = 'unassigned';
@@ -726,20 +692,84 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
 
             }
 
+            ///////////
+            // Add local project directory selection form container element
+            // #state attribute makes it only visible if flat_source field is set to 'local'
+            ///////////
+            module_load_include('inc','flat_deposit','inc/class.Workspaces');
+            $form['workspace_navigation'] = Workspaces::get_container();
+
+
+            // set the local departments' project folder
+            $config_names = variable_get('flat_deposit_names');
+            $department = !empty($form_state['values']['department']) ? $form_state['values']['department'] : 'none';
+            $projects_directory = 'local://' . $department . '/' . $config_names['workspace_folder'];
+
+            //Scan project directory; non-existing directories will return false, existing dirs will populate the
+            // projects field options
+            // todo filter projects for permissions
+            $projects = getSubdirectoryNames($projects_directory, ['directories']);
+
+            if (!empty($projects)){
+                $form['workspace_navigation']['field']['project']['#options'] = drupal_map_assoc($projects);
+                $form['workspace_navigation']['field']['project']['#access'] = TRUE;
+            }
+
+            $project = !empty($form_state['values']['project']) ? $form_state['values']['project'] : 'none';
+            $project_root = $projects_directory . '/' . $project . '/' . $config_names['archive_folder'];
+
+
+            // Get original directory value.
+            $current =  Workspaces::get_flat_original_path($form_state, $project_root);
+
+            // (if chosen) extend 'current' directory value with value of next_directories
+            if (!empty($form_state['values']['next_directories'])) {
+
+                $current .= "/" . $form_state['values']['next_directories'];
+                unset($form_state['values']['next_directories']);
+                $form['workspace_navigation']['field']['next_directories']['#options'] = array();
+                $form['workspace_navigation']['field']['next_directories']['#access'] = FALSE;
+
+            }
+
+            // alter default value of the flat_original_path field to attach value of current directory to flat_bundle node
+            $form['flat_original_path']['und'][0]['value']['#default_value'] = $current;
+
+            // print result to screen
+            $form['workspace_navigation']['field']['current_directory']['#markup'] = $current; #can be removed
+
+
+            // Add button to go back to previous level
+            if ($current != $project_root AND !empty($current)) {
+                $form['workspace_navigation']['field']['previous_directory']['#access'] = TRUE;
+            }
+
+            // Add dropdown menu with lower level directories to go into
+            $subDirs = getSubdirectoryNames($current, ['access']);
+            if (!empty($subDirs)){
+                $form['workspace_navigation']['field']['next_directories']['#options'] = drupal_map_assoc($subDirs);
+                $form['workspace_navigation']['field']['next_directories']['#access'] = TRUE;
+            }
+
             // custom validation and submission
             $form['#validate'][] = 'flat_bundle_node_form_add_validate';
             $form['#submit'][] = 'flat_bundle_node_form_add_submit';
+
             break;
         }
 
         // for existing bundles:
-        // for existing bundles:
         case 'edit':{
+
 
             $node_wrapper = entity_metadata_wrapper('node', $node);
 
-            // prevent altering bundle name (title), external location and collection
+            // prevent altering bundle name (title), policy
             $form['title']['#disabled'] = TRUE;
+            $form['flat_policies']['und']['#disabled'] = TRUE;
+            $form['flat_cmdi_option']['und']['#disabled'] = TRUE;
+            $form['flat_source']['und']['#disabled'] = TRUE;
+
 
             // hide cmdi file field
             $status = $node_wrapper->flat_bundle_status->value();
@@ -764,10 +794,21 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
     }
 }
 
+function workspace_navigation_previous_directory_submit($form, &$form_state) {
 
-/**
- *
- */
+    // alter saved current_directory value
+    $form_state['values']['flat_original_path']['und'][0]['value'] = dirname($form_state['values']['flat_original_path']['und'][0]['value']);
+
+    // unset next_directories value
+    $form_state['values']['next_directories'] = '';
+
+    $form_state['rebuild'] = TRUE;
+}
+
+
+#function flat_bundle_node_form_add_submit($form, &$form_state){}
+
+
 function flat_bundle_edit_node_form_validate($form, &$form_state){
 
 
@@ -775,6 +816,9 @@ function flat_bundle_edit_node_form_validate($form, &$form_state){
     // If parent nid has not changed pass validation
     $node = $form_state['node'];
     $wrapper = entity_metadata_wrapper('node', $node);
+
+    $source = $wrapper->flat_source->value();
+
     $original_collection_nid = $wrapper->flat_parent_nid->value();
     $new_collection_nid = (string)$form_state['values']['flat_parent_nid']['und'][0]['value'];
 
@@ -836,36 +880,22 @@ function flat_bundle_edit_node_form_submit($form, &$form_state) {
     #Wdrupal_set_message('Bundle has been edited');
 }
 
+
 /**
- * AJAX trigger which will alter and reload the specified form element
+ * Flat_bundle node validator called every time a flat_bundle node is created or edited (also AJAX!!)
+ * @param $node
+ * @param $form
+ * @param $form_state
  */
-function select_external_trigger_ajax_callback ($form, &$form_state)
-{
-    return $form['flat_location'];
-}
-
-
 function flat_bundle_validate($node, $form, &$form_state){
     $node_wrapper = entity_metadata_wrapper('node', $node);
-    $external = $node_wrapper->flat_external->value();
-    $location = $node_wrapper->flat_location->value();
-    if ($external AND !$location){
-        form_set_error('flat_location',t('Location needs to be set when data is located on archive server'));
-    }
+    $source = $node_wrapper->flat_source->value();
+    $original_path = $node_wrapper->flat_original_path->value();
+    if ($source == 'local' ){
 
-    if ($external ){
-        $config = variable_get('flat_deposit_paths');
-        $root = $config['alternate_dir'];
-        $sub = $config['alternate_subdir'];
+        if (!file_exists($original_path)) {
 
-        global $user;
-
-
-        $full_path = $root . $user->name . $sub . "/$location";
-
-        if (!file_exists($full_path)){
-
-            form_set_error('flat_location',t('External location does not exist (:path) ' , array(':path' => $full_path)));
+            form_set_error('flat_location',t('Location needs to be set when data is located on archive server'));
 
         }
     }
@@ -876,6 +906,8 @@ function flat_bundle_validate($node, $form, &$form_state){
  * Flat_bundle creation validation
  */
 function flat_bundle_node_form_add_validate($form, &$form_state){
+    $source = $form_state['values']['flat_source']['und'][0]['value'];
+    $original_path = $form_state['values']['flat_original_path']['und'][0]['value'];
 
     $bundle_name = $form_state['values']['title'];
 
@@ -909,24 +941,14 @@ function flat_bundle_node_form_add_validate($form, &$form_state){
     }
 
 
-
-    // Check if external location is accessible by drupal
-    $external = $form_state['values']['flat_external']['und'][0]['value']; #wrapper can't be used during initiation. If this doesn't work use node_presave
-
-    if ($external){
-        $location = $form_state['values']['flat_location']['und'][0]['value'];
-        $is_accessible = flat_deposit_external_location_is_accessible($location);
-        if ($is_accessible !== TRUE){
-            form_set_error('flat_external', t($is_accessible));
-        }
-    }
-
 #    form_set_error('debug', 'debug');
+ #   return $form;
+
 }
 
 
 /**
- * submission handler for newly created bundles
+ * Submission handler for newly created bundles
  */
 function flat_bundle_node_form_add_submit($form, &$form_state){
 
@@ -944,16 +966,15 @@ function flat_bundle_node_form_add_submit($form, &$form_state){
 
 
     // Resources might be locally found or external
-    $external = $form_state['values']['flat_external']['und'][0]['value'];
-    if ($external) {
+    $source = $form_state['values']['flat_source']['und'][0]['value'];
+    if ($source == 'local') {
 
-        $config = variable_get('flat_deposit_ingest_service');
-
-        $location = $form_state['values']['flat_location']['und'][0]['value'];
-        $resource_dir = $config['alternate_dir'] . $user->name . $config['alternate_subdir'] . "/" . $location;
+        $resource_dir = $form_state['values']['flat_original_path']['und'][0]['value'];
 
     } else {
+
         $resource_dir = 'external://' . $user->name . "/$collection/$bundle";
+
     }
 
 
