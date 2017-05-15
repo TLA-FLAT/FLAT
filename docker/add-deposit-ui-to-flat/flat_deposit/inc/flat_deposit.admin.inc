@@ -25,17 +25,9 @@ function flat_deposit_admin_form($form, &$form_state)
 
     $form['paths']['local'] = array (
         '#type' => 'textfield',
-        '#title' => t('Workspace folder'),
-        '#description' => t('Directory where all department workspaces can be found'),
+        '#title' => t('Local department data'),
+        '#description' => t('Root path where department\'s data folders are mounted'),
         '#default_value' => $paths ['local'],
-        '#required' => TRUE,
-    );
-
-    $form['paths']['local_subfolder'] = array (
-        '#type' => 'textfield',
-        '#title' => t('Workspace subfolder'),
-        '#description' => t('subdirectory within department workspace where archive data can be found'),
-        '#default_value' => $paths ['local_subfolder'],
         '#required' => TRUE,
     );
 
@@ -111,6 +103,20 @@ function flat_deposit_admin_form($form, &$form_state)
         '#title' => t('Apache User'),
         '#description' => t('Name of the apache user (e.g. www-data, www-)'),
         '#default_value' => $names['apache_user'],
+        '#required' => TRUE,
+    );
+
+    $form['names']['workspace_folder'] = array (
+        '#type' => 'textfield',
+        '#title' => t('Workspace folder name'),
+        '#description' => t('Name of the workspace folder available within each department folder'),
+        '#default_value' => $names['workspace_folder'],
+        '#required' => TRUE,
+    );
+    $form['names']['archive_folder'] = array (
+        '#type' => 'textfield',
+        '#title' => t('Name of accessible archive folder'),
+        '#default_value' => $names['archive_folder'],
         '#required' => TRUE,
     );
 

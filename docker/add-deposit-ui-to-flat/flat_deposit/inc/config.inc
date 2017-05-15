@@ -8,10 +8,8 @@ function flat_deposit_set_paths($updated_values=NULL)
 {
 
     $defaults =  array(
-        #directory for locally stored data
+        #root path for locally stored data
         'local' => '/app/flat/deposit/local/',
-        #subdirectory within $local/$department tree where archive data can be found
-        'local_subfolder' => '/workspaces/archive_deposit',
         #directory for uploading external data
         'external' => '/var/www/html/flat/sites/default/files/private/flat_deposit/data',
         #directory for storing data
@@ -55,7 +53,9 @@ function flat_deposit_set_paths($updated_values=NULL)
 function flat_deposit_set_names($updated_values=NULL)
 {
     $defaults =   array(
-        'apache_user' => 'www-data'
+        'apache_user' => 'www-data',
+        'workspace_folder' => 'workspaces',
+        'archive_folder' => 'archive_deposit',
     );
 
     $values_stored_in_database = variable_get('flat_deposit_names', array());

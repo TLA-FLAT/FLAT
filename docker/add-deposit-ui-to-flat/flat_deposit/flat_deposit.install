@@ -78,8 +78,8 @@ function flat_deposit_install()
         'settings' => array(
             'max_length' => 255,
             'allowed_values' => array(
-                'local' => 'local',
-                'external' => 'external',
+                'local' => 'MPI Workspaces',
+                'external' => 'Upload data from local desktop',
             ),
         ),
         'locked' => TRUE,
@@ -390,11 +390,11 @@ function flat_deposit_install()
     $instances['flat_source'] = array(
         'field_name' => 'flat_source',
         'bundle' => 'flat_bundle',
-        'label' => $t('Source for bundle resources'
+        'label' => $t('Origin of bundle resources'
         ),
-        'description' => $t('Check whether data are locally stored or uploaded from external location'),
+        'description' => $t('To be archived data is either stored at MPI workspace directories or uploaded from your desktop computer'),
         'widget' => array(
-            'type' => 'option_buttons',
+            'type' => 'option_select',
         ),
         'default_value' => array(
             0 => array('value'=> 'local')),
@@ -580,7 +580,7 @@ function flat_deposit_install()
 
     flat_deposit_set_paths();
     flat_deposit_set_names();
-    flat_deposit_set_metadata();
+    flat_deposit_set_fits();
     flat_deposit_set_ingest_service();
     flat_deposit_set_sword();
     flat_deposit_set_doorkeeper();

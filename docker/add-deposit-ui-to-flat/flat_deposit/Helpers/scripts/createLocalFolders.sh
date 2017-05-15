@@ -1,6 +1,20 @@
 #!/bin/bash
 
-base=/app/flat/deposit/local/
+if [ $# -ne 1 ];then
+  echo "Not enough parameters specified"
+  echo "Please provide (1) base directory"
+  exit 1
+
+else
+    base=$1
+fi
+
+if [ ! -d "$base" ]; then
+
+  echo "Specified base directory does not exist"
+  exit 1
+fi
+
 for departments in lac lag ladd nbl pol nvc tg; do
 
  mkdir -p $base/$departments/general
@@ -19,14 +33,16 @@ for departments in lac lag ladd nbl pol nvc tg; do
 
     f=$(mktemp);
     echo "This is the data for project $project of department $departments" >$f
-    enscript $f -o - | ps2pdf - $archive_deposit_dir/data.pdf
+    enscript $f -o - | ps2pdf - "$archive_deposit_dir/data_${departments}_${project}.pdf"
 
+    chmod -R 0755 $(dirname $project_dir)
+    chmod -R 0700 $archive_deposit_dir
     chown -R www-data:www-data $archive_deposit_dir
-    chmod -R 0600 $archive_deposit_dir
-
 
   done;
+
 done;
 
 
-exit 1;
+echo 'script executed successfully';
+exit 0;
