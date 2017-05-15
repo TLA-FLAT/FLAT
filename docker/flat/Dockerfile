@@ -1,16 +1,16 @@
-FROM phusion/baseimage:0.9.19
+FROM ubuntu:16.04
 MAINTAINER  Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 
 #
 # Configure FLAT
 #
 
-ENV DRUPAL_PROJECT=flat
-ENV TOMCAT_TIMEOUT=60
+ENV FLAT_NAME=flat
 #ENV FLAT_HOST=192.168.99.100
 ENV FLAT_HOST=localhost
+ENV FLAT_ICON_DIR=/app/flat/data/icons
+ENV FLAT_TIMEOUT=60
 ENV CMD_EXTENSION=cmdi
-ENV FLAT_ICONS=/app/flat/data/icons
 
 
 #
@@ -38,17 +38,26 @@ EXPOSE 8080
 RUN mv /etc/localtime /etc/localtime.bak &&\
     ln -sf /usr/share/zoneinfo/Europe/Amsterdam /etc/localtime
 
-# Regenerate SSH host keys. baseimage-docker does not contain any, so you
-# have to do that yourself. You may also comment out this instruction; the
-# init system will auto-generate one during boot.
-RUN /etc/my_init.d/00_regen_ssh_host_keys.sh
-
 #
 # Update and install all system libraries
 #
 RUN apt-get update &&\
 	apt-get -y dist-upgrade &&\
-	apt-get -y install curl wget openssl apache2 postgresql libapache2-mod-php php-gd php-pgsql php-xsl php-curl unzip default-jdk libapache2-mod-jk ssh rsync git maven libxml2-utils
+	apt-get -y install supervisor curl wget openssl apache2 postgresql unzip ssh rsync git
+
+# PHP
+RUN apt-get -y install libapache2-mod-php php-gd php-pgsql php-xsl php-curl
+
+# Java 8
+RUN apt-get -y install software-properties-common python-software-properties && \
+    add-apt-repository ppa:webupd8team/java && \
+    apt-get update && \
+    echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections && \
+    apt-get -y install oracle-java8-installer maven
+ENV JAVA_HOME "/usr/lib/jvm/java-8-oracle"
+
+# dev
+RUN apt-get -y install libxml2-utils vim
 
 #
 # Configure apache
@@ -60,23 +69,15 @@ RUN a2enmod ssl &&\
 	a2enmod proxy &&\
 	a2enmod proxy_http &&\
 	a2enmod sed &&\
-	sed -i "s|DRUPAL_PROJECT|${DRUPAL_PROJECT}|g" /etc/apache2/apache2.conf
+	sed -i "s|FLAT_NAME|${FLAT_NAME}|g" /etc/apache2/apache2.conf
 
 #
 # Configure postgres
-#   - update postgresql.conf to bind to localhost
-#   - create database user and update pg_hba_conf for this user
 #   - initialise databases for fedora and drupal
-#
-# TODO: fix snakeoil key permission issue without copying
-RUN cp /etc/ssl/certs/ssl-cert-snakeoil.pem /etc/postgresql/ssl-cert-snakeoil.pem &&\
-	chown postgres:postgres /etc/postgresql/ssl-cert-snakeoil.pem &&\
-	cp /etc/ssl/private/ssl-cert-snakeoil.key /etc/postgresql/ssl-cert-snakeoil.key &&\
-	chown postgres:postgres /etc/postgresql/ssl-cert-snakeoil.key
-ADD postgresql/pg_hba.conf /etc/postgresql/9.3/main/pg_hba.conf
-ADD postgresql/postgresql.conf /etc/postgresql/9.3/main/postgresql.conf
-RUN useradd -g postgres ssl-cert &&\
+ADD postgresql/wait-postgres.sh /wait-postgres.sh
+RUN chmod u+x /wait-postgres.sh &&\
     /etc/init.d/postgresql start &&\
+	/wait-postgres.sh &&\
 	su -c "psql -c \"CREATE USER fedora WITH PASSWORD 'fedora'\"" postgres &&\
 	su -c "createdb -O fedora fedora" postgres &&\
 	su -c "createdb -O fedora proai" postgres &&\
@@ -101,6 +102,7 @@ RUN mkdir /tmp/fedora &&\
 
 ADD fedora/install.properties /tmp/fedora/install.properties
 RUN /etc/init.d/postgresql start &&\
+	/wait-postgres.sh &&\
 	cd /tmp/fedora &&\
 	java -jar fcrepo-installer-3.8.1.jar install.properties &&\
 	/etc/init.d/postgresql stop
@@ -109,20 +111,29 @@ RUN /etc/init.d/postgresql start &&\
 RUN sed -i 's|</mappings>|<mime-mapping><mime-type>application/x-cmdi+xml</mime-type><extension>cmdi</extension></mime-mapping></mappings>|g' /var/www/fedora/server/config/mime-to-extensions.xml
 
 #
+# All services are installed, add start script to automatically start required services
+#
+
+ADD flat.txt /flat.txt
+ADD supervisor/start-*.sh /
+RUN	chmod u+x /start-*.sh
+ADD supervisor/*.conf /etc/supervisor/conf.d/
+ADD supervisor/start.sh /start.sh
+RUN	chmod u+x /start.sh
+
+ENTRYPOINT /start.sh
+
+#
 # starting fedora will initialize required directories
 #
 
-ADD fedora/wait.sh /tmp/wait.sh
-RUN chmod 0755 /tmp/wait.sh &&\
-	/etc/init.d/postgresql start &&\
-	/var/www/fedora/tomcat/bin/startup.sh &&\
-	/tmp/wait.sh &&\
-	bash -c "timeout $TOMCAT_TIMEOUT grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-# apparantly the shutdown port is not directly available after startup
-sleep 60 &&\
-	/var/www/fedora/tomcat/bin/shutdown.sh &&\
-	bash -c "timeout $TOMCAT_TIMEOUT grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-	/etc/init.d/postgresql stop
+ADD fedora/wait-tomcat.sh /wait-tomcat.sh
+RUN chmod u+x /wait-tomcat.sh &&\
+    service supervisor start &&\
+	/wait-postgres.sh &&\
+	supervisorctl start tomcat &&\
+	/wait-tomcat.sh &&\
+	service supervisor stop
 RUN rm -v /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/deny-purge-*
 ADD fedora/permit-anything-to-localhost.xml /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/permit-anything-to-localhost.xml
 ADD fedora/deny-unallowed-file-resolution.xml /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/deny-unallowed-file-resolution.xml
@@ -145,79 +156,81 @@ ENV COMPOSER_HOME=/var/www/composer
 RUN $COMPOSER_HOME/composer global require drush/drush:7.*
 
 RUN cd /var/www/html &&\
-	/var/www/composer/vendor/drush/drush/drush -v dl drupal --drupal-project-rename=$DRUPAL_PROJECT
+	/var/www/composer/vendor/drush/drush/drush -v dl drupal --drupal-project-rename=$FLAT_NAME
 ENV PGPASSWORD=fedora
-RUN /etc/init.d/postgresql start &&\
-	cd /var/www/html/$DRUPAL_PROJECT &&\
+RUN service supervisor start &&\
+    /wait-postgres.sh &&\
+	supervisorctl start tomcat &&\
+	/wait-tomcat.sh &&\
+	cd /var/www/html/$FLAT_NAME &&\
 	export PHP_OPTIONS="-d sendmail_path=`which true`" &&\
 	/var/www/composer/vendor/drush/drush/drush site-install standard --site-name=FLAT --account-name=admin --account-pass=admin --db-su=fedora --db-su-pw=fedora --db-url=pgsql://fedora:fedora@localhost/drupal -y &&\
-	/etc/init.d/postgresql stop
+	service supervisor stop
 
-RUN mkdir -p /var/www/html/$DRUPAL_PROJECT/sites/all/modules/custom &&\
-	chown www-data:www-data /var/www/html/$DRUPAL_PROJECT/sites/default/files &&\
-	chown www-data:www-data /var/www/html/$DRUPAL_PROJECT/sites/default/settings.php &&\
-	chown www-data:www-data /var/www/html/$DRUPAL_PROJECT/sites/all/modules/custom
+RUN mkdir -p /var/www/html/$FLAT_NAME/sites/all/modules/custom &&\
+	chown www-data:www-data /var/www/html/$FLAT_NAME/sites/default/files &&\
+	chown www-data:www-data /var/www/html/$FLAT_NAME/sites/default/settings.php &&\
+	chown www-data:www-data /var/www/html/$FLAT_NAME/sites/all/modules/custom
     
-ADD drupal/flat-logo.png /var/www/html/$DRUPAL_PROJECT/sites/default/files/flat-logo.png
-ADD drupal/flat /var/www/html/$DRUPAL_PROJECT/sites/all/modules/custom/
+ADD drupal/flat-logo.png /var/www/html/$FLAT_NAME/sites/default/files/flat-logo.png
+ADD drupal/flat /var/www/html/$FLAT_NAME/sites/all/modules/custom/
 ADD drupal/flat-logo.php /tmp/
 
 RUN mkdir /tmp/tuque &&\
 	cd /tmp/tuque &&\
 	wget "https://github.com/islandora/tuque/archive/1.6.zip" &&\
 	unzip 1.6.zip &&\
-	mv /tmp/tuque/tuque-1.6 /var/www/html/$DRUPAL_PROJECT/sites/all/libraries/tuque &&\
-	sed -i 's|public $verifyPeer = TRUE;|public $verifyPeer = FALSE;|g' /var/www/html/$DRUPAL_PROJECT/sites/all/libraries/tuque/HttpConnection.php
+	mv /tmp/tuque/tuque-1.6 /var/www/html/$FLAT_NAME/sites/all/libraries/tuque &&\
+	sed -i 's|public $verifyPeer = TRUE;|public $verifyPeer = FALSE;|g' /var/www/html/$FLAT_NAME/sites/all/libraries/tuque/HttpConnection.php
 
 RUN mkdir -p /tmp/islandora &&\
-	mkdir -p /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib &&\
-	mkdir -p /var/www/html/$DRUPAL_PROJECT/sites/all/themes &&\
+	mkdir -p /var/www/html/$FLAT_NAME/sites/all/modules/contrib &&\
+	mkdir -p /var/www/html/$FLAT_NAME/sites/all/themes &&\
 	cd /tmp/islandora &&\
 	wget "https://github.com/Islandora/islandora/archive/7.x-1.6.tar.gz" &&\
-	tar -xf 7.x-1.6.tar.gz -C /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/ &&\
+	tar -xf 7.x-1.6.tar.gz -C /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
 	wget "https://github.com/islandora/islandora_solution_pack_collection/archive/7.x-1.6.zip" &&\
 	mv 7.x-1.6.zip islandora_solution_pack_collection-7.x-1.6.zip &&\
-	unzip islandora_solution_pack_collection-7.x-1.6.zip -d /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/ &&\
+	unzip islandora_solution_pack_collection-7.x-1.6.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
 	wget "https://github.com/Islandora/islandora_solution_pack_compound/archive/7.x-1.6.zip" &&\
 	mv 7.x-1.6.zip islandora_solution_pack_compound-7.x-1.6.zip &&\
-	unzip islandora_solution_pack_compound-7.x-1.6.zip -d /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/ &&\
-    sed -i 's|function islandora_compound_object_islandora_compoundCModel_islandora_view_object|function islandora_compound_object_islandora_compoundCModel_islandora_view_object_DISABLED_BY_FLAT|g' /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/islandora_solution_pack_compound-7.x-1.6/islandora_compound_object.module
+	unzip islandora_solution_pack_compound-7.x-1.6.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
+    sed -i 's|function islandora_compound_object_islandora_compoundCModel_islandora_view_object|function islandora_compound_object_islandora_compoundCModel_islandora_view_object_DISABLED_BY_FLAT|g' /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora_solution_pack_compound-7.x-1.6/islandora_compound_object.module
 # overwrites the collection object view, so we get file details
 ADD islandora/islandora_basic_collection.module /var/www/html/flat/sites/all/modules/contrib/islandora_solution_pack_collection-7.x-1.6/islandora_basic_collection.module
 
 # add CMDI solution pack
-RUN mkdir -p /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/islandora_solution_pack_cmdi
-ADD flat/islandora_solution_pack_cmdi /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/islandora_solution_pack_cmdi
+RUN mkdir -p /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora_solution_pack_cmdi
+ADD flat/islandora_solution_pack_cmdi /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora_solution_pack_cmdi
 
 # tell islandora about CMDI
-RUN sed -i "/\"json\"/a \"cmdi\" => \"application/x-cmdi+xml\"," /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/islandora-7.x-1.6/includes/mimetype.utils.inc &&\
-	sed -i "/header('Content-type: ' . \$datastream/a if (\$datastream->ID == 'CMD') {\nheader('Content-type: ' . 'application/xml');\n}" /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/islandora-7.x-1.6/includes/datastream.inc
+RUN sed -i "/\"json\"/a \"cmdi\" => \"application/x-cmdi+xml\"," /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora-7.x-1.6/includes/mimetype.utils.inc &&\
+	sed -i "/header('Content-type: ' . \$datastream/a if (\$datastream->ID == 'CMD') {\nheader('Content-type: ' . 'application/xml');\n}" /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora-7.x-1.6/includes/datastream.inc
     
 RUN mkdir -p /tmp/bootstrap &&\
 	cd /tmp/bootstrap &&\
 	wget "http://ftp.drupal.org/files/projects/bootstrap-7.x-3.8.zip" &&\
 	unzip bootstrap-7.x-3.8.zip &&\
-	mv /tmp/bootstrap/bootstrap /var/www/html/$DRUPAL_PROJECT/sites/all/themes/bootstrap
+	mv /tmp/bootstrap/bootstrap /var/www/html/$FLAT_NAME/sites/all/themes/bootstrap
 
-RUN cp -r /var/www/html/$DRUPAL_PROJECT/sites/all/themes/bootstrap/starterkits/cdn  /var/www/html/$DRUPAL_PROJECT/sites/all/themes/flat_bootstrap_theme &&\
-	cd /var/www/html/$DRUPAL_PROJECT/sites/all/themes/flat_bootstrap_theme/ &&\
+RUN cp -r /var/www/html/$FLAT_NAME/sites/all/themes/bootstrap/starterkits/cdn  /var/www/html/$FLAT_NAME/sites/all/themes/flat_bootstrap_theme &&\
+	cd /var/www/html/$FLAT_NAME/sites/all/themes/flat_bootstrap_theme/ &&\
 	mv cdn.starterkit flat_bootstrap_theme.info &&\
     echo ";; FLAT settings" >> flat_bootstrap_theme.info &&\
 	echo "settings[bootstrap_cdn_jsdelivr_theme] = 'flatly'" >> flat_bootstrap_theme.info &&\
     echo "settings[bootstrap_fluid_container] = 1" >> flat_bootstrap_theme.info
 # determine our own object view
-ADD islandora/islandora-default.tpl.php /var/www/html/$DRUPAL_PROJECT/sites/all/themes/flat_bootstrap_theme/templates/islandora-default.tpl.php
+ADD islandora/islandora-default.tpl.php /var/www/html/$FLAT_NAME/sites/all/themes/flat_bootstrap_theme/templates/islandora-default.tpl.php
 # overwrite the compound behavior, which does special things for the first member (as being the representative)
-ADD islandora/template.php /var/www/html/$DRUPAL_PROJECT/sites/all/themes/flat_bootstrap_theme/template.php
+ADD islandora/template.php /var/www/html/$FLAT_NAME/sites/all/themes/flat_bootstrap_theme/template.php
 
-RUN export PGPASSWORD=fedora &&\
-	/etc/init.d/postgresql start &&\
-	/var/www/fedora/tomcat/bin/startup.sh &&\
-	bash -c "timeout $TOMCAT_TIMEOUT grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-sleep 10 &&\
-	cd /var/www/html/$DRUPAL_PROJECT/ &&\
+RUN service supervisor start &&\
+	/wait-postgres.sh &&\
+	supervisorctl start tomcat &&\
+	/wait-tomcat.sh &&\
+	cd /var/www/html/$FLAT_NAME/ &&\
 	/var/www/composer/vendor/drush/drush/drush vset islandora_base_url http://localhost:8080/fedora &&\
 	/var/www/composer/vendor/drush/drush/drush en islandora -y &&\
 	/var/www/composer/vendor/drush/drush/drush en islandora_basic_collection -y &&\
@@ -231,27 +244,22 @@ sleep 10 &&\
 	/var/www/composer/vendor/drush/drush/drush en bootstrap -y &&\
 	/var/www/composer/vendor/drush/drush/drush en flat_bootstrap_theme -y &&\
 	/var/www/composer/vendor/drush/drush/drush vset theme_default flat_bootstrap_theme &&\
-	/var/www/fedora/tomcat/bin/shutdown.sh &&\
-	bash -c "timeout $TOMCAT_TIMEOUT grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-	/etc/init.d/postgresql stop
+	service supervisor stop
     
 # security patch for islandora
-RUN export PGPASSWORD=fedora &&\
-	/etc/init.d/postgresql start &&\
-	/var/www/fedora/tomcat/bin/startup.sh &&\
-	bash -c "timeout $TOMCAT_TIMEOUT grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-sleep 10 &&\
+RUN	service supervisor start &&\
+	/wait-postgres.sh &&\
+	supervisorctl start tomcat &&\
+	/wait-tomcat.sh &&\
 	cd /tmp/islandora &&\
 	git clone https://github.com/Islandora-Labs/islandora_patches.git &&\
 	cd islandora_patches &&\
-	mv disable_dl_clip /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/ &&\
-	mv disable_print_endpoint  /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/ &&\
-	cd /var/www/html/$DRUPAL_PROJECT/ &&\
+	mv disable_dl_clip /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
+	mv disable_print_endpoint  /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
+	cd /var/www/html/$FLAT_NAME/ &&\
 	/var/www/composer/vendor/drush/drush/drush en disable_dl_clip -y &&\
 	/var/www/composer/vendor/drush/drush/drush en disable_print_endpoint -y &&\
-	/var/www/fedora/tomcat/bin/shutdown.sh &&\
-	bash -c "timeout $TOMCAT_TIMEOUT grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-	/etc/init.d/postgresql stop
+	service supervisor stop
 
 #
 # proai
@@ -298,21 +306,8 @@ RUN mkdir -p /app/flat/policies
 ADD flat/policies/default-resource-policy.xml /app/flat/deposit/policies/default-resource-policy.xml
 
 RUN mkdir -p /app/flat/data/icons
-ADD flat/icons $FLAT_ICONS
+ADD flat/icons $FLAT_ICON_DIR
     
-#
-# Add start script to automatically start required services
-#
-
-ADD fedora/tomcat-fedora.sh /var/www/fedora/tomcat/bin/tomcat-fedora.sh
-ADD my_init.d/start.sh /etc/my_init.d/start.sh
-RUN chmod u+x /var/www/fedora/tomcat/bin/tomcat-fedora.sh &&\
-	chmod u+x /etc/my_init.d/start.sh
-
-# Use baseimage-docker's init system.
-ENTRYPOINT ["/sbin/my_init"]
-CMD ["--", "/bin/bash", "-l"]
-
 #
 # Cleanup
 #

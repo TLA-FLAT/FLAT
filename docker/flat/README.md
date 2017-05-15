@@ -46,11 +46,11 @@ This will start your docker container with the following properties:
 ## Additional configuration ##
 
 The Dockerfile contains some global environment variables, which might have to be adapted:
-- ``TOMCAT_TIMEOUT`` gives the timeout (default: ``60 ``seconds) to wait for a Tomcat to startup, if you have a slow/busy machine this might have to be increased
+- ``FLAT_TIMEOUT`` gives the timeout (default: ``60 ``seconds) to wait for a Tomcat to startup, if you have a slow/busy machine this might have to be increased
 - ``FLAT_HOST`` the hostname/IP (default: ``localhost``) used to access the FLAT services from the host, if you use the Docker Toolbox you have to change this into the IP assigned to your docker-machine (default: ``192.168.99.100``)
-- ``DRUPAL_PROJECT`` the base name (default: ``flat``) for FLAT's UI and APIs 
+- ``FLAT_NAME`` the base name (default: ``flat``) for FLAT's UI and APIs 
 - ``CMD_EXTENSION`` the extension (default: ``cmdi``) used by CMDI files to be imported, change to ``xml`` if you import an OAI harvest
-- ``FLAT_ICONS`` the directory (default: ``/app/flat/data/icons``) where the icons for the UI are placed
+- ``FLAT_ICON_DIR`` the directory (default: ``/app/flat/data/icons``) where the icons for the UI are placed
 
 ### CMD to Dublin Core ###
 

@@ -4,29 +4,26 @@ MAINTAINER	Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 RUN apt-get update &&\
 	apt-get -y dist-upgrade &&\
 	update-ca-certificates -f &&\
-	apt-get install --reinstall ca-certificates-java 
+	apt-get -y install --reinstall ca-certificates-java 
 
 # add sample SIP
 RUN mkdir -p /app/flat/test
+ADD flat/deposit/test/icons/* $FLAT_ICON_DIR
 ADD flat/deposit/test/*.* /app/flat/test/
 ADD flat/deposit/test/cmd /app/flat/test/cmd
 ADD flat/deposit/test/data /app/flat/test/data
 ADD flat/deposit/test/test-sip /app/flat/test/test-sip
 
 # add sample user(s)
-ENV TOMCAT_TIMEOUT=600
-RUN	cd /var/www/html/$DRUPAL_PROJECT/ &&\
+RUN	service supervisor start &&\
+	/wait-postgres.sh &&\
+	supervisorctl start tomcat &&\
+	FLAT_TIMEOUT="600" /wait-tomcat.sh &&\
+	cd /var/www/html/$FLAT_NAME/ &&\
 	export PGPASSWORD=fedora &&\
-	/etc/init.d/postgresql start &&\
-	/var/www/fedora/tomcat/bin/startup.sh &&\
-	bash -c "timeout $TOMCAT_TIMEOUT grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-	echo "TOMCAT runs" &&\
 	/var/www/composer/vendor/drush/drush/drush user-create "john@example.com" --mail="john@example.com" --password="password" -y &&\
 	/var/www/composer/vendor/drush/drush/drush user-create "jane@example.com" --mail="jane@example.com" --password="password" -y &&\
-sleep 60 &&\
-	/var/www/fedora/tomcat/bin/shutdown.sh &&\
-	bash -c "timeout $TOMCAT_TIMEOUT grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-	/etc/init.d/postgresql stop
+	service supervisor stop
 
 #
 # Add FLAT's own scripts and tools 

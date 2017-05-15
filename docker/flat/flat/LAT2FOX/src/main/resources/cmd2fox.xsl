@@ -638,7 +638,11 @@
 						</xsl:choose>
 					</xsl:variable>
 					<!--<xsl:message use-when="$debug">DBG: creating FOX[<xsl:value-of select="$resFOX"/>]?[<xsl:value-of select="not(doc-available($resFOX))"/>]</xsl:message>-->
-					<xsl:variable name="resMIME" select="cmd:getMIME($res/cmd:ResourceType/@mimetype,$resURI)"/>
+					<xsl:variable name="resMIME">
+						<xsl:apply-templates select="current()" mode="mime">
+							<xsl:with-param name="resURI" select="$resURI"/>
+						</xsl:apply-templates>
+					</xsl:variable>
 					<xsl:variable name="createFOX" as="xs:boolean">
 						<xsl:choose>
 							<xsl:when test="exists(($rels-doc/key('rels-to', $resPID)[normalize-space(resolve-uri(dst, src))!=''])[1][resolve-uri(dst, src)!= cmd:hdl($resURI)])">
@@ -811,21 +815,10 @@
 													<xsl:for-each select="$parents">
 														<fedora:isMemberOfCollection rdf:resource="info:fedora/{current()}"/>
 													</xsl:for-each>
-													<!-- add specific content models for specific MIME types -->
-													<xsl:choose>
-														<xsl:when test="starts-with($resMIME,'audio/')">
-															<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp-audioCModel"/>
-														</xsl:when>
-														<xsl:when test="starts-with($resMIME,'video/')">
-															<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_videoCModel"/>
-														</xsl:when>
-														<xsl:when test="starts-with($resMIME,'image/')">
-															<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_basic_image"/>
-														</xsl:when>
-														<xsl:when test="starts-with($resMIME,'application/pdf')">
-															<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_pdf"/>
-														</xsl:when>
-													</xsl:choose>
+													<xsl:apply-templates select="current()" mode="cmodel">
+														<xsl:with-param name="resURI" select="$resURI"/>
+														<xsl:with-param name="resMIME" select="$resMIME"/>
+													</xsl:apply-templates>
 												</rdf:Description>
 											</rdf:RDF>
 										</foxml:xmlContent>
@@ -845,7 +838,7 @@
 											<xsl:attribute name="CONTROL_GROUP" select="'R'"/>
 										</xsl:otherwise>
 									</xsl:choose>
-									<foxml:datastreamVersion ID="OBJ.0" LABEL="{substring($resTitle,1,255)}" MIMETYPE="{cmd:getMIME($res/cmd:ResourceType/@mimetype,$resURI)}">
+									<foxml:datastreamVersion ID="OBJ.0" LABEL="{substring($resTitle,1,255)}" MIMETYPE="{$resMIME}">
 										<foxml:contentLocation TYPE="URL">
 											<xsl:choose>
 												<xsl:when test="starts-with($resURI, 'file:') and exists($import-base)">
@@ -861,32 +854,10 @@
 								<!-- add specific thumbnail icons for specific MIME types -->
 								<foxml:datastream ID="TN" STATE="A" CONTROL_GROUP="E" VERSIONABLE="false">
 									<foxml:datastreamVersion ID="TN.0" LABEL="icon.png" MIMETYPE="image/png">
-										<xsl:choose>
-											<xsl:when test="starts-with($resMIME,'audio/')">
-												<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/audio.png"/>
-											</xsl:when>
-											<xsl:when test="starts-with($resMIME,'image/')">
-												<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/image.png"/>
-											</xsl:when>
-											<xsl:when test="starts-with($resMIME,'text/')">
-												<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/text.png"/>
-											</xsl:when>
-											<xsl:when test="starts-with($resMIME,'video/')">
-												<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/video.png"/>
-											</xsl:when>
-											<xsl:when test="starts-with($resMIME,'application/pdf')">
-												<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/pdf.png"/>
-											</xsl:when>
-											<xsl:when test="starts-with($resMIME,'application/zip')">
-												<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/zip.png"/>
-											</xsl:when>
-											<xsl:when test="starts-with($resMIME,'application/x-gzip')">
-												<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/zip.png"/>
-											</xsl:when>
-											<xsl:otherwise>
-												<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/other.png"/>
-											</xsl:otherwise>
-										</xsl:choose>
+										<xsl:apply-templates select="current()" mode="thumbnail">
+											<xsl:with-param name="resURI" select="$resURI"/>
+											<xsl:with-param name="resMIME" select="$resMIME"/>
+										</xsl:apply-templates>
 									</foxml:datastreamVersion>
 								</foxml:datastream>
 								<!-- add POLICY data stream -->
@@ -1136,9 +1107,68 @@
 		</oai_dc:dc>
 	</xsl:template>
 
-	<!-- Other -->
+	<!-- other -->
 	<xsl:template match="cmd:CMD" mode="other">
 		<xsl:comment>[CMD2Other] nothing happening here, please overwrite with your own templates!</xsl:comment>
 	</xsl:template>
-
+	
+	<!-- mime -->
+	<xsl:template match="cmd:ResourceProxy" mode="mime">
+		<xsl:param name="resURI"/>
+		<xsl:sequence select="cmd:getMIME(cmd:ResourceType/@mimetype,$resURI)"/>
+	</xsl:template>
+	
+	<!-- cmodel -->
+	<xsl:template match="cmd:ResourceProxy" mode="cmodel" xmlns:fedora-model="info:fedora/fedora-system:def/model#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:islandora="http://islandora.ca/ontology/relsext#">
+		<xsl:param name="resURI"/>
+		<xsl:param name="resMIME"/>
+		<!-- add specific content models for specific MIME types -->
+		<xsl:choose>
+			<xsl:when test="starts-with($resMIME,'audio/')">
+				<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp-audioCModel"/>
+			</xsl:when>
+			<xsl:when test="starts-with($resMIME,'video/')">
+				<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_videoCModel"/>
+			</xsl:when>
+			<xsl:when test="starts-with($resMIME,'image/')">
+				<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_basic_image"/>
+			</xsl:when>
+			<xsl:when test="starts-with($resMIME,'application/pdf')">
+				<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_pdf"/>
+			</xsl:when>
+		</xsl:choose>
+	</xsl:template>
+	
+	<!-- thumbnail -->
+	<xsl:template match="cmd:ResourceProxy" mode="thumbnail">
+		<xsl:param name="resURI"/>
+		<xsl:param name="resMIME"/>
+		<xsl:choose>
+			<xsl:when test="starts-with($resMIME,'audio/')">
+				<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/audio.png"/>
+			</xsl:when>
+			<xsl:when test="starts-with($resMIME,'image/')">
+				<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/image.png"/>
+			</xsl:when>
+			<xsl:when test="starts-with($resMIME,'text/')">
+				<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/text.png"/>
+			</xsl:when>
+			<xsl:when test="starts-with($resMIME,'video/')">
+				<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/video.png"/>
+			</xsl:when>
+			<xsl:when test="starts-with($resMIME,'application/pdf')">
+				<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/pdf.png"/>
+			</xsl:when>
+			<xsl:when test="starts-with($resMIME,'application/zip')">
+				<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/zip.png"/>
+			</xsl:when>
+			<xsl:when test="starts-with($resMIME,'application/x-gzip')">
+				<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/zip.png"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/other.png"/>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
+	
 </xsl:stylesheet>

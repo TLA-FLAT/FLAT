@@ -20,11 +20,8 @@ fi
 cd $_PWD
 
 # restart the tomcat, as some step above kills SSL (e.g., to the CR)
-/var/www/fedora/tomcat/bin/shutdown.sh &&\
-  bash -c "timeout $TOMCAT_TIMEOUT grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-/var/www/fedora/tomcat/bin/startup.sh &&\
- bash -c "timeout $TOMCAT_TIMEOUT grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-
+supervisorctl restart tomcat
+/wait-tomcat.sh
 
 cat << EOF
 TODO: 1. bag the test SIP directory:

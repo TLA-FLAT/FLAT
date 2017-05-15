@@ -54,7 +54,7 @@
             <parameter name="cmd2fox" value="{$base}/policies/cmd2fox.xsl"/>
             <parameter name="jar_cmd2fox" value="{$base}/transforms/cmd2fox.xsl"/>
             <parameter name="dir" value="{$work}/fox"/>
-            <parameter name="icons" value="{$env-FLAT_ICONS}"/>
+            <parameter name="icons" value="{$env-FLAT_ICON_DIR}"/>
             <parameter name="policies" value="{$work}/acl"/>
             <parameter name="policies" value="{$base}/policies"/>
         </action>

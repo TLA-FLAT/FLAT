@@ -2,7 +2,7 @@
 
 CONTENT_TYPE=application/zip
 FILENAME=$1
-TARGET=http://$FLAT_HOST/$DRUPAL_PROJECT/easy-deposit/collection
+TARGET=http://$FLAT_HOST/$FLAT_NAME/easy-deposit/collection
 SLUG=$2
 MD5=`md5sum -b $FILENAME | awk '{print $1;}'`
 IN_PROGRESS=false

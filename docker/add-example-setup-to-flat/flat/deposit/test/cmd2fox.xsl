@@ -20,5 +20,18 @@
 	</xsl:template>
 
 	<xsl:template match="text()" mode="dc"/>
+	
+	<xsl:template match="cmd:ResourceProxy" mode="thumbnail">
+		<xsl:param name="resURI"/>
+		<xsl:param name="resMIME"/>
+		<xsl:choose>
+			<xsl:when test="starts-with($resMIME,'application/pdf')">
+				<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/comic.png"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:next-match/>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
 
 </xsl:stylesheet>

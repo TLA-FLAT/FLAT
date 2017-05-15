@@ -9,25 +9,22 @@ RUN mkdir /tmp/islandora &&\
 	cd /tmp/islandora &&\
 	wget "https://github.com/Islandora/islandora_solr_search/archive/7.x-1.6.zip" &&\
 	mv 7.x-1.6.zip islandora_gsearch_module-7.x-1.6.zip &&\
-	unzip islandora_gsearch_module-7.x-1.6.zip -d /var/www/html/$DRUPAL_PROJECT/sites/all/modules/contrib/
+	unzip islandora_gsearch_module-7.x-1.6.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/
 
-ADD drupal/flat_search /var/www/html/$DRUPAL_PROJECT/sites/all/modules/custom/
+ADD drupal/flat_search /var/www/html/$FLAT_NAME/sites/all/modules/custom/
 
-RUN cd /var/www/html/$DRUPAL_PROJECT/ &&\
-	export PGPASSWORD=fedora &&\
-	/etc/init.d/postgresql start &&\
-	/var/www/fedora/tomcat/bin/startup.sh &&\
-	bash -c "timeout $TOMCAT_TIMEOUT grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
+RUN	service supervisor start &&\
+	/wait-postgres.sh &&\
+	supervisorctl start tomcat &&\
+	/wait-tomcat.sh &&\
+	cd /var/www/html/$FLAT_NAME/ &&\
 	/var/www/composer/vendor/drush/drush/drush en islandora_solr -y &&\
 	/var/www/composer/vendor/drush/drush/drush en islandora_solr_config -y &&\
 	/var/www/composer/vendor/drush/drush/drush en flat_search -y &&\
     /var/www/composer/vendor/drush/drush/drush vset islandora_basic_collection_display_backend islandora_solr_query_backend -y &&\
     /var/www/composer/vendor/drush/drush/drush vset islandora_compound_object_thumbnail_child 0 -y &&\
     /var/www/composer/vendor/drush/drush/drush vset islandora_compound_object_show_compound_parents_in_breadcrumbs 1 -y &&\
- sleep 10 &&\
-	/var/www/fedora/tomcat/bin/shutdown.sh &&\
-	bash -c "timeout $TOMCAT_TIMEOUT grep -q 'Server shutdown complete' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-	/etc/init.d/postgresql stop
+ 	service supervisor stop
 
 #Clean up APT when done.
 RUN apt-get clean &&\
