@@ -63,6 +63,8 @@ CMDI records can vary a lot. Based on the VLO configuration a mapping to Dublin 
 
 __NOTE__: simple passwords are included in the setup, they should not be take along to a production environment!
 
+__NOTE for Windows users__: It is important that the line endings of the files stay as they are in the git repository. By default, a git clone on a Windows client will translate line endings into DOS/Windows line endings (carriage return + line feed). You can turn this off globally using ```git config --global core.autocrlf input``` (or "false" instead of "input", depending on whether you need to preserve DOS/Windows line endings for other repositories you commit to). You can also specify this upon cloning the repository, e.g. ```git clone https://github.com/TLA-FLAT/FLAT.git -c core.autocrlf=input```
+
 The following commands show how to build a setup that supports FLAT base plus facetted search and the DoorKeeper:
 
 ```sh
