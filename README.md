@@ -144,7 +144,7 @@ Run the various ```do-*.sh``` scripts in their natural order. And visit FLAT in 
 ## Known problems ##
 
 * _PROBLEM_: Starting and stopping the Tomcat application server can take longer than expected, as it depends on the power or activity of the host.
-  * _SOLUTION_: Increase the [```TOMCAT_TIMEOUT```](docker/flat/Dockerfile).
+  * _SOLUTION_: Increase the [```FLAT_TIMEOUT```](docker/flat/Dockerfile).
 * _PROBLEM_: During the compilation of the MediaShelf fedora-client the test sometimes runs into a locking problem.
   * _SOLUTION_: Just restart the build, the test will most likely succeed this time.
 
