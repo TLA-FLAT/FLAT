@@ -21,8 +21,7 @@ class Workspaces
             ),
             'field' => array(
                 '#type' => 'fieldset',
-                '#title' => 'Local Path Selector',
-                '#description' => 'Select the folder to be archived',
+                '#description' => 'Select the workspace folder within the departments\' project folder containing the data for this bundle',
                 '#states' => array(
                     // Hide this select menu if source of resources in not local.
                     'visible' => array(
@@ -32,6 +31,7 @@ class Workspaces
 
                 'department' => array(
                     '#type' => 'radios',
+                    '#title' => t('Department'),
                     '#options' => array(
                         'lac' => 'Language and Cognition',
                         'ladd' => 'Language Development',
@@ -43,7 +43,6 @@ class Workspaces
                     ),
                     '#empty_option' => '-- Select Department --',
                     '#empty_value' => 'unselected',
-                    '#title' => t('Department for which data will be archived'),
                     '#ajax' => array(
                         'callback' => 'reload_workspace_navigation_container_ajax_callback',
                         'wrapper' => 'workspace_navigation',
@@ -52,7 +51,7 @@ class Workspaces
                 ),
 
                 'project' => array(
-                    '#title' => 'Project name',
+                    '#title' => 'Project',
                     '#type' => 'select',
                     '#options' => array(),
                     '#empty_option' => '-- Select Project --',
@@ -89,7 +88,7 @@ class Workspaces
 
 
                 'next_directories' => array(
-                    '#title' => 'Traverse into subdirectory',
+                    '#title' => 'Subfolder',
                     '#type' => 'select',
                     '#empty_option' => '-- not selected --',
                     '#empty_value' => '',
@@ -134,46 +133,71 @@ class Workspaces
         return $current;
 
     }
-}
+     static function getSubdirectoryNames($directory, $filters=[]){
 
+        $subdirectories = [];
+        if (!file_exists($directory)){
+            return $subdirectories;
+        }
 
-function getSubdirectoryNames($directory, $filters=[]){
+        $results = scandir($directory);
 
-    $subdirectories = [];
-    if (!file_exists($directory)){return $subdirectories;}
+        foreach ($results as $result) {
 
-    $results = scandir($directory);
+            $full_path = $directory . '/' . $result;
 
-    foreach ($results as $result) {
-        if ($result === '.' or $result === '..') continue;
+            $check = self::passedAllChecks($full_path, $filters);
 
-        $dir = $directory . '/' . $result;
+            if (!$check) {
 
-        if (in_array('access', $filters)){
+                    continue;
 
-            if (!is_dir($dir) OR !is_readable($dir)) {
-                continue;
+            } else {
+
+                $subdirectories[] = $result;
+
             }
 
         }
 
-        if (in_array('directories', $filters)){
+        return $subdirectories;
 
-            if (!is_dir($dir) ) {
-                continue;
-            }
-
-        }
-
-
-        $subdirectories[] = $result;
     }
 
+    static function passedAllChecks($directory, $filters=[]){
 
-    return $subdirectories;
+        $checkPassed = [];
+
+        foreach ($filters as $filter) {
+
+            if (!self::$filter($directory)) {
+
+                $checkPassed[] = FALSE;
+
+            } else {
+
+                $checkPassed[] = TRUE;
+
+            }
+        }
+
+        return !in_array(FALSE, $checkPassed, TRUE);
+
+    }
+
+    static function isAccessibleDir($directory){
+        return is_dir($directory) AND is_readable($directory) ? TRUE: FALSE;
+    }
+
+    static function isAccessible($directory){
+        return is_readable($directory);
+    }
+
+    static function isDir($directory){
+        return is_dir($directory) ;
+    }
 
 }
-
 
 function reload_workspace_navigation_container_ajax_callback ($form, $form_state)
 {

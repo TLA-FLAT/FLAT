@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: danrhe
- * Date: 15/11/16
- * Time: 12:18
- */
 
 
 function flat_bundle_action_form($form, &$form_state, $vars)
@@ -13,9 +7,11 @@ function flat_bundle_action_form($form, &$form_state, $vars)
 
     $form['actions']['bundle_image'] = array(
         '#type' => 'image_button',
+        '#title' => 'test',
         '#value' => t('Bundle image'),
         '#disabled' => TRUE,
-        '#prefix' => '</p>'
+        '#prefix' => '<div><br></div>',
+
     );
 
     $form['actions']['container'] = array(
@@ -23,13 +19,33 @@ function flat_bundle_action_form($form, &$form_state, $vars)
         '#attributes' => array('class' => array('container-inline')),
     );
 
-
     $form['actions']['describe_bundle'] = array(
         '#type' => 'submit',
-        '#value' => t('Create info file for bundle'),
+        '#value' => t('Fill in metadata for bundle'),
         #'#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
-        '#description' => t('Bundles are obliged to be accompanied by a info file'),
+        '#description' => t('Bundles are obliged to be accompanied by metadata'),
         '#validate' => array('flat_bundle_action_form_describe_validate'),
+        '#disabled' => TRUE,
+    );
+
+    $form['actions']['upload_data'] = array(
+        '#type' => 'submit',
+        '#value' => t('Upload data'),
+        '#disabled' => TRUE,
+    );
+
+
+    $form['actions']['markup_1'] = array(
+        '#markup' => '<div><br></div>'
+    );
+
+
+    $form['actions']['validate_bundle'] = array(
+        '#type' => 'submit',
+        '#value' => t('Validate bundle'),
+        '#validate' => array('flat_bundle_action_form_validate_validate'),
+        #'#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
+        '#description' => t('Validated bundles will be transferred to different location and can not be altered'),
         '#disabled' => TRUE,
     );
 
@@ -39,15 +55,6 @@ function flat_bundle_action_form($form, &$form_state, $vars)
         '#validate' => array('flat_bundle_action_form_reopen_validate'),
         #'#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
         '#description' => t('Click to allow modifications of your bundle'),
-        '#disabled' => TRUE,
-    );
-
-    $form['actions']['validate_bundle'] = array(
-        '#type' => 'submit',
-        '#value' => t('Validate bundle'),
-        '#validate' => array('flat_bundle_action_form_validate_validate'),
-        #'#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
-        '#description' => t('Validated bundles will be transferred to different location and can not be altered'),
         '#disabled' => TRUE,
     );
 
@@ -64,14 +71,14 @@ function flat_bundle_action_form($form, &$form_state, $vars)
         '#value' => t('Edit bundle'),
         #    '#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
         #'#submit' => array('flat_bundle_action_form_bundle_edit_submit'),
-        '#prefix' => '</p></p>',
+        '#prefix' => '<div><br></div>',
     );
 
     $form['actions']['delete_bundle'] = array(
         '#type' => 'submit',
         '#value' => t('Delete bundle'),
         #    '#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
-        '#suffix' => '</p>',
+        '#suffix' => '<div><br></div>',
     );
 
     global $user;
@@ -82,13 +89,6 @@ function flat_bundle_action_form($form, &$form_state, $vars)
             '#prefix' => '</p>',
         );
     }
-
-    $form['actions']['delete_bundle'] = array(
-        '#type' => 'submit',
-        '#value' => t('Delete bundle'),
-        #    '#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
-        '#suffix' => '</p>',
-    );
 
     $node = menu_get_object();
     $wrapper = entity_metadata_wrapper('node', $node);
@@ -117,6 +117,7 @@ function flat_bundle_action_form($form, &$form_state, $vars)
 
     switch ($status) {
         case 'open': {
+            $form['actions']['upload_data']['#disabled'] = $disable_file_browser;
             $form['actions']['bundle_image']['#disabled'] = $disable_file_browser;
             $form['actions']['validate_bundle']['#disabled'] = FALSE;
             $form['actions']['edit_bundle']['#disabled'] = FALSE;
@@ -131,6 +132,7 @@ function flat_bundle_action_form($form, &$form_state, $vars)
         }
 
         case 'failed': {
+            $form['actions']['upload_data']['#disabled'] = $disable_file_browser;
             $form['actions']['bundle_image']['#disabled'] = $disable_file_browser;
             $form['actions']['validate_bundle']['#disabled'] = FALSE;
             $form['actions']['edit_bundle']['#disabled'] = FALSE;
@@ -155,7 +157,6 @@ function flat_bundle_action_form($form, &$form_state, $vars)
 
 
     // Activate metadata creation button only if 1) cmdi option is 'new' 2) status is either open or failed and 3) no cmdi has been created
-
     if ($wrapper->flat_cmdi_option->value() == 'new' AND ($status == 'open' OR $status == 'failed') AND (empty($node->flat_cmdi_file))) {
 
         $form['actions']['describe_bundle']['#disabled'] = FALSE;
@@ -190,18 +191,18 @@ function flat_bundle_action_form_reopen_validate($form, &$form_state){
     $node = $form_state['values']['node'];
     $wrapper = entity_metadata_wrapper('node', $node);
 
-    $stream = 'private';
 
-    $move = FlatBundle::moveBundleData($node, 'data', $stream);
+
+    $move = FlatBundle::moveBundleData($node, 'data', 'unfreeze');
     if (!$move){
-        form_set_error('reopen', 'Unable to move bundle data to ' . $stream);
+        form_set_error('reopen', 'Unable to move bundle data to unfreeze');
         drupal_goto($form_state['values']['origin_url']);
     }
 
     if (isset($wrapper->flat_cmdi_file)){
-        $move = FlatBundle::moveBundleData($node, 'metadata', $stream);
+        $move = FlatBundle::moveBundleData($node, 'metadata', 'unfreeze');
         if (!$move){
-            form_set_error('reopen', 'Unable to move bundle metadata to ' . $stream);
+            form_set_error('reopen', 'Unable to move bundle metadata to unfreeze');
             drupal_goto($form_state['values']['origin_url']);
         }
 
@@ -344,12 +345,13 @@ function flat_bundle_action_form_submit($form, &$form_state){
 
     switch ($action){
         case 'Bundle image':
+        case 'Upload data':
             global $user;
             $form_state['redirect'] = array('user/' . $user->uid  . '/imce');
             break;
 
 
-        case 'Create info file for bundle':
+        case 'Fill in metadata for bundle':
             $url = array('node/' . $node->nid  . '/cmdi');
             $form_state['redirect'] = $url;
             break;
@@ -429,8 +431,10 @@ function flat_bundle_action_form_submit($form, &$form_state){
         }
 
 
-        $form_state['redirect'] = '<front>';
-        drupal_set_message('Bundle is being processed');
+        $processed = ($status == 'valid') ? 'archived' : 'validated';
+
+        $form_state['redirect'] = 'workspace';
+        drupal_set_message("Bundle is being $processed");
 
 
         break;

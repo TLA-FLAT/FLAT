@@ -129,28 +129,31 @@ class Bundle extends SIP
     {
         $this->logging('Starting prepareSipData');
 
+        // Validated bundles do not need to be prepared
         if (!$this->test){
             $this->logging('Finishing prepareSipData');
             return TRUE;
 
-        } else {
-
-            $stream = 'freeze';
         }
 
         module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
 
+        $move = FlatBundle::moveBundleData($this->node, 'data', 'freeze');
 
-        $move = FlatBundle::moveBundleData($this->node, 'data', $stream);
         if (!$move){
-            throw new IngestServiceException('Unable to move bundle data to ' . $stream);
+
+            throw new IngestServiceException('Unable to move bundle data to freeze');
+
         }
 
-
         if (!is_null($this->wrapper->flat_cmdi_file->value())){
-            $move = FlatBundle::moveBundleData($this->node, 'metadata', $stream);
+
+            $move = FlatBundle::moveBundleData($this->node, 'metadata', 'freeze');
+
             if (!$move){
-                throw new IngestServiceException('Unable to move bundle metadata to ' . $stream);
+
+                throw new IngestServiceException('Unable to move bundle metadata to freeze');
+
             }
 
             // update local variables
@@ -285,7 +288,8 @@ class Bundle extends SIP
         if (!$this->test AND $succeeded){
 
 
-            $url_link = $scheme . '://' . $host . '/flat/islandora/object/' . $this->fid ;
+            global $base_path;
+            $url_link = $scheme . '://' . $host . $base_path . 'islandora/object/' . $this->fid ;
 
         } else {
 
@@ -332,8 +336,8 @@ class Bundle extends SIP
         // bundles need to unfreeze (if frozen) during rollback
         module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
 
-        $move = FlatBundle::moveBundleData($this->node, 'data', 'private');
-        $move = FlatBundle::moveBundleData($this->node, 'metadata', 'private');
+        $move = FlatBundle::moveBundleData($this->node, 'data', 'unfreeze');
+        $move = FlatBundle::moveBundleData($this->node, 'metadata', 'unfreeze');
 
 
         // create blog entry

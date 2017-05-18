@@ -191,7 +191,7 @@ function flat_deposit_admin_form($form, &$form_state)
 
     $form['ingest_service']['error_log_file'] = array (
         '#type' => 'textfield',
-        '#title' => t('Path to error log file'),
+        '#title' => t('Path to error log directory'),
         '#default_value' => $service['error_log_file'],
         '#required' => TRUE,
     );
@@ -206,7 +206,7 @@ function flat_deposit_admin_form($form, &$form_state)
 
     $form['ingest_service']['log_file_dir'] = array (
         '#type' => 'textfield',
-        '#title' => t('Path to log file storage'),
+        '#title' => t('Path to action log directory'),
         '#default_value' => $service['log_file_dir'],
         '#required' => TRUE,
     );
@@ -523,7 +523,7 @@ function flat_deposit_admin_form_export_submit()
     file_unmanaged_save_data(serialize($config), $URI, FILE_EXISTS_REPLACE);
 
     $header =  array('Content-type' => 'application/x-php',
-        'Content-Disposition' => 'attachment; filename=\'flat_deposit_settings.php\'');
+        'Content-Disposition' => 'attachment; filename=flat_deposit_settings.php');
 
     file_transfer($URI, $header);
 
@@ -543,7 +543,8 @@ function flat_deposit_admin_form_import_validate ($form, &$form_state)
     // Check mime type of file
     $tmp = $_FILES['File_selector']['tmp_name'];
 
-    $type = mime_content_type(drupal_realpath($tmp));
+    module_load_include('php', 'flat_deposit', '/Helpers/CMDI/CmdiHandler');
+    $type = CmdiHandler::fits_mimetype_check($tmp);
 
     if ($type != 'text/plain') {
 
