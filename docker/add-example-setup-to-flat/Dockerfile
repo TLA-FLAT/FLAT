@@ -25,7 +25,7 @@ RUN	service supervisor start &&\
 	/var/www/composer/vendor/drush/drush/drush user-create "jane@example.com" --mail="jane@example.com" --password="password" -y &&\
 	supervisorctl stop all &&\
 	service supervisor stop &&\
-	sleep 1
+	/wait-sergtsop.sh
 
 #
 # Add FLAT's own scripts and tools 

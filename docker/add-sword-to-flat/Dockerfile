@@ -37,8 +37,11 @@ ADD sword/application.properties /app/flat/deposit/sword/cfg/application.propert
 RUN sed -i "s|FLAT_HOST|${FLAT_HOST}|g" /app/flat/deposit/sword/cfg/application.properties &&\
     sed -i "s|FLAT_NAME|${FLAT_NAME}|g" /app/flat/deposit/sword/cfg/application.properties
     
-RUN echo '' >> /etc/supervisor/conf.d/supervisord-tomcat.conf &&\
-    echo 'environment=EASY_DEPOSIT_HOME="/app/flat/deposit/sword"' >> /etc/supervisor/conf.d/supervisord-tomcat.conf
+ENV EASY_DEPOSIT_HOME="/app/flat/deposit/sword"
+RUN if [ `grep 'environment=' /etc/supervisor/conf.d/supervisord-tomcat.conf` ]; \
+      then sed -i 's|^environment=\(.*\)$|environment=\1,EASY_DEPOSIT_HOME="/app/flat/deposit/sword"|g' /etc/supervisor/conf.d/supervisord-tomcat.conf; \
+      else echo '' >> /etc/supervisor/conf.d/supervisord-tomcat.conf; echo 'environment=EASY_DEPOSIT_HOME="/app/flat/deposit/sword"' >> /etc/supervisor/conf.d/supervisord-tomcat.conf; \
+    fi
 
 # Add proxy to Apache
 

@@ -61,6 +61,11 @@ RUN cd /tmp/ServiceFLAT &&\
     mkdir /var/www/fedora/tomcat/webapps/flat &&\
     cd /var/www/fedora/tomcat/webapps/flat &&\
     unzip ../flat.war
+    
+RUN if [ `grep 'environment=' /etc/supervisor/conf.d/supervisord-tomcat.conf` ]; \
+      then sed -i 's|^environment=\(.*\)$|environment=\1,FLAT_ICON_DIR="'$FLAT_ICON_DIR'"|g' /etc/supervisor/conf.d/supervisord-tomcat.conf; \
+      else echo '' >> /etc/supervisor/conf.d/supervisord-tomcat.conf; echo 'environment=FLAT_ICON_DIR="'$FLAT_ICON_DIR'"' >> /etc/supervisor/conf.d/supervisord-tomcat.conf; \
+    fi
 
 # Add proxy to Apache
 
