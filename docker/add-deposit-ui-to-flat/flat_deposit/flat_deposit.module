@@ -278,9 +278,10 @@ function flat_deposit_enable(){
     // enable blog functionality in order to allow the backend to create ingest reports
     module_enable(array('blog','flat_views'));
 
+    $paths = variable_get('flat_deposit_paths');
+    $filter = array('local', 'external', 'metadata', 'freeze');
 
-    $directories = array (DRUPAL_ROOT . '/' . variable_get('file_private_path') .'/flat_deposit/data',
-        DRUPAL_ROOT . '/' . variable_get('file_private_path') .'/flat_deposit/metadata');
+    $directories = array_intersect_key($paths, array_flip($filter));
 
     foreach ($directories as $directory)
     {
@@ -423,11 +424,13 @@ function flat_supercollection_admin(AbstractObject $object){
  * Implements hook_menu_local_task_alter
  *
  */
+
 function flat_deposit_menu_local_tasks_alter(&$data, $router_item, $root_path)
 {
     if (isset($data['tabs'][0]['output'])){
         $tabs = $data['tabs'][0]['output'];
         foreach ($tabs as $index => $tab) {
+            /*
             // Remove the 'Add bundle'-menu from every islandora object view if user is not member of the collection
             if ($tab['#link']['path'] == 'islandora/object/%/add_bundle') {
                 $pid_parent = explode('/', $tab['#link']['tab_parent_href']);
@@ -441,8 +444,10 @@ function flat_deposit_menu_local_tasks_alter(&$data, $router_item, $root_path)
                     unset($data['tabs'][0]['output'][$index]);
                 }
 
+            }
+            */
             // Remove edit- menu from node view
-            } elseif ($tab['#link']['path'] == 'node/%/edit') {
+            if ($tab['#link']['path'] == 'node/%/edit') {
 
                 $data['tabs'][0]['output'][$index]['#link']['access'] = FALSE;
                 unset($data['tabs'][0]['output'][$index]);
@@ -708,7 +713,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
             //Scan project directory; non-existing directories will return false, existing dirs will populate the
             // projects field options
             // todo filter projects for permissions
-            $projects = getSubdirectoryNames($projects_directory, ['directories']);
+            $projects = Workspaces::getSubdirectoryNames($projects_directory, ['isAccessibleDir']);
 
             if (!empty($projects)){
                 $form['workspace_navigation']['field']['project']['#options'] = drupal_map_assoc($projects);
@@ -736,7 +741,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
             $form['flat_original_path']['und'][0]['value']['#default_value'] = $current;
 
             // print result to screen
-            $form['workspace_navigation']['field']['current_directory']['#markup'] = $current; #can be removed
+            $form['workspace_navigation']['field']['current_directory']['#markup'] = 'current selection: ' . str_replace('local://' ,'', $current);
 
 
             // Add button to go back to previous level
@@ -745,7 +750,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
             }
 
             // Add dropdown menu with lower level directories to go into
-            $subDirs = getSubdirectoryNames($current, ['access']);
+            $subDirs = Workspaces::getSubdirectoryNames($current, ['isAccessibleDir']);
             if (!empty($subDirs)){
                 $form['workspace_navigation']['field']['next_directories']['#options'] = drupal_map_assoc($subDirs);
                 $form['workspace_navigation']['field']['next_directories']['#access'] = TRUE;
@@ -809,36 +814,51 @@ function workspace_navigation_previous_directory_submit($form, &$form_state) {
 #function flat_bundle_node_form_add_submit($form, &$form_state){}
 
 
+/**
+ * Validation of flat_bundle node edits. At the moment this is only assigning a bundle to a different collection
+ * @param $form
+ * @param $form_state
+ * @return mixed
+ */
 function flat_bundle_edit_node_form_validate($form, &$form_state){
 
-
-
-    // If parent nid has not changed pass validation
     $node = $form_state['node'];
     $wrapper = entity_metadata_wrapper('node', $node);
-
-    $source = $wrapper->flat_source->value();
 
     $original_collection_nid = $wrapper->flat_parent_nid->value();
     $new_collection_nid = (string)$form_state['values']['flat_parent_nid']['und'][0]['value'];
 
-    if ($original_collection_nid === $new_collection_nid){
-        return $form;
-    }
-
-
     // If parent nid has changed
-
-        // get name of collection
+    // get name of collection
     if ((integer)$new_collection_nid != 0){
+
         $collection_node = node_load($new_collection_nid);
         $new_collection_name = $collection_node->title;
-    } else{
+
+    } else {
+
         $new_collection_name = 'unassigned';
+
     }
 
     // Set parent nid value of this bundle to the name of the new collection
     $form_state['values']['flat_parent_title']['und'][0]['value'] = $new_collection_name;
+
+    // If parent nid has not changed pass validation
+    if ($original_collection_nid === $new_collection_nid){
+        form_set_error('flat_parent_nid', 'collection has not changed');
+        return $form;
+    }
+
+    // Validate that no record.cmdi exists with metadata related to a collection and then, the collection changes
+    $cmdi_option = $wrapper->flat_cmdi_option->value();
+    $cmdi_file = $wrapper->flat_cmdi_file->value();
+    if ($cmdi_option == 'new' AND $new_collection_name == 'unassigned' AND !is_null($cmdi_file)){
+
+        form_set_error('flat_parent_nid', 'It is not possible to change the collection if new metadata file has been saved. Please remove record.cmdi first');
+        return $form;
+
+    }
 
 
     //Check that bundle name within collection is distinctive from existing bundles, otherwise we get problems with creating new folders.
@@ -851,27 +871,32 @@ function flat_bundle_edit_node_form_validate($form, &$form_state){
         form_set_error('title', t('Bundle with same or very similar bundle name exists'));
         return $form;
     }
-
+    /*
+*/
     // Move files to new location
-    $stream = 'external';
-    $new_location = FlatBundle::moveBundleData($node, 'data', $stream, $new_collection_name);
+    $new_location = FlatBundle::moveBundleData($node, 'data', 'unfreeze', $new_collection_name);
 
-    if(!$new_location) {
+    if (!$new_location){
+
         form_set_error('flat_parent_title', 'Unable to move files to new location');
         return $form;
     }
+
+
     $form_state['values']['flat_location']['und'][0]['value'] = $new_location;
 
     if(!is_null($wrapper->flat_cmdi_file->value())){
-        $move = FlatBundle::moveBundleData($node, 'metadata', $stream, $new_collection_name);
+
+        $move = FlatBundle::moveBundleData($node, 'metadata', 'unfreeze', $new_collection_name);
+
         if(!$move) {
+
             form_set_error('flat_parent_title', 'Unable to move metadata to new location');
             return $form;
+
         }
 
     }
-
-
 }
 
 
@@ -1027,6 +1052,12 @@ function flat_bundle_view($node, $view_mode) {
 
     $info = field_info_field('flat_cmdi_file');
 
+    $wrapper = entity_metadata_wrapper('node', $node);
+    $location = $wrapper->flat_location->value();
+
+
+
+
 /*
 
 // switch off promotion of new entries to front
@@ -1165,7 +1196,7 @@ function flat_deposit_block_view($delta = '')
 
         $image_links = array(
             'link_workspace' => array(
-                'name' => 'My workspace',
+                'name' => 'My bundles',
                 'href' => 'workspace',
                 'image_path' => drupal_get_path('module','flat_deposit') .'/Images/Upload.png',
             ),

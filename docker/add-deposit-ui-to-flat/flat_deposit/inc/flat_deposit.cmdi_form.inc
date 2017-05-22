@@ -251,18 +251,21 @@ function flat_deposit_cmdi_form_submit($form, &$form_state){
 
 
 
-    $original_flat_location = $wrapper->flat_location->value();
+    // for some unknown reason flat_location and flat_original_path are messed up by attaching the newly created cmdi file, so we need to restore it
+    $flat_location_original = $wrapper->flat_location->value();
+    $flat_original_path_original = $wrapper->flat_original_path->value();
+
     $wrapper->flat_cmdi_file->file->set($new_file);
     $wrapper->save();
 
-    // for some unknown reason flat_location is messed up by attaching the newly created cmdi file, so we need to restore it
     $node = menu_get_object();
     $wrapper = entity_metadata_wrapper('node', $node);
-    $wrapper->flat_location->set($original_flat_location);
+    $wrapper->flat_location->set($flat_location_original);
+    $wrapper->flat_original_path->set($flat_original_path_original);
     $wrapper->save();
 
     $form_state['redirect'] = 'node/' .$node->nid;
-    drupal_set_message('Flat bundle cmdi has been generated');
+    drupal_set_message(t('Metadata for bundle %title has been saved', array('%title' => $node->title)));
 
 
 }

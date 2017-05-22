@@ -5,7 +5,7 @@ see https://api.drupal.org/api/drupal/developer%21topics%21forms_api_reference.h
 
 In the fields section you can specify fields. Fields need to have attributes:
 - id: unique id which will become the form field id in drupal
-- name: name of the field in the original  cmdi-profile
+- name: name of the field in the original cmdi-profile
 
 and children:
 - type: formatting of the field; implemented values are
@@ -40,7 +40,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
     <fields>
         <field id="field_01" name="Title">
             <type>textfield</type>
-            <title>My custom title</title>
+            <title>Collection title</title>
             <required>true</required>
         </field>
         <field id="field_02" name="DataType">
@@ -57,7 +57,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
         </field>
         <field id="field_03" name="ResearchField">
             <type>dropdown</type>
-            <title>Department</title>
+            <title>Research Discipline</title>
             <required>true</required>
             <options>
                 <option>Language Documentation</option>

@@ -58,7 +58,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
         </field>
         <field id="field_03" name="ResearchField">
             <type>dropdown</type>
-            <title>Department</title>
+            <title>Research Discipline</title>
             <required>true</required>
             <inherited>true</inherited>
             <options>

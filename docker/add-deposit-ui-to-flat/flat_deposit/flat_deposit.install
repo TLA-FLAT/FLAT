@@ -16,7 +16,7 @@ function flat_deposit_install()
     $content_types = array(
         'flat_bundle' => array(
             'type' => 'flat_bundle',
-            'name' => $t('FLAT Upload bundle'),
+            'name' => $t('Bundle'),
             'description' => $t('A bundle of one or more data files upload entity'),
             'title_label' => $t('Name of the upload bundle'),
             'base' => 'flat_bundle', #declare to be able to use content type hooks
@@ -24,7 +24,7 @@ function flat_deposit_install()
         ),
         'flat_collection' => array(
             'type' => 'flat_collection',
-            'name' => $t('FLAT collection'),
+            'name' => $t('Collection'),
             'description' => $t('A collection of data bundles'),
             'title_label' => $t('Name of the collection'),
             'base' => 'flat_collection', #declare to be able to use content type hooks
@@ -78,8 +78,8 @@ function flat_deposit_install()
         'settings' => array(
             'max_length' => 255,
             'allowed_values' => array(
-                'local' => 'MPI Workspaces',
-                'external' => 'Upload data from local desktop',
+                'local' => 'Select a folder in an MPI Workspace on the server',
+                'external' => 'Upload the files using the web browser',
             ),
         ),
         'locked' => TRUE,
@@ -152,9 +152,9 @@ function flat_deposit_install()
         'cardinality' => 1,
         'settings' => array(
             'allowed_values'=> array(
-                'new' => 'Generate new file',
-                'template' => 'Use existing cmdi file as template (Resources related information will be stripped)',
-                'import' => 'Use existing cmdi file',
+                'new' => 'Enter it using a form',
+                'import' => 'Upload a CMDI file',
+                'template' => 'Upload a CMDI file to be used as a template (any links to files will be stripped)',
                 ),
         ),
     );
@@ -220,7 +220,7 @@ function flat_deposit_install()
     $instances['flat_parent_nid_bundle'] = array(
         'field_name' => 'flat_parent_nid',
         'bundle' => 'flat_bundle',
-        'label' => $t('NID of the parent of this node'),
+        'label' => $t('Parent collection'),
         'widget' => array(
             'type' => 'option_buttons'
         ),
@@ -239,7 +239,7 @@ function flat_deposit_install()
     $instances['flat_policies'] = array(
         'field_name' => 'flat_policies',
         'bundle' => 'flat_bundle',
-        'label' => $t('Access policies for bundle resources'
+        'label' => $t('Access policies for files within the bundle'
         ),
         'widget' => array(
             'type' => 'option_buttons',
@@ -257,7 +257,7 @@ function flat_deposit_install()
     $instances['flat_cmdi_option'] = array(
         'field_name' => 'flat_cmdi_option',
         'bundle' => 'flat_bundle',
-        'label' => $t('What kind of cmdi file is being used'),
+        'label' => $t('How will you provide the metadata for this bundle?'),
         'widget' => array(
             'type' => 'option_buttons',
         ),
@@ -390,9 +390,7 @@ function flat_deposit_install()
     $instances['flat_source'] = array(
         'field_name' => 'flat_source',
         'bundle' => 'flat_bundle',
-        'label' => $t('Origin of bundle resources'
-        ),
-        'description' => $t('To be archived data is either stored at MPI workspace directories or uploaded from your desktop computer'),
+        'label' => $t('How will you provide the files to be included in this bundle?'),
         'widget' => array(
             'type' => 'option_select',
         ),
