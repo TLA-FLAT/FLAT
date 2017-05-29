@@ -1,5 +1,5 @@
 <?php
-
+module_load_include('inc', 'node', 'node.pages');
 /**
  * Created by PhpStorm.
  * User: danrhe

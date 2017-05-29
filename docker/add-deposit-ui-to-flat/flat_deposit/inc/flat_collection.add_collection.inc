@@ -49,6 +49,19 @@ function flat_collection_add_form($form, &$form_state, $parent){
         ),
     );
 
+    $form['select_policy'] = array(
+        '#title' => t('Which accessibility policy do you want to apply'),
+        '#type' => 'select',
+        '#required' => TRUE,
+        '#options' => drupal_map_assoc(array('public','private')),
+        '#default_value' => 'public',
+    );
+
+    $form['hide_metadata'] = array(
+        '#title' => t('Hide metadata of this collection'),
+        '#type' => 'checkbox',
+        '#required' => FALSE,
+        );
 
     $form['template_container'] = array(
         '#type' => 'container',
@@ -58,6 +71,10 @@ function flat_collection_add_form($form, &$form_state, $parent){
         ),
     );
 
+    $form['template_container']['space'] = array(
+        '#type' => 'markup',
+        '#markup' => '</br>',
+    );
 
     //**************************************************
     // Get profile specific form and attach to container
@@ -151,14 +168,6 @@ function flat_collection_add_form($form, &$form_state, $parent){
     );
 
 
-    $form['select_policy'] = array(
-        '#title' => t('Which accessibility policy do you want to apply'),
-        '#type' => 'select',
-        '#required' => TRUE,
-        '#options' => drupal_map_assoc(array('public','private')),
-        '#default_value' => 'public',
-    );
-
 
     $form['Submit'] = array(
         '#type' => 'submit',
@@ -240,7 +249,7 @@ function flat_collection_add_form_final_validate($form, &$form_state)
         foreach ($results as $result) {
             if ($labelNewCollection === $result['label']['value']){
 
-                form_set_error('title',t("Found existing collection with this collection with same title (%title)",array('%title' => $labelNewCollection)));
+                form_set_error('title',t("Found existing collection with same collection title (%title)",array('%title' => $labelNewCollection)));
                 return $form;
             };
 

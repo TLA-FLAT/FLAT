@@ -332,14 +332,14 @@ function flat_deposit_menu()
         'access arguments' => array('admin deposit module'));
 
     //FLAT_BUNDLE
-    // node creation
     $items['islandora/object/%islandora_object/add_bundle'] = array(
         'title' => 'Add bundle',
-        'page callback' => 'flat_bundle_node_form_fixed_collection',
-        'page arguments' => array(2),
         'type' => MENU_LOCAL_TASK,
-        'weight' => 10,
-        'access arguments' => array('use deposit module'),
+        'page callback' => 'flat_bundle_add_bundle',
+        'page arguments' => array(2),
+        'access callback' => 'islandora_object_manage_access_callback',
+        'access arguments' => array(array(ISLANDORA_MANAGE_PROPERTIES,), 2),
+        'weight' => 99,
     );
 
     // FLAT_Collection
@@ -350,11 +350,9 @@ function flat_deposit_menu()
         'page arguments' => array(2),
         'access callback' => 'islandora_object_manage_access_callback',
         'access arguments' => array(
-            array(
-                ISLANDORA_MANAGE_PROPERTIES,
-            ), 2),
-        'weight' => 99,
-    );
+            array(ISLANDORA_MANAGE_PROPERTIES,), 2),
+        'weight' => 95,
+        );
 
     // FLAT_Collection
     $items['islandora/object/%islandora_object/add_collection'] = array(
@@ -368,7 +366,7 @@ function flat_deposit_menu()
             array(
                 ISLANDORA_MANAGE_PROPERTIES,
             ), 2),
-        'weight' => 99,
+        'weight' => 95,
     );
 
 
@@ -547,15 +545,65 @@ function flat_deposit_node_info() {
     );
 }
 
+
+function flat_bundle_add_bundle($pid){
+    global $user;
+
+
+// Query all flat_collection nodes that are owned by the user and have no empty fedora_fid (flat_fid) value.
+    // Resulting nodes will be added as options with the node's nid as option-key and node's title as option-labels.
+    $query = new EntityFieldQuery();
+    $entities = $query->entityCondition('entity_type', 'node')
+        ->propertyCondition('type', 'flat_collection')
+        ->propertyCondition('uid', $user->uid)
+        ->fieldCondition('flat_fid', 'value',  $pid->id, '=')
+        ->execute();
+    if (!empty($entities['node']) AND count($entities['node']) == 1) {
+        foreach ($entities['node'] as $entity){
+            $nid = $entity->nid;
+
+            $parent_node = node_load($nid);
+            $value = $parent_node->title;
+            $custom = ['nid' => $nid, 'value' => $value];
+        }
+
+    } else {
+
+        $custom = NULL;
+        drupal_set_message('Unable to find user link to this collection. Parent collection needs to assigned manually', 'warning');
+
+    }
+
+
+    module_load_include('inc', 'node', 'node.pages');
+
+    $node_type = 'flat_bundle';
+    $types = node_type_get_types();
+    #$collection = $collections ['collection_name'][0];
+
+
+    $node = (object) array('uid' => $user->uid, 'name' => (isset($user->name) ? $user->name : ''), 'type' => $node_type, 'language' => LANGUAGE_NONE);
+    drupal_set_title(t('Create @name', array('@name' => $types[$node_type]->name)), PASS_THROUGH);
+    $form = drupal_get_form($node_type . '_node_form', $node, $custom);
+
+    return $form;
+
+}
+
 /**
  * Implements hook_form.
  *
  *  flat_bundle add/edit form
  *
  */
-function flat_bundle_form($node, $form_state) {
+function flat_bundle_form($node, $form_state)
+{
+
+
     return node_content_form($node, $form_state);
 }
+
+
 
 /**
  * Implements hook_form.
@@ -568,46 +616,6 @@ function flat_collection_form($node, $form_state) {
 }
 
 
-/**
- * Redirects to flat_bundle form
- * @param $pid
- */
-function flat_bundle_node_form_fixed_collection($pid)
-{
-
-    module_load_include('php', 'flat_deposit', 'inc/drupal_queries');
-    $collections = query_user_supercollections(array($pid->id), TRUE);
-
-    if (empty($collections)) {
-
-        return t('You are not member of this collection and can"t create bundles here');
-    } else {
-
-        module_load_include('inc', 'node', 'node.pages');
-        $node_type = 'flat_bundle';
-        $form_id = $node_type . '_node_form';
-
-        global $user;
-        $new_node = new stdClass();
-        $new_node->uid = $GLOBALS['user']->uid;
-        $new_node->name = $user->name;
-        $new_node->type = $node_type;
-        $new_node->language = 'und';
-        $new_node->status = 1;
-        $new_node->sticky = 0;
-        $new_node->revision = FALSE;
-        $new_node->promote = 1;
-        $new_node->comment = 0;
-
-        node_object_prepare($new_node);
-
-        $collection = $collections ['collection_name'][0];
-        $form = drupal_get_form($form_id, $new_node, $collection);
-        return $form;
-
-    }
-}
-
 
 /**
  * Implements hook_form_FORMID_alter.
@@ -617,6 +625,7 @@ function flat_bundle_node_form_fixed_collection($pid)
  */
 function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $form_id)
 {
+
     $form['flat_parent_nid']['und']['#required'] = false; //remove after next install
 
     global $user;
@@ -627,8 +636,12 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
     hide($form['flat_external']);
     hide($form['flat_location']);
     hide($form['flat_original_path']);
+    hide($form['flat_parent_title']);
 
     hide($form['actions']['preview']);
+
+    // prevent deletion of a node to run through validation
+    $form['actions']['delete']['#limit_validation_errors'] = array();
 
 
     // Conditionally hide cmdi file field.
@@ -691,10 +704,10 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
 
             if (isset($args[1])) {
 
-                // todo set default value by adding an entry to $options-array with key nid of parent and title of the node($nid) as value
-                $collections[0]['collection_name'] = $args[1];
-                $form['flat_parent_title']['und']['#default_value'] = array($collections[0]['collection_name']);
+                $form['flat_parent_nid']['und']['#default_value'][] = (string)$args[1]['nid'];
+                $form['flat_parent_nid']['und']['#disabled'] = TRUE;
 
+                $form['flat_parent_title']['und'][0]['value']['#default_value'] = $args[1]['value'];
             }
 
             ///////////
@@ -702,8 +715,9 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
             // #state attribute makes it only visible if flat_source field is set to 'local'
             ///////////
             module_load_include('inc','flat_deposit','inc/class.Workspaces');
+            module_load_include('inc', 'node', 'node.pages');
             $form['workspace_navigation'] = Workspaces::get_container();
-
+            form_load_include($form_state, 'inc', 'node', 'node.pages');
 
             // set the local departments' project folder
             $config_names = variable_get('flat_deposit_names');
@@ -741,7 +755,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
             $form['flat_original_path']['und'][0]['value']['#default_value'] = $current;
 
             // print result to screen
-            $form['workspace_navigation']['field']['current_directory']['#markup'] = 'current selection: ' . str_replace('local://' ,'', $current);
+            $form['workspace_navigation']['field']['current_directory']['#markup'] = '</br>currently selected archive directory: <strong>' . str_replace('local://' ,'', $current. '</strong>');
 
 
             // Add button to go back to previous level
@@ -793,6 +807,8 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
 
             $form['#validate'][] = 'flat_bundle_edit_node_form_validate';
             $form['#submit'][] = 'flat_bundle_edit_node_form_submit';
+
+
 
             break;
         }

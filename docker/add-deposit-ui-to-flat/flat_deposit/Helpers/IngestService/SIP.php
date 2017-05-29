@@ -62,7 +62,14 @@ abstract class SIP
         $this->sipId = get_class($this) . '_'. $uuid;
 
         $this->logProcess = variable_get('flat_deposit_ingest_service')['log_errors'];
+
         $base_name = variable_get('flat_deposit_ingest_service')['error_log_file'];
+
+        // put feedback on screen if logging is set and error_log dir is not accessible
+        if ((!file_exists($base_name) OR !is_writable($base_name)) AND $this->logProcess){
+            drupal_set_message('Unable to write log file to log directory','warning');
+        };
+
         $this->logFile = $base_name . "/" . $this->sipId . '_' . $owner . '_' . date("Y-m-d\TH-i-s") . '.log';
 
         $this->logging(t("Starting SIP constructor with following parameters: \nowner: !owner\ncmdi file: !cmdiFileName\nparent Fid: !parentFid\ntest: !test\n", array(
