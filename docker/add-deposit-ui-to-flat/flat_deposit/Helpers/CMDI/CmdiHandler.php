@@ -429,7 +429,7 @@ function select_profile_name_ajax_callback ($form, $form_state)
 
 
 /**
- * Recursively exchanges array keys with an numeric value with '#default_value'.
+ * Recursively exchanges array keys with a numeric value with '#default_value'.
  * @param $array
  *
  * @return array|void
@@ -451,6 +451,8 @@ function exchange_numeric_key_with_default_value_property($array) {
 
                 $helper['#default_value' ] = $value;
 
+            } elseif(is_numeric(array_search($key,['month','day','year']))){
+                $helper['#default_value'][$key] = $value;
             } else{
                 $helper[$key] = $value;
             }

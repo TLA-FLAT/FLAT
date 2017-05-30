@@ -4,10 +4,6 @@ function flat_collection_add_form($form, &$form_state, $parent){
 
     drupal_set_title(t('Collection Form'));
 
-    // remove when done
-    $data =  json_decode(file_get_contents(drupal_realpath(drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormTemplates/Example_MPI_Collection.json')), TRUE);
-    unset($data['data']);
-
     // Set selected profile as this is updated on every AJAX request
     $selected_profile = !empty($form_state['values']['select_profile_name']) ? $form_state['values']['select_profile_name'] : "";
 
@@ -48,6 +44,18 @@ function flat_collection_add_form($form, &$form_state, $parent){
             'effect' => 'fade',
         ),
     );
+    $form['cmdi_file'] = array(
+        '#type' => 'file',
+        '#title' => t('Choose a file'),
+        '#states' => array(
+            'visible' => array(
+                ':input[name="select_profile_name"]' => array('value' => 'Import'),
+            ),
+            'required' => array(
+                ':input[name="select_profile_name"]' => array('value' => 'Import'),
+            ),
+        ),
+    );
 
     $form['select_policy'] = array(
         '#title' => t('Which accessibility policy do you want to apply'),
@@ -63,6 +71,8 @@ function flat_collection_add_form($form, &$form_state, $parent){
         '#required' => FALSE,
         );
 
+
+
     $form['template_container'] = array(
         '#type' => 'container',
         '#tree' => TRUE,
@@ -71,10 +81,6 @@ function flat_collection_add_form($form, &$form_state, $parent){
         ),
     );
 
-    $form['template_container']['space'] = array(
-        '#type' => 'markup',
-        '#markup' => '</br>',
-    );
 
     //**************************************************
     // Get profile specific form and attach to container
@@ -88,7 +94,53 @@ function flat_collection_add_form($form, &$form_state, $parent){
         // check if everything worked as expected
         if (is_array($fields)){
 
+            $form['template_container']['space'] = array(
+                '#markup' => '<hr>',
+            );
+
+            $is_developer = user_role_load_by_name('developer');
+
+            if ($is_developer){
+
+            $form['template_container']['add_demodata'] = array(
+                '#title' => t('Fill form with demo data'),
+                '#type' => 'checkbox',
+                '#ajax' => array(
+                    'callback' => 'select_profile_name_ajax_callback',
+                    'wrapper' => 'template-form',
+                    'method' => 'replace',
+                    'effect' => 'fade',
+                )
+            );
+
+            }
+
+
+
             $form['template_container']['elements'] = $fields;
+
+            ///////////
+            // Fill form field with loaded data
+
+            //first remove empty or preset values in form
+            if (isset($form_state['input']['template_container']['elements'])) unset($form_state['input']['template_container']['elements']);
+            $add_data = isset($form_state['values']['template_container']['add_demodata']) ? $form_state['values']['template_container']['add_demodata'] : 0;
+
+            // set default values for form elements
+            if ($add_data){
+
+                $data =  json_decode(file_get_contents(drupal_realpath(drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormTemplates/Example_MPI_Collection.json')), TRUE);
+                unset($data['data']);
+
+                $result = array_merge_recursive($form['template_container']['elements'], $data);
+                $result2 = exchange_numeric_key_with_default_value_property($result);
+
+                $form['template_container']['elements'] = $result2;
+                #$form['template_container']['elements']['field_04']['#default_value']= array('day'=>'10', 'month'=>'10', 'year'=>'2010');
+
+            }
+
+
 
         } else {
 
@@ -96,78 +148,7 @@ function flat_collection_add_form($form, &$form_state, $parent){
 
         }
 
-
     }
-/*
-    // add trigger and field to populate form with data
-    $form['import_trigger'] = array(
-        '#title' => t('Import data'),
-        '#type' => 'checkbox',
-        '#disabled' => TRUE,
-        '#ajax' => array(
-            'callback' => 'select_profile_name_ajax_callback',
-            'wrapper' => 'template-form',
-            'method' => 'replace',
-            'effect' => 'fade',
-        ),
-    );
-*/
-/*
-    $form['import_data'] = array(
-        '#type' => 'fieldset',
-        '#states' => array(
-            'visible' => array(
-                ':input[name="import_trigger"]' => array('checked' => true),
-            ),
-        ),
-    );
-*/
-
-/*
-    // add trigger and field to save data as json
-    $form['export_trigger'] = array(
-        '#title' => t('Save data'),
-        '#disabled' => TRUE,
-        '#type' => 'checkbox',
-    );
-
-
-    $form['export_data'] = array(
-        '#type' => 'fieldset',
-        '#states' => array(
-            'visible' => array(
-                ':input[name="export_trigger"]' => array('checked' => true),
-            ),
-        ),
-    );
-
-    $form['export_data']['export_name'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Choose a file name'),
-    );
-
-    $form['export_data']['export_submit'] = array(
-        '#type' => 'submit',
-        '#value' => t('Save'),
-
-    );
-
-*/
-
-    $form['cmdi_file'] = array(
-        '#type' => 'file',
-        '#title' => t('Choose a file'),
-        '#states' => array(
-            'visible' => array(
-                ':input[name="select_profile_name"]' => array('value' => 'Import'),
-            ),
-            'required' => array(
-                ':input[name="select_profile_name"]' => array('value' => 'Import'),
-            ),
-        ),
-    );
-
-
 
     $form['Submit'] = array(
         '#type' => 'submit',
@@ -185,17 +166,7 @@ function flat_collection_add_form($form, &$form_state, $parent){
     );
 
 
-    // Fill form field with loaded data
-    if ($load_profile_specific_form){
-        // review why it does not work if extra condition is chosen
-        #if (isset ($form_state['values']['import_trigger']) AND $form_state['values']['import_trigger'] === 1) {
 
-            $result = array_merge_recursive($form['template_container']['elements'], $data);
-            $result2 = exchange_numeric_key_with_default_value_property($result);
-
-            $form['template_container']['elements'] = $result2;
-        #}
-    }
 
     return $form;
 

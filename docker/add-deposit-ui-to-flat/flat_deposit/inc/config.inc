@@ -274,15 +274,21 @@ function flat_deposit_set_authenticated_user_permissions(){
 
 
 function flat_deposit_set_custom_roles(){
-    $corpman = user_role_load_by_name('corpman');
+    $roles = array('corpman', 'developer');
+    foreach ($roles as $role){
+        $role_exists = user_role_load_by_name($role);
 
-    if (!$corpman){
-        // Create corpus manager permission role
-        $role = new stdClass();
-        $role->name = 'corpman';
-        user_role_save($role);
+        if (!$role_exists){
+            // Create corpus manager permission role
+            $roleObject = new stdClass();
+            $roleObject->name = $role;
+            user_role_save($roleObject);
 
+        }
     }
+
+
+
     // Role to grant the permissions to
     $corpman_role = user_role_load_by_name('corpman');
     $corpman_rid = $corpman_role->rid;
