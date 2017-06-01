@@ -288,8 +288,8 @@ class Bundle extends SIP
         if (!$this->test AND $succeeded){
 
 
-            global $base_path;
-            $url_link = $scheme . '://' . $host . $base_path . 'islandora/object/' . $this->fid ;
+            global $base_root;
+            $url_link = $base_root . '/islandora/object/' . $this->fid ;
 
         } else {
 

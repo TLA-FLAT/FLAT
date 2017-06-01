@@ -599,7 +599,6 @@ function flat_bundle_add_bundle($pid){
 function flat_bundle_form($node, $form_state)
 {
 
-
     return node_content_form($node, $form_state);
 }
 
@@ -625,6 +624,9 @@ function flat_collection_form($node, $form_state) {
  */
 function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $form_id)
 {
+
+    if (isset($form['additional_settings'])) $form['additional_settings']['#access'] = false;
+    if (isset($form['revision_information'])) $form['revision_information']['#access'] = false;
 
     $form['flat_parent_nid']['und']['#required'] = false; //remove after next install
 
@@ -1003,7 +1005,7 @@ function flat_bundle_node_form_add_submit($form, &$form_state){
     imce_initiate_profile ($user);
 
     // Determine directories for metadata and resources
-    $meta_dir = 'metadata://' . $user->name . "/$collection/$bundle";
+    $meta_dir = 'metadata://' . str_replace('@' ,'_at_' , $user->name) . "/$collection/$bundle";
 
 
     // Resources might be locally found or external
@@ -1014,7 +1016,7 @@ function flat_bundle_node_form_add_submit($form, &$form_state){
 
     } else {
 
-        $resource_dir = 'external://' . $user->name . "/$collection/$bundle";
+        $resource_dir = 'external://' . str_replace('@' ,'_at_' , $user->name) . "/$collection/$bundle";
 
     }
 
@@ -1109,8 +1111,45 @@ function flat_bundle_view($node, $view_mode) {
     flat_deposit_set_anonymous_user_permissions();
     flat_deposit_set_authenticated_user_permissions();
     flat_deposit_set_custom_roles();
+
 */
+
     return $node;
+}
+
+
+/**
+ *
+ * Implements hook_node_view()
+ *
+ *
+ * Act on a node being viewed.
+ *
+ * @param $node
+ * The node that is being view.
+ *
+ * @param $view_mode
+ * The view mode of node.
+ *
+ * @param $langcode
+ * The language of node.
+ *
+ * @ingroup node_api_hooks
+ */
+function flat_deposit_node_view($node, $view_mode, $langcode)
+{
+    if ($node->type == 'flat_bundle' AND $view_mode == 'full' AND node_is_page($node)) {
+        unset ($node->content['flat_original_path']);
+        unset ($node->content['flat_bundle_status']);
+        unset ($node->content['flat_parent_nid']);
+        unset ($node->content['flat_parent_title']);
+        unset ($node->content['flat_cmdi_option']);
+        unset ($node->content['flat_policies']);
+        unset ($node->content['flat_source']);
+        unset ($node->content['flat_external']);
+        unset ($node->content['flat_location']);
+    }
+
 }
 
 /**
@@ -1124,7 +1163,7 @@ function flat_bundle_delete($node){
     $wrapper = entity_metadata_wrapper('node',$node);
     $collection = $wrapper->flat_parent_title->value();
 
-    $tail = $user->name . "/$collection/$bundle";
+    $tail = str_replace('@' ,'_at_' , $user->name) . "/$collection/$bundle";
 
     $bundle_resources_directory = drupal_realpath('external://') . "/$tail";
     $bundle_metadata_directory = drupal_realpath('metadata://') . "/$tail";
@@ -1216,8 +1255,15 @@ function flat_deposit_block_view($delta = '')
                 'href' => 'workspace',
                 'image_path' => drupal_get_path('module','flat_deposit') .'/Images/Upload.png',
             ),
+            'link_my_collections' => array(
+                'name' => 'My collections',
+                'href' => 'my_collections',
+                'image_path' => drupal_get_path('module','flat_deposit') .'/Images/Manage_coll.png',
+            ),
+
         );
 
+        $output = array();
         // Create complete variables to be sent to theme_image_link
         foreach ($image_links as $key => $image_link) {
 
@@ -1236,8 +1282,8 @@ function flat_deposit_block_view($delta = '')
                     'attributes' => array(),
                 )
             );
+
             // Attach render array to array of outputted block items.
-            $output = array();
             $output [$key] = array(
                 '#prefix' => '<div>',
                 '#type' => 'markup',
@@ -1246,16 +1292,11 @@ function flat_deposit_block_view($delta = '')
             );
         }
 
-            $block = array (
+        $block = array (
             'subject' => t('FLAT Deposit Main Menu'),
             'content' => array(
                 'deposit_menus' =>$output )
-            );
-
-
-
-
-
+        );
 
     }
 
@@ -1379,36 +1420,6 @@ function flat_deposit_page_alter(&$page)
 }
 
 
-
-/**
- * Checks if external location specified by user is accessible by drupal
-
- * @param $location
- * @return bool|string
- */
-function flat_deposit_external_location_is_accessible($location)
-{
-
-
-    $config = variable_get('flat_deposit_paths');
-
-    // Check accessibility root directory
-    if (!is_writable($config['alternate_dir'])){
-        $message =  sprintf('External root directory %s does not exist or is not writable. Please contact administrator',$config["alternate_dir"]);
-        return $message;
-    };
-
-    // Check accessibility specific user directory
-    global $user;
-    $alternate_full_path = $config['alternate_dir'] . $user->name . $config['alternate_subdir'] . "/" . $location;
-
-    if (!is_writable($alternate_full_path)){
-        $message = sprintf('External user directory %s does not exist or is not writable.',$alternate_full_path);
-        return $message;
-    };
-
-    return TRUE;
-}
 
 /**
  * Implements hook_view().

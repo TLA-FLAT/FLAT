@@ -82,11 +82,13 @@ function flat_bundle_action_form($form, &$form_state, $vars)
     );
 
     global $user;
-    if ($user->name == 'admin') {
+    if (user_role_load_by_name('developer')){
         $form['options']['serial'] = array(
             '#type' => 'checkbox',
             '#title' => t('Serial processing (debug mode)'),
             '#prefix' => '</p>',
+            '#default_value' => 1,
+
         );
     }
 
@@ -283,7 +285,7 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
         $root = $config['alternate_dir'];
         $sub = $config['alternate_subdir'];
 
-        $full_path = $root . $user->name . $sub . "/$location";
+        $full_path = $root . str_replace('@' ,'_at_' , $user->name) . $sub . "/$location";
 
         if (!file_exists($full_path)){
 
