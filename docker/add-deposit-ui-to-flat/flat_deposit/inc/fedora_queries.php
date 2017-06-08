@@ -36,12 +36,12 @@ function query_owned_collections($user)
             SELECT ?pid ?label ?created
             FROM <#ri>
             WHERE {
-                ?object <http://purl.org/dc/elements/1.1/identifier> ?pid;
+                ?pid fm:label ?label ;
                 fm:state fm:Active;
                 fm:label ?label;
                 fm:createdDate ?created;
                 fm:ownerId ?owner;
-                fm:hasModel <info:fedora/islandora:compoundCModel>;
+                fm:hasModel <info:fedora/islandora:collectionCModel>;
                 fm:ownerId '" . $user . "'
             }
             ORDER BY DESC(?created)";
