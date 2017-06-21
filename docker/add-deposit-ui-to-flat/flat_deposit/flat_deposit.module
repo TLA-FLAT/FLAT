@@ -482,14 +482,11 @@ function flat_deposit_theme() {
                 )
             )
         ),
-        'node_actions' => array(
-            'variables' => array(
-                'title' => FALSE,
-                'status' => FALSE,
-                'nid' => FALSE,
-            ),
-        ),
+
         'flat_collection_form_table' => array(
+            'render element' => 'form',
+        ),
+        'flat_bundle_action_table' => array(
             'render element' => 'form',
         ),
     );
@@ -497,6 +494,8 @@ function flat_deposit_theme() {
     return $themes;
 
 }
+
+
 
 
 /**
@@ -520,6 +519,7 @@ function theme_image_link($variables) {
 }
 
 
+
 function theme_flat_collection_form_table($variables)
 {
     // Note: $form will be $form['table_container'] from your
@@ -533,17 +533,46 @@ function theme_flat_collection_form_table($variables)
 
     foreach(element_children($form) as $index) {
 
-      $row = array();
+        $row = array();
 
-      $row[] = drupal_render($form[$index]['label']);
-      $row[] = drupal_render($form[$index]['pid']);
-      $row[] = drupal_render($form[$index]['link']);
-      $row[] = drupal_render($form[$index]['activate']);
-      $rows[] = $row;
-  }
+        $row[] = drupal_render($form[$index]['label']);
+        $row[] = drupal_render($form[$index]['pid']);
+        $row[] = drupal_render($form[$index]['link']);
+        $row[] = drupal_render($form[$index]['activate']);
 
-  // Return the themed table:
-  return theme('table', array('header' => $header, 'rows' => $rows));
+        $rows[] = $row;
+    }
+
+    // Return the themed table:
+    return theme('table', array('header' => $header, 'rows' => $rows));
+}
+
+
+function theme_flat_bundle_action_table($variables)
+{
+    // Note: $form will be $form['table_container'] from your
+    // form definition, as that is the element that #theme was
+    // applied to.
+    $form = $variables['form'];
+
+// Define our $header and $rows variables
+    $header = array(t('Bundle Name'), t('Status'),t('Metadata'), t('Select'));
+    $rows = array();
+
+    foreach(element_children($form) as $index) {
+
+        $row = array();
+
+        $row[] = drupal_render($form[$index]['title']);
+        $row[] = drupal_render($form[$index]['status']);
+        $row[] = drupal_render($form[$index]['metadata']);
+        $row[] = drupal_render($form[$index]['checked']);
+
+        $rows[] = $row;
+    }
+
+    // Return the themed table:
+    return theme('table', array('header' => $header, 'rows' => $rows));
 }
 
 
@@ -1075,15 +1104,23 @@ function flat_collection_view($node, $view_mode) {
             '#weight' => 10,
             '#theme' => 'link',
             '#path' => 'islandora/object/' . $val,
-            '#text' => t('Shortcut to collection'),
+            '#text' => t('Shortcut to archived collection'),
             '#options' => array(
                 'attributes' => array(),
                 'html' => FALSE,
                 ),
             );
         #flat_fid
-    }
 
+        // Add form to node
+        module_load_include('inc', 'flat_deposit','/inc/flat_collection.bundle_actions');
+        $extra_form = drupal_get_form('flat_collection_bundle_action_form', $node);
+        $node->content['extra_form'] = $extra_form;
+        $node->content['extra_form']['#weight'] = 998;
+
+
+
+    }
 
     return $node;
 }
@@ -1095,51 +1132,23 @@ function flat_collection_view($node, $view_mode) {
  */
 function flat_bundle_view($node, $view_mode) {
 
-    $info = field_info_field('flat_cmdi_file');
 
     $wrapper = entity_metadata_wrapper('node', $node);
-    $location = $wrapper->flat_location->value();
-
-
-
-
-/*
-
-// switch off promotion of new entries to front
-    $node_options = variable_get('node_options_flat_bundle', array());
-    $promote_key = array_search('promote', $node_options);
-    if ($promote_key !== false) {
-        unset($node_options[$promote_key]);
-        variable_set('node_options_flat_bundle', $node_options);
-    }
-
-
-
- */
-
-    #flat_deposit_enable();
-    #$config = variable_get('content_access_flat_bundle');
-
 
     if ($view_mode == 'full' && node_is_page($node)) {
         // Breadcrumb navigation.  l() escapes title, so we should not escape !name.
         drupal_set_breadcrumb(array(
-            l(t('Home'), NULL),
-            l(t("!name's bundles", array(
-                '!name' => format_username($node))), 'node/')));
+                l(t('Home'),  NULL),
+                l(t('!name', array ('!name'=> $wrapper->flat_parent_title->value())),'node/' . $wrapper->flat_parent_nid->value()),
+        ));
+
 
         $exception = field_get_items('node', $node, 'flat_exception')[0]['value'];
         if ($exception) {
             $node->content["flat_exception"] = field_view_field('node', $node, 'flat_exception');
         }
     }
-    /*
-     module_load_include('inc', 'flat_deposit', 'inc/config');
-    flat_deposit_set_anonymous_user_permissions();
-    flat_deposit_set_authenticated_user_permissions();
-    flat_deposit_set_custom_roles();
 
-*/
 
     return $node;
 }
@@ -1267,21 +1276,16 @@ function flat_deposit_block_view($delta = '')
 
             $node = menu_get_object();
             $node_wrapper = entity_metadata_wrapper('node', $node);
-            $status = $node_wrapper->flat_bundle_status->value();
 
-            $block = array
-            (
+            module_load_include('inc','flat_deposit','inc/flat_bundle.actions_form');
+
+
+            $form = drupal_get_form('flat_bundle_action_form');
+            $rendered_form = drupal_render($form);
+
+            $block = array(
                 'subject' => '',
-                'content' => array
-                (
-                    'node_actions' => array
-                    (
-                        '#theme' => 'node_actions',
-                        '#title' => $node->title,
-                        '#status' => $status,
-                        '#nid' => $node->nid,
-                    ),
-                ),
+                'content' => $rendered_form,
             );
             break;
 
@@ -1338,7 +1342,7 @@ function flat_deposit_block_view($delta = '')
 
         case 'flat_deposit_collections':
             module_load_include('inc','flat_deposit','/inc/flat_collection.fedora_collections_actions');
-            $block['subject'] = t('All owned collections in repository');
+            $block['subject'] = t('All inactive collections in repository');
             $block['content'] = drupal_get_form('flat_fedora_collections_form');
             break;
 
@@ -1354,20 +1358,6 @@ function flat_deposit_block_view($delta = '')
 
 
 
-
-/**
- * Themeing function of the node action block
-
- */
-function theme_node_actions($variables)
-{
-
-    module_load_include('inc','flat_deposit','inc/flat_bundle.actions_form');
-    $form = drupal_get_form('flat_bundle_action_form',$variables);
-    $rendered_form = drupal_render($form);
-
-    return $rendered_form;
-}
 
 
 

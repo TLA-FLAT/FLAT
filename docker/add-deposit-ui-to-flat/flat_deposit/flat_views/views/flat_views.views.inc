@@ -25,6 +25,8 @@ function flat_views_views_data_alter(&$data) {
           'click sortable' => FALSE,
       ),
   );
+    
+
   $data['flat_supercollection']['date_created'] = array(
       'title' => t('Created date'),
       'help' => t('The date the relationship was created.'),

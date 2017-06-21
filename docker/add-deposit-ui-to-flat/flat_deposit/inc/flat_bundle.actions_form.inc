@@ -1,9 +1,9 @@
 <?php
 
 
-function flat_bundle_action_form($form, &$form_state, $vars)
+function flat_bundle_action_form($form, &$form_state)
 {
-
+    form_load_include($form_state, 'inc', 'flat_deposit', 'inc/flat_bundle_action_helpers');
 
     $form['actions']['bundle_image'] = array(
         '#type' => 'image_button',
@@ -61,7 +61,7 @@ function flat_bundle_action_form($form, &$form_state, $vars)
     $form['actions']['archive_bundle'] = array(
         '#type' => 'submit',
         '#value' => t('Archive bundle'),
-        '#validate' => array('flat_bundle_action_form_archive_validate'),
+        #'#validate' => array('flat_bundle_action_form_archive_validate'),
         #    '#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
         '#disabled' => TRUE,
     );
@@ -81,8 +81,18 @@ function flat_bundle_action_form($form, &$form_state, $vars)
         '#suffix' => '<div><br></div>',
     );
 
-    global $user;
-    if (user_role_load_by_name('developer')){
+    $node = menu_get_object();
+
+    $form['values']['node'] = array(
+        '#type' => 'value',
+        '#value' => $node
+    );
+
+    $form['values']['origin_url'] = array(
+        '#type' => 'value',
+        '#value' => 'node/' . $node->nid);
+
+    if (user_role_load_by_name('developer')) {
         $form['options']['serial'] = array(
             '#type' => 'checkbox',
             '#title' => t('Serial processing (debug mode)'),
@@ -92,20 +102,16 @@ function flat_bundle_action_form($form, &$form_state, $vars)
         );
     }
 
+
+    return $form;
+}
+
+
+
+function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $form_id){
+
     $node = menu_get_object();
     $wrapper = entity_metadata_wrapper('node', $node);
-
-    $form['values']['node'] = array(
-        '#type' => 'value',
-        '#value' => $node
-    );
-
-    $form['values']['origin_url'] = array(
-        '#type' => 'value',
-        '#value' => 'node/' . $vars['nid']);
-
-
-
 
     // Specify which handlers to become active and which bundle_image to display
     $form['actions']['edit_bundle']['#disabled'] = TRUE;
@@ -164,56 +170,48 @@ function flat_bundle_action_form($form, &$form_state, $vars)
         $form['actions']['describe_bundle']['#disabled'] = FALSE;
     }
 
-
-    return $form;
-
 }
 
+
+/**
+ * Implements hook_form_validate.
+ *
+ * Validation of opening the bundle data browser
+ *
+ */
 function flat_bundle_action_form_describe_validate($form, &$form_state){
 
+    form_set_error('debug', "Debug");
     $node = $form_state['values']['node'];
     $wrapper = entity_metadata_wrapper('node', $node);
 
     $parent_nid = $wrapper->flat_parent_nid->value();
     if ($parent_nid === '0'){
         form_set_error('describe_bundle', "To generate or edit a cmdi file, you need to select a collection first");
-        drupal_goto($form_state['values']['origin_url']);
-        return;
+        return $form;
 
     }
 
-    return $form;
-
 }
 
+/**
+ * Implements hook_form_validate.
+ *
+ * Validation of opening the bundle data browser
+ *
+ */
 function flat_bundle_action_form_reopen_validate($form, &$form_state){
 
-    module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
-
     $node = $form_state['values']['node'];
-    $wrapper = entity_metadata_wrapper('node', $node);
+    $error = move_node_data($node->nid);
+    if (!empty($error)){
 
+        form_set_error('reopen', t('Unable to move bundle !what to unfreeze', array('!what'=>implode(' AND ', $error))));
 
-
-    $move = FlatBundle::moveBundleData($node, 'data', 'unfreeze');
-    if (!$move){
-        form_set_error('reopen', 'Unable to move bundle data to unfreeze');
-        drupal_goto($form_state['values']['origin_url']);
     }
 
-    if (isset($wrapper->flat_cmdi_file)){
-        $move = FlatBundle::moveBundleData($node, 'metadata', 'unfreeze');
-        if (!$move){
-            form_set_error('reopen', 'Unable to move bundle metadata to unfreeze');
-            drupal_goto($form_state['values']['origin_url']);
-        }
-
-
-    };
-
-    return $form;
-
 }
+
 
 
 
@@ -221,140 +219,75 @@ function flat_bundle_action_form_reopen_validate($form, &$form_state){
 
 function flat_bundle_action_form_validate_validate($form, &$form_state){
 
-
     $node = $form_state['values']['node'];
-    $wrapper = entity_metadata_wrapper('node',$node);
+    $nid = $node->nid;
 
-    global $user;
-    $user_id = $user->uid;
+    $parent_is_known = parent_is_known($nid);
+    $has_cmdi = has_cmdi($nid);
+    $valid_xml = is_valid_xml($nid, $has_cmdi);
+    $good_name = has_correct_filename($nid);
+    $file_exists = bundle_file_exists($nid);
+    $user_has_permissions = user_has_permissions($nid);
+
 
     // validate that a collection has been selected
-    if ((integer)$wrapper->flat_parent_nid->value() === 0){
+    if ($parent_is_known === false){
         form_set_error('error', "Bundle has not been assigned to a collection");
-        drupal_goto($form_state['values']['origin_url']);
-        return;
-
+        return $form;
     }
 
     // In case no cmdi file exists
-    if (!$wrapper->flat_cmdi_file->value()) {
+    if ($has_cmdi === false){
         form_set_error('error', "No metadata file has been specified");
-        drupal_goto($form_state['values']['origin_url']);
-        return;
+        return $form;
     }
-
-
-
- // In case of wrong naming
-    $exploded_uri = explode('/', $wrapper->flat_cmdi_file->value()['uri']);
-    $file_name = end($exploded_uri);
-
-    if ($file_name !== 'record.cmdi') {
-        form_set_error('validate_bundle', t("Metadata file has wrong file name"));
-        drupal_goto($form_state['values']['origin_url']);
-        return;
-    }
-
-    /*
-    // Check if target freeze directory exists
-    if (!file_exists(drupal_realpath('freeze://' . $user->name .'/' . $wrapper->flat_parent_title->value() . '/' . $node->title . '/metadata'))){
-
-        form_set_error('validate_bundle', "Target directory for metafile does not exist");
-        drupal_goto($form_state['values']['origin_url']);
-        return;
-    }
-*/
 
     // Quick and dirty Check cmdi valid xml
-    $file_field = $wrapper->flat_cmdi_file->value();
-    $attached_file = file_load($file_field['fid']);
-    $xml = simplexml_load_file(drupal_realpath($attached_file->uri));
-    if (!$xml) {
-
+    if ($valid_xml === false){
         form_set_error('validate_bundle', t("Attached file is no valid xml file"));
-        drupal_goto($form_state['values']['origin_url']);
-        return;
+        return $form;
+    }
+
+    // In case of wrong naming
+    if ($good_name === false){
+        form_set_error('validate_bundle', t("Metadata file has wrong file name (record.cmdi expected)"));
+        return $form;
     }
 
     // Check existence external location
+    if ($file_exists === false){
+        form_set_error('validate_bundle',t('File location does not exist (:path) ' , array(':path' => '/path/to/file')));
+        return $form;
 
-    $external = $wrapper->flat_external->value();
-    $location = $wrapper->flat_location->value();
-    if ($external ){
-        $config = variable_get('flat_deposit_paths');
-        $root = $config['alternate_dir'];
-        $sub = $config['alternate_subdir'];
-
-        $full_path = $root . str_replace('@' ,'_at_' , $user->name) . $sub . "/$location";
-
-        if (!file_exists($full_path)){
-
-            form_set_error('validate_bundle',t('External location does not exist (:path) ' , array(':path' => $full_path)));
-            drupal_goto($form_state['values']['origin_url']);
-            return;
-        }
     }
 
     // Check user permissions
-    $bundle_id = $node->uid;
-
-    if($user_id === $bundle_id OR user_access('validate bundles')) {
-
-    } else {
-
+    if ($user_has_permissions === false){
         form_set_error('validate_bundle', t('User has not enough privileges to perform requested action'));
-        drupal_goto($form_state['values']['origin_url']);
-        return;
+        return $form;
     }
-
-
-
-
 
 }
 
 
-
-function flat_bundle_action_form_archive_validate($form, &$form_state){
-
-    $node = $form_state['values']['node'];
-
-    // Check user permissions
-    global $user;
-    $user_id = $user->uid;
-
-    $bundle_id = $node->uid;
-
-    if (($user_id === $bundle_id AND user_access('certified user')) OR user_access('ingest bundles')) {
-
-        return $form;
-
-    } else {
-
-        form_set_error('archive_bundle', t('User has not enough privileges to perform requested action'));
-        drupal_goto($form_state['values']['origin_url']);
-        return $form;
-    }
-
-
-}
-
-
-function flat_bundle_action_form_submit($form, &$form_state){
+function flat_bundle_action_form_submit($form, &$form_state)
+{
 
     $node = $form_state['values']['node'];
+    $wrapper = entity_metadata_wrapper('node', $node);
+
     $action = $form_state['clicked_button']['#value'];
 
-    switch ($action){
+    switch ($action) {
         case 'Bundle image':
         case 'Upload data':
             global $user;
-            $form_state['redirect'] = array('user/' . $user->uid  . '/imce');
+            $form_state['redirect'] = array('user/' . $user->uid . '/imce');
             break;
 
 
         case 'Fill in metadata for bundle':
-            $url = array('node/' . $node->nid  . '/cmdi');
+            $url = array('node/' . $node->nid . '/cmdi');
             $form_state['redirect'] = $url;
             break;
 
@@ -362,107 +295,35 @@ function flat_bundle_action_form_submit($form, &$form_state){
         case 'Validate bundle':
         case 'Archive bundle':
 
-            global $user;
+            $debug = isset($form_state['values']['serial']) ? $form_state['values']['serial'] : false;
 
-            // background service http request settings
-            $host = variable_get('flat_deposit_ingest_service')['host_name'];
-            $scheme = variable_get('flat_deposit_ingest_service')['host_scheme'];
-            $base = $GLOBALS['base_path'];
+            send_request($node->nid, $action, $debug);
 
-            $sid = $user->sid;
-            $name = array_search($sid,$_COOKIE);
+            $processed = ($wrapper->flat_bundle_status->value() == 'valid') ? 'archived' : 'validated';
 
-            // create array containing data needed by the ingest service
-            $data_to_post = array();
-            $data_to_post['drupal_path'] = DRUPAL_ROOT;
-            $data_to_post['nid'] = $node->nid;
-            $data_to_post['sid'] = $sid;
-        $data_to_post['test'] = $action;
+            $form_state['redirect'] = 'workspace';
+            drupal_set_message("Bundle is being $processed");
 
-
-
-        $options = array(
-                'method' => 'POST',
-                'data' => $data_to_post,
-                'blocking' => FALSE,
-                'headers' => array(
-                    // Set the Host header to self.
-                    'Host' => $host,
-                ),
-            );
-
-
-            $url = $scheme . '://' . $host . $base . drupal_get_path('module', 'flat_deposit') . '/Helpers/IngestService/IngestService.php'; #?user='.$user->name. '&pass='.$user->pass
-
-
-        // Debug mode
-        $wrapper = entity_metadata_wrapper('node', $node);
-        $status = $wrapper->flat_bundle_status->value();
-
-
-        if (isset($form_state['values']['serial'])) {
-
-            if ($form_state['values']['serial']) {
-
-
-                $ch = curl_init();
-                curl_setopt_array($ch, array(
-
-                    CURLOPT_URL => $url,
-
-                    CURLOPT_COOKIE => "XDEBUG_SESSION=PHPSTORM",
-                    CURLOPT_POST => sizeof($data_to_post),
-                    CURLOPT_POSTFIELDS => $data_to_post));
-
-                $result = curl_exec($ch);
-
-                if ($errno = curl_errno($ch)) {
-                    $error_message = curl_strerror($errno);
-                    drupal_set_message("cURL error ({$errno}):\n {$error_message}",'error');
-                }
-                curl_close($ch);
-
-            } else {
-
-                // normal background mode
-                $request = httprl_request($url, $options);
-
-                // Execute request.
-                $response = httprl_send_request();
-            }
-        }
-
-
-        $processed = ($status == 'valid') ? 'archived' : 'validated';
-
-        $form_state['redirect'] = 'workspace';
-        drupal_set_message("Bundle is being $processed");
-
-
-        break;
-
+            break;
 
 
         case 'Edit bundle':
-            $url = array('node/' . $node->nid  . '/edit');
+            $url = array('node/' . $node->nid . '/edit');
             $form_state['redirect'] = $url;
             break;
 
 
         case 'Delete bundle':
-            $url = array('node/' . $node->nid  . '/delete');
+            $url = array('node/' . $node->nid . '/delete');
             $form_state['redirect'] = $url;
+
             break;
 
         case 'Re-open bundle':
 
-
-            $node = $form_state['values']['node'];
-            $wrapper = entity_metadata_wrapper('node', $node);
             $wrapper->flat_bundle_status->set('open');
             $wrapper->save();
-            drupal_set_message('Bundle is open and can be modified');
-            $form_state['redirect'] = $form_state['values']['origin_url'];
+            drupal_set_message('Bundle is open and can be modified again');
 
             break;
 

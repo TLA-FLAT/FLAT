@@ -52,7 +52,6 @@ function flat_fedora_collections_form($form, &$form_state)
     foreach ($sparql_query_results as $result){
 
 
-        #$obj = $ri = $connection->repository->getObject($pid);
         $pid = $result['pid']['value'];
         $label = $result['label']['value'];
         $url_link = 'islandora/object/' . $pid ;
@@ -60,6 +59,9 @@ function flat_fedora_collections_form($form, &$form_state)
         if (in_array($pid, $existing)){
             continue;
         }
+
+        //
+        #$obj = $ri = $connection->repository->getObject($pid);
 
         $data[$count]['label'] = $label;
         $data[$count]['pid'] = $pid;
