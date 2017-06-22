@@ -128,14 +128,16 @@ function check_completeness($type, $nid, $index, $form_state)
 
         $status = $form_state['values']['data'][$index]['status'];
 
-        if ($type == 'validate'){
-
-        $correct_status = ($status == 'open' OR $status == 'failed') ? true : false;
-
-        } else {
-
-            $correct_status = ($status == 'valid') ? true : false;
-
+        switch ($type){
+            case  'validate':
+                $correct_status = ($status == 'open' OR $status == 'failed') ? true : false;
+                break;
+            case  'archive':
+                $correct_status = ($status == 'valid') ? true : false;
+                break;
+            case  'reopen':
+                $correct_status = ($status == 'valid') ? true : false;
+                break;
         }
 
         $complete = ($correct_status AND $correct_meta) ? true : false;

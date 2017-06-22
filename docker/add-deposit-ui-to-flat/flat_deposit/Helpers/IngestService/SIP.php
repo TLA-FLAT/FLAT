@@ -87,7 +87,7 @@ abstract class SIP
 
         $this->test = $test;
 
-        $this->frozenSipDir = drupal_realpath('freeze://') . '/SIPS/' .  $this->owner . '/' . $this->sipId . '/';
+        $this->frozenSipDir = drupal_realpath('freeze://') . '/SIPS/' .  str_replace('@', '_at_', $this->owner) . '/' . $this->sipId . '/';
 
         $this->cmdiTarget = $this->frozenSipDir .  '/data/metadata/record.cmdi';
 
