@@ -181,7 +181,6 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
  */
 function flat_bundle_action_form_describe_validate($form, &$form_state){
 
-    form_set_error('debug', "Debug");
     $node = $form_state['values']['node'];
     $wrapper = entity_metadata_wrapper('node', $node);
 

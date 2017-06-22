@@ -109,9 +109,16 @@ function flat_collection_bundle_action_form_reopen_validate($form, &$form_state)
     $nids = get_nids($form_state);
     foreach ($nids as $index => $nid) {
 
-        $error = move_node_data($nid);
+        $error = [];
+        $complete = check_completeness('reopen', $nid, $index, $form_state);
 
-        if (!empty($error)){
+        if($complete) {
+
+            $error = move_node_data($nid);
+
+        }
+
+        if (!empty($error)) {
 
             $form_state['values']['reopen_error'][] = $nid;
 

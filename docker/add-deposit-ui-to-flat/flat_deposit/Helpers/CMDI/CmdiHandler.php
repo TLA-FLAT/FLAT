@@ -384,12 +384,13 @@ class CmdiHandler
         }
 
         $config = variable_get('flat_deposit_fits');
-        $url = $config['url'] . '/examine?file=' .$fName;
+        $url = $config['url'] . '/examine?file=';
+        $query = rawurlencode($fName);
         $port = $config['port'];
 
         $ch = curl_init();
         curl_setopt_array($ch, array(
-                CURLOPT_URL => $url,
+                CURLOPT_URL => $url . $query,
                 CURLOPT_PORT => $port,
                 CURLOPT_RETURNTRANSFER => 1,
                 CURLOPT_CONNECTTIMEOUT => 5,

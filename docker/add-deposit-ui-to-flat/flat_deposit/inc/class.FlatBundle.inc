@@ -125,7 +125,7 @@ class FlatBundle
         $collection_name = ($toNewCollection != '') ? $toNewCollection : $wrapper->flat_parent_title->value();
 
         $usr = user_load($node->uid);
-        $tail = $usr->name . "/$collection_name/$bundle";
+        $tail = str_replace('@', '_at_' , $usr->name) . "/$collection_name/$bundle";
 
 
         if ($data_type == 'metadata') {
