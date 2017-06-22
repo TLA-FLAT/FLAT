@@ -305,23 +305,31 @@ function flat_collection_add_form_final_validate($form, &$form_state)
 function flat_collection_add_form_submit($form, &$form_state){
 
     $owner = user_load_by_name($form_state['values']['data']['owner']);
+    $uid = $owner->uid;
+    $label = $form_state['values']['data']['label'];
+    $fid = $form_state['values']['data']['fid'];
+
+    create_collection_node($label, $uid, $fid);
+
+    drupal_set_message('New collection item has been created');
+    $form_state['redirect']= 'islandora/object/' . $form_state['values']['data'][ 'parentFid'];
+
+}
+
+
+function create_collection_node($label, $uid, $fid){
+
     $new_node = new stdClass();
     $new_node->type = 'flat_collection';
     $new_node->language = 'und';
-    $new_node->title = $form_state['values']['data']['label'];
-    $new_node->uid = $owner->uid;
+    $new_node->title = $label;
+    $new_node->uid = $uid;
     $new_node->status = 1;
     $new_node->sticky = 0;
     $new_node->promote = 0;
     $new_node->format = 3;
     $new_node->revision = 0;
-    $new_node->flat_fid['und'][0]['value'] = $form_state['values']['data']['fid'];
+    $new_node->flat_fid['und'][0]['value'] = $fid;
     node_save($new_node);
-
-
-
-
-    drupal_set_message('New collection item has been created');
-    $form_state['redirect']= 'islandora/object/' . $form_state['values']['data'][ 'parentFid'];
 
 }
