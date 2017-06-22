@@ -188,6 +188,11 @@ ADD drupal/flat-logo.png /var/www/html/$FLAT_NAME/sites/default/files/flat-logo.
 ADD drupal/flat /var/www/html/$FLAT_NAME/sites/all/modules/custom/
 ADD drupal/flat-logo.php /tmp/
 
+# To check accessibility we use a HEAD request using the http(s)?://<user>:<pass>@<host>(:<port>)?/<path>... support of drupal_http_request
+# however if the password does contain funny characters no escaping is supported
+# this change allows to use rawurlencode, as drupal_http_request will now do a rawurldecode
+RUN sed -i "s| \$uri\['pass'\] | rawurldecode(\$uri['pass']) |g" /var/www/html/$FLAT_NAME/includes/common.inc
+
 RUN mkdir /tmp/tuque &&\
 	cd /tmp/tuque &&\
 	wget "https://github.com/islandora/tuque/archive/1.6.zip" &&\
@@ -259,7 +264,7 @@ RUN service supervisor start &&\
 	supervisorctl stop all &&\
 	service supervisor stop &&\
 	/wait-sergtsop.sh
-    
+
 # security patch for islandora
 RUN	service supervisor start &&\
 	/wait-postgres.sh &&\

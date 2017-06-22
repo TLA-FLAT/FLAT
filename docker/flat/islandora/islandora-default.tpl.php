@@ -12,7 +12,7 @@
  *    $object->id                - The identifier of the object.
  *    $object->state             - The state of this object.
  *    $object->createdDate       - The date the object was ingested.
- *    $object->lastModifiedDate  - The date teh object was last mofified.
+ *    $object->lastModifiedDate  - The date the object was last mofified.
  *
  * to get the contents of a datastream
  *    $object['dsid']->content
@@ -70,14 +70,23 @@ foreach($datastreams as $key => $value) {
   $available_ds[] = $value['id'];
 }
 
-function check_ds_access($ds) {
+function check_ds_access($object,$ds,$user) {
+  if (!isset($user)) {
+    global $user;
+  }
   $options = array(
     'absolute' => TRUE
   );
-  $url = url(islandora_datastream_get_url($ds, 'download'), $options);
+  $url = variable_get('islandora_base_url', 'http://localhost:8080/fedora');
+  if ($user->uid)
+      $url = str_replace("://","://" . rawurlencode($user->name) . ":" . rawurlencode($user->pass) . "@", $url);
+  else
+      $url = str_replace("://","://anonymous:anonymous@", $url);
+  $url = $url . "/objects/" . $object->id . "/datastreams/" . $ds->id . "/content";
+  $url = url($url, $options);
   $options = array(
-    'method' => 'HEAD',
-    'headers' => array('Cookie' => session_name()."=".session_id())
+//    'context' => stream_context_create(array('ssl' => ['verify_peer' => FALSE, 'verify_peer_name' => FALSE])),
+    'method' => 'HEAD'
   );
   $result = drupal_http_request($url,$options);
   return ($result->code==200);
@@ -114,7 +123,7 @@ function check_ds_access($ds) {
       <?php foreach($datastreams as $key => $value): ?>
         <?php if (isset($value['id']) and in_array($value['id'], $show_ds)): ?>
           <tr>
-              <td><?php if(isset($value['label_link']) and check_ds_access($islandora_object[$value['id']])): ?><?php print $value['label_link']; ?><?php else: ?><?php print $value['label']; ?><?php endif; ?></td>
+              <td><?php if(isset($value['label_link']) and check_ds_access($islandora_object,$islandora_object[$value['id']],$user)): ?><?php print $value['label_link']; ?><?php else: ?><?php print $value['label']; ?><?php endif; ?></td>
               <td><?php if(isset($value['size'])): ?><?php print $value['size']; ?><?php endif; ?></td>
               <td><?php if(isset($value['mimetype'])): ?><?php print $value['mimetype']; ?><?php endif; ?></td>
               <td><?php if(isset($value['created_date'])): ?><?php print $value['created_date']; ?><?php endif; ?></td>
