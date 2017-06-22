@@ -189,11 +189,10 @@ ADD drupal/flat /var/www/html/$FLAT_NAME/sites/all/modules/custom/
 ADD drupal/flat-logo.php /tmp/
 
 # To check accessibility we use a HEAD request using the http(s)?://<user>:<pass>@<host>(:<port>)?/<path>... support of drupal_http_request
-# however if the password does contain funny characters no escaping is supported
+# however if the username or password does contain funny characters no escaping is supported
 # this change allows to use rawurlencode, as drupal_http_request will now do a rawurldecode
 RUN sed -i "s|base64_encode(\$uri\['user'\]|base64_encode(rawurldecode(\$uri['user'])|g" /var/www/html/$FLAT_NAME/includes/common.inc &&\
 	sed -i "s| \$uri\['pass'\] | rawurldecode(\$uri['pass']) |g" /var/www/html/$FLAT_NAME/includes/common.inc
-RUN grep pass /var/www/html/$FLAT_NAME/includes/common.inc
 
 RUN mkdir /tmp/tuque &&\
 	cd /tmp/tuque &&\
