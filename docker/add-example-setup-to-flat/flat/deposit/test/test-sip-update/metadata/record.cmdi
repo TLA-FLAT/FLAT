@@ -19,7 +19,6 @@
          </ResourceProxy>
          <ResourceProxy id="h2">
             <ResourceType mimetype="text/plain">Resource</ResourceType>
-            <!-- https://archive.org/details/GreenHornetComics1 -->
             <ResourceRef lat:localURI="../resources/hello.txt">https://hdl.handle.net/12345/comic-1-txt</ResourceRef>
          </ResourceProxy>
       </ResourceProxyList>

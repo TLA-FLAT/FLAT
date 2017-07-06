@@ -14,6 +14,7 @@ ADD flat/deposit/test/cmd /app/flat/test/cmd
 ADD flat/deposit/test/data /app/flat/test/data
 ADD flat/deposit/test/test-sip /app/flat/test/test-sip
 ADD flat/deposit/test/test-sip-update /app/flat/test/test-sip-update
+ADD flat/deposit/test/test-sip-delete /app/flat/test/test-sip-delete
 
 # add sample user(s)
 RUN	service supervisor start &&\

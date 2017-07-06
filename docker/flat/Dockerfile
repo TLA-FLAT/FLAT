@@ -143,7 +143,9 @@ RUN chmod u+x /wait-tomcat.sh &&\
 
 # policies
 RUN rm -v /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/deny-purge-*
-RUN rm /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/deny-policy-management-if-not-administrator.xml
+RUN rm -v /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/deny-policy-management-if-not-administrator.xml
+RUN rm -v /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/deny-inactive-or-deleted-objects-or-datastreams-if-not-administrator.xml
+ADD fedora/deny-deleted-objects-or-datastreams-if-not-administrator.xml /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/deny-deleted-objects-or-datastreams-if-not-administrator.xml
 ADD fedora/permit-anything-to-localhost.xml /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/permit-anything-to-localhost.xml
 ADD fedora/deny-unallowed-file-resolution.xml /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/deny-unallowed-file-resolution.xml
 RUN cd /var/www/fedora/data/fedora-xacml-policies/repository-policies/ &&\

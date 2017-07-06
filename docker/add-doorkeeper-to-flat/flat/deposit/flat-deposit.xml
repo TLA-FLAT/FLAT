@@ -87,9 +87,9 @@
             <parameter name="fedoraConfig" value="{$work}/acl/fedora-config.xml"/>
             <parameter name="dir" value="{$work}/fox"/>
         </action>
-        <!--<action class="nl.mpi.tla.flat.deposit.action.FedoraDelete">
+        <action class="nl.mpi.tla.flat.deposit.action.FedoraDelete">
             <parameter name="fedoraConfig" value="{$work}/acl/fedora-config.xml"/>
-        </action>-->
+        </action>
         <action class="nl.mpi.tla.flat.deposit.action.EPICHandleCreation">
             <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
             <parameter name="epicConfig" value="{$base}/policies/epic-config.xml"/>
