@@ -9,7 +9,7 @@ ENV FLAT_NAME=flat
 #ENV FLAT_HOST=192.168.99.100
 ENV FLAT_HOST=localhost
 ENV FLAT_ICON_DIR=/app/flat/data/icons
-ENV FLAT_TIMEOUT=100
+ENV FLAT_TIMEOUT=120
 ENV CMD_EXTENSION=cmdi
 
 
@@ -143,6 +143,7 @@ RUN chmod u+x /wait-tomcat.sh &&\
 
 # policies
 RUN rm -v /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/deny-purge-*
+RUN rm /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/deny-policy-management-if-not-administrator.xml
 ADD fedora/permit-anything-to-localhost.xml /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/permit-anything-to-localhost.xml
 ADD fedora/deny-unallowed-file-resolution.xml /var/www/fedora/data/fedora-xacml-policies/repository-policies/default/deny-unallowed-file-resolution.xml
 RUN cd /var/www/fedora/data/fedora-xacml-policies/repository-policies/ &&\

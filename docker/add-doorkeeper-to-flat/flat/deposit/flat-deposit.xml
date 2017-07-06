@@ -9,7 +9,7 @@
         <property name="bag" value="{$base}/bags/{$sip}" uniq="true"/>
         <property name="work" value="{flat:findBagBase($bag)}" uniq="true"/>
         <property name="easy" value="{$base}/easy" uniq="true"/>
-        <property name="epicPrefix" value="12345"/>
+        <property name="epicPrefix" value="{doc(concat($base,'/policies/epic-config.xml'))//HandlePrefix}"/>
         <property name="gsearchUser" value="fgsAdmin"/>
         <property name="gsearchPassword" value="fgsAdmin"/>
         <property name="gsearchServer" value="http://localhost:8080/fedoragsearch"/>
@@ -17,15 +17,18 @@
     <init>
         <action name="logSetup" class="nl.mpi.tla.flat.deposit.action.WorkspaceLogSetup">
             <parameter name="dir" value="{$work}/logs"/>
-        </action>        
+        </action>
         <action name="check workspace" class="nl.mpi.tla.flat.deposit.action.SIPLoad">
             <parameter name="sip" value="{$work}/metadata/record.cmdi"/>
         </action>
+        <action class="nl.mpi.tla.flat.deposit.action.FedoraIsAIPUpdate">
+            <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
+        </action>
     </init>
     <main>
-        <action name="assemble package" class="nl.mpi.tla.flat.deposit.action.PackageAssembly">
+        <action name="assemble package" class="nl.mpi.tla.flat.deposit.action.ResourceMapping">
             <parameter name="dir" value="{$work}/resources"/>
-            <parameter name="prefix" value="{$epicPrefix}"/>
+            <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
         </action>
         <action name="validate metadata" class="nl.mpi.tla.flat.deposit.action.Validate">
             <parameter name="schemaCache" value="{$base}/cache/schemas"/>
@@ -34,9 +37,14 @@
         <action name="validate resources" class="nl.mpi.tla.flat.deposit.action.FITS">
         	<parameter name="fitsService" value="{$fitsService}"/>
         	<parameter name="mimetypes" value="{$base}/policies/fits-mimetypes.xml"/>
+            <parameter name="dir" value="{$work}/fits"/>
+        </action>
+        <action name="purge updates" class="nl.mpi.tla.flat.deposit.action.PurgeUpdates">
+            <parameter name="dir" value="{$work}/resources"/>
+            <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
+            <parameter name="fits" value="{$work}/fits"/>
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.HandleAssignment">
-            <!-- TODO get from epicConfig -->
             <parameter name="prefix" value="{$epicPrefix}"/>
         </action>
         <action name="persist resources" class="nl.mpi.tla.flat.deposit.action.Persist">
@@ -48,7 +56,7 @@
             <parameter name="policy" value="{$work}/metadata/policy.n3"/>
             <parameter name="dir" value="{$work}/acl"/>
         </action>
-        <action class="nl.mpi.tla.flat.deposit.action.CreateFOX">
+        <action class="nl.mpi.tla.flat.deposit.action.FOXCreate">
             <parameter name="owner" value="{$work}/acl/owner.xml"/>
             <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
             <parameter name="cmd2fox" value="{$base}/policies/cmd2fox.xsl"/>
@@ -57,6 +65,11 @@
             <parameter name="icons" value="{$env-FLAT_ICON_DIR}"/>
             <parameter name="policies" value="{$work}/acl"/>
             <parameter name="policies" value="{$base}/policies"/>
+            <parameter name="fits" value="{$work}/fits"/>
+        </action>
+        <action class="nl.mpi.tla.flat.deposit.action.FOXUpdate">
+            <parameter name="debug" value="true"/>
+            <parameter name="dir" value="{$work}/fox"/>
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.FedoraUser">
             <parameter name="user" value="{$work}/acl/owner.xml"/>
@@ -74,6 +87,9 @@
             <parameter name="fedoraConfig" value="{$work}/acl/fedora-config.xml"/>
             <parameter name="dir" value="{$work}/fox"/>
         </action>
+        <!--<action class="nl.mpi.tla.flat.deposit.action.FedoraDelete">
+            <parameter name="fedoraConfig" value="{$work}/acl/fedora-config.xml"/>
+        </action>-->
         <action class="nl.mpi.tla.flat.deposit.action.EPICHandleCreation">
             <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
             <parameter name="epicConfig" value="{$base}/policies/epic-config.xml"/>

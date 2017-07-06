@@ -8,11 +8,12 @@ RUN apt-get update &&\
 
 # add sample SIP
 RUN mkdir -p /app/flat/test
-ADD flat/deposit/test/icons/* $FLAT_ICON_DIR
+ADD flat/deposit/test/icons/* $FLAT_ICON_DIR/
 ADD flat/deposit/test/*.* /app/flat/test/
 ADD flat/deposit/test/cmd /app/flat/test/cmd
 ADD flat/deposit/test/data /app/flat/test/data
 ADD flat/deposit/test/test-sip /app/flat/test/test-sip
+ADD flat/deposit/test/test-sip-update /app/flat/test/test-sip-update
 
 # add sample user(s)
 RUN	service supervisor start &&\

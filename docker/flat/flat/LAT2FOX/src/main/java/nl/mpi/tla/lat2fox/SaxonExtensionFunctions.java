@@ -1,14 +1,9 @@
 package nl.mpi.tla.lat2fox;
 
-import java.io.File;
-import java.io.IOException;
+import com.twmacinta.util.MD5;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.value.SequenceType;
 import net.sf.saxon.value.StringValue;
@@ -18,7 +13,6 @@ import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.lib.ExtensionFunctionDefinition;
 import net.sf.saxon.Configuration;
-import net.sf.saxon.TransformerFactoryImpl;
 import net.sf.saxon.om.AxisInfo;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.s9api.Processor;
@@ -27,9 +21,7 @@ import net.sf.saxon.s9api.XPathCompiler;
 import net.sf.saxon.s9api.XPathExecutable;
 import net.sf.saxon.s9api.XPathSelector;
 import net.sf.saxon.s9api.XdmAtomicValue;
-import net.sf.saxon.s9api.XdmItem;
 import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.s9api.XdmValue;
 import net.sf.saxon.tree.NamespaceNode;
 import net.sf.saxon.tree.iter.AxisIterator;
 
@@ -49,6 +41,7 @@ public final class SaxonExtensionFunctions {
         config.registerExtensionFunction(new FileExistsDefinition());
         config.registerExtensionFunction(new CheckURLDefinition());
         config.registerExtensionFunction(new EvaluateDefinition());
+        config.registerExtensionFunction(new MD5Definition());
     }
 
     // -----------------------------------------------------------------------
@@ -217,6 +210,57 @@ public final class SaxonExtensionFunctions {
                         seq = xps.evaluate().getUnderlyingValue();
                     } catch(SaxonApiException e) {
                         System.err.println("ERR: "+e.getMessage());
+                        e.printStackTrace(System.err);
+                    }
+                    return seq;
+                }
+            };
+        }
+    }
+    
+    // -----------------------------------------------------------------------
+    // sx:fileExists
+    // -----------------------------------------------------------------------
+
+    public static final class MD5Definition 
+                        extends ExtensionFunctionDefinition {
+        public StructuredQName getFunctionQName() {
+            return new StructuredQName("sx", 
+                                       "java:nl.mpi.tla.saxon", 
+                                       "md5");
+        }
+
+        public int getMinimumNumberOfArguments() {
+            return 1;
+        }
+
+        public int getMaximumNumberOfArguments() {
+            return 1;
+        }
+
+        public SequenceType[] getArgumentTypes() {
+            return new SequenceType[] { SequenceType.SINGLE_ANY_URI };
+        }
+
+        public SequenceType getResultType(SequenceType[] suppliedArgTypes) {
+            return SequenceType.SINGLE_STRING;
+        }
+        
+        public boolean dependsOnFocus() {
+           return false;
+        }
+
+        public ExtensionFunctionCall makeCallExpression() {
+            return new ExtensionFunctionCall() {
+                @Override
+                public Sequence call(XPathContext context, Sequence[] arguments) throws XPathException {
+                    Sequence seq = null;
+                    try {
+                        URI uri = new URI(((StringValue) arguments[0].head()).getStringValue());
+                        String hash = MD5.asHex(MD5.getHash(new java.io.File(uri)));
+                        seq = (new XdmAtomicValue(hash)).getUnderlyingValue();
+                    } catch(Exception e) {
+                        System.err.println("ERR: ["+((StringValue) arguments[0].head()).getStringValue()+"]:"+e.getMessage());
                         e.printStackTrace(System.err);
                     }
                     return seq;

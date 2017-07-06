@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet xmlns:xd="http://www.oxygenxml.com/ns/doc/xsl" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:foxml="info:fedora/fedora-system:def/foxml#" xmlns:cmd="http://www.clarin.eu/cmd/" xmlns:lat="http://lat.mpi.nl/" xmlns:sx="java:nl.mpi.tla.saxon" exclude-result-prefixes="xs sx lat" version="3.0">
 
-	<xsl:variable name="debug" select="false()" static="yes"/>
+	<xsl:param name="debug" select="false()" static="yes"/>
 
 	<xd:doc>
 		<xd:desc>
@@ -36,6 +36,8 @@
 	
 	<xsl:param name="management-dir" select="()" as="xs:string*"/>
 	
+	<xsl:param name="fits-dir" select="()" as="xs:string?"/>
+
 	<xsl:param name="always-collection-eval" select="'false()'"/>
 	
 	<xsl:param name="always-compound-eval" select="'false()'"/>
@@ -262,7 +264,16 @@
 				</xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
-		<xsl:variable name="fid" select="cmd:lat('lat:', $pid)"/>
+		<xsl:variable name="fid">
+			<xsl:choose>
+				<xsl:when test="normalize-space($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink/@lat:flatURI) != ''">
+					<xsl:sequence select="normalize-space($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink/@lat:flatURI)"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:sequence select="cmd:lat('lat:', $pid)"/>
+				</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
 		<xsl:message use-when="$debug">
 			<xsl:text>DBG: CMDI2FOX[</xsl:text>
 			<xsl:value-of select="$pid"/>
@@ -388,9 +399,6 @@
 					<foxml:xmlContent>
 						<oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:dc="http://purl.org/dc/elements/1.1/">
 							<dc:identifier>
-								<xsl:if test="starts-with($pid,'hdl:')">
-									<xsl:attribute name="type" select="'hdl'"/>
-								</xsl:if>
 								<xsl:value-of select="replace($pid, '^hdl:', 'https://hdl.handle.net/')"/>
 							</dc:identifier>
 							<xsl:copy-of select="$dc/oai_dc:dc/* except dc:identifier[@type='hdl']"/>
@@ -622,7 +630,16 @@
 							</xsl:when>
 						</xsl:choose>
 					</xsl:variable>
-					<xsl:variable name="resID" select="cmd:lat('lat:', $resPID)"/>
+					<xsl:variable name="resID">
+						<xsl:choose>
+							<xsl:when test="normalize-space($res/cmd:ResourceRef/@lat:flatURI) != ''">
+								<xsl:sequence select="normalize-space($res/cmd:ResourceRef/@lat:flatURI)"/>
+							</xsl:when>
+							<xsl:otherwise>
+								<xsl:sequence select="cmd:lat('lat:', $resPID)"/>
+							</xsl:otherwise>
+						</xsl:choose>
+					</xsl:variable>
 					<!--<xsl:variable name="resFOX" select="concat($fox-base,'/',replace($resURI,'[^a-zA-Z0-9]','_'),'.xml')"/>-->
 					<xsl:variable name="resFOX" select="concat($fox-base, '/', replace($resID, '[^a-zA-Z0-9]', '_'), '.xml')"/>
 					<!--<xsl:message use-when="$debug">DBG: resourceProxy[<xsl:value-of select="$resURI"/>][<xsl:value-of select="$resFOX"/>][<xsl:value-of select="$resPID"/>][<xsl:value-of select="$resID"/>]</xsl:message>-->
@@ -783,11 +800,25 @@
 													<xsl:value-of select="$resTitle"/>
 												</dc:title>
 												<dc:identifier>
-													<xsl:if test="starts-with($resPID,'hdl:')">
-														<xsl:attribute name="type" select="'hdl'"/>
-													</xsl:if>
 													<xsl:value-of select="replace($resPID, '^hdl:', 'https://hdl.handle.net/')"/>
 												</dc:identifier>
+												<xsl:choose>
+													<xsl:when test="exists($fits-dir)">
+														<xsl:variable name="fits" select="cmd:firstFile($fits-dir,concat($res/@id,'.FITS.xml'),$base)" as="xs:anyURI"/>
+														<xsl:if test="exists($fits)">
+															<dc:identifier>
+																<xsl:text>md5:</xsl:text>
+																<xsl:value-of select="doc($fits)//fits:md5checksum" xmlns:fits="http://hul.harvard.edu/ois/xml/ns/fits/fits_output"/>
+															</dc:identifier>
+														</xsl:if>
+													</xsl:when>
+													<xsl:otherwise>
+														<dc:identifier>
+															<xsl:text>md5:</xsl:text>
+															<xsl:value-of select="sx:md5($resURI cast as xs:anyURI)" xmlns:fits="http://hul.harvard.edu/ois/xml/ns/fits/fits_output"/>
+														</dc:identifier>
+													</xsl:otherwise>
+												</xsl:choose>
 											</oai_dc:dc>
 										</foxml:xmlContent>
 									</foxml:datastreamVersion>
@@ -944,8 +975,15 @@
 			<xsl:apply-templates select="@*" mode="#current"/>
 			<xsl:apply-templates select="cmd:MdCreator | cmd:MdCreationDate" mode="#current"/>
 			<cmd:MdSelfLink>
-				<xsl:copy-of select="cmd:MdSelfLink/@* except @lat:localURI"/>
-				<xsl:attribute name="lat:localURI" select="cmd:lat('lat:', $pid)"/>
+				<xsl:copy-of select="cmd:MdSelfLink/@* except (@lat:localURI,@lat:flatURI)"/>
+				<xsl:choose>
+					<xsl:when test="normalize-space(@lat:flatURI)!=''">
+						<xsl:copy-of select="@lat:flatURI"/>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:attribute name="lat:flatURI" select="cmd:lat('lat:', $pid)"/>
+					</xsl:otherwise>
+				</xsl:choose>
 				<xsl:value-of select="replace($pid,'hdl:','https://hdl.handle.net/')"/>
 			</cmd:MdSelfLink>
 			<xsl:apply-templates select="node() except (cmd:MdCreator | cmd:MdCreationDate | cmd:MdSelfLink)" mode="#current"/>
@@ -1068,10 +1106,17 @@
 					</xsl:when>
 					<xsl:otherwise>
 						<xsl:copy>
-							<xsl:apply-templates select="@* except @lat:localURI" mode="#current"/>
-							<xsl:attribute name="lat:localURI" xmlns:lat="http://lat.mpi.nl/">
-								<xsl:value-of select="cmd:lat('lat:', $hdl)"/>
-							</xsl:attribute>
+							<xsl:apply-templates select="@* except (@lat:localURI,@lat:flatURI)" mode="#current"/>
+							<xsl:choose>
+								<xsl:when test="normalize-space(@lat:flatURI)!=''">
+									<xsl:apply-templates select="@lat:flatURI" mode="#current"/>
+								</xsl:when>
+								<xsl:otherwise>
+									<xsl:attribute name="lat:flatURI" xmlns:lat="http://lat.mpi.nl/">
+										<xsl:value-of select="cmd:lat('lat:', $hdl)"/>
+									</xsl:attribute>
+								</xsl:otherwise>
+							</xsl:choose>
 							<xsl:value-of select="replace($hdl,'hdl:','https://hdl.handle.net/')"/>
 						</xsl:copy>
 					</xsl:otherwise>

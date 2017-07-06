@@ -14,7 +14,7 @@
          <ResourceProxy id="h1">
             <ResourceType mimetype="application/pdf">Resource</ResourceType>
             <!-- https://archive.org/details/GreenHornetComics2 -->
-            <ResourceRef>/app/flat/data/comic-2/Green Hornet 002.pdf</ResourceRef>
+            <ResourceRef>/app/flat/data/comic-2/pdf/Green Hornet 002.pdf</ResourceRef>
          </ResourceProxy>
       </ResourceProxyList>
       <JournalFileProxyList/>

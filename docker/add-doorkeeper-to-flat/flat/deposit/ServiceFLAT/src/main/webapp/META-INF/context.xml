@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Context path="/">
 	<WatchedResource>WEB-INF/web.xml</WatchedResource>
+        <!--
+ 	<Parameter name="doorkeeperThreads"
+         value="5"
+         description="max. number of concurrent DoorKeeper threads" />
+        -->
+        <!--
+ 	<Parameter name="doorkeeperQueue"
+         value="100"
+         description="max. number of DoorKeeper requests in the waiting queue" />
+        -->
  	<Parameter name="doorkeeperConfig"
          value="/app/flat/deposit/flat-deposit.xml"
          description="location of DoorKeeper configuration" />

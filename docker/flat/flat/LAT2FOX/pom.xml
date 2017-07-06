@@ -23,7 +23,20 @@
             <artifactId>jopt-simple</artifactId>
             <version>4.8</version>
         </dependency>
+	<dependency>
+            <groupId>com.twmacinta</groupId>
+            <artifactId>fast-md5</artifactId>
+            <version>2.7.1</version>
+        </dependency>
     </dependencies>
+    <repositories>
+        <!-- needed for fast-md5 -->
+        <repository>
+            <id>Geomajas</id>
+            <name>Geomajas repository</name>
+            <url>http://maven.geomajas.org/</url>
+        </repository>
+    </repositories>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.7</maven.compiler.source>
