@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CMD xmlns="http://www.clarin.eu/cmd/"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xmlns:lat="http://lat.mpi.nl/"
+     CMDVersion="1.1"
+     xsi:schemaLocation="http://www.clarin.eu/cmd/ http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1345561703683/xsd">
+   <Header>
+      <MdCreator>twagoo</MdCreator>
+      <MdCreationDate>2012-09-11+02:00</MdCreationDate>
+      <MdSelfLink>hdl:12345/comic-1</MdSelfLink>
+      <MdProfile>clarin.eu:cr1:p_1345561703683</MdProfile>
+   </Header>
+   <Resources>
+      <ResourceProxyList>
+         <ResourceProxy id="h1">
+            <ResourceType mimetype="application/pdf">Resource</ResourceType>
+            <!-- https://archive.org/details/GreenHornetComics1 -->
+            <ResourceRef lat:localURI="../resources/Green Hornet 001.pdf">https://hdl.handle.net/12345/comic-1-pdf</ResourceRef>
+         </ResourceProxy>
+         <!-- DELETED:
+         <ResourceProxy id="h2">
+            <ResourceType mimetype="text/plain">Resource</ResourceType>
+            <ResourceRef lat:localURI="../resources/hello.txt">https://hdl.handle.net/12345/comic-1-txt</ResourceRef>
+         </ResourceProxy>
+         -->
+      </ResourceProxyList>
+      <JournalFileProxyList/>
+      <ResourceRelationList/>
+   </Resources>
+   <Components>
+      <ComicBook ref="h1">
+         <Title>The Green Hornet</Title>
+         <Series xml:lang="eng">Green Hornet Comics</Series>
+         <PublicationYear>1967</PublicationYear>
+         <NumberOfPages>36</NumberOfPages>
+         <NumberOfChapters>1</NumberOfChapters>
+         <dc-publisher>
+            <publisher>Gold Key Comics</publisher>
+         </dc-publisher>
+         <Language>
+            <LanguageName>English</LanguageName>
+            <ISO639>
+               <iso-639-3-code>eng</iso-639-3-code>
+            </ISO639>
+         </Language>
+         <Format>
+            <ColorPrinting>true</ColorPrinting>
+         </Format>
+         <Author>
+            <Name>Fran Striker</Name>
+            <BirthYear>1903</BirthYear>
+            <Country>
+               <Code>US</Code>
+            </Country>
+         </Author>
+         <Character>
+            <Name>Britt Reid</Name>
+            <Role>primary</Role>
+         </Character>
+         <Character>
+            <Name>Kato</Name>
+            <Role>primary</Role>
+         </Character>
+      </ComicBook>
+   </Components>
+</CMD>
