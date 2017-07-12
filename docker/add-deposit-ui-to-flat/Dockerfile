@@ -1,8 +1,8 @@
-FROM        flat-deposit
+FROM        flat
 MAINTAINER	Daniel von Rhein <daniel.vonrhein@mpi.nl>
 
 # Add deposit module to installation
-# ADD flat_deposit /var/www/html/flat/sites/all/modules/custom/flat_deposit
+ADD flat_deposit /var/www/html/flat/sites/all/modules/custom/flat_deposit
 
 # add WYSIWYG editor
 RUN cd /var/www/html/flat/sites/all/libraries/ &&\
@@ -15,10 +15,10 @@ RUN sed -e "s/'host' => 'localhost'/'host' => '127.0.0.1'/" /var/www/html/flat/s
 # add extra modules
 RUN cd /var/www/html/flat/ &&\
     export PGPASSWORD=fedora &&\
-    /etc/init.d/postgresql start &&\
-    /var/www/fedora/tomcat/bin/startup.sh &&\
-    bash -c "timeout 60 grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-    sleep 10 &&\
+    service supervisor start &&\
+    /wait-postgres.sh &&\
+    supervisorctl start tomcat &&\
+    /wait-tomcat.sh &&\
     /var/www/composer/vendor/drush/drush/drush dis toolbar -y &&\
     /var/www/composer/vendor/drush/drush/drush pmu toolbar -y &&\
     /var/www/composer/vendor/drush/drush/drush dl entity -y  &&\
@@ -37,21 +37,15 @@ RUN cd /var/www/html/flat/ &&\
     /var/www/composer/vendor/drush/drush/drush -y en content_access  &&\
     /var/www/composer/vendor/drush/drush/drush -y dl job_scheduler &&\
     /var/www/composer/vendor/drush/drush/drush -y dl token &&\
-    /etc/init.d/postgresql stop
-
-
-RUN cd /var/www/html/flat/ &&\
-    export PGPASSWORD=fedora &&\
-    /etc/init.d/postgresql start &&\
-    /var/www/fedora/tomcat/bin/startup.sh &&\
-    bash -c "timeout 60 grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-    sleep 10 &&\
     /var/www/composer/vendor/drush/drush/drush -y cache-clear all &&\
     /var/www/composer/vendor/drush/drush/drush -y dl views  &&\
     /var/www/composer/vendor/drush/drush/drush -y en views  &&\
     /var/www/composer/vendor/drush/drush/drush -y en views_ui &&\
-    /etc/init.d/postgresql stop
-#    /var/www/composer/vendor/drush/drush/drush en flat_deposit -y
+    # /var/www/composer/vendor/drush/drush/drush en flat_deposit -y &&\
+    # enable module manually, otherwise docker build fails due to directories not being present
+    supervisorctl stop all &&\
+    service supervisor stop &&\
+    /wait-sergtsop.sh
 
 # add module configuration
 ENV PGPASSWORD=fedora
@@ -60,16 +54,18 @@ COPY drupal/settings_imce.php /tmp/settings_imce.php
 
 RUN cd /var/www/html/flat/ &&\
     export PGPASSWORD=fedora &&\
-    /etc/init.d/postgresql start &&\
-    /var/www/fedora/tomcat/bin/startup.sh &&\
-    bash -c "timeout 60 grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-    sleep 10 &&\
+    service supervisor start &&\
+    /wait-postgres.sh &&\
+    supervisorctl start tomcat &&\
+    /wait-tomcat.sh &&\
     cd /var/www/html/flat/ &&\
     /var/www/composer/vendor/drush/drush/drush sql-query "$(cat /tmp/wysiwyg.sql)" -y &&\
     /var/www/composer/vendor/drush/drush/drush php-script settings_imce --script-path=/tmp &&\
     /var/www/composer/vendor/drush/drush/drush dl imce_mkdir -y &&\
     /var/www/composer/vendor/drush/drush/drush en imce_mkdir -y &&\
-    /etc/init.d/postgresql stop
+    supervisorctl stop all &&\
+    service supervisor stop &&\
+    sleep 1
 
 # add owncloud to version
 RUN wget -nv https://download.owncloud.org/download/repositories/stable/Ubuntu_16.04/Release.key -O Release.key &&\
@@ -79,11 +75,12 @@ RUN sh -c "echo 'deb http://download.owncloud.org/download/repositories/stable/U
     apt-get update &&\
     apt-get install -y owncloud
 
+
 RUN /etc/init.d/postgresql start &&\
     su -c "createdb -O fedora owncloud" postgres &&\
     /etc/init.d/postgresql stop
 
-RUN     apt-get update &&\
+RUN apt-get update &&\
     apt-get install sudo
 
 RUN /etc/init.d/postgresql start &&\

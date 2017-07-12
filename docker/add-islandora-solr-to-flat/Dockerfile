@@ -7,9 +7,9 @@ RUN apt-get update &&\
 
 RUN mkdir /tmp/islandora &&\
 	cd /tmp/islandora &&\
-	wget "https://github.com/Islandora/islandora_solr_search/archive/7.x-1.6.zip" &&\
-	mv 7.x-1.6.zip islandora_gsearch_module-7.x-1.6.zip &&\
-	unzip islandora_gsearch_module-7.x-1.6.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/
+	wget "https://github.com/Islandora/islandora_solr_search/archive/7.x-1.9.zip" &&\
+	mv 7.x-1.9.zip islandora_gsearch_module-7.x-1.9.zip &&\
+	unzip islandora_gsearch_module-7.x-1.9.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/
 
 ADD drupal/flat_search /var/www/html/$FLAT_NAME/sites/all/modules/custom/
 

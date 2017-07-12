@@ -1,4 +1,4 @@
-FROM        flat-deposit
+FROM        flat
 MAINTAINER	Daniel von Rhein <daniel.vonrhein@mpi.nl>
 
 #Build xdebug library
@@ -25,10 +25,10 @@ COPY drush/Create_test_user.php /tmp/Create_test_user.php
 
 RUN cd /var/www/html/flat/ &&\
     export PGPASSWORD=fedora &&\
-    /etc/init.d/postgresql start &&\
-    /var/www/fedora/tomcat/bin/startup.sh &&\
-    bash -c "timeout 60 grep -q '(AuthFilterJAAS) initialised servlet filter: org.fcrepo.server.security.jaas.AuthFilterJAAS' <(tail -f $FEDORA_HOME/server/logs/fedora.log)" &&\
-    sleep 25 &&\
+    service supervisor start &&\
+    /wait-postgres.sh &&\
+    supervisorctl start tomcat &&\
+    /wait-tomcat.sh &&\
     /var/www/composer/vendor/drush/drush/drush dl admin_menu -y &&\
     /var/www/composer/vendor/drush/drush/drush -y dl devel  &&\
     /var/www/composer/vendor/drush/drush/drush -y dl feeds  &&\
@@ -38,7 +38,9 @@ RUN cd /var/www/html/flat/ &&\
 #    /var/www/composer/vendor/drush/drush/drush -y en feeds_ui  &&\
 #    /var/www/composer/vendor/drush/drush/drush php-script Create_test_user.php --script-path=/tmp &&\
 
-    /etc/init.d/postgresql stop 
+    supervisorctl stop all &&\
+    service supervisor stop &&\
+    sleep 1
 
 #RUN mv /app/flat/lib/doorkeeper.jar /app/flat/lib/doorkeeper.jar.bkp &&\
 #    mv  /app/flat/deposit/flat-deposit.xml /app/flat/deposit/flat-deposit.xml.bkp
