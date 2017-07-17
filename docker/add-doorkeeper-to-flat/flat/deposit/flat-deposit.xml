@@ -24,6 +24,9 @@
         <action class="nl.mpi.tla.flat.deposit.action.FedoraIsAIPUpdate">
             <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
         </action>
+        <action class="nl.mpi.tla.flat.deposit.action.FedoraLoadCollectionHierarchy">
+            <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
+        </action>
     </init>
     <main>
         <action name="assemble package" class="nl.mpi.tla.flat.deposit.action.ResourceMapping">
