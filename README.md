@@ -101,10 +101,12 @@ do.sh
 flat-create-sip.sh /app/flat/test/test-sip
 #- upload the SIP via SWORD
 flat-sword-upload.sh test-sip.zip test
+#- check if the SWORD upload went fine
+curl -u flat:sword http://localhost/flat/easy-deposit/statement/test | xmllint --format -
 #- trigger the DoorKeeper run for the SIP
-wget --method=PUT http://localhost:8080/flat/doorkeeper/test
+wget --method=PUT http://localhost/flat/doorkeeper/test
 #- inspect the result
-wget http://localhost:8080/flat/doorkeeper/test
+wget http://localhost/flat/doorkeeper/test
 #- inspect the developers log
 tail -f deposit/bags/test/bag-test-sip/data/test-sip/logs/devel.log
 ```
