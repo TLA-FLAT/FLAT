@@ -33,3 +33,19 @@ function flat_views_views_api() {
 
 
 
+function flat_views_pre_render(&$view) {
+    #krumo ($view);
+
+    if ($view->name == 'flat_my_collections') {
+
+        foreach ($view->result as $key => $result) {
+
+            $val = $result->field_data_flat_fid_flat_fid_value;
+            $link = l('link to archive', 'islandora/object/' . rawurlencode($val));
+            $result->field_flat_flat_fid[0]['rendered']['#markup'] = $link;
+            #krumo ($result);
+            #var_dump($result->field_data_flat_fid_flat_fid_value);
+        }
+    }
+}
+

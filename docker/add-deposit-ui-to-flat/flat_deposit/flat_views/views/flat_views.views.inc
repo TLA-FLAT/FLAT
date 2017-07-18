@@ -25,7 +25,6 @@ function flat_views_views_data_alter(&$data) {
           'click sortable' => FALSE,
       ),
   );
-    
 
   $data['flat_supercollection']['date_created'] = array(
       'title' => t('Created date'),
@@ -41,5 +40,7 @@ function flat_views_views_data_alter(&$data) {
           'handler' => 'views_handler_filter_date',
       ),
   );
+
+    #$data['field_data_flat_fid']['flat_fid']['field']['handler'] = 'flat_views_views_handler_collections' ;
 }
 
