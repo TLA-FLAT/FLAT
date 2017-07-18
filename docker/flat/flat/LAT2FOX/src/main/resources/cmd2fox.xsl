@@ -385,7 +385,7 @@
 					<xsl:variable name="label" select="($dc//dc:title[normalize-space() != ''])[1]" xmlns:dc="http://purl.org/dc/elements/1.1/"/>
 					<xsl:choose>
 						<xsl:when test="exists($label)">
-							<xsl:attribute name="VALUE" select="substring($label, 1, 255)"/>
+							<xsl:attribute name="VALUE" select="substring(normalize-unicode($label), 1, 255)"/>
 						</xsl:when>
 						<xsl:otherwise>
 							<xsl:attribute name="VALUE" select="$pid"/>
@@ -812,12 +812,12 @@
 															</dc:identifier>
 														</xsl:if>
 													</xsl:when>
-													<xsl:otherwise>
+													<xsl:when test="starts-with($resURI,'file:')">
 														<dc:identifier>
 															<xsl:text>md5:</xsl:text>
 															<xsl:value-of select="sx:md5($resURI cast as xs:anyURI)" xmlns:fits="http://hul.harvard.edu/ois/xml/ns/fits/fits_output"/>
 														</dc:identifier>
-													</xsl:otherwise>
+													</xsl:when>
 												</xsl:choose>
 											</oai_dc:dc>
 										</foxml:xmlContent>

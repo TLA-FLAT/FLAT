@@ -32,11 +32,23 @@ EXPOSE 80
 EXPOSE 8080
 
 #
-# set local timezone
+# locale
 #
 
-RUN mv /etc/localtime /etc/localtime.bak &&\
-    ln -sf /usr/share/zoneinfo/Europe/Amsterdam /etc/localtime
+ENV TZ 'Europe/Amsterdam'
+RUN echo $TZ > /etc/timezone && \
+    apt-get update && apt-get install -y tzdata && \
+    rm /etc/localtime && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    dpkg-reconfigure -f noninteractive tzdata
+
+RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+    echo 'LANG="en_US.UTF-8"'>/etc/default/locale && \
+    dpkg-reconfigure --frontend=noninteractive locales && \
+    update-locale LANG=en_US.UTF-8
+ENV LANG "en_US.UTF-8"
+ENV LANGUAGE "en_US.UTF-8"
+ENV LC_ALL "en_US.UTF-8"
 
 #
 # Update and install all system libraries

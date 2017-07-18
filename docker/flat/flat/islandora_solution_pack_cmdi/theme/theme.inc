@@ -19,8 +19,7 @@ function islandora_cmdi_preprocess_islandora_cmdi_display(array &$variables) {
       drupal_set_message(t('Error retrieving object %s %t', array('%s' => $object->id, '%t' => $e->getMessage())), 'error', FALSE);
     }
   }
-  // Using the Islandora 6 object details XSLT let's transform the CMD datastream
-  // to HTML output.
+  // Using the Islandora object details XSLT let's transform the CMD datastream to HTML output.
   if ($cmd) {
     $input = new DOMDocument();
     $did_load_ok = $input->loadXML($cmd);
@@ -30,18 +29,18 @@ function islandora_cmdi_preprocess_islandora_cmdi_display(array &$variables) {
       $profile_id = $xpath->query('/cmd:CMD/cmd:Header/cmd:MdProfile');
       $profile_str = $profile_id->item(0)->nodeValue;
       $profile_str = preg_replace("/[^a-zA-Z0-9]/","_",$profile_str, -1,$count);
-    }
 
-    $file = drupal_get_path('module', 'islandora_cmdi') . '/xsl/' . $profile_str . '.xsl';
-    if (!file_exists($file)) {
+      $file = drupal_get_path('module', 'islandora_cmdi') . '/xsl/' . $profile_str . '.xsl';
+      if (!file_exists($file)) {
         $file = drupal_get_path('module', 'islandora_cmdi') . '/xsl/browser_cmdi2html.xsl';
-    }
-    $xslt = new XSLTProcessor();
-    $xslt_dom = new DOMDocument();
-    $xslt_dom->load($file);
-    if ($did_load_ok) {
-      $xslt->importStylesheet($xslt_dom);
-      $variables['metadata'] = $xslt->transformToXml($input);
+      }
+      $xslt = new XSLTProcessor();
+      $xslt_dom = new DOMDocument();
+      $xslt_dom->load($file);
+      if ($did_load_ok) {
+        $xslt->importStylesheet($xslt_dom);
+        $variables['metadata'] = $xslt->transformToXml($input);
+      }
     }
   }
 }
