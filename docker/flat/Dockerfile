@@ -42,7 +42,8 @@ RUN echo $TZ > /etc/timezone && \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
     dpkg-reconfigure -f noninteractive tzdata
 
-RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+RUN apt-get update && apt-get install -y locales && \
+	sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     echo 'LANG="en_US.UTF-8"'>/etc/default/locale && \
     dpkg-reconfigure --frontend=noninteractive locales && \
     update-locale LANG=en_US.UTF-8
@@ -253,11 +254,13 @@ RUN cp -r /var/www/html/$FLAT_NAME/sites/all/themes/bootstrap/starterkits/cdn  /
 	mv cdn.starterkit flat_bootstrap_theme.info &&\
     echo ";; FLAT settings" >> flat_bootstrap_theme.info &&\
 	echo "settings[bootstrap_cdn_jsdelivr_theme] = 'flatly'" >> flat_bootstrap_theme.info &&\
-    echo "settings[bootstrap_fluid_container] = 1" >> flat_bootstrap_theme.info
+    echo "settings[bootstrap_fluid_container] = 1" >> flat_bootstrap_theme.info &&\
+	mkdir -p /var/www/html/$FLAT_NAME/sites/all/themes/flat_bootstrap_theme/js
 # determine our own object view
 ADD islandora/islandora-default.tpl.php /var/www/html/$FLAT_NAME/sites/all/themes/flat_bootstrap_theme/templates/islandora-default.tpl.php
 # overwrite the compound behavior, which does special things for the first member (as being the representative)
 ADD islandora/template.php /var/www/html/$FLAT_NAME/sites/all/themes/flat_bootstrap_theme/template.php
+ADD islandora/flat.js /var/www/html/$FLAT_NAME/sites/all/themes/flat_bootstrap_theme/js/flat.js
 
 RUN service supervisor start &&\
 	/wait-postgres.sh &&\
@@ -342,7 +345,7 @@ RUN chmod +x /app/flat/bin/*.sh &&\
 RUN mkdir -p /app/flat/policies
 ADD flat/policies/default-resource-policy.xml /app/flat/deposit/policies/default-resource-policy.xml
 
-RUN mkdir -p /app/flat/data/icons
+RUN mkdir -p $FLAT_ICON_DIR
 ADD flat/icons $FLAT_ICON_DIR
     
 #

@@ -62,6 +62,7 @@ public class Main {
         System.err.println("INF: -a=<XPATH> XPath 2.0 expressions determining if the DO should always be a collection and a compound");
         System.err.println("INF: -s=<NAME>  name of the server/repository used by OAI");
         System.err.println("INF: -b=<DIR>   directory where the icons are stored (default: /app/flat/icons)");
+        System.err.println("INF: -u=<URI>   license URI");
         System.err.println("INF: -v         validate the FOX files (optional)");
         System.err.println("INF: -l         lax check if a local resource exists (optional)");
         System.err.println("INF: -h         don't create a CMD object as first child of the compound, but include the CMD in the compound itself (optional)");
@@ -82,6 +83,7 @@ public class Main {
         String oxp = null;
         String axp = null;
         String server = null;
+        String license = null;
         XdmNode collsDoc = null;
         boolean validateFOX = false;
         boolean laxResourceCheck = false;
@@ -89,7 +91,7 @@ public class Main {
         boolean relationCheck = true;
         int ndir = 0;
         // check command line
-        OptionParser parser = new OptionParser( "zhlve:r:f:i:x:p:q:n:c:o:a:s:b:?*" );
+        OptionParser parser = new OptionParser( "zhlve:r:f:i:x:p:q:n:c:o:a:s:b:u:?*" );
         OptionSet options = parser.parse(args);
         if (options.has("l"))
             laxResourceCheck = true;
@@ -152,6 +154,9 @@ public class Main {
         }
         if (options.has("s")) {
             server = (String)options.valueOf("s");
+        }
+        if (options.has("u")) {
+            license = (String)options.valueOf("u");
         }
         if (options.has("?")) {
             showHelp();
@@ -251,6 +256,8 @@ public class Main {
                             fox.setParameter(new QName("policies-dir"), new XdmAtomicValue(pdir));
                         if (mdir != null)
                             fox.setParameter(new QName("management-dir"), new XdmAtomicValue(mdir));
+                        if (license != null)
+                            fox.setParameter(new QName("license-uri"), new XdmAtomicValue(license));
                         fox.setParameter(new QName("create-cmd-object"), new XdmAtomicValue(createCMDObject));
                         fox.setSource(new StreamSource(input));
                         XdmDestination destination = new XdmDestination();

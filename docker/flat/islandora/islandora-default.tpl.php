@@ -60,7 +60,12 @@
 
 global $user;
 
-$show_ds = array("OBJ","CMD");
+$options = array(
+    'group' => JS_THEME,
+);
+drupal_add_js(drupal_get_path('theme', 'flat_bootstrap_theme'). '/js/flat.js', $options);
+
+$show_ds = array("OBJ","CMD","LICENSE");
 if (in_array("data manager",$user->roles)) {
   $show_ds[] = "MGMT";
 }
@@ -69,6 +74,8 @@ $available_ds = array();
 foreach($datastreams as $key => $value) {
   $available_ds[] = $value['id'];
 }
+
+$accept_license = in_array("LICENSE",$available_ds);
 
 function check_ds_access($object,$ds,$user) {
   if (!isset($user)) {
@@ -123,7 +130,17 @@ function check_ds_access($object,$ds,$user) {
       <?php foreach($datastreams as $key => $value): ?>
         <?php if (isset($value['id']) and in_array($value['id'], $show_ds)): ?>
           <tr>
-              <td><?php if(isset($value['label_link']) and check_ds_access($islandora_object,$islandora_object[$value['id']],$user)): ?><?php print $value['label_link']; ?><?php else: ?><?php print $value['label']; ?><?php endif; ?></td>
+              <td>
+                <?php if(isset($value['label_link']) and check_ds_access($islandora_object,$islandora_object[$value['id']],$user)): ?>
+                  <?php if(isset($accept_license) and $accept_license): ?>
+                    <?php print str_replace("a ","a class=\"license\" ",$value['label_link']); ?>
+                  <?php else: ?>
+                    <?php print $value['label_link']; ?>
+                  <?php endif; ?>
+                <?php else: ?>
+                  <?php print $value['label']; ?>
+                <?php endif; ?>
+              </td>
               <td><?php if(isset($value['size'])): ?><?php print $value['size']; ?><?php endif; ?></td>
               <td><?php if(isset($value['mimetype'])): ?><?php print $value['mimetype']; ?><?php endif; ?></td>
               <td><?php if(isset($value['created_date'])): ?><?php print $value['created_date']; ?><?php endif; ?></td>

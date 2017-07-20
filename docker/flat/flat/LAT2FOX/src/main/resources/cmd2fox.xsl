@@ -50,6 +50,8 @@
 	<xsl:variable name="NS" select="$namespaces/descendant-or-self::ns"/>
 	
 	<xsl:param name="icon-base" select="'/app/flat/icons'"/>
+	
+	<xsl:param name="license-uri"/>
 
 	<xsl:function name="cmd:hdl">
 		<xsl:param name="pid"/>
@@ -882,6 +884,14 @@
 										</foxml:contentLocation>
 									</foxml:datastreamVersion>
 								</foxml:datastream>
+								<!-- license -->
+								<xsl:if test="normalize-space($license-uri)!=''">
+									<foxml:datastream ID="LICENSE" STATE="A" CONTROL_GROUP="R" VERSIONABLE="false">
+										<foxml:datastreamVersion ID="LICENSE.0" LABEL="license" MIMETYPE="text/html">
+											<foxml:contentLocation TYPE="URL" REF="{$license-uri}"/>
+										</foxml:datastreamVersion>
+									</foxml:datastream>
+								</xsl:if>
 								<!-- add specific thumbnail icons for specific MIME types -->
 								<foxml:datastream ID="TN" STATE="A" CONTROL_GROUP="E" VERSIONABLE="false">
 									<foxml:datastreamVersion ID="TN.0" LABEL="icon.png" MIMETYPE="image/png">
