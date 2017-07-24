@@ -100,6 +100,12 @@ function flat_deposit_cmdi_form($form, &$form_state){
 
         $fields = CmdiHandler::generateDrupalForm($selected_profile);
 
+        if(isset($form_state['multival'])){
+
+            $fields = CmdiHandler::addMultivalElements($fields, $form_state['multival'] );
+
+        }
+
         // check if everything worked as expected
         if (is_array($fields)){
 
@@ -159,14 +165,39 @@ function flat_deposit_cmdi_form($form, &$form_state){
         #}
     }
 
-
-
     return $form;
 
 
 }
 
+function cmdi_form_add_multival($form, &$form_state) {
 
+    $field_id = $form_state['clicked_button']['#name'];
+    $form['template_container']['elements'][$field_id]['remove']['#access'] = TRUE;
+
+    if (!isset($form_state['multival'][$field_id])){
+
+        $form_state['multival'][$field_id] = 1;
+
+    } else {
+
+        $form_state['multival'][$field_id]++;
+
+    }
+
+    // Setting $form_state['rebuild'] = TRUE causes the form to be rebuilt again.
+    $form_state['rebuild'] = TRUE;
+}
+
+function cmdi_form_remove_multival($form, &$form_state) {
+    $field_id = $form_state['clicked_button']['#name'];
+
+
+    $form_state['multival'][$field_id]--;
+
+    // Setting $form_state['rebuild'] = TRUE causes the form to be rebuilt again.
+    $form_state['rebuild'] = TRUE;
+}
 
 function flat_deposit_cmdi_form_validate($form, &$form_state)
 {

@@ -129,6 +129,69 @@ class CmdiHandler
 
     }
 
+    /**
+     * copies form elements with multival properties and adds it n times to the existing form
+     *
+     * @param $form drupal renderable array with form fields
+     *
+     * @param $multi_fields array with form elements. Keys indicate id of the field. In case
+     * @return mixed
+     */
+    static public function addMultivalElements($fields, $multi_fields)
+    {
+
+
+        foreach ($multi_fields as $id => $value){
+
+            // link to field element depends on subNode property of the element, If set for field ID the element is nested in fieldset
+                if (isset($fields['data']['#value']['subNode'][$id])){
+
+                    $subNode = $fields['data']['#value']['subNode'][$id];
+                    $link_field =  &$fields[$subNode][$id];
+
+                } else {
+
+                    $link_field =&$fields[$id];
+
+                };
+
+            $copy_form_element = $link_field[0];
+            $copy_add = $link_field['add'];
+            $copy_remove = $link_field['remove'];
+
+            unset($link_field['add']);
+            unset($link_field['remove']);
+
+            if ($value >= 1){
+
+                $copy_remove ['#access'] = TRUE;
+
+                for ($i = 1; $i <= $value; $i++) {
+
+                    $link_field[$i] = $copy_form_element;
+                }
+            } else {
+
+                $copy_remove ['#access'] = FALSE;
+            }
+
+
+            // make remove button visible depending on amount of extra fields
+            #krumo($value);
+            $link_field['add'] = $copy_add;
+            $link_field['remove'] = $copy_remove;
+
+
+        }
+
+#            dsm('In condition');
+ #           krumo ($fields);
+  #          krumo ($multi_fields);
+
+
+        return $fields;
+
+    }
 
 
 

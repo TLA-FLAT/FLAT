@@ -39,8 +39,8 @@ class Template2FormParser {
 
 
         $this->xml = $xml;
-        $this->_getFormFields();
         $this->_getDataField();
+        $this->_getFormFields();
         $this->_structureForm();
         return $this->form;
     }
@@ -62,6 +62,7 @@ class Template2FormParser {
             $this->_setType($id, $field);
             $this->_setRequired($id, $field);
             $this->_setDescription($id, $field);
+            $this->_setMultival($id, $field);
             $this->_setDefaultValue($id, $field);
             $this->_setFieldset($id, $field);
         }
@@ -91,6 +92,7 @@ class Template2FormParser {
                 };
 
                 $this->form[$subNode][$key] = $field;
+                $this->form['data']['#value']['subNode'][$key] = $subNode;
 
             } else {
 
@@ -113,7 +115,7 @@ class Template2FormParser {
         } else {
             $title = (string)$field['name'];
         }
-        $this->fields[$id] ['#title'] = $title;
+        $this->fields[$id]['#title'] = $title;
 
     }
 
@@ -132,6 +134,39 @@ class Template2FormParser {
         if (isset($field->description)) $this->fields[$id]['#description'] = (string)$field->description;
     }
 
+    private function _setMultival($id , $field)
+    {
+        if (isset($field->multival)){
+
+            $title = $this->fields[$id]['#title'];
+            $old_field = $this->fields[$id];
+            unset ($this->fields[$id]);
+            $this->fields[$id][0] = $old_field;
+
+
+            // Add
+            $this->fields[$id]['add'] = array(
+                '#tree' => TRUE,
+                '#name' => $id,
+                '#type' => 'submit',
+                '#value' => t('Add ' . $title),
+                '#submit' => array('cmdi_form_add_multival'),
+                '#limit_validation_errors' => array()
+            );
+
+            // Remove
+            $this->fields[$id]['remove'] = array(
+                '#name' => $id,
+                '#type' => 'submit',
+                '#value' => t('Remove ' . $title),
+                '#submit' => array('cmdi_form_remove_multival'),
+                '#limit_validation_errors' => array(),
+                '#access' => FALSE,
+            );
+
+        }
+
+    }
 
     /**
      * return the render element. If not set, default is to return a text field.
@@ -180,7 +215,11 @@ class Template2FormParser {
     private function _setDefaultValue($id, $field)
     {
         if (isset($field->defaultValue)) {
-            $this->fields[$id]['#default_value'] = (string)$field->defaultValue;
+            if (!isset($field->multival)) {
+                $this->fields[$id]['#default_value'] = (string)$field->defaultValue;
+            } else {
+            //todo implement how to assign default values to multivals
+            }
         }
 
     }
