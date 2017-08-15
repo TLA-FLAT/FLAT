@@ -5,19 +5,29 @@ function flat_collection_add_form($form, &$form_state, $parent){
     drupal_set_title(t('Collection Form'));
 
     // Set selected profile as this is updated on every AJAX request
-    $selected_profile = !empty($form_state['values']['select_profile_name']) ? $form_state['values']['select_profile_name'] : "";
+    if (isset($form_state['values']['select_profile_name'])) {
+        $form_state['selected'] =  $form_state['values']['select_profile_name'];
+
+    }
+
+    // unset saved 'ajax_select' value if the ajax_select-button is unselected, the saved value of this button is empty and no button has been clicked
+    if (!isset($form_state['values']['select_profile_name']) AND !empty($form_state['selected']) AND !isset($form_state['clicked_button'])) {
+
+        $form_state['selected'] = '';
+    }
+
+
 
     // get all available template xml
-    module_load_include('php','flat_deposit','Helpers/CMDI/CmdiHandler');
+    form_load_include($form_state, 'inc','flat_deposit','Helpers/CMDI/Cmdi2FormParser');
+    form_load_include($form_state, 'php','flat_deposit','Helpers/CMDI/CmdiHandler');
     $available_profiles = CmdiHandler::getAvailableTemplates('flat_collection');
 
     // set '$load_profile_specific_form' which will trigger loading of container with form elements
-    $load_profile_specific_form = array_search($selected_profile, $available_profiles);
-
+    #$load_profile_specific_form = array_search($form_state['selected'], $available_profiles);
 
     // Add option to import a external file
     $available_profiles ['Import'] = 'I want to import an existing CMDI file';
-
 
     global $user;
     $form['owner'] = array(
@@ -25,7 +35,6 @@ function flat_collection_add_form($form, &$form_state, $parent){
         '#type' => 'textfield',
         '#required' => TRUE,
         '#default_value' => $user->name,
-
     );
 
     if (!user_access('Admin collections')){$form['owner']['#disabled'] = TRUE; }
@@ -36,7 +45,6 @@ function flat_collection_add_form($form, &$form_state, $parent){
         '#empty_option' => '-- Select --',
         '#required' => TRUE,
         '#options' => $available_profiles,
-        '#default_value' => $selected_profile,
         '#ajax' => array(
             'callback' => 'select_profile_name_ajax_callback',
             'wrapper' => 'template-form',
@@ -44,6 +52,8 @@ function flat_collection_add_form($form, &$form_state, $parent){
             'effect' => 'fade',
         ),
     );
+    if (isset($form_state['selected'])){$form['trigger']['select_profile_name']['#default_value'] = $form_state['selected'];};
+
     $form['cmdi_file'] = array(
         '#type' => 'file',
         '#title' => t('Choose a file'),
@@ -69,7 +79,7 @@ function flat_collection_add_form($form, &$form_state, $parent){
         '#title' => t('Hide metadata of this collection'),
         '#type' => 'checkbox',
         '#required' => FALSE,
-        );
+    );
 
 
 
@@ -82,72 +92,38 @@ function flat_collection_add_form($form, &$form_state, $parent){
     );
 
 
+
     //**************************************************
     // Get profile specific form and attach to container
     //**************************************************
 
     // load form element container if profile with available template is chosen
-    if ($load_profile_specific_form){
+    if (isset($form_state['selected']) and $form_state['selected'] == 'MPI_Collection'){
 
-        $fields = CmdiHandler::generateDrupalForm($selected_profile);
+        $fields = CmdiHandler::generateDrupalForm($form_state['selected']);
+
+
+         CmdiHandler::aggregateClickedButtons($form_state);
+
+        // add manually generated fields to form depending on tracked button presses
+        if (isset($form_state['count'])) {
+            $fields = CmdiHandler::addMultivalElements($fields, $form_state['count'] );
+        }
+
+
 
         // check if everything worked as expected
-        if (is_array($fields)){
-
-            $form['template_container']['space'] = array(
-                '#markup' => '<hr>',
-            );
-
-            $is_developer = user_role_load_by_name('developer');
-
-            if ($is_developer){
-
-            $form['template_container']['add_demodata'] = array(
-                '#title' => t('Fill form with demo data'),
-                '#type' => 'checkbox',
-                '#ajax' => array(
-                    'callback' => 'select_profile_name_ajax_callback',
-                    'wrapper' => 'template-form',
-                    'method' => 'replace',
-                    'effect' => 'fade',
-                )
-            );
-
-            }
-
-
-
-            $form['template_container']['elements'] = $fields;
-
-            ///////////
-            // Fill form field with loaded data
-
-            //first remove empty or preset values in form
-            if (isset($form_state['input']['template_container']['elements'])) unset($form_state['input']['template_container']['elements']);
-            $add_data = isset($form_state['values']['template_container']['add_demodata']) ? $form_state['values']['template_container']['add_demodata'] : 0;
-
-            // set default values for form elements
-            if ($add_data){
-
-                $data =  json_decode(file_get_contents(drupal_realpath(drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormTemplates/Example_MPI_Collection.json')), TRUE);
-                unset($data['data']);
-
-                $result = array_merge_recursive($form['template_container']['elements'], $data);
-                $result2 = exchange_numeric_key_with_default_value_property($result);
-
-                $form['template_container']['elements'] = $result2;
-                #$form['template_container']['elements']['field_04']['#default_value']= array('day'=>'10', 'month'=>'10', 'year'=>'2010');
-
-            }
-
-
-
-        } else {
+        if (!is_array($fields)){
 
             drupal_set_message($fields,'warning');
+            return $form;
 
         }
 
+
+
+
+        $form['template_container']['elements'] = $fields;
     }
 
     $form['Submit'] = array(
@@ -166,30 +142,27 @@ function flat_collection_add_form($form, &$form_state, $parent){
     );
 
 
-
-
     return $form;
-
 }
 
 
 
+function flat_collection_add_form_final_validate($form, &$form_state){
 
-function flat_collection_add_form_validate($form, &$form_state){
+    // don't run validation if other validation has failed
+    if (!empty(form_get_errors())) {
 
-    $owner =  $form_state['values']['owner'];
+        form_set_error('debug','debug');
+        return $form;
+    }
 
-}
-
-function flat_collection_add_form_final_validate($form, &$form_state)
-{
     module_load_include('php','flat_deposit','Helpers/CMDI/CmdiHandler');
 
     //Validate title
     // Special characters
     if ($form_state['values']['select_profile_name'] == 'MPI_Collection'){
 
-        $title = $form_state['values']['template_container']['elements']['field_01'];
+        $title = $form_state['values']['template_container']['elements']['field_01'][0];
         if (!preg_match('/^[a-zA-Z0-9\_\s]{2,40}+$/', $title)) {
             form_set_error('title', t('Allowed are all letters, numbers and underscores (max length 40)'));
         }
@@ -291,15 +264,14 @@ function flat_collection_add_form_final_validate($form, &$form_state)
     $form_state['values']['data']['fid'] = (string)$fid;
     $form_state['values']['data']['label']=  $fObject->label;
     $form_state['values']['data']['owner']=  $fObject->owner;
+    #form_set_error('debug','debug');
     return $form;
 
 }
 
 
-
-
 /**
- * Creates new flat_collection node and redirects to parent node.
+* Creates new flat_collection node and redirects to parent node.
  *
  */
 function flat_collection_add_form_submit($form, &$form_state){

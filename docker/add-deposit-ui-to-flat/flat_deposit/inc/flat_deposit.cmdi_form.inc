@@ -4,15 +4,16 @@
 function flat_deposit_cmdi_form($form, &$form_state){
 
     // exit form generation if no parent collection has been selected
-    if (isset($form_state['values']['data']['parent_nid'])){
+    if (isset($form_state['parent_nid'])){
 
-        $parent_nid = $form_state['values']['data']['parent_nid'];
+        $parent_nid = $form_state['parent_nid'];
 
     } else {
 
         $node = menu_get_object();
         $wrapper = entity_metadata_wrapper('node', $node);
         $parent_nid = $wrapper->flat_parent_nid->value();
+        $form_state['parent_nid'] = $parent_nid;
 
     }
 
@@ -30,17 +31,23 @@ function flat_deposit_cmdi_form($form, &$form_state){
     }
 
 
-
     // Set selected profile as this is updated on every AJAX request
-    $selected_profile = !empty($form_state['values']['select_profile_name']) ? $form_state['values']['select_profile_name'] : "MPI_Bundle";
+    if (isset($form_state['values']['select_profile_name'])) {
+        $form_state['selected'] =  $form_state['values']['select_profile_name'];
+
+    }
+
+    // unset saved 'ajax_select' value if the ajax_select-button is unselected, the saved value of this button is empty and no button has been clicked
+    if (!isset($form_state['values']['select_profile_name']) AND !empty($form_state['selected']) AND !isset($form_state['clicked_button'])) {
+
+        $form_state['selected'] = '';
+    }
+
 
     // get all available template xml
     module_load_include('php','flat_deposit','Helpers/CMDI/CmdiHandler');
-
     $available_profiles = CmdiHandler::getAvailableTemplates('flat_bundle');
 
-    // set '$load_profile_specific_form' which will trigger loading of container with form elements
-    $load_profile_specific_form = array_search($selected_profile, $available_profiles);
 
     global $user;
     $form['owner'] = array(
@@ -58,7 +65,6 @@ function flat_deposit_cmdi_form($form, &$form_state){
         '#empty_option' => '-- Select --',
         '#required' => TRUE,
         '#options' => $available_profiles,
-        '#default_value' => $selected_profile,
         '#ajax' => array(
             'callback' => 'select_profile_name_ajax_callback',
             'wrapper' => 'template-form',
@@ -66,6 +72,7 @@ function flat_deposit_cmdi_form($form, &$form_state){
             'effect' => 'fade',
         ),
     );
+    if (isset($form_state['selected'])){$form['trigger']['select_profile_name']['#default_value'] = $form_state['selected'];};
 
 
     $form['template_container'] = array(
@@ -89,47 +96,18 @@ function flat_deposit_cmdi_form($form, &$form_state){
         ),
     );
 
-
-
     //**************************************************
     // Get profile specific form and attach to container
     //**************************************************
 
     // load form element container if profile with available template is chosen
-    if ($load_profile_specific_form){
+    if (isset($form_state['selected']) and $form_state['selected'] == 'MPI_Bundle'){
 
-        $fields = CmdiHandler::generateDrupalForm($selected_profile);
-
-        if(isset($form_state['multival'])){
-
-            $fields = CmdiHandler::addMultivalElements($fields, $form_state['multival'] );
-
-        }
-
-        // check if everything worked as expected
-        if (is_array($fields)){
-
-            $form['template_container']['elements'] = $fields;
-
-        } else {
-
-            drupal_set_message($fields,'warning');
-
-        }
+        // generate basis form tree
+        $fields = CmdiHandler::generateDrupalForm($form_state['selected']);
 
 
-    }
-
-    $form['Submit'] = array(
-        '#type' => 'submit',
-        '#value' => t('Submit'),
-        '#validate' => array('flat_deposit_cmdi_form_validate'),
-    );
-
-
-
-    // Fill form field with loaded data
-    if ($load_profile_specific_form) {
+        // Fill form field with inherited data and add form fields for fields with mulitvals
         $parent = node_load($parent_nid);
         $pwrapper = entity_metadata_wrapper('node', $parent);
         $pFid = $pwrapper->flat_fid->value();
@@ -138,68 +116,56 @@ function flat_deposit_cmdi_form($form, &$form_state){
         module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/Cmdi2FormParser');
         $parser = new Cmdi2FormParser;
         try {
-            $result = $parser->getDefaultValuesFromCmdi($selected_profile, $parentCmdi);
-            $formPlusDefaults = array_merge_recursive($form['template_container']['elements'], $result);
+            $default_values = $parser->getDefaultValuesFromCmdi($form_state['selected'], $parentCmdi);
+
+            CmdiHandler::createInheritedMultivalForm($fields, $default_values, $form_state);
+
+            $formPlusDefaults = $parser->array_merge_recursive_new($fields, $default_values);
             $form['template_container']['elements'] = $formPlusDefaults;
+
 
         } catch (Cmdi2FormParserException $exception) {
 
             drupal_set_message($exception->getMessage(), 'warning');
         }
+
+
+        // count button presses per field
+        CmdiHandler::aggregateClickedButtons($form_state);
+
+        //
+        if(isset($form_state['count'])){
+
+            $allFields = CmdiHandler::addMultivalElements($formPlusDefaults, $form_state['count'] );
+            $form['template_container']['elements'] = $allFields;
+
+        }
+
+        // check if everything worked as expected
+        if (!is_array($allFields)){
+
+            drupal_set_message($fields,'warning');
+
+        }
+
     }
 
+    $form['Submit'] = array(
+        '#type' => 'submit',
+        '#value' => t('Submit'),
+        '#validate' => array('flat_deposit_cmdi_form_final_validate'),
+    );
 
 
-
-
-    #$data =  json_decode(file_get_contents(drupal_realpath(drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormTemplates/Example_MPI_Collection.json')), TRUE);
-
-
-    if ($load_profile_specific_form){
-        // review why it does not work if extra condition is chosen
-        #if (isset ($form_state['values']['import_trigger']) AND $form_state['values']['import_trigger'] === 1) {
-
-        #$result2 = exchange_numeric_key_with_default_value_property($result);
-
-        #$form['template_container']['elements'] = $result2;
-        #}
-    }
 
     return $form;
 
 
 }
 
-function cmdi_form_add_multival($form, &$form_state) {
-
-    $field_id = $form_state['clicked_button']['#name'];
-    $form['template_container']['elements'][$field_id]['remove']['#access'] = TRUE;
-
-    if (!isset($form_state['multival'][$field_id])){
-
-        $form_state['multival'][$field_id] = 1;
-
-    } else {
-
-        $form_state['multival'][$field_id]++;
-
-    }
-
-    // Setting $form_state['rebuild'] = TRUE causes the form to be rebuilt again.
-    $form_state['rebuild'] = TRUE;
-}
-
-function cmdi_form_remove_multival($form, &$form_state) {
-    $field_id = $form_state['clicked_button']['#name'];
 
 
-    $form_state['multival'][$field_id]--;
-
-    // Setting $form_state['rebuild'] = TRUE causes the form to be rebuilt again.
-    $form_state['rebuild'] = TRUE;
-}
-
-function flat_deposit_cmdi_form_validate($form, &$form_state)
+function flat_deposit_cmdi_form_final_validate($form, &$form_state)
 {
 
     // Validate owner.
@@ -235,6 +201,11 @@ function flat_deposit_cmdi_form_validate($form, &$form_state)
     }
 
 
+    // stop validation if errors have occurred
+    if(form_get_errors()){
+        return $form;
+    }
+
     // set cmdi filename
     $profile = $form_state['values']['select_profile_name'];
     $recordCmdi = $export_dir . '/' . $profile . '_' . uniqid() . '.cmdi';
@@ -242,9 +213,7 @@ function flat_deposit_cmdi_form_validate($form, &$form_state)
 
     // Get cmdi
     $import =  FALSE;
-
     module_load_include('php','flat_deposit','Helpers/CMDI/CmdiHandler');
-
     $msg = get_cmdi($form_state['values'], $recordCmdi, $import);
 
 
@@ -253,13 +222,6 @@ function flat_deposit_cmdi_form_validate($form, &$form_state)
         return $form;
     }
 
-
-/*
-
-    form_set_error('Debug','Debug2');
-    return $form;
-
-*/
 
 }
 
