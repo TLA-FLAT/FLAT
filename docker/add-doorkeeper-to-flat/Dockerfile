@@ -12,9 +12,9 @@ RUN apt-get update &&\
 
 RUN mkdir /tmp/fits &&\
     cd /tmp/fits &&\
-    wget http://projects.iq.harvard.edu/files/fits/files/fits-1.0.4.zip &&\
-    unzip fits-1.0.4.zip &&\
-    mv fits-1.0.4 /app/fits &&\
+    wget http://projects.iq.harvard.edu/files/fits/files/fits-1.2.0.zip &&\
+    unzip fits-1.2.0.zip &&\
+    mv fits-1.2.0 /app/fits &&\
     mkdir /app/fits/log-lib &&\
     mv /app/fits/lib/slf4j-log4j12-1.7.12.jar /app/fits/log-lib &&\
     sed -i 's|APPCLASSPATH=""|APPCLASSPATH="${FITS_HOME}/log-lib/slf4j-log4j12-1.7.12.jar"|g' /app/fits/fits-env.sh &&\
@@ -60,7 +60,8 @@ RUN cd /tmp/ServiceFLAT &&\
     cp target/flat.war /var/www/fedora/tomcat/webapps/flat.war &&\
     mkdir /var/www/fedora/tomcat/webapps/flat &&\
     cd /var/www/fedora/tomcat/webapps/flat &&\
-    unzip ../flat.war
+    unzip ../flat.war &&\
+    cp /tmp/ServiceFLAT/logging.properties /var/www/fedora/tomcat/webapps/flat/WEB-INF/classes/logging.properties
     
 RUN if [ `grep 'environment=' /etc/supervisor/conf.d/supervisord-tomcat.conf` ]; \
       then sed -i 's|^environment=\(.*\)$|environment=\1,FLAT_ICON_DIR="'$FLAT_ICON_DIR'"|g' /etc/supervisor/conf.d/supervisord-tomcat.conf; \

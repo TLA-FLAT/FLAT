@@ -815,10 +815,20 @@
 														</xsl:if>
 													</xsl:when>
 													<xsl:when test="starts-with($resURI,'file:')">
-														<dc:identifier>
-															<xsl:text>md5:</xsl:text>
-															<xsl:value-of select="sx:md5($resURI cast as xs:anyURI)" xmlns:fits="http://hul.harvard.edu/ois/xml/ns/fits/fits_output"/>
-														</dc:identifier>
+														<xsl:choose>
+															<xsl:when test="sx:fileExists($resURI cast as xs:anyURI)">
+																<dc:identifier>
+																	<xsl:text>md5:</xsl:text>
+																	<xsl:value-of select="sx:md5($resURI cast as xs:anyURI)" xmlns:fits="http://hul.harvard.edu/ois/xml/ns/fits/fits_output"/>
+																</dc:identifier>
+															</xsl:when>
+															<xsl:when test="$lax-resource-check">
+																<xsl:message>WRN: can't compute a MD5 checksum as the Resource[<xsl:value-of select="$resURI"/>] doesn't exist!</xsl:message>
+															</xsl:when>
+															<xsl:otherwise>
+																<xsl:message>ERR: can't compute a MD5 checksum as the Resource[<xsl:value-of select="$resURI"/>] doesn't exist!</xsl:message>
+															</xsl:otherwise>
+														</xsl:choose>
 													</xsl:when>
 												</xsl:choose>
 											</oai_dc:dc>

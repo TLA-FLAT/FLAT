@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<b:beans 
+    xmlns="http://www.springframework.org/schema/security"
+    xmlns:b="http://www.springframework.org/schema/beans"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+    http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+    http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-4.2.xsd">
+    
+    <http auto-config="true" use-expressions="false">
+        <intercept-url pattern="/**" access="ROLE_USER" />
+        <csrf disabled="true"/>
+        <http-basic />
+    </http>
+    
+    <user-service>
+        <user name="flat" password="sword" authorities="ROLE_USER" />
+    </user-service>
+
+</b:beans>

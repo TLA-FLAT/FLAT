@@ -50,10 +50,15 @@
         <action class="nl.mpi.tla.flat.deposit.action.HandleAssignment">
             <parameter name="prefix" value="{$epicPrefix}"/>
         </action>
-        <action name="persist resources" class="nl.mpi.tla.flat.deposit.action.MPIPersists">
+        <!--<action name="persist resources" class="nl.mpi.tla.flat.deposit.action.MPIPersists">
             <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
             <parameter name="resourcesDir" value="/app/flat/data"/>
             <parameter name="xpathDatasetName" value="/cmd:CMD/cmd:Components/cmd:ComicBook/cmd:Title"/>
+        </action>-->
+        <action name="persist resources" class="nl.mpi.tla.flat.deposit.action.Persist">
+            <parameter name="resourcesDir" value="/app/flat/data"/>
+            <parameter name="policyFile" value="{$base}/policies/persistence-policy.xml"/>
+            <parameter name="xpathDatasetName" value="replace(/cmd:CMD/cmd:Header/cmd:MdSelfLink,'.*{$epicPrefix}/','')"/>
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.ACL">
             <parameter name="policy" value="{$work}/metadata/policy.n3"/>
