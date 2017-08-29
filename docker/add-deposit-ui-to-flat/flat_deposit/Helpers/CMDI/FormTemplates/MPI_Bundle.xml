@@ -49,6 +49,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <description>Kind of data that is acquired</description>
             <required>true</required>
             <inherited>true</inherited>
+            <multival>true</multival>
             <options>
                 <option>DNA sequences</option>
                 <option>EEG data</option>
@@ -68,6 +69,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
                 <option>Language &amp; Genetics</option>
                 <option>Neurobiology of Language</option>
             </options>
+            <multival>true</multival>
         </field>
         <field id="field_04" name="Date">
             <type>date</type>
@@ -81,6 +83,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <type>textfield</type>
             <required>true</required>
             <subNode>Description</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_06" name="Name">
             <title>Name</title>
@@ -121,6 +124,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
                 <option>transcriber</option>
                 <option>translator</option>
             </options>
+            <multival>true</multival>
         </field>
         <field id="field_08" name="EmailAddress">
             <title>Email Address</title>
@@ -139,6 +143,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <type>textfield</type>
             <inherited>true</inherited>
             <subNode>Institution</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_11" name="Organisation">
             <title>Organisation</title>
@@ -146,12 +151,14 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <inherited>true</inherited>
             <required>true</required>
             <subNode>Institution</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_12" name="Url">
             <title>URL</title>
             <type>textfield</type>
             <inherited>true</inherited>
             <subNode>Institution</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_13" name="ProjectName">
             <title>Project Name</title>
@@ -184,30 +191,36 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <type>textfield</type>
             <inherited>true</inherited>
             <subNode>Content_Language</subNode>
+            <multival>true</multival>
+
         </field>
         <field id="field_18" name="Id">
             <title>Id</title>
             <type>textfield</type>
             <inherited>true</inherited>
             <subNode>Content_Language</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_19" name="Continent">
             <title>Continent</title>
             <type>textfield</type>
             <inherited>true</inherited>
             <subNode>Location</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_20" name="Country">
             <title>Country</title>
             <type>textfield</type>
             <inherited>true</inherited>
             <subNode>Location</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_21" name="PlaceName">
             <title>Place Name</title>
             <type>textfield</type>
             <inherited>true</inherited>
             <subNode>Location</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_22" name="Latitute">
             <title>Latitude</title>
@@ -215,6 +228,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <inherited>true</inherited>
             <subNode>Location</subNode>
             <subNode>geoCoordinates</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_23" name="Longitude">
             <title>Longitude</title>
@@ -222,6 +236,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <subNode>Location</subNode>
             <subNode>geoCoordinates</subNode>
             <inherited>true</inherited>
+            <multival>true</multival>
         </field>
         <field id="field_24" name="Elevation">
             <title>Elevation</title>
@@ -229,28 +244,33 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <subNode>Location</subNode>
             <subNode>geoCoordinates</subNode>
             <inherited>true</inherited>
+            <multival>true</multival>
         </field>
         <field id="field_25" name="Reference">
             <title>Reference</title>
             <type>textfield</type>
             <subNode>Publication</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_26" name="Url">
             <title>URL</title>
             <type>textfield</type>
             <subNode>Publication</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_27" name="Licence">
             <title>Licence</title>
             <inherited>true</inherited>
             <type>textfield</type>
             <subNode>Licence</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_28" name="LicenseUrl">
             <title>Licence URL</title>
             <inherited>true</inherited>
             <type>textfield</type>
             <subNode>Licence</subNode>
+            <multival>true</multival>
         </field>
     </fields>
     <data>

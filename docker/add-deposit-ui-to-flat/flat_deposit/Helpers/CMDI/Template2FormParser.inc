@@ -39,8 +39,8 @@ class Template2FormParser {
 
 
         $this->xml = $xml;
-        $this->_getFormFields();
         $this->_getDataField();
+        $this->_getFormFields();
         $this->_structureForm();
         return $this->form;
     }
@@ -57,11 +57,12 @@ class Template2FormParser {
         foreach ($xml->fields->field as $field) {
 
             $id = (string)$field['id'];
-            $this->fields[$id] = array();
+            $this->fields[$id][0] = array();
             $this->_setTitle($id, $field);
             $this->_setType($id, $field);
             $this->_setRequired($id, $field);
             $this->_setDescription($id, $field);
+            $this->_setMultival($id, $field);
             $this->_setDefaultValue($id, $field);
             $this->_setFieldset($id, $field);
         }
@@ -91,6 +92,7 @@ class Template2FormParser {
                 };
 
                 $this->form[$subNode][$key] = $field;
+                $this->form['data']['#value']['subNode'][$key] = $subNode;
 
             } else {
 
@@ -113,7 +115,7 @@ class Template2FormParser {
         } else {
             $title = (string)$field['name'];
         }
-        $this->fields[$id] ['#title'] = $title;
+        $this->fields[$id][0]['#title'] = $title;
 
     }
 
@@ -121,16 +123,63 @@ class Template2FormParser {
     {
         if (isset($field->required)) {
             $res = (string)$field->required == 'true' ? true : false;
-            $this->fields[$id] ['#required'] = $res;
+            $this->fields[$id][0]['#required'] = $res;
         } else {
-            $this->fields[$id] ['#required'] = false;
+            $this->fields[$id][0]['#required'] = false;
         }
     }
 
     private function _setDescription($id , $field)
     {
-        if (isset($field->description)) $this->fields[$id]['#description'] = (string)$field->description;
+        if (isset($field->description)) $this->fields[$id][0]['#description'] = (string)$field->description;
     }
+
+    private function _setMultival($id , $field)
+    {
+        if (isset($field->multival)){
+
+            $title = $this->fields[$id][0]['#title'];
+
+
+            // Add 'add' button
+            $this->fields[$id]['add'] = array(
+                '#tree' => TRUE,
+                '#weight' => 999,
+                '#name' => $id,
+                '#type' => 'button',
+                '#value' => t('Add'),
+                '#ajax' => array(
+                    'callback' => 'add_multival_to_cmdi_form_ajax',
+                    'wrapper' => 'template-form',
+                    'method' => 'replace',
+                    'event' => 'click',
+                    'prevent' => 'submit click mousedown',
+                    ),
+                '#limit_validation_errors' => array(), // No elements will be validated
+            );
+
+            // Add 'Remove' button
+            $this->fields[$id]['remove'] = array(
+                '#tree' => TRUE,
+                '#weight' => 999,
+                '#name' => $id,
+                '#type' => 'button',
+                '#value' => t('Remove'),
+                '#access' => FALSE,
+                '#ajax' => array(
+                    'callback' => 'remove_multival_from_cmdi_form_ajax',
+                    'wrapper' => 'template-form',
+                    'method' => 'replace',
+                    'effect' => 'fade',
+                ),
+                '#limit_validation_errors' => array(), // No elements will be validated
+
+        );
+
+        }
+
+    }
+
 
 
     /**
@@ -158,7 +207,7 @@ class Template2FormParser {
                     $options [] = (string)$option;
                 }
 
-                $this->fields[$id]['#options'] = drupal_map_assoc($options);
+                $this->fields[$id][0]['#options'] = drupal_map_assoc($options);
                 break;
 
             case 'date':
@@ -172,7 +221,7 @@ class Template2FormParser {
 
         }
 
-        $this->fields[$id]['#type'] = $data;
+        $this->fields[$id][0]['#type'] = $data;
 
     }
 
@@ -180,7 +229,11 @@ class Template2FormParser {
     private function _setDefaultValue($id, $field)
     {
         if (isset($field->defaultValue)) {
-            $this->fields[$id]['#default_value'] = (string)$field->defaultValue;
+            if (!isset($field->multival)) {
+                $this->fields[$id][0]['#default_value'] = (string)$field->defaultValue;
+            } else {
+            //todo implement how to assign default values to multivals
+            }
         }
 
     }

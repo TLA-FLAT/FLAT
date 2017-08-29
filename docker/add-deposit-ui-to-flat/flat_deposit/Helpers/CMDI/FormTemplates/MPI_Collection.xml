@@ -54,6 +54,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
                 <option>fMRI data</option>
                 <option>Video recordings</option>
             </options>
+            <multival>true</multival>
         </field>
         <field id="field_03" name="ResearchField">
             <type>dropdown</type>
@@ -66,6 +67,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
                 <option>Language &amp; Genetics</option>
                 <option>Neurobiology of Language</option>
             </options>
+            <multival>true</multival>
         </field>
         <field id="field_04" name="Date">
             <type>date</type>
@@ -78,6 +80,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <type>textfield</type>
             <required>true</required>
             <subNode>Description</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_06" name="Name">
             <title>Name</title>
@@ -90,6 +93,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <type>dropdown</type>
             <required>true</required>
             <subNode>Contributor</subNode>
+            <multival>true</multival>
             <options>
                 <option>annotator</option>
                 <option>author</option>
@@ -131,17 +135,20 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <title>Department</title>
             <type>textfield</type>
             <subNode>Institution</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_11" name="Organisation">
             <title>Organisation</title>
             <type>textfield</type>
             <required>true</required>
             <subNode>Institution</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_12" name="Url">
             <title>URL</title>
             <type>textfield</type>
             <subNode>Institution</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_13" name="ProjectName">
             <title>Project Name</title>
@@ -169,64 +176,76 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <title>Name</title>
             <type>textfield</type>
             <subNode>Content_Language</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_18" name="Id">
             <title>Id</title>
             <type>textfield</type>
             <subNode>Content_Language</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_19" name="Continent">
             <title>Continent</title>
             <type>textfield</type>
             <subNode>Location</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_20" name="Country">
             <title>Country</title>
             <type>textfield</type>
             <subNode>Location</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_21" name="PlaceName">
             <title>Place Name</title>
             <type>textfield</type>
             <subNode>Location</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_22" name="Latitute">
             <title>Latitude</title>
             <type>textfield</type>
             <subNode>Location</subNode>
             <subNode>geoCoordinates</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_23" name="Longitude">
             <title>Longitude</title>
             <type>textfield</type>
             <subNode>Location</subNode>
             <subNode>geoCoordinates</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_24" name="Elevation">
             <title>Elevation</title>
             <type>textfield</type>
             <subNode>Location</subNode>
             <subNode>geoCoordinates</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_25" name="Reference">
             <title>Reference</title>
             <type>textfield</type>
             <subNode>Publication</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_26" name="Url">
             <title>URL</title>
             <type>textfield</type>
             <subNode>Publication</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_27" name="Licence">
             <title>Licence</title>
             <type>textfield</type>
             <subNode>Licence</subNode>
+            <multival>true</multival>
         </field>
         <field id="field_28" name="LicenseUrl">
             <title>Licence URL</title>
             <type>textfield</type>
             <subNode>Licence</subNode>
+            <multival>true</multival>
         </field>
     </fields>
     <data>

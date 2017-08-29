@@ -65,11 +65,6 @@ class Cmdi2FormParser
 
             $this->default_values = $this->_getInheritedValues();
 
-            #$arraydata = json_decode(json_encode((array)$data2), true); // data as ass array
-            // need to transform data keys into drupal form element ids as specified in Form Templates
-
-
-
             return $this->default_values;
         }
 
@@ -79,7 +74,7 @@ class Cmdi2FormParser
 
 
     /**
-     * Reads in template to create form fields.
+     * Loop through Form Template to get all fields with thw inherited attribute. If is set to true, get values from parent cmdi and save as default_value.
      *
      */
     private function _getInheritedValues(){
@@ -91,6 +86,7 @@ class Cmdi2FormParser
 
             if((bool)$field->inherited) {
 
+
                 $id = (string)$field['id'];
                 $name = (string)$field['name'];
                 $type = (string)$field->type;
@@ -98,36 +94,53 @@ class Cmdi2FormParser
                 if (isset($field->subNode)) {
 
                     $sub = (string)$field->subNode[0];
+                    // loop through parent cmdi if values are set
+                    if (isset($this->parentData->Components->{$this->parentProfile}->$sub->{$name})){
 
-                    $value = (string)$this->parentData->Components->{$this->parentProfile}->$sub->{$name};
+                        $count = 0;
+                        foreach ($this->parentData->Components->{$this->parentProfile}->$sub->{$name} as $child) {
 
-                    $default_values[$sub][$id]['#default_value'] = '';
+                            $value = (string)$this->parentData->Components->{$this->parentProfile}->$sub->{$name}[$count];
+                            if ($type == 'date') {
 
-                    $df = &$default_values[$sub][$id]['#default_value'];
+                                $value = $this->convertDate($value);
+
+                            }
+
+                            $default_values[$sub][$id][(string)$count]['#default_value'] = $value;
+
+                        $count++;
+                        }
+                    }
 
                 } else {
 
-                    $value = (string)$this->parentData->Components->{$this->parentProfile}->{$name};
+                    // loop through parent cmdi if values are set
+                    if (isset($this->parentData->Components->{$this->parentProfile}->{$name})) {
 
-                    $default_values[$id] ['#default_value'] = '';
+                        $count = 0;
 
-                    $df = &$default_values[$id]['#default_value'];
+                        foreach ($this->parentData->Components->{$this->parentProfile}->{$name} as $child) {
+                            $value = (string)$this->parentData->Components->{$this->parentProfile}->{$name}[$count];
+                            if ($type == 'date') {
+
+                                $value = $this->convertDate($value);
+
+                            }
+
+                            $default_values[$id][$count] ['#default_value'] = $value;
+                            $count++;
+
+                        }
+
+                    }
 
                 }
 
-                if ($type == 'date') {
+            }
 
-                    $value = $this->convertDate($value);
+        };
 
-                }
-
-                $df = $value;
-
-
-            };
-
-
-        }
         return $default_values;
     }
 
@@ -147,6 +160,34 @@ class Cmdi2FormParser
         }
 
         return $converted_date;
+    }
+
+
+    /**
+     * Version of array_merge_recursive without overwriting numeric keys
+     *
+     * @param  array $array1 Initial array to merge.
+     * @param  array ...     Variable list of arrays to recursively merge.
+     *
+     * @link   http://www.php.net/manual/en/function.array-merge-recursive.php#106985
+     * @author Martyniuk Vasyl <martyniuk.vasyl@gmail.com>
+     */
+    function array_merge_recursive_new()
+    {
+        $arrays = func_get_args();
+        $base = array_shift($arrays);
+        foreach($arrays as $array) {
+            reset($base);
+            while(list($key, $value) = @each($array)) {
+                if(is_array($value) && @is_array($base[$key])) {
+                    $base[$key] = self::array_merge_recursive_new($base[$key], $value);
+                }
+                else {
+                    $base[$key] = $value;
+                }
+            }
+        }
+        return $base;
     }
 
 

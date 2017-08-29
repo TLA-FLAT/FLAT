@@ -120,9 +120,7 @@ class Form2CmdiParser
     private function _populateComponentNode($profile_name, $data){
 
 
-        $string = '<Components></Components>';
-
-        $this->components = simplexml_load_string($string);
+        $this->components = simplexml_load_string('<Components></Components>');
         $this->components->addChild($profile_name);
 
 
@@ -143,9 +141,13 @@ class Form2CmdiParser
 
 
             // get data from form
-            if ($field_data !== ''){
-                $values = (array)$field_data; // convert to array in order to unify input
-                $converted_values = $this->convertValues($field->type, $values); // convert values into xml - compatible format
+            $values = (array)$field_data; // convert to array in order to unify input
+            $no_button_values = array_diff_key($values, ['add'=>'add', 'remove'=>'remove']);
+            $only_entered_values = array_filter($no_button_values, function($value) { return $value !== ''; });
+            if (!empty($only_entered_values)){
+
+                $converted_values = $this->convertValues($field->type, $only_entered_values); // convert values into xml - compatible format
+
             } else {
 
                 continue;
@@ -187,9 +189,9 @@ class Form2CmdiParser
 
         switch ($type){
             case 'date':
-                $month = (strlen($values['month']) == 2 ) ? $values['month'] : '0'. $values['month'];
-                $day = (strlen($values['day']) == 2 ) ? $values['day'] : '0'. $values['day'];
-                $date = $values['year'] . '-' . $month . '-' . $day;
+                $month = (strlen($values[0]['month']) == 2 ) ? $values[0]['month'] : '0'. $values[0]['month'];
+                $day = (strlen($values[0]['day']) == 2 ) ? $values[0]['day'] : '0'. $values[0]['day'];
+                $date = $values[0]['year'] . '-' . $month . '-' . $day;
                 $converted = array($date);
                 break;
             default :

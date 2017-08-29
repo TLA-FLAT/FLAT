@@ -50,3 +50,4 @@ class flat_views_views_handler_field_actions extends views_handler_field {
     // Do nothing, leave query blank, we render the contents
   }
 }
+

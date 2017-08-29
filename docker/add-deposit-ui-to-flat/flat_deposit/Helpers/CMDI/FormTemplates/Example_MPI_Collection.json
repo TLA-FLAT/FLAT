@@ -1,1 +1,165 @@
-{"data":{"clarinProfileId":"clarin.eu:cr1:p_1475136016239"},"field_01":"Demo Collection","field_02":"Video recordings","field_03":"Language Documentation","field_04":{"month":"10","day":"12","year":"2014"},"Description":{"field_05":"A collection demonstrating the use of the deposit tool"},"Contributor":{"field_06":"Daniel von Rhein","field_07":"developer","field_08":"","field_09":""},"Institution":{"field_10":"Technical group","field_11":"Max Planck Institute for Psycholinguistics","field_12":""},"Project":{"field_13":"Advantages of a Living Archive","field_14":"Benefits-costs evaluation of large-scale linguistic data archives","field_15":"","field_16":""},"Content_Language":{"field_17":"","field_18":""},"Location":{"field_19":"","field_20":"","field_21":"","field_22":"","field_23":"","field_24":""},"Publication":{"field_25":"","field_26":""},"Licence":{"field_27":"","field_28":""}}
+{
+  "data": {
+    "clarinProfileId": "clarin.eu:cr1:p_1475136016239"
+  },
+  "field_01": {
+    "0": {
+      "#default_value": "Demo Collection"
+    }
+  },
+  "field_02": {
+    "0": {
+      "#default_value": "Video recordings"
+    }
+  },
+  "field_03": {
+    "0": {
+      "#default_value": "Language Documentation"
+    }
+  },
+  "field_04": {
+    "0": {
+      "#default_value": {
+        "month": "10",
+        "day": "12",
+        "year": "2014"
+      }
+    }
+  },
+  "Description": {
+    "field_05": {
+      "0": {
+        "#default_value": "A collection demonstrating the use of the deposit tool"
+      }
+    }
+  },
+  "Contributor": {
+    "field_06": {
+      "0": {
+        "#default_value": "Daniel von Rhein"
+      }
+    },
+    "field_07": {
+      "0": {
+        "#default_value": "developer"
+      }
+    },
+    "field_08": {
+      "0": {
+        "#default_value": ""
+      }
+    },
+    "field_09": {
+      "0": {
+        "#default_value": ""
+      }
+    }
+  },
+  "Institution": {
+    "field_10": {
+      "0": {
+        "#default_value": "Technical group"
+      }
+    },
+    "field_11": {
+      "0": {
+        "#default_value": "Max Planck Institute for Psycholinguistics"
+      }
+    },
+    "field_12": {
+      "0": {
+        "#default_value": ""
+      }
+    }
+  },
+  "Project": {
+    "field_13": {
+      "0": {
+        "#default_value": "Advantages of a Living Archive"
+      }
+    },
+    "field_14": {
+      "0": {
+        "#default_value": "Benefits-costs evaluation of large-scale linguistic data archives"
+      }
+    },
+    "field_15": {
+      "0": {
+        "#default_value": ""
+      }
+    },
+    "field_16": {
+      "0": {
+        "#default_value": ""
+      }
+    }
+  },
+  "Content_Language": {
+    "field_17": {
+      "0": {
+        "#default_value": ""
+      }
+    },
+    "field_18": {
+      "0": {
+        "#default_value": ""
+      }
+    }
+  },
+  "Location": {
+    "field_19": {
+      "0": {
+        "#default_value": ""
+      }
+    },
+    "field_20": {
+      "0": {
+        "#default_value": ""
+      }
+    },
+    "field_21": {
+      "0": {
+        "#default_value": ""
+      }
+    },
+    "field_22": {
+      "0": {
+        "#default_value": ""
+      }
+    },
+    "field_23": {
+      "0": {
+        "#default_value": ""
+      }
+    },
+    "field_24": {
+      "0": {
+        "#default_value": ""
+      }
+    }
+  },
+  "Publication": {
+    "field_25": {
+      "0": {
+        "#default_value": ""
+      }
+    },
+    "field_26": {
+      "0": {
+        "#default_value": ""
+      }
+    }
+  },
+  "Licence": {
+    "field_27": {
+      "0": {
+        "#default_value": ""
+      },
+      "field_28": {
+        "0": {
+          "#default_value": ""
+        }
+      }
+    }
+  }
+}

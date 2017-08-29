@@ -919,10 +919,10 @@ function flat_bundle_edit_node_form_validate($form, &$form_state){
     $form_state['values']['flat_parent_title']['und'][0]['value'] = $new_collection_name;
 
     // If parent nid has not changed pass validation
-    if ($original_collection_nid === $new_collection_nid){
-        form_set_error('flat_parent_nid', 'collection has not changed');
-        return $form;
-    }
+    #if ($original_collection_nid === $new_collection_nid){
+    #    form_set_error('flat_parent_nid', 'collection has not changed');
+    #    return $form;
+    #}
 
     // Validate that no record.cmdi exists with metadata related to a collection and then, the collection changes
     $cmdi_option = $wrapper->flat_cmdi_option->value();
