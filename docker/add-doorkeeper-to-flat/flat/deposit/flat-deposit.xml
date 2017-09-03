@@ -23,6 +23,7 @@
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.FedoraIsAIPUpdate">
             <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
+            <parameter name="prefix" value="{$epicPrefix}"/>
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.FedoraLoadCollectionHierarchy">
             <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>

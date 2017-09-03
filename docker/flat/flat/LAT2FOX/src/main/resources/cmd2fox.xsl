@@ -269,7 +269,7 @@
 		<xsl:variable name="fid">
 			<xsl:choose>
 				<xsl:when test="normalize-space($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink/@lat:flatURI) != ''">
-					<xsl:sequence select="normalize-space($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink/@lat:flatURI)"/>
+					<xsl:sequence select="replace(normalize-space($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink/@lat:flatURI),'#.*','')"/>
 				</xsl:when>
 				<xsl:otherwise>
 					<xsl:sequence select="cmd:lat('lat:', $pid)"/>
@@ -321,17 +321,17 @@
 						<xsl:choose>
 							<xsl:when test="normalize-space(@lat:flatURI)!=''">
 								<xsl:message use-when="$debug">DBG: IsPartOf.@lat:flatURI[<xsl:value-of select="@lat:flatURI"/>]</xsl:message>
-								<xsl:sequence select="@lat:flatURI"/>
+								<xsl:sequence select="replace(@lat:flatURI,'#.*','')"/>
 							</xsl:when>
 							<xsl:otherwise>
 								<xsl:choose>
 									<xsl:when test="starts-with(.,'islandora:')">
 										<xsl:message use-when="$debug">DBG: IsPartOf.islandora[<xsl:value-of select="."/>]</xsl:message>
-										<xsl:sequence select="."/>
+										<xsl:sequence select="replace(.,'#.*','')"/>
 									</xsl:when>
 									<xsl:when test="starts-with(.,'lat:')">
 										<xsl:message use-when="$debug">DBG: IsPartOf.lat[<xsl:value-of select="."/>]</xsl:message>
-										<xsl:sequence select="."/>
+										<xsl:sequence select="replace(.,'#.*','')"/>
 									</xsl:when>
 									<xsl:when test="starts-with(.,'hdl:') or matches(.,'http(s)?://hdl.handle.net/')">
 										<xsl:message use-when="$debug">DBG: IsPartOf.hdl[<xsl:value-of select="cmd:lat('lat:',cmd:hdl(.))"/>]</xsl:message>
@@ -635,7 +635,7 @@
 					<xsl:variable name="resID">
 						<xsl:choose>
 							<xsl:when test="normalize-space($res/cmd:ResourceRef/@lat:flatURI) != ''">
-								<xsl:sequence select="normalize-space($res/cmd:ResourceRef/@lat:flatURI)"/>
+								<xsl:sequence select="replace(normalize-space($res/cmd:ResourceRef/@lat:flatURI),'#.*','')"/>
 							</xsl:when>
 							<xsl:otherwise>
 								<xsl:sequence select="cmd:lat('lat:', $resPID)"/>
@@ -995,10 +995,10 @@
 			<xsl:apply-templates select="@*" mode="#current"/>
 			<xsl:apply-templates select="cmd:MdCreator | cmd:MdCreationDate" mode="#current"/>
 			<cmd:MdSelfLink>
-				<xsl:copy-of select="cmd:MdSelfLink/@* except (@lat:localURI,@lat:flatURI)"/>
+				<xsl:copy-of select="cmd:MdSelfLink/(@* except (@lat:localURI,@lat:flatURI))"/>
 				<xsl:choose>
-					<xsl:when test="normalize-space(@lat:flatURI)!=''">
-						<xsl:copy-of select="@lat:flatURI"/>
+					<xsl:when test="normalize-space(cmd:MdSelfLink/@lat:flatURI)!=''">
+						<xsl:apply-templates select="cmd:MdSelfLink/@lat:flatURI" mode="#current"/>
 					</xsl:when>
 					<xsl:otherwise>
 						<xsl:attribute name="lat:flatURI" select="cmd:lat('lat:', $pid)"/>
@@ -1158,10 +1158,13 @@
 		</xsl:choose>
 	</xsl:template>
 
-	<!-- turn @lat:localURI into a lat: reference -->
-	<xsl:template match="@lat:localURI" priority="1" mode="cmd">
-		<xsl:attribute name="lat:localURI" xmlns:lat="http://lat.mpi.nl/">
-			<xsl:value-of select="cmd:lat('lat:', parent::cmd:ResourceRef)"/>
+	<!-- strip out @lat:localURI -->
+	<xsl:template match="@lat:localURI" priority="1" mode="cmd"/>
+
+	<!-- cleanup @lat:flatURI -->
+	<xsl:template match="@lat:flatURI" priority="1" mode="cmd">
+		<xsl:attribute name="lat:flatURI" xmlns:lat="http://lat.mpi.nl/">
+			<xsl:value-of select="replace(.,'#.*','')"/>
 		</xsl:attribute>
 	</xsl:template>
 

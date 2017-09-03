@@ -31,11 +31,11 @@ TODO:   flat-sword-upload.sh test-sip.zip test
 TODO: 3. check if everything went fine:
 TODO    curl -u flat:sword http://localhost/flat/easy-deposit/statement/test | xmllint --format -
 TODO: 4. trigger the doorkeeper:
-TODO:   curl -X PUT http://localhost/flat/doorkeeper/test
+TODO:   curl -u flat:sword -X PUT http://localhost/flat/doorkeeper/test
 TODO: OR
 TODO:   doorkeeper.sh sip=test
 TODO: 5. check the progress:
-TODO:   curl http://localhost/flat/doorkeeper/test
+TODO:   curl -u flat:sword http://localhost/flat/doorkeeper/test
 TODO:   (repeat until done)
 TODO: OR
 TODO:   tail -f deposit/bags/test/bag-test-sip/data/test-sip/logs/devel.log
