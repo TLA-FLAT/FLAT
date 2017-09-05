@@ -1,0 +1,55 @@
+<?php
+
+/**
+ * Implements hook_install
+ *
+ */
+function flat_workspaces_install()
+{
+
+    //basic settings
+    module_load_include('inc', 'flat_workspaces', 'inc/config');
+    flat_workspaces_set_variables();
+
+    $t = get_t();
+
+
+    // Get rid of flat_source field option to select a local resource
+    $field = field_info_field('flat_source');
+
+    $values = &$field['settings']['allowed_values'];
+
+    if (!isset($values['local'])){
+        $values['local'] = 'Select a folder in an MPI Workspace on the server';
+        field_update_field($field);
+
+    }
+
+
+
+}
+
+/**
+ * Implements hook_uninstall
+ *
+ */
+function flat_workspaces_uninstall()
+{
+    $t = get_t();
+
+
+
+    // Get rid of flat_source field option to select a local resource
+    $field = field_info_field('flat_source');
+
+    $values = &$field['settings']['allowed_values'];
+
+    if (isset($values['local'])){
+
+        unset($values['local']);
+        field_update_field($field);
+
+    }
+
+
+}

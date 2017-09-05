@@ -20,12 +20,6 @@ function flat_deposit_stream_wrappers() {
             'type' => STREAM_WRAPPERS_LOCAL_NORMAL,
         ),
 
-        'local' => array(
-            'name' => t('The Local Data Stream'),
-            'class' => 'LocalStreamWrapper',
-            'description' => t('Stream wrapper for locally stored data'),
-            'type' => STREAM_WRAPPERS_LOCAL_NORMAL,
-        ),
 
         'external' => array(
             'name' => t('The External Data Stream'),
@@ -140,51 +134,6 @@ class MetadataStreamWrapper extends DrupalPrivateStreamWrapper {
 
 
 
-class LocalStreamWrapper extends DrupalPrivateStreamWrapper {
-    public function getDirectoryPath() {
-
-        return variable_get('flat_deposit_paths')['local'];
-    }
-
-    /**
-     * Overrides getExternalUrl().
-     *
-     * Return the HTML URI of a private file.
-     */
-    function getExternalUrl() {
-        $path = str_replace('\\', '/', $this->getTarget());
-        return url('system/files/' . $path, array('absolute' => TRUE));
-    }
-
-    /**
-     * Overrides StreamWrapperInterface::rename
-     */
-    public function rename($from_uri, $to_uri) {
-        return rename($this->getLocalPath($from_uri), $this->getLocalPath($to_uri));
-    }
-
-    /**
-     * Overrides StreamWrapperInterface::getLocalPath
-     */
-    protected function getLocalPath($uri = NULL) {
-        if (!isset($uri)) {
-            $uri = $this->uri;
-        }
-        $path = $this->getDirectoryPath() . '/' . $this->getTarget($uri);
-        $realpath = realpath($path);
-        if (!$realpath) {
-            // This file does not yet exist.
-            $realpath = realpath(dirname($path)) . '/' . drupal_basename($path);
-        }
-        $directory = realpath($this->getDirectoryPath());
-        if (!$realpath || !$directory || strpos($realpath, $directory) !== 0) {
-            return FALSE;
-        }
-        return $realpath;
-    }
-
-}
-
 class ExternalStreamWrapper extends DrupalPrivateStreamWrapper {
     public function getDirectoryPath() {
 
@@ -279,7 +228,7 @@ function flat_deposit_enable(){
     module_enable(array('blog','flat_views'));
 
     $paths = variable_get('flat_deposit_paths');
-    $filter = array('local', 'external', 'metadata', 'freeze');
+    $filter = array('external', 'metadata', 'freeze');
 
     $directories = array_intersect_key($paths, array_flip($filter));
 
@@ -297,7 +246,7 @@ function flat_deposit_enable(){
                 Make sure also to adapt profile User-1 in admin/config/media/imce/profile',
                     array('!directory'=> $directory)),'warning');
 
-            } elseif (posix_getpwuid(fileowner($directory)) !== variable_get('flat_deposit_names')['apache_user']){
+            } elseif (posix_getpwuid(fileowner($directory)) !== exec('whoami')){
 
                 drupal_set_message(t('Private directory (!directory) is not owned by apache user. Please change manually ownership of the directory. 
                 Make sure also to adapt profile User-1 in admin/config/media/imce/profile',
@@ -370,18 +319,18 @@ function flat_deposit_menu()
     );
 
 
-/*
+    /*
 
-    // bundle cmdi file selection form
-    $items['node/%node/cmdi/select'] = array(
-        'type' => MENU_CALLBACK,
-        'page callback' => 'drupal_get_form',
-        'page arguments' => array('flat_deposit_cmdi_select_form',1),
-        'file' => 'inc/flat_deposit.cmdi_select.inc',
-        'access arguments' => array('use deposit module'),
-    );
+        // bundle cmdi file selection form
+        $items['node/%node/cmdi/select'] = array(
+            'type' => MENU_CALLBACK,
+            'page callback' => 'drupal_get_form',
+            'page arguments' => array('flat_deposit_cmdi_select_form',1),
+            'file' => 'inc/flat_deposit.cmdi_select.inc',
+            'access arguments' => array('use deposit module'),
+        );
 
-*/
+    */
     // bundle cmdi file creator form
     $items['node/%node/cmdi'] = array(
         'title' => 'Flat bundle cmdi generation',
@@ -392,20 +341,20 @@ function flat_deposit_menu()
         'access arguments' => array('use deposit module', 1),
     );
 
-/*
-    //FLAT_COLLECTION
-    // flat_supercollection entity rendering
-    $items['flat_supercollection/%entity_object'] = array(
-        'load arguments' => array('flat_supercollection'),
-        'title callback' => 'flat_supercollection_page_title',
-        'title arguments' => array(1),
-        'page callback' => 'entity_ui_entity_page_view',
-        'page arguments' => array(1),
-        'access arguments' => array('view collection'),
+    /*
+        //FLAT_COLLECTION
+        // flat_supercollection entity rendering
+        $items['flat_supercollection/%entity_object'] = array(
+            'load arguments' => array('flat_supercollection'),
+            'title callback' => 'flat_supercollection_page_title',
+            'title arguments' => array(1),
+            'page callback' => 'entity_ui_entity_page_view',
+            'page arguments' => array(1),
+            'access arguments' => array('view collection'),
 
-    );
+        );
 
-*/
+    */
 
 
     return $items;
@@ -415,7 +364,7 @@ function flat_deposit_menu()
 
 function flat_supercollection_admin(AbstractObject $object){
 
- #   print_r('hello');
+    #   print_r('hello');
 }
 
 /**
@@ -721,6 +670,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
     );
 
 
+
     // Query all flat_collection nodes that are owned by the user and have no empty fedora_fid (flat_fid) value.
     // Resulting nodes will be added as options with the node's nid as option-key and node's title as option-labels.
     $options = [];
@@ -768,66 +718,8 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
                 $form['flat_parent_title']['und'][0]['value']['#default_value'] = $args[1]['value'];
             }
 
-            ///////////
-            // Add local project directory selection form container element
-            // #state attribute makes it only visible if flat_source field is set to 'local'
-            ///////////
-            module_load_include('inc','flat_deposit','inc/class.Workspaces');
-            module_load_include('inc', 'node', 'node.pages');
-            $form['workspace_navigation'] = Workspaces::get_container();
-            form_load_include($form_state, 'inc', 'node', 'node.pages');
-
-            // set the local departments' project folder
-            $config_names = variable_get('flat_deposit_names');
-            $department = !empty($form_state['values']['department']) ? $form_state['values']['department'] : 'none';
-            $projects_directory = 'local://' . $department . '/' . $config_names['workspace_folder'];
-
-            //Scan project directory; non-existing directories will return false, existing dirs will populate the
-            // projects field options
-            // todo filter projects for permissions
-            $projects = Workspaces::getSubdirectoryNames($projects_directory, ['isAccessibleDir']);
-
-            if (!empty($projects)){
-                $form['workspace_navigation']['field']['project']['#options'] = drupal_map_assoc($projects);
-                $form['workspace_navigation']['field']['project']['#access'] = TRUE;
-            }
-
-            $project = !empty($form_state['values']['project']) ? $form_state['values']['project'] : 'none';
-            $project_root = $projects_directory . '/' . $project . '/' . $config_names['archive_folder'];
-
-
-            // Get original directory value.
-            $current =  Workspaces::get_flat_original_path($form_state, $project_root);
-
-            // (if chosen) extend 'current' directory value with value of next_directories
-            if (!empty($form_state['values']['next_directories'])) {
-
-                $current .= "/" . $form_state['values']['next_directories'];
-                unset($form_state['values']['next_directories']);
-                $form['workspace_navigation']['field']['next_directories']['#options'] = array();
-                $form['workspace_navigation']['field']['next_directories']['#access'] = FALSE;
-
-            }
-
-            // alter default value of the flat_original_path field to attach value of current directory to flat_bundle node
-            $form['flat_original_path']['und'][0]['value']['#default_value'] = $current;
-
-            // print result to screen
-            $form['workspace_navigation']['field']['current_directory']['#markup'] = '</br>currently selected archive directory: <strong>' . str_replace('local://' ,'', $current. '</strong>');
-
-
-            // Add button to go back to previous level
-            if ($current != $project_root AND !empty($current)) {
-                $form['workspace_navigation']['field']['previous_directory']['#access'] = TRUE;
-            }
-
-            // Add dropdown menu with lower level directories to go into
-            $subDirs = Workspaces::getSubdirectoryNames($current, ['isAccessibleDir']);
-            if (!empty($subDirs)){
-                $form['workspace_navigation']['field']['next_directories']['#options'] = drupal_map_assoc($subDirs);
-                $form['workspace_navigation']['field']['next_directories']['#access'] = TRUE;
-            }
-
+            /*
+            */
             // custom validation and submission
             $form['#validate'][] = 'flat_bundle_node_form_add_validate';
             $form['#submit'][] = 'flat_bundle_node_form_add_submit';
@@ -873,16 +765,6 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
     }
 }
 
-function workspace_navigation_previous_directory_submit($form, &$form_state) {
-
-    // alter saved current_directory value
-    $form_state['values']['flat_original_path']['und'][0]['value'] = dirname($form_state['values']['flat_original_path']['und'][0]['value']);
-
-    // unset next_directories value
-    $form_state['values']['next_directories'] = '';
-
-    $form_state['rebuild'] = TRUE;
-}
 
 
 #function flat_bundle_node_form_add_submit($form, &$form_state){}
@@ -933,6 +815,7 @@ function flat_bundle_edit_node_form_validate($form, &$form_state){
         return $form;
 
     }
+
 
 
     //Check that bundle name within collection is distinctive from existing bundles, otherwise we get problems with creating new folders.
@@ -1038,10 +921,19 @@ function flat_bundle_node_form_add_validate($form, &$form_state){
     if (!$unique) {
         form_set_error('title', t('Bundle with same or very similar bundle name exists'));
     }
+// Validate that currently selected folder has no subfolders
+    $dirs = array_filter(glob($original_path . '/*'), 'is_dir');
+    if (file_exists(drupal_realpath($original_path)) AND !empty(glob(drupal_realpath($original_path).'/*'))){
+        form_set_error('department', 'Chosen directory contains subfolders');
+        return $form;
+    }
+
+    #form_set_error('department', 'Next step');
+    return $form;
 
 
 #    form_set_error('debug', 'debug');
- #   return $form;
+    #   return $form;
 
 }
 
@@ -1108,8 +1000,8 @@ function flat_collection_view($node, $view_mode) {
             '#options' => array(
                 'attributes' => array(),
                 'html' => FALSE,
-                ),
-            );
+            ),
+        );
         #flat_fid
 
         // Add form to node
@@ -1132,14 +1024,13 @@ function flat_collection_view($node, $view_mode) {
  */
 function flat_bundle_view($node, $view_mode) {
 
-
     $wrapper = entity_metadata_wrapper('node', $node);
 
     if ($view_mode == 'full' && node_is_page($node)) {
         // Breadcrumb navigation.  l() escapes title, so we should not escape !name.
         drupal_set_breadcrumb(array(
-                l(t('Home'),  NULL),
-                l(t('!name', array ('!name'=> $wrapper->flat_parent_title->value())),'node/' . $wrapper->flat_parent_nid->value()),
+            l(t('Home'),  NULL),
+            l(t('!name', array ('!name'=> $wrapper->flat_parent_title->value())),'node/' . $wrapper->flat_parent_nid->value()),
         ));
 
 
@@ -1482,8 +1373,3 @@ function flat_supercollection_view($node, $view_mode) {
 
     return $node;
 }
-
-
-
-
-

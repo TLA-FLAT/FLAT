@@ -64,29 +64,6 @@ class Workspaces
                     ),
 
                 ),
-                'previous_directory' => array(
-                    '#type' => 'submit',
-                    '#value' => t('Back one level'),
-                    '#submit' => array('workspace_navigation_previous_directory_submit'),
-                    '#ajax' => array(
-                        'callback' => 'reload_workspace_navigation_container_ajax_callback',
-                        'wrapper' => 'workspace_navigation',
-                        'effect' => 'fade',
-                    ),
-
-                    '#limit_validation_errors' => array(
-                        array('data', 'current_directory'),
-                        array('project'),
-                        array('department'),
-                        array('next_directories'),
-                        array('flat_original_path'),
-                        array('flat_source'),
-                    ),
-
-                    '#access' => FALSE,
-                ),
-
-
                 'next_directories' => array(
                     '#title' => 'Subfolder',
                     '#type' => 'select',
@@ -107,6 +84,14 @@ class Workspaces
 
     }
 
+    /**
+     * Get the path of a bundles" resource files. If value of node field 'original_path' is not set yet, path is set to project root.
+     * Otherwise, if project root folder has changed set 'original path' to root folder. Otherwise take saved value
+
+     * @param $form_state
+     * @param $project_root
+     * @return string
+     */
     static function get_flat_original_path($form_state, $project_root){
         if (isset($form_state['values']['flat_source']['und'][0]['value'])) {
             if ($form_state['values']['flat_source']['und'][0]['value'] == 'external') {
@@ -133,6 +118,7 @@ class Workspaces
         return $current;
 
     }
+
      static function getSubdirectoryNames($directory, $filters=[]){
 
         $subdirectories = [];
@@ -164,6 +150,12 @@ class Workspaces
 
     }
 
+    /**
+     * Checks if a certain directoru
+     * @param $directory
+     * @param array $filters
+     * @return bool
+     */
     static function passedAllChecks($directory, $filters=[]){
 
         $checkPassed = [];
@@ -196,6 +188,38 @@ class Workspaces
     static function isDir($directory){
         return is_dir($directory) ;
     }
+
+    static function isNotCurrentDir($directory){
+
+
+        return basename($directory) != '.';
+    }
+    static function isNotProjectParentDir($directory)
+    {
+
+        if (basename(dirname($directory)) == variable_get('flat_workspaces')['archive_folder'] AND basename($directory) == '..') {
+
+            return false;
+
+        } else {
+
+            return true;
+
+        }
+    }
+
+
+    static function userHasAclPermissions($directory){
+        module_load_include('inc', 'flat_workspaces','inc/class.AclHandler');
+        $acl = new AclHandler(drupal_realpath($directory));
+
+        global $user;
+        $id = $user->name == 'admin' ? exec('whoami') : $user->name;
+        $id = str_replace('@mpi.nl', '', $id);
+
+        return $acl->checkWriteAccess($id) ;
+    }
+
 
 }
 

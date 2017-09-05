@@ -4,43 +4,32 @@
 DEFAULT SETTINGS OF THE FLAT_DEPOSIT MODULE AND FUNCTIONS TO SET THESE
 */
 
-function flat_deposit_set_paths($updated_values=NULL)
+function flat_deposit_set_general($updated_values=NULL)
 {
 
     $defaults =  array(
-        #root path for locally stored data
-        'local' => '/app/flat/deposit/local/',
         #directory for uploading external data
         'external' => '/var/www/html/flat/sites/default/files/private/flat_deposit/data',
-        #directory for storing data
+        #directory for storing metadata
         'metadata' => '/var/www/html/flat/sites/default/files/private/flat_deposit/metadata',
         #backend directory for freeze of data
         'freeze' => '/app/flat/backend/',
-        #backend directory where bags will be placed
-        'bag'=> "/app/flat/deposit/bags/",
-        # directory sword uses to temporarily save bags
-        'sword_tmp_dir' => '/app/flat/deposit/sword/tmp/',
-        # root of the alternative directory where ingest service can search for archiving files.
-        # This root need to contain user data folders named just as the LDAP login name
-        'alternate_dir' => '/var/www/owncloud/data/',
-        # (optional) subdirectory following user login name (e.g. in owncloud this is '/files')
-        'alternate_subdir' => '/files'
     );
 
     //remove already installed variables
-    $values_stored_in_database = variable_get('flat_deposit_paths', array());
+    $values_stored_in_database = variable_get('flat_deposit_general', array());
 
-    if (!empty($values_stored_in_database[0])) {variable_del('flat_deposit_paths'); }
+    if (!empty($values_stored_in_database[0])) {variable_del('flat_deposit_general'); }
 
 
     // set or update values
     $values = $updated_values ? array_merge($values_stored_in_database, $updated_values) : $defaults;
-    variable_set('flat_deposit_paths', $values );
+    variable_set('flat_deposit_general', $values );
 
 
     // warn if directory does not exist
-    $checks = ['local','external', 'metadata', 'freeze','bag', 'sword_tmp_dir', 'alternate_dir' ];
-    $paths = variable_get('flat_deposit_paths');
+    $checks = ['external', 'metadata', 'freeze'];
+    $paths = variable_get('flat_deposit_general');
     foreach ($checks as $check){
         if (!file_exists($paths[$check])){
             drupal_set_message(t('%check directory (%dir) as specified in flat_deposit module settings does not exist', array('%check'=> $check, '%dir'=> $paths[$check])), 'error');
@@ -50,26 +39,6 @@ function flat_deposit_set_paths($updated_values=NULL)
     return TRUE;
 }
 
-function flat_deposit_set_names($updated_values=NULL)
-{
-    $defaults =   array(
-        'apache_user' => 'www-data',
-        'workspace_folder' => 'workspaces',
-        'archive_folder' => 'archive_deposit',
-    );
-
-    $values_stored_in_database = variable_get('flat_deposit_names', array());
-
-    //already installed
-    if (!empty($values_stored_in_database[0])) {variable_del('flat_deposit_names'); }
-
-    // set or update values
-    $values = $updated_values ? array_merge($values_stored_in_database, $updated_values) : $defaults;
-    variable_set('flat_deposit_names', $values );
-
-
-    return TRUE;
-}
 
 function flat_deposit_set_fits($updated_values=NULL)
 {
@@ -102,14 +71,16 @@ function flat_deposit_set_ingest_service($updated_values=NULL)
         'host_scheme' => 'http',
         # the bagit executable
         'bag_exe' => '/usr/local/bin/bagit-4.9.0/bin/bag',
+        #backend directory where bags will be placed
+        'bag_dir'=> "/app/flat/deposit/bags/",
         # Should errors be logged
+        # directory sword uses to temporarily save bags
+        'sword_tmp_dir' => '/app/flat/deposit/sword/tmp/',
         'log_errors' => TRUE,
         # directory to log errors)
         'error_log_file' => '/app/flat/backend/Ingest_service_log/',
         # Should everything be logged
         'log_all' => TRUE,
-        # directory to log errors)
-        'log_file_dir' => '/app/flat/backend/',
     );
 
     //clean up stored values
@@ -123,7 +94,7 @@ function flat_deposit_set_ingest_service($updated_values=NULL)
     variable_set('flat_deposit_ingest_service', $values );
 
     // warn if directory does not exist
-    $checks = ['bag_exe','error_log_file', 'log_file_dir'];
+    $checks = ['bag_exe','bag_dir','error_log_file','sword_tmp_dir'];
     $paths = variable_get('flat_deposit_ingest_service');
     foreach ($checks as $check){
         if (!file_exists($paths[$check])){

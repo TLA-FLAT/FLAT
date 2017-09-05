@@ -327,7 +327,7 @@ abstract class SIP
 
     protected function removeSwordBag(){
 
-        $basePath = variable_get('flat_deposit_paths')['bag'];
+        $basePath = variable_get('flat_deposit_ingest_service')['bag_dir'];
         $bagDir = $basePath . $this->sipId;
         module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
         FlatBundle::recursiveRmDir($bagDir);

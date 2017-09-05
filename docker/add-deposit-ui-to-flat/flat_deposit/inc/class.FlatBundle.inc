@@ -172,7 +172,7 @@ class FlatBundle
         $source = $wrapper->flat_source->value();
 
         if ($source == 'local' AND $data_type == 'data'){
-            module_load_include('inc','flat_deposit','inc/class.Workspaces');
+            #module_load_include('inc','flat_deposit','inc/class.Workspaces');
             // todo implement validation
 
         } else {

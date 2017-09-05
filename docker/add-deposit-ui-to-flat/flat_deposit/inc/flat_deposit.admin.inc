@@ -12,26 +12,18 @@ function flat_deposit_admin_form($form, &$form_state)
         '#suffix' => '</p>',
     );
 
-    // PATHS
-    $form['paths'] = array(
+    // GENERAL
+    $form['general'] = array(
         '#type' => 'fieldset',
-        '#title' => t('Paths'),
+        '#title' => t('General settings'),
         '#collapsible' => TRUE,
         '#collapsed' => TRUE,
         '#tree' => TRUE,
     );
 
-    $paths = variable_get('flat_deposit_paths');
+    $paths = variable_get('flat_deposit_general');
 
-    $form['paths']['local'] = array (
-        '#type' => 'textfield',
-        '#title' => t('Local department data'),
-        '#description' => t('Root path where department\'s data folders are mounted'),
-        '#default_value' => $paths ['local'],
-        '#required' => TRUE,
-    );
-
-    $form['paths']['external'] = array (
+    $form['general']['external'] = array (
         '#type' => 'textfield',
         '#title' => t('External data folder'),
         '#description' => t('Directory for uploading external data'),
@@ -39,7 +31,7 @@ function flat_deposit_admin_form($form, &$form_state)
         '#required' => TRUE,
     );
 
-    $form['paths']['metadata'] = array (
+    $form['general']['metadata'] = array (
         '#type' => 'textfield',
         '#title' => t('Metadata folder'),
         '#description' => t('Directory for temporarily storing metadata'),
@@ -47,101 +39,11 @@ function flat_deposit_admin_form($form, &$form_state)
         '#required' => TRUE,
     );
 
-    $form['paths']['freeze'] = array (
+    $form['general']['freeze'] = array (
         '#type' => 'textfield',
         '#title' => t('Freeze folder'),
         '#description' => t('Directory where user bundles ready to be validated will be moved to'),
         '#default_value' => $paths ['freeze'],
-        '#required' => TRUE,
-    );
-
-    $form['paths']['bag'] = array (
-        '#type' => 'textfield',
-        '#title' => t('Bag folder'),
-        '#description' => t('Backend directory where bags will be placed'),
-        '#default_value' => $paths ['bag'],
-        '#required' => TRUE,
-    );
-
-    $form['paths']['sword_tmp_dir'] = array (
-        '#type' => 'textfield',
-        '#title' => t('Sword temporary folder'),
-        '#description' => t('Directory sword uses to temporarily save bags'),
-        '#default_value' => $paths ['sword_tmp_dir'],
-        '#required' => TRUE,
-    );
-
-    $form['paths']['alternate_dir'] = array (
-        '#type' => 'textfield',
-        '#title' => t('Alternative root user data directory'),
-        '#description' => t('Root of the alternative directory where ingest service can search for archiving files. This 
-            root need to contain user data folders named just as the LDAP login name'),
-        '#default_value' => $paths ['alternate_dir'],
-        '#required' => TRUE,
-    );
-
-    $form['paths']['alternate_subdir'] = array (
-        '#type' => 'textfield',
-        '#title' => t('Alternative sub directory'),
-        '#description' => t('subdirectory following user login name (e.g. in owncloud this is \'/files\')'),
-        '#default_value' => $paths ['alternate_subdir'],
-    );
-
-    // NAMES
-    $form['names'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('Names'),
-        '#collapsible' => TRUE,
-        '#collapsed' => TRUE,
-        '#tree' => TRUE,
-    );
-
-    $names = variable_get('flat_deposit_names');
-
-    $form['names']['apache_user'] = array (
-        '#type' => 'textfield',
-        '#title' => t('Apache User'),
-        '#description' => t('Name of the apache user (e.g. www-data, www-)'),
-        '#default_value' => $names['apache_user'],
-        '#required' => TRUE,
-    );
-
-    $form['names']['workspace_folder'] = array (
-        '#type' => 'textfield',
-        '#title' => t('Workspace folder name'),
-        '#description' => t('Name of the workspace folder available within each department folder'),
-        '#default_value' => $names['workspace_folder'],
-        '#required' => TRUE,
-    );
-    $form['names']['archive_folder'] = array (
-        '#type' => 'textfield',
-        '#title' => t('Name of accessible archive folder'),
-        '#default_value' => $names['archive_folder'],
-        '#required' => TRUE,
-    );
-
-    // FITS
-    $form['fits'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('FITS'),
-        '#collapsible' => TRUE,
-        '#collapsed' => TRUE,
-        '#tree' => TRUE,
-    );
-
-    $fits = variable_get('flat_deposit_fits');
-
-    $form['fits']['url'] = array (
-        '#type' => 'textfield',
-        '#title' => t('URL of FITS service'),
-        '#default_value' => $fits['url'],
-        '#required' => TRUE,
-    );
-
-    $form['fits']['port'] = array (
-        '#type' => 'textfield',
-        '#title' => t('Port of FITS service'),
-        '#default_value' => $fits['port'],
         '#required' => TRUE,
     );
 
@@ -181,6 +83,22 @@ function flat_deposit_admin_form($form, &$form_state)
         '#required' => TRUE,
     );
 
+    $form['ingest_service']['bag_dir'] = array (
+        '#type' => 'textfield',
+        '#title' => t('Bag folder'),
+        '#description' => t('Backend directory where bags will be placed'),
+        '#default_value' => $service ['bag_dir'],
+        '#required' => TRUE,
+    );
+
+    $form['ingest_service']['sword_tmp_dir'] = array (
+        '#type' => 'textfield',
+        '#title' => t('Sword temporary folder'),
+        '#description' => t('Directory sword uses to temporarily save bags'),
+        '#default_value' => $service ['sword_tmp_dir'],
+        '#required' => TRUE,
+    );
+
     $form['ingest_service']['log_errors'] = array (
         '#type' => 'checkbox',
         '#title' => t('Log backend service errors'),
@@ -188,6 +106,7 @@ function flat_deposit_admin_form($form, &$form_state)
         '#default_value' => $service['log_errors'],
         '#required' => FALSE,
     );
+
 
     $form['ingest_service']['error_log_file'] = array (
         '#type' => 'textfield',
@@ -204,13 +123,33 @@ function flat_deposit_admin_form($form, &$form_state)
         '#required' => FALSE,
     );
 
-    $form['ingest_service']['log_file_dir'] = array (
+
+
+
+    // FITS
+    $form['fits'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('FITS'),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+        '#tree' => TRUE,
+    );
+
+    $fits = variable_get('flat_deposit_fits');
+
+    $form['fits']['url'] = array (
         '#type' => 'textfield',
-        '#title' => t('Path to action log directory'),
-        '#default_value' => $service['log_file_dir'],
+        '#title' => t('URL of FITS service'),
+        '#default_value' => $fits['url'],
         '#required' => TRUE,
     );
 
+    $form['fits']['port'] = array (
+        '#type' => 'textfield',
+        '#title' => t('Port of FITS service'),
+        '#default_value' => $fits['port'],
+        '#required' => TRUE,
+    );
 
     // SWORD
     $form['sword'] = array(
@@ -442,8 +381,8 @@ function keep_default_password($form, &$form_state) {
 
 function flat_deposit_admin_form_save_validate($form, &$form_state){
 
-    $excluded = array('local_subfolder', 'alternate_subdir');
-    foreach ( $form_state['values']['paths'] as $key=>$path) {
+    $excluded = []; #fill with values if general get extra values that are not paths to check
+    foreach ( $form_state['values']['general'] as $key=>$path) {
 
         if (!is_numeric(array_search($key, $excluded))){
 
@@ -459,22 +398,13 @@ function flat_deposit_admin_form_save_validate($form, &$form_state){
 
 }
 
+
 function flat_deposit_admin_form_save_submit ($form, &$form_state)
 {
 
     module_load_include('inc', 'flat_deposit', 'inc/config');
 
-    #variable_set('flat_deposit_paths', $form_state['values']['paths']);
-    #variable_set('flat_deposit_names', $form_state['values']['names']);
-    #variable_set('flat_deposit_metadata', $form_state['values']['metadata']);
-    #variable_set('flat_deposit_ingest_service', $form_state['values']['ingest_service']);
-    #variable_set('flat_deposit_sword', $form_state['values']['sword']);
-    #variable_set('flat_deposit_doorkeeper', $form_state['values']['doorkeeper']);
-    #variable_set('flat_deposit_fedora', $form_state['values']['fedora']);
-    #variable_set('flat_deposit_solr', $form_state['values']['solr']);
-
-    flat_deposit_set_paths($form_state['values']['paths']);
-    flat_deposit_set_names($form_state['values']['names']);
+    flat_deposit_set_general($form_state['values']['general']);
     flat_deposit_set_fits($form_state['values']['fits']);
     flat_deposit_set_ingest_service($form_state['values']['ingest_service']);
     flat_deposit_set_sword($form_state['values']['sword']);
@@ -490,8 +420,7 @@ function flat_deposit_admin_form_save_submit ($form, &$form_state)
 function flat_deposit_admin_form_reset_submit ($form, &$form_state){
     module_load_include('inc', 'flat_deposit', 'inc/config');
 
-    flat_deposit_set_paths();
-    flat_deposit_set_names();
+    flat_deposit_set_general();
     flat_deposit_set_fits();
     flat_deposit_set_ingest_service();
     flat_deposit_set_sword();
@@ -507,8 +436,7 @@ function flat_deposit_admin_form_export_submit()
 {
 
     $config = array(
-        'paths' =>  variable_get('flat_deposit_paths'),
-        'names' => variable_get('flat_deposit_names'),
+        'general' =>  variable_get('flat_deposit_general'),
         'fits' => variable_get('flat_deposit_fits'),
         'ingest_service' => variable_get('flat_deposit_ingest_service'),
         'sword' => variable_get('flat_deposit_sword'),
@@ -580,7 +508,7 @@ function flat_deposit_admin_form_import_validate ($form, &$form_state)
     }
 
     // validate that unserialization of imported string results in arrays corresponding to the drupal 'flat_deposit'-variables
-    $checks = array('paths', 'names', 'fits', 'ingest_service', 'sword', 'doorkeeper', 'fedora', 'solr');
+    $checks = array('paths', 'fits', 'ingest_service', 'sword', 'doorkeeper', 'fedora', 'solr');
 
     foreach ($checks as $check) {
         if (!empty(array_diff_key($imported_values[$check], $form_state['values'][$check]))) {
@@ -601,8 +529,7 @@ function flat_deposit_admin_form_import_validate ($form, &$form_state)
 function flat_deposit_admin_form_import_submit ($form, &$form_state){
 
 
-    variable_set('flat_deposit_paths', $form_state['values']['imported_values']['paths']);
-    variable_set('flat_deposit_names', $form_state['values']['imported_values']['names']);
+    variable_set('flat_deposit_general', $form_state['values']['imported_values']['general']);
     variable_set('flat_deposit_fits', $form_state['values']['imported_values']['fits']);
     variable_set('flat_deposit_ingest_service', $form_state['values']['imported_values']['ingest_service']);
     variable_set('flat_deposit_sword', $form_state['values']['imported_values']['sword']);

@@ -142,14 +142,13 @@ function flat_deposit_cmdi_form($form, &$form_state){
         }
 
         // check if everything worked as expected
-        if (!is_array($allFields)){
+        if (!is_array($form['template_container']['elements'])){
 
-            drupal_set_message($fields,'warning');
+            drupal_set_message('Unable to generate cmdi form based on profile','warning');
 
         }
 
     }
-
     $form['Submit'] = array(
         '#type' => 'submit',
         '#value' => t('Submit'),

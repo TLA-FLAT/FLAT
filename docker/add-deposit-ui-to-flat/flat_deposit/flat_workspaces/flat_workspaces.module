@@ -1,0 +1,170 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: danrhe
+ * Date: 07/11/16
+ * Time: 16:22
+ */
+
+
+
+/**
+ * Implements hook_stream_wrappers().
+ */
+function flat_workspaces_stream_wrappers() {
+    return array(
+        'local' => array(
+            'name' => t('The Local Data Stream'),
+            'class' => 'LocalStreamWrapper',
+            'description' => t('Stream wrapper for locally stored data'),
+            'type' => STREAM_WRAPPERS_LOCAL_NORMAL,
+        ),
+
+    );
+}
+
+class LocalStreamWrapper extends DrupalPrivateStreamWrapper {
+    public function getDirectoryPath() {
+
+        return variable_get('flat_workspaces')['mount_folder'];
+    }
+
+    /**
+     * Overrides getExternalUrl().
+     *
+     * Return the HTML URI of a private file.
+     */
+    function getExternalUrl() {
+        $path = str_replace('\\', '/', $this->getTarget());
+        return url('system/files/' . $path, array('absolute' => TRUE));
+    }
+
+    /**
+     * Overrides StreamWrapperInterface::rename
+     */
+    public function rename($from_uri, $to_uri) {
+        return rename($this->getLocalPath($from_uri), $this->getLocalPath($to_uri));
+    }
+
+    /**
+     * Overrides StreamWrapperInterface::getLocalPath
+     */
+    protected function getLocalPath($uri = NULL) {
+        if (!isset($uri)) {
+            $uri = $this->uri;
+        }
+        $path = $this->getDirectoryPath() . '/' . $this->getTarget($uri);
+        $realpath = realpath($path);
+        if (!$realpath) {
+            // This file does not yet exist.
+            $realpath = realpath(dirname($path)) . '/' . drupal_basename($path);
+        }
+        $directory = realpath($this->getDirectoryPath());
+        if (!$realpath || !$directory || strpos($realpath, $directory) !== 0) {
+            return FALSE;
+        }
+        return $realpath;
+    }
+
+}
+/**
+ * Implements hook_menu().
+ */
+function flat_workspaces_menu()
+{
+
+    $items = array();
+
+    // Admin configuration - Owncloud settings
+    $items['admin/config/flat_deposit/workspaces'] = array(
+        'title' => 'Administer workspaces',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array( 'flat_workspaces_admin_form'),
+        'file' => 'inc/flat_workspaces.admin_form.inc',
+        'access arguments' => array('admin deposit module'));
+
+    return $items;
+}
+
+function flat_workspaces_form_flat_bundle_node_form_alter(&$form, &$form_state, $form_id){
+    hide($form['flat_source']);
+
+    // Form alterations depending on node status
+    $node = $form_state['node'];
+    $node_status = (!isset($node->nid) || isset($node->is_new)) ? 'create' : 'edit';
+    switch ($node_status){
+
+        case 'create': {
+            ///////////
+            // Add local project directory selection form container element
+            // #state attribute makes it only visible if flat_source field is set to 'local'
+            ///////////
+            form_load_include($form_state, 'inc','flat_workspaces','inc/class.Workspaces');
+            module_load_include('inc', 'node', 'node.pages');
+            $form['workspace_navigation'] = Workspaces::get_container();
+            form_load_include($form_state, 'inc', 'node', 'node.pages');
+
+            // set the local departments' project folder
+            $config_names = variable_get('flat_workspaces');
+            $department = !empty($form_state['values']['department']) ? $form_state['values']['department'] : 'none';
+            $projects_directory = 'local://' . $department . '/' . $config_names['workspace_folder'];
+
+            //Scan project directory; non-existing directories will return false, existing dirs will populate the
+            // projects field options
+            // todo filter projects for permissions
+            //
+            $projects = Workspaces::getSubdirectoryNames($projects_directory, ['isAccessibleDir','userHasAclPermissions', 'isNotCurrentDir']);
+
+            if (!empty($projects)){
+                $form['workspace_navigation']['field']['project']['#options'] = drupal_map_assoc($projects);
+                $form['workspace_navigation']['field']['project']['#access'] = TRUE;
+            } else{
+                $form['workspace_navigation']['field']['project']['#access'] = TRUE;
+                $form['workspace_navigation']['field']['project']['#disabled'] = TRUE;
+            }
+
+            $project = !empty($form_state['values']['project']) ? $form_state['values']['project'] : 'none';
+            $project_root = $projects_directory . '/' . $project . '/' . $config_names['archive_folder'];
+
+
+            // Get original directory value.
+            $current =  Workspaces::get_flat_original_path($form_state, $project_root);
+
+            // (if chosen) extend 'current' directory value with value of next_directories
+            if (!empty($form_state['values']['next_directories'])) {
+
+                if ($form_state['values']['next_directories'] == '..'){
+
+                    $current = dirname($current);
+
+                } else {
+
+                    $current .= "/" . $form_state['values']['next_directories'];
+                }
+
+                unset($form_state['values']['next_directories']);
+                $form['workspace_navigation']['field']['next_directories']['#options'] = array();
+                $form['workspace_navigation']['field']['next_directories']['#access'] = FALSE;
+
+                $form['workspace_navigation']['field']['next_directories']['#default_value'] = '';
+                $form_state['input']['next_directories'] ='';
+
+            }
+
+            // alter default value of the flat_original_path field to attach value of current directory to flat_bundle node
+            $form['flat_original_path']['und'][0]['value']['#default_value'] = $current;
+
+            // print result to screen
+            $form['workspace_navigation']['field']['current_directory']['#markup'] = '</br>currently selected archive directory: <strong>' . str_replace('local://' ,'', $current. '</strong>');
+
+            // Add dropdown menu with lower level directories to go into
+            $subDirs = Workspaces::getSubdirectoryNames($current, ['isAccessibleDir','userHasAclPermissions', 'isNotCurrentDir', 'isNotProjectParentDir']);
+            if (!empty($subDirs)){
+                $form['workspace_navigation']['field']['next_directories']['#options'] = drupal_map_assoc($subDirs);
+                $form['workspace_navigation']['field']['next_directories']['#access'] = TRUE;
+            }
+        }
+
+
+    }
+}

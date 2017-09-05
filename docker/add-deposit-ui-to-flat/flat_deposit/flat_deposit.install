@@ -78,7 +78,6 @@ function flat_deposit_install()
         'settings' => array(
             'max_length' => 255,
             'allowed_values' => array(
-                'local' => 'Select a folder in an MPI Workspace on the server',
                 'external' => 'Upload the files using the web browser',
             ),
         ),
@@ -575,9 +574,7 @@ function flat_deposit_install()
 
     //SET DEFAULTS
     module_load_include('inc', 'flat_deposit', 'inc/config');
-
-    flat_deposit_set_paths();
-    flat_deposit_set_names();
+    flat_deposit_set_general();
     flat_deposit_set_fits();
     flat_deposit_set_ingest_service();
     flat_deposit_set_sword();
@@ -690,8 +687,6 @@ function flat_deposit_uninstall(){
 
     // clean up variables
     variable_del('flat_deposit_paths');
-    variable_del('flat_deposit_names');
-    variable_del('flat_deposit_metadata');
     variable_del('flat_deposit_ingest_service');
     variable_del('flat_deposit_sword');
     variable_del('flat_deposit_doorkeeper');
