@@ -152,7 +152,7 @@ function flat_collection_add_form_final_validate($form, &$form_state){
     // don't run validation if other validation has failed
     if (!empty(form_get_errors())) {
 
-        form_set_error('debug','debug');
+        form_set_error('debug','Other validations have failed');
         return $form;
     }
 

@@ -187,6 +187,21 @@ function flat_deposit_install()
     );
 
 
+    $fields['flat_type'] = array(
+        'field_name' => 'flat_type',
+        'type' => 'list_text',
+        'cardinality' => 1,
+        'settings' => array(
+            'max_length' => 255,
+            'allowed_values' => array(
+                'new' => 'Newly created content',
+                'update' => 'Update of an existing content',
+            ),
+        ),
+        'locked' => TRUE,
+    );
+
+
     $fields['flat_collection_status'] = array(
         'field_name' => 'flat_collection_status',
         'type' => 'list_text',
@@ -462,6 +477,27 @@ function flat_deposit_install()
         )
     );
 
+// flat collection field instances
+    $instances['flat_fid_bundle'] = array(
+        'field_name' => 'flat_fid',
+        'bundle' => 'flat_bundle',
+        'label' => $t('Fedora commons ID'
+        ),
+        'description' => $t('ID assigned by fedora during ingest process'),
+        'widget' => array(
+            'type' => 'text_textfield'
+        ),
+        'required' => FALSE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            ),
+            'error' => array(
+                'label' => 'inline',
+            ),
+        )
+    );
 
     // flat collection field instances
     $instances['flat_fid'] = array(
@@ -485,6 +521,8 @@ function flat_deposit_install()
         )
     );
 
+
+
     $instances['flat_collection_status'] = array(
         'field_name' => 'flat_collection_status',
         'bundle' => 'flat_collection',
@@ -505,8 +543,6 @@ function flat_deposit_install()
             )
         )
     );
-
-
 
     $instances['flat_collection_exception'] = array(
         'field_name' => 'flat_exception',
@@ -566,6 +602,27 @@ function flat_deposit_install()
             ),
         )
     );
+
+    $instances['flat_bundle_type'] = array(
+        'field_name' => 'flat_type',
+        'bundle' => 'flat_bundle',
+        'label' => $t('Type of bundle'),
+        'description' => $t('Is the bundle newly created or is an existing bundle updated?'),
+        'widget' => array(
+            'type' => 'option_buttons',
+        ),
+        'required' => TRUE,
+        'default_value' => array(
+            0 => array('value'=> 'new')),
+        'settings' => array('text_processing' => 0),
+        'no_ui' => TRUE,
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            )
+        )
+    );
+
 
     foreach ($instances as $instance){
         $instance['entity_type'] = 'node';
@@ -686,7 +743,7 @@ function flat_deposit_uninstall(){
     drupal_uninstall_modules(array('blog', 'flat_owncloud'));
 
     // clean up variables
-    variable_del('flat_deposit_paths');
+    variable_del('flat_deposit_general');
     variable_del('flat_deposit_ingest_service');
     variable_del('flat_deposit_sword');
     variable_del('flat_deposit_doorkeeper');

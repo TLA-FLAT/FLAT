@@ -87,7 +87,7 @@ function flat_workspaces_menu()
 }
 
 function flat_workspaces_form_flat_bundle_node_form_alter(&$form, &$form_state, $form_id){
-    hide($form['flat_source']);
+
 
     // Form alterations depending on node status
     $node = $form_state['node'];

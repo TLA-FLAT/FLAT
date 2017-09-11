@@ -351,11 +351,63 @@ class CmdiHandler
         }
 
         // Removal exitsing resources from Components->{profile}->Resources child
-        foreach ($xml->Components->{$profile}->Resources->children() as $child){
-            unset($child[0]);
+        foreach ($xml->Components->{$profile}->Resource as $resource){
+            unset($resource[0]);
         }
     }
+
     /**
+     * Removes a specified resource from xml file
+     *
+     * @param $xml stdClass a cmdi simplexml object
+     *
+     * @param $profile string a valid cmdi profile name (e.g. MPI_bundle)
+     *
+     * @param $resourceID string resource ID
+     */
+    static public function stripSingleResource(&$xml, $profile, $resourceID)
+    {
+
+
+        // Removal existing resources from ResourceProxy child
+        $proxy_list = $xml->Resources->ResourceProxyList;
+        if ($proxy_list){
+            foreach ($proxy_list->ResourceProxy as $resource){
+
+                if ($resource && $resource->attributes()) {
+                    if ((string)$resource->attributes()->id == $resourceID) {
+                        unset($resource[0]);
+                    }
+                }
+
+            }
+
+        }
+
+
+        // Removal exitsing resources from Components->{profile}->Resources child
+
+        foreach ($xml->Components->{$profile}->Resource as $resource) {
+
+            if ((string)$resource->attributes()->ref == $resourceID) {
+                unset($resource[0]);
+
+            }
+        }
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+        /**
      * Maps name on clarin id. In case of unspecified case, a get request is done to the clarin catalogue.
      *
      * @param $id clarin id.

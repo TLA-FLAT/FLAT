@@ -86,7 +86,7 @@ $handler->display->display_options['header']['area']['table'] = 'views';
 $handler->display->display_options['header']['area']['field'] = 'area';
 $handler->display->display_options['header']['area']['label'] = 'link_create_new_bundle';
 $handler->display->display_options['header']['area']['empty'] = TRUE;
-$handler->display->display_options['header']['area']['content'] = '<a href="node/add/flat-bundle">Inititate new bundle</a>';
+$handler->display->display_options['header']['area']['content'] = '<a href="node/add/flat-bundle">Initiate new bundle</a>';
 $handler->display->display_options['header']['area']['format'] = 'filtered_html';
 /* Header: Global: View area */
 $handler->display->display_options['header']['view_1']['id'] = 'view_1';
