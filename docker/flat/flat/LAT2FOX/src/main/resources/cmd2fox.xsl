@@ -806,7 +806,7 @@
 												</dc:identifier>
 												<xsl:choose>
 													<xsl:when test="exists($fits-dir)">
-														<xsl:variable name="fits" select="cmd:firstFile($fits-dir,concat($res/@id,'.FITS.xml'),$base)" as="xs:anyURI"/>
+														<xsl:variable name="fits" select="cmd:firstFile($fits-dir,concat($res/@id,'.FITS.xml'),$base)" as="xs:anyURI?"/>
 														<xsl:if test="exists($fits)">
 															<dc:identifier>
 																<xsl:text>md5:</xsl:text>
