@@ -23,7 +23,14 @@ class Sword
 
         $config = variable_get('flat_deposit_sword');
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $config['url'].'collection'); //
+
+        $url = $config['url'].'collection';
+        #$url = 'http://localhost/easy-deposit/collection';
+
+        $port = $config['port'];
+        #$port = '8080';
+
+        curl_setopt($ch, CURLOPT_URL, $url); //
         curl_setopt($ch, CURLOPT_PORT, $config['port']);
         curl_setopt($ch, CURLOPT_USERPWD, sprintf("%s:%s",$config['user'],$config['password']));
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);

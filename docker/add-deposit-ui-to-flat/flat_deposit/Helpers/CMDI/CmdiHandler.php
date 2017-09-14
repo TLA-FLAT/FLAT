@@ -50,7 +50,7 @@ class CmdiHandler
     static public function loadXml($fileName)
     {
 
-        if (simplexml_load_file($fileName) === false) {
+        if (@simplexml_load_file($fileName) === false) {
 
             $message = 'Error loading schema file. ';
 
@@ -343,16 +343,23 @@ class CmdiHandler
      *
      * @param $xml SimpleXMLElement cmdi xml file
      */
-    static public function stripResources(&$xml, $profile)
+    static public function striplocalURI(&$xml)
     {
+
         // Removal existing resources from ResourceProxy child
         foreach ($xml->Resources->ResourceProxyList->ResourceProxy as $resource) {
-            unset($resource[0]);
-        }
+            $value = $resource->ResourceRef;
+            if (isset($value)){
+                $attributes = $resource->ResourceRef->attributes('lat', TRUE);
+                if (isset($attributes->localURI)){
 
-        // Removal exitsing resources from Components->{profile}->Resources child
-        foreach ($xml->Components->{$profile}->Resource as $resource){
-            unset($resource[0]);
+                    unset ($attributes->localURI);
+
+                }
+
+            }
+
+
         }
     }
 
@@ -464,28 +471,81 @@ class CmdiHandler
      */
     static public function addResources(&$xml, $profile, $directory){
 
+        // todo check filenames of exisitng resources in order to identify updated files
+
+        // Inventarize existing resources in the cmdi ResourceProxyList
+        $existing_resource_ids = [];
+        $existing_filenames = [];
+        $resourceProxyList = $xml->Resources->ResourceProxyList;
+        if (!empty($resourceProxyList->children())){
+
+            foreach ($resourceProxyList->ResourceProxy as $resource) {
+
+                $attributes = $resource->attributes();
+                $id = (string)$attributes->id;
+
+                $existing_resource_ids[] = $id;
+
+                $lat_attributes = $resource->ResourceRef->attributes('lat', TRUE);
+                if (isset($lat_attributes->flatURI)){
+                    $flatURI = (string)$lat_attributes->flatURI;
+                    $fObj = islandora_object_load($flatURI);
+
+                    if ($fObj){
+
+                        $existing_filenames[$id] = $fObj->label;
+
+                    }
+
+
+                }
+            }
+        }
+
+
 
         // scan all files of the bundle freeze directory and add theses as resources to the CMDI;
         if (!is_dir($directory)) return false;
 
-        $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory,RecursiveDirectoryIterator::FOLLOW_SYMLINKS));
+
+        // Iterate through resources directory and add every file to the array resource with a unique resource ID as key.
+        // In case a resource with an existing resource file name is found assign that resource the ID of the existing resource.
+        // Otherwise, generate unique ID by incrementing the counter c until it is unqiue.
 
         $resources = array();
         $c=10000; # counter for resource ID (each resource within an CMDI-object needs an unique identifier)
 
+        $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory,RecursiveDirectoryIterator::FOLLOW_SYMLINKS));
 
         foreach ($rii as $file) {
             if ($file->isDir()){
-                continue;}
+                continue;
+            }
 
-            $c++;
-            $fid = "d$c";
-            $resources[$fid] = drupal_realpath($file->getPathname());
+            $file_name = drupal_realpath($file->getPathname());
+
+            if (in_array(basename($file_name), $existing_filenames) !== FALSE){
+
+                $resource_id = array_search ( basename($file_name) , $existing_filenames);
+
+            } else {
+
+                $unique = false;
+                while (!$unique) {
+                    $c++;
+                    $resource_id = "d$c";
+                    if (in_array($resource_id, $existing_resource_ids) === FALSE) {
+                        $unique = TRUE;
+                    }
+
+                }
+            }
+            $resources[$resource_id] = $file_name;
 
         }
 
         // Add resources to simplexml variable
-        foreach ($resources as $fid => $file_name) {
+        foreach ($resources as $rid => $file_name) {
 
             $file_mime = self::fits_mimetype_check(drupal_realpath($file_name)) ;
             if (!$file_mime){
@@ -494,71 +554,94 @@ class CmdiHandler
 
             $file_size = filesize(drupal_realpath($file_name));
 
-            // Add Resource to Resources->ResourceProxyList
-            $resourceProxy = $xml->Resources->ResourceProxyList->addChild('ResourceProxy');
-            $resourceProxy->addAttribute('id', $fid);
+            if (in_array(basename($file_name), $existing_filenames) !== FALSE){
+                $id = array_search ( basename($file_name) , $existing_filenames);
 
-            $resourceProxy->addChild('ResourceType', 'Resource');
-            $resourceProxy->ResourceType->addAttribute('mimetype', $file_mime);
+                // Add Resource to existing resource at Resources->ResourceProxyList
+                $resourceProxyList = $xml->Resources->ResourceProxyList;
+                $resourceProxy = $resourceProxyList->xpath('cmd:ResourceProxy[@id="' . $id . '"]');
+                $resourceProxy[0]->ResourceRef->addAttribute('lat:localURI', 'file:' . $file_name, "http://lat.mpi.nl/");
 
-            $resourceProxy->addChild('ResourceRef');
-            $resourceProxy->ResourceRef->addAttribute('lat:localURI', 'file:' . $file_name, "http://lat.mpi.nl/");
 
-            // Add Resources to Components->Resources
-            if ($profile == 'lat-session'){
+                // Update Resources at Components->Resources
+                if ($profile == 'lat-session'){
 
-                // Add 'Resources'-child to Components->profile if not existing
-                if (!isset($xml->Components->{$profile}->Resources)){
-                    $xml->Components->{$profile}->addChild('Resources');
+                    // Add 'Resources'-child to Components->profile if not existing
+                    if (!isset($xml->Components->{$profile}->Resources)){
+                        $xml->Components->{$profile}->addChild('Resources');
+                    }
+
+
+                    $refType = 'MediaFile';
+
+
+                } else{
+
+                    $refType = 'Resource';
+
+                }
+                $node = $xml->Components->{$profile};
+                $resource = $node->xpath('//cmd:Resource[@ref="' . $id . '"]');
+
+
+                if ($profile == 'lat-session'){
+
+                    $resource->Type = 'document';
+                    $resource->Format = $file_mime;
+
                 }
 
+                $resource->Size = $file_size;
 
-                $refType = 'MediaFile';
-                $resource = $xml->Components->{$profile}->Resources->addChild($refType);
 
-            } else{
 
-                $refType = 'Resource';
-                $resource = $xml->Components->{$profile}->addChild($refType);
+            } else {
 
+                // Add Resource to Resources->ResourceProxyList
+                $resourceProxy = $xml->Resources->ResourceProxyList->addChild('ResourceProxy');
+                $resourceProxy->addAttribute('id', $rid);
+
+                $resourceProxy->addChild('ResourceType', 'Resource');
+                $resourceProxy->ResourceType->addAttribute('mimetype', $file_mime);
+
+                $resourceProxy->addChild('ResourceRef');
+                $resourceProxy->ResourceRef->addAttribute('lat:localURI', 'file:' . $file_name, "http://lat.mpi.nl/");
+
+                // Add Resources to Components->Resources
+                if ($profile == 'lat-session'){
+
+                    // Add 'Resources'-child to Components->profile if not existing
+                    if (!isset($xml->Components->{$profile}->Resources)){
+                        $xml->Components->{$profile}->addChild('Resources');
+                    }
+
+
+                    $refType = 'MediaFile';
+                    $resource = $xml->Components->{$profile}->Resources->addChild($refType);
+
+                } else{
+
+                    $refType = 'Resource';
+                    $resource = $xml->Components->{$profile}->addChild($refType);
+
+                }
+
+                $resource->addAttribute('ref', $rid);
+
+                if ($profile == 'lat-session'){
+
+                    $resource->addChild('Type', 'document');
+                    $resource->addChild('Format', $file_mime);
+
+                }
+
+                $resource->addChild('Size', $file_size);
             }
 
-            $resource->addAttribute('ref', $fid);
-
-            if ($profile == 'lat-session'){
-
-                $resource->addChild('Type', 'document');
-                $resource->addChild('Format', $file_mime);
-
-            }
-
-            $resource->addChild('Size', $file_size);
 
         }
 
     }
-
-
-    /**
-     * Adds freeze directory base path to resources in cmdi file.
-     *
-     * @param $xml
-     *
-     * @param $directory
-     *
-     * @return bool
-     */
-    static public function addFrozenDirBaseToResources($xml, $directory){
-
-        // Removal existing resources from ResourceProxy child
-        foreach ($xml->Resources->ResourceProxyList->ResourceProxy as $resource) {
-            $attributes = $resource->ResourceRef->attributes('lat', TRUE);
-            $oldName = (string)$attributes['localURI'];
-            $resource->ResourceRef =  'file:' . drupal_realpath($directory) . '/' . $oldName  ;
-        }
-
-    }
-
 
 
     /**

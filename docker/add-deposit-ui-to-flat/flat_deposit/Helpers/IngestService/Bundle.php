@@ -199,31 +199,28 @@ class Bundle extends SIP
 
 
 
-        switch ($resource_handling){
+        switch ($resource_handling) {
 
-
-            case 'import':{
-                CmdiHandler::addFrozenDirBaseToResources($xml, $directory);
+            case 'template':
+            case 'import':
+                {
+                    //todo 1 function strip lat:localURI
+                CmdiHandler::striplocalURI($xml);
                 break;
             }
-            default :{
-                CmdiHandler::removeMdSelfLink($xml);
-                CmdiHandler::stripResources($xml, $profile_name);
 
-                try{
-
-                    CmdiHandler::addResources($xml, $profile_name, $directory);
-
-                } catch (CmdiHandlerException $exception){
-
-                    throw new IngestServiceException($exception->getMessage());
-
-                }
-
-                break;
-            }
 
         }
+        try{
+
+            CmdiHandler::addResources($xml, $profile_name, $directory);
+
+        } catch (CmdiHandlerException $exception){
+
+            throw new IngestServiceException($exception->getMessage());
+
+        }
+
 
         $check = $xml->asXML($file_name);
         if ($check !== TRUE){
@@ -234,6 +231,10 @@ class Bundle extends SIP
         $this->logging('Finishing addResourcesToCmdi');
         return TRUE;
     }
+
+
+
+
 
 
 
@@ -288,12 +289,12 @@ class Bundle extends SIP
         if (!$this->test AND $succeeded){
 
 
-            global $base_root;
-            $url_link = $base_root . '/islandora/object/' . $this->fid ;
+
+            $url_link = '/islandora/object/' . $this->fid ;
 
         } else {
 
-            $url_link = 'node/' . $this->node->nid;
+            $url_link = '/node/' . (string)$this->node->nid;
 
         }
 
@@ -303,8 +304,10 @@ class Bundle extends SIP
         $bundle = $this->node->title;
         $collection = $this->wrapper->flat_parent_title->value();
 
+
+
         $summary = sprintf("<p>%s of %s %s</p>",$action, $bundle, $outcome);
-        $body = sprintf("<p>%s %s</p><p>%s of %s belonging to %s %s. Check bundle ". l('here', $url_link) . '</p>',$bundle, $collection, $action, $bundle, $collection, $outcome);
+        $body = sprintf("<p>%s %s</p><p>%s of %s belonging to %s %s. Check bundle ". l(t('here'), $url_link, array('html' => TRUE, 'external' => FALSE, 'absolute' => TRUE, 'base_url' => $scheme . '://' . $host)) . '</p>',$bundle, $collection, $action, $bundle, $collection, $outcome);
         $body = preg_replace(array('/lat_/') , array('lat%3A'), $body);
 
         if ($additonal_message){ $body .=  '</p>Exception message:</p>' . $additonal_message ;};

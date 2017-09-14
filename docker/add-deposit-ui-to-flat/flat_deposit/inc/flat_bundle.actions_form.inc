@@ -204,7 +204,7 @@ function flat_bundle_action_form_reopen_validate($form, &$form_state){
     $error = move_node_data($node->nid);
     if (!empty($error)){
 
-        form_set_error('reopen', t('Unable to move bundle !what to unfreeze', array('!what'=>implode(' AND ', $error))));
+        form_set_error('reopen', t('Unable to move bundle !what to unfreeze', array('!what'=>$node->nid)));
 
     }
 
@@ -254,7 +254,10 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
 
     // Check existence external location
     if ($file_exists === false){
-        form_set_error('validate_bundle',t('File location does not exist (:path) ' , array(':path' => '/path/to/file')));
+
+        $wrapper = entity_metadata_wrapper('node', $node);
+        $path = $wrapper->flat_original_path->value();
+        form_set_error('validate_bundle',t('File location does not exist (:path) ' , array(':path' => $path)));
         return $form;
 
     }

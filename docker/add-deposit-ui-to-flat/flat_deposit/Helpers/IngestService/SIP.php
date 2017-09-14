@@ -103,6 +103,13 @@ abstract class SIP
         return $this->fid;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getSipId()
+    {
+        return (string)$this->sipId;
+    }
 
 
     /**

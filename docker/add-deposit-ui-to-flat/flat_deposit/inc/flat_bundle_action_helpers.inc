@@ -210,16 +210,17 @@ function send_request($nid, $action, $debug=FALSE){
         curl_setopt_array($ch, array(
 
             CURLOPT_URL => $url,
-
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST =>false,
             CURLOPT_COOKIE => "XDEBUG_SESSION=PHPSTORM",
             CURLOPT_POST => sizeof($data_to_post),
             CURLOPT_POSTFIELDS => $data_to_post));
 
         $result = curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        if ($errno = curl_errno($ch)) {
-            $error_message = curl_strerror($errno);
-            drupal_set_message("cURL error ({$errno}):\n {$error_message}",'error');
+        if ($httpcode  != 200) {
+            drupal_set_message("Unable to send sequential http request using curl to Ingest service");
         }
         curl_close($ch);
 
