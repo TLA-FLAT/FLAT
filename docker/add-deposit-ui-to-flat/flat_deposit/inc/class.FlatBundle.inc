@@ -210,8 +210,11 @@ class FlatBundle
                     throw new FlatBundleException("Unable to create folder at target original_location");
                 }
             }
-            if (!is_writable($collection_dir)) {
-                throw new FlatBundleException("Unable to write at target location");
+            if ($wrapper->flat_source->value() != 'local'){
+
+                if (!is_writable($collection_dir)) {
+                    throw new FlatBundleException("Unable to write at target location");
+                }
             }
 
         }

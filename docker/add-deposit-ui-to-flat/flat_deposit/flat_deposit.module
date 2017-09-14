@@ -270,7 +270,10 @@ function flat_deposit_menu()
     $items['admin/config/flat_deposit'] = array(
         'title' => 'FLAT deposit user interface',
         'description' => 'Administer FLAT deposit user interface',
-        'access arguments' => array('admin deposit module'));
+        'access arguments' => array('admin deposit module'),
+        'weight' => 999,
+        );
+
 
     // Admin configuration - Upload settings
     $items['admin/config/flat_deposit/customize'] = array(
@@ -292,7 +295,7 @@ function flat_deposit_menu()
         'weight' => 99,
     );
 
-    /*
+/*
     // bundle update
     $items['islandora/object/%islandora_object/update_bundle'] = array(
         'title' => 'Update bundle',
@@ -744,6 +747,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
     hide($form['flat_create_cmdi']);
     hide($form['flat_external']);
     hide($form['flat_location']);
+    hide($form['flat_fid']);
     hide($form['flat_original_path']);
     hide($form['flat_parent_title']);
     hide($form['actions']['preview']);
@@ -973,7 +977,7 @@ function flat_bundle_node_form_add_validate($form, &$form_state){
     }
 // Validate that currently selected folder has no subfolders
     $dirs = array_filter(glob($original_path . '/*'), 'is_dir');
-    if (file_exists(drupal_realpath($original_path)) AND !empty(glob(drupal_realpath($original_path).'/*'))){
+    if (file_exists(drupal_realpath($original_path)) AND !empty(glob(drupal_realpath($original_path).'/*', GLOB_ONLYDIR))){
         form_set_error('department', 'Chosen directory contains subfolders');
         return $form;
     }
@@ -1267,7 +1271,7 @@ function flat_bundle_view($node, $view_mode) {
 
 
     $wrapper = entity_metadata_wrapper('node', $node);
-    #$meta_dir = 'metadata://' . str_replace('@' ,'_at_' , $user->name) . "/$collection/$bundle";
+    $file = $wrapper->flat_cmdi_file->value();
     #if (!file_exists($meta_dir)) drupal_mkdir($meta_dir, NULL, TRUE);
 
     if ($view_mode == 'full' && node_is_page($node)) {
@@ -1311,7 +1315,11 @@ function flat_bundle_view($node, $view_mode) {
 function flat_deposit_node_view($node, $view_mode, $langcode)
 {
     if ($node->type == 'flat_bundle' AND $view_mode == 'full' AND node_is_page($node)) {
-        unset ($node->content['flat_original_path']);
+        $path = $node->content['flat_original_path'][0]['#markup'];
+        $path = str_replace('local://', '', $path);
+        $path = str_replace('external://', '', $path);
+        $path = str_replace('freeze://', '[protected folder on server]', $path);
+        $node->content['flat_original_path'][0]['#markup'] = $path;
         unset ($node->content['flat_bundle_status']);
         unset ($node->content['flat_parent_nid']);
         unset ($node->content['flat_parent_title']);
@@ -1320,7 +1328,15 @@ function flat_deposit_node_view($node, $view_mode, $langcode)
         unset ($node->content['flat_source']);
         unset ($node->content['flat_external']);
         unset ($node->content['flat_location']);
-        unset ($node->content['flat_fid']);
+
+        if (isset($node->content['flat_fid'])){
+            $node->content['flat_fid']['#title'] = 'Link to archived bundle ';
+            $node->content['flat_fid'][0]['#markup'] = l('link archive' , 'islandora/object/' . rawurlencode($node->content['flat_fid'][0]['#markup'])) ;
+        } else {
+
+            unset ($node->content['flat_fid']);
+
+        }
         unset ($node->content['flat_type']);
     }
 
@@ -1441,9 +1457,33 @@ function flat_deposit_block_view($delta = '')
 
             $node = menu_get_object();
 
+            // hide blocks for function calls that are not related to nodes
+            if (!$node){
+                $block['content'] =[];
+                break;
+            }
+
+            // hide blocks for nodes without flat_fid or flat_cmdi_file field
+            $node_wrapper = entity_metadata_wrapper('node', $node);
+
+            if (!isset($node_wrapper->flat_fid) OR !isset($node_wrapper->flat_cmdi_file)){
+                $block['content'] =[];
+                break;
+            }
+
+            // hide blocks for nodes without assigned fedora ID or without cmdi file
+            $fedora_id = $node_wrapper->flat_fid->value();
+            $file = $node_wrapper->flat_cmdi_file->value();
+            $fName = $file['uri'];
+
+            if (is_null($fName) OR is_null($fedora_id)){
+                $block['content'] =[];
+                break;
+            }
+
+
             $block['subject'] = t('All existing resources');
             $block['content'] = drupal_get_form('flat_bundle_update_cmdi_resources_form', ['node' => $node]);
-            #$block['content'] = drupal_get_form('flat_bundle_update_cmdi_resources_form', ['node' => $node]);
 
 
             break;

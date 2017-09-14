@@ -11,6 +11,7 @@ define('DRUPAL_ROOT', getcwd()); //the most important line
 require_once './includes/bootstrap.inc';
 drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
+drupal_set_message('hello');
 
 // Info from Post request
 $nid = $_POST['nid'];

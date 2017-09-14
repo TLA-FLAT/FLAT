@@ -3,6 +3,23 @@
 function flat_bundle_update_cmdi_resources_form($form, &$form_state)
 {
 
+    // hide blocks for function calls that are not related to nodes
+    $node = $form_state['build_info']['args'][0]['node'];
+    if (!$node){
+        return $form;
+    }
+
+    // hide blocks for nodes without assigned fedora ID (to be updated bundles) or $nodes without cmdi file
+    $node_wrapper = entity_metadata_wrapper('node', $node);
+
+
+    $fedora_id = $node_wrapper->flat_fid->value();
+
+    $file = $node_wrapper->flat_cmdi_file->value();
+    $fName = $file['uri'];
+
+
+
     $form['table_container'] = array
     (
         '#theme' => 'flat_bundle_cmdi_resource_table',
@@ -12,23 +29,10 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
         '#tree' => TRUE,
     );
 
-    $node = $form_state['build_info']['args'][0]['node'];
-
-    if (!$node){
-        return $form;
-    }
-    $node_wrapper = entity_metadata_wrapper('node', $node);
-    $fedora_id = $node_wrapper->flat_fid->value();
 
 
 
-    if (!isset($fedora_id)){
-        return [];
-    }
 
-    $file = $node_wrapper->flat_cmdi_file->value();
-    $fName = $file['uri'];
-    
 
 
     module_load_include('php','flat_deposit','Helpers/CMDI/CmdiHandler');
@@ -43,7 +47,7 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
         $resource_id = (string)$resource->attributes()->id;
         $res_ref_attributes = $resource->ResourceRef->attributes('lat', TRUE);
 
-        $fid    = $res_ref_attributes['localURI'];
+        $fid    = $res_ref_attributes['flatURI'];
 
         $fObj = islandora_object_load($fid);
         $label = $fObj->label;
