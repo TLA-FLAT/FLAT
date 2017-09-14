@@ -1034,6 +1034,7 @@
 			<xsl:variable name="md">
 				<xsl:for-each select="$metadata">
 					<cmd:ResourceProxy>
+						<xsl:copy-of select="@*"/>
 						<cmd:ResourceType mimetype="application/x-cmdi+xml">Metadata</cmd:ResourceType>
 						<cmd:ResourceRef>
 							<xsl:if test="exists(cmd:ResourceRef/@lat:localURI)">
