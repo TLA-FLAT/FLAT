@@ -97,7 +97,7 @@ function flat_bundle_action_form($form, &$form_state)
             '#type' => 'checkbox',
             '#title' => t('Serial processing (debug mode)'),
             '#prefix' => '</p>',
-            '#default_value' => 1,
+            '#default_value' => 0,
 
         );
     }

@@ -294,8 +294,8 @@ function flat_deposit_menu()
         'access arguments' => array(array(ISLANDORA_MANAGE_PROPERTIES,), 2),
         'weight' => 99,
     );
-
 /*
+
     // bundle update
     $items['islandora/object/%islandora_object/update_bundle'] = array(
         'title' => 'Update bundle',
@@ -993,7 +993,7 @@ function flat_bundle_node_form_add_validate($form, &$form_state){
     $results = $query->execute();
     if (empty(!$results)){
 
-#        form_set_error('flat_original_path', 'Specified path for resources is already in use');
+        form_set_error('flat_original_path', 'Specified path for resources is already in use');
 
     };
 
