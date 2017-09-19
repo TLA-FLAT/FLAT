@@ -741,6 +741,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
     $form['flat_parent_nid']['und']['#required'] = false; //remove after next install
 
     global $user;
+
     // Hide unwanted buttons anf fields
     hide($form['flat_bundle_status']);
     hide($form['flat_exception']);
@@ -843,6 +844,9 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
 
         case 'create':{
 
+            // Assign value to flat_original_path field
+            $form['flat_original_path']['und'][0]['value']['#default_value'] = 'external://USER/COLLECTION/BUNDLE';
+
             // Create selection of collections.
             // This is dependent from extra parameters. In case the name of a collection is provided only that specific collection can be used
             // Otherwise options are queried based on collection membership
@@ -866,7 +870,6 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
 
         // for existing bundles:
         case 'edit':{
-
 
             if ($update) {
                 $form['flat_cmdi_file']['#access'] = FALSE;
@@ -901,10 +904,12 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
             $form['#submit'][] = 'flat_bundle_node_form_edit_submit';
 
 
-
             break;}
             // for updated bundles:
         case 'update':{
+
+            // Assign value to flat_original_path field
+            $form['flat_original_path']['und'][0]['value']['#default_value'] = 'external://USER/COLLECTION/BUNDLE';
 
 
             // set default_value of parent_nid and parent_title
@@ -943,7 +948,6 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
  */
 function flat_bundle_node_form_add_validate($form, &$form_state){
     $source = $form_state['values']['flat_source']['und'][0]['value'];
-    $original_path = $form_state['values']['flat_original_path']['und'][0]['value'];
 
     $bundle_name = $form_state['values']['title'];
 
@@ -960,6 +964,17 @@ function flat_bundle_node_form_add_validate($form, &$form_state){
     $form_state['values']['flat_parent_title']['und'][0]['value'] = $collection;
 
 
+    // Assign value to flat_original_path field
+    if ($form_state['values']['flat_source']['und'][0]['value'] == 'external') {
+
+        global $user;
+        $user_name = str_replace('@' ,'_at_' , $user->name);
+
+        $form_state['values']['flat_original_path']['und'][0]['value'] = "external://$user_name/$collection/$bundle_name";
+
+    }
+
+    $original_path = $form_state['values']['flat_original_path']['und'][0]['value'];
 
     //Validate bundle name
     if (!preg_match('/^[a-zA-Z0-9\_]{2,40}+$/', $bundle_name)) {
@@ -997,7 +1012,6 @@ function flat_bundle_node_form_add_validate($form, &$form_state){
 
     };
 
-
     return $form;
 
 }
@@ -1011,6 +1025,7 @@ function flat_bundle_node_form_add_submit($form, &$form_state){
 
     $bundle = $form_state['values']['title'];
     $collection = $form_state['values']['flat_parent_title']['und'][0]['value'];
+
 
     // initiate user directories if necessary
     module_load_include('inc', 'imce', 'inc/imce.page');
@@ -1219,7 +1234,7 @@ function flat_bundle_validate($node, $form, &$form_state){
 
         if (!file_exists($original_path)) {
 
-            form_set_error('flat_location',t('Location needs to be set when data is located on archive server'));
+            form_set_error('flat_location',t('Specified path does not exist on archive server'));
 
         }
     }
@@ -1314,12 +1329,17 @@ function flat_bundle_view($node, $view_mode) {
  */
 function flat_deposit_node_view($node, $view_mode, $langcode)
 {
+
     if ($node->type == 'flat_bundle' AND $view_mode == 'full' AND node_is_page($node)) {
-        $path = $node->content['flat_original_path'][0]['#markup'];
-        $path = str_replace('local://', '', $path);
-        $path = str_replace('external://', '', $path);
-        $path = str_replace('freeze://', '[protected folder on server]', $path);
-        $node->content['flat_original_path'][0]['#markup'] = $path;
+
+        $wrapper = entity_metadata_wrapper('node', $node);
+
+        if ($wrapper->flat_source->value() == 'external') {
+
+            unset($node->content['flat_original_path']);
+
+        }
+
         unset ($node->content['flat_bundle_status']);
         unset ($node->content['flat_parent_nid']);
         unset ($node->content['flat_parent_title']);

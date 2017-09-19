@@ -168,3 +168,23 @@ function flat_workspaces_form_flat_bundle_node_form_alter(&$form, &$form_state, 
 
     }
 }
+
+
+
+function flat_workspaces_node_view($node, $view_mode, $langcode)
+{
+
+    if ($node->type == 'flat_bundle' AND $view_mode == 'full' AND node_is_page($node)) {
+
+        $wrapper = entity_metadata_wrapper('node', $node);
+
+        if ($wrapper->flat_source->value() == 'local') {
+            $path = $node->content['flat_original_path'][0]['#markup'];
+            $path = str_replace('local://', '', $path);
+            $path = str_replace('external://', '', $path);
+            $path = str_replace('freeze://', '[protected folder on server]', $path);
+            $node->content['flat_original_path'][0]['#markup'] = $path;
+        }
+
+    }
+}
