@@ -1334,9 +1334,9 @@ function flat_deposit_node_view($node, $view_mode, $langcode)
 
         $wrapper = entity_metadata_wrapper('node', $node);
 
-        if ($wrapper->flat_source->value() == 'external') {
+        if ($wrapper->flat_source->value() == 'external' and isset($node->content['flat_original_path'])) {
 
-            unset($node->content['flat_original_path']);
+#            unset($node->content['flat_original_path']);
 
         }
 

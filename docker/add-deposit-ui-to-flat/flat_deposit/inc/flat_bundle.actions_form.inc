@@ -256,7 +256,7 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
     if ($file_exists === false){
 
         $wrapper = entity_metadata_wrapper('node', $node);
-        $path = $wrapper->flat_original_path->value();
+        $path = $wrapper->flat_location->value();
         form_set_error('validate_bundle',t('File location does not exist (:path) ' , array(':path' => $path)));
         return $form;
 
