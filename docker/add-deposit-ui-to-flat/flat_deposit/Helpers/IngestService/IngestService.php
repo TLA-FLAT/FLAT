@@ -15,7 +15,7 @@ drupal_set_message('hello');
 
 // Info from Post request
 $nid = $_POST['nid'];
-$sid = $_POST['sid'];
+$loggedin_user = $_POST['loggedin_user'];
 $test = $_POST['test'];
 
 #$nid = 16;
@@ -32,9 +32,9 @@ $posted_cmdi_handling = 'use existing';
 $node = node_load($nid);
 $wrapper = entity_metadata_wrapper('node',$node);
 
-// get user name from node
-$user = user_load($node->uid);
-$userName = $user->name;
+// get owner name from node
+$sipOwner = user_load($node->uid);
+$sipOwnerName = $sipOwner->name;
 
 // define SIP type
 $sipType = 'Bundle';
@@ -53,10 +53,10 @@ $collection_fid = $collection_wrapper->flat_fid->value();
 
 // instantiate client
 module_load_include('php','flat_deposit','Helpers/IngestService/IngestClient');
-$ingest_client = new IngestClient($sipType, $userName, $recordCmdi, $collection_fid, $test);
+$ingest_client = new IngestClient($sipType, $sipOwnerName, $recordCmdi, $collection_fid, $test);
 
 // set ingest parameters
-$info['session_id']= $sid;
+$info['loggedin_user'] = $loggedin_user;
 $info['nid']= $nid;
 
 $try = $ingest_client->requestSipIngest($info);

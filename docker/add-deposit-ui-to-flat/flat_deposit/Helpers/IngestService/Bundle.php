@@ -17,7 +17,7 @@ class Bundle extends SIP
      *
      * The array requires following parameters:
      *
-     * 'session_id': the session id of the user doing the ingest
+     * 'loggedin_user': the user ID of the user doing the ingest
      * 'nid' : the node id of the bundle to ingest
      *
      * @return bool
@@ -27,7 +27,7 @@ class Bundle extends SIP
     public function init($info){
         $this->logging('Starting init');
         $required = array(
-            'session_id',
+            'loggedin_user',
             'nid',
         );
         $diff = array_diff($required,array_keys($info));
@@ -68,27 +68,29 @@ class Bundle extends SIP
     {
         $this->logging('Starting authentication');
 
-        $result = db_select('sessions', 's')
-            ->fields('s', array('uid'))
-            ->condition('s.sid', $this->info['session_id'])
-            ->execute();
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'user')
+            ->propertyCondition('uid', $this->info['loggedin_user'])
+        ;
+
+        $results = $query->execute();
 
 
-        if ($result){
+        if (empty($results)){
 
-            $user_id = $result->fetchAssoc()['uid'];
+            $id_loggedin_user = 0;
 
         } else {
 
-            $user_id = 0;
+            $id_loggedin_user = $this->info['loggedin_user'];
         }
 
-        $bundle_id = $this->node->uid;
+        $uid_bundle = $this->node->uid;
 
         // only bundle owner, editors and admins might validate the bundle
         if ($this->test){
 
-            if($user_id === $bundle_id OR user_access('validate bundles', user_load($user_id))) {
+            if($id_loggedin_user === $uid_bundle OR user_access('validate bundles', user_load($id_loggedin_user))) {
 
                 $this->logging('Finishing authentication');
                 return TRUE;
@@ -102,7 +104,7 @@ class Bundle extends SIP
         } else {
             // only certified users and corpmanager might ingest the bundle
 
-            if (($user_id === $bundle_id AND user_access('certified user', user_load($user_id))) OR user_access('ingest bundles', user_load($user_id))) {
+            if (($id_loggedin_user === $uid_bundle AND user_access('certified user', user_load($id_loggedin_user))) OR user_access('ingest bundles', user_load($id_loggedin_user))) {
 
                 $this->logging('Finishing authentication');
                 return TRUE;

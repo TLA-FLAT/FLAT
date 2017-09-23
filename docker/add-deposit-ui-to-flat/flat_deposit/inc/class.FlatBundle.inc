@@ -268,8 +268,8 @@ class FlatBundle
 
 
         } else {
-
-            $moved = rename(drupal_realpath($source_location), drupal_realpath($target_location)); // Unfortunately, rename does not return true on success
+            $moved = rename(drupal_realpath($source_location), drupal_realpath($target_location));
+            #$moved = rename(drupal_realpath($source_location), drupal_realpath($target_location)); // Unfortunately, rename does not return true on success
 
             if (!file_exists($target_location)) {
 

@@ -544,12 +544,31 @@ class CmdiHandler
 
         }
 
+        // Validate that all resources are accessible by ingest service
+        $inaccesible_files = [];
+        foreach ($resources as $rid => $file_name) {
+
+            $fName = str_replace("\\\\", "\\", $file_name);
+
+            if (!is_readable($fName)) {
+
+                $inaccesible_files [] = basename($fName);
+
+            }
+        }
+
+        if (!empty($inaccesible_files)){
+
+            throw new CmdiHandlerException(t('One or more files are not accessible. ' . implode(', ', $inaccesible_files)));
+
+        }
+
         // Add resources to simplexml variable
         foreach ($resources as $rid => $file_name) {
 
             $file_mime = self::fits_mimetype_check(drupal_realpath($file_name)) ;
             if (!$file_mime){
-                throw new CmdiHandlerException('Unable to get fits mime type for specified file');
+                throw new CmdiHandlerException('Unable to get fits mime type for specified file (' . $file_name . ')');
             }
 
             $file_size = filesize(drupal_realpath($file_name));
@@ -656,16 +675,10 @@ class CmdiHandler
      */
     static public function fits_mimetype_check($filename){
 
-        $fName = str_replace("\\\\", "\\", $filename);
-        if (!file_exists($fName) OR !is_readable($fName)){
-
-            return false;
-
-        }
 
         $config = variable_get('flat_deposit_fits');
         $url = $config['url'] . '/examine?file=';
-        $query = rawurlencode($fName);
+        $query = rawurlencode($filename);
         $port = $config['port'];
 
         $ch = curl_init();

@@ -182,14 +182,11 @@ function send_request($nid, $action, $debug=FALSE){
     $scheme = variable_get('flat_deposit_ingest_service')['host_scheme'];
     $base = $GLOBALS['base_path'];
 
-    $sid = $user->sid;
-    $name = array_search($sid,$_COOKIE);
-
     // create array containing data needed by the ingest service
     $data_to_post = array();
     $data_to_post['drupal_path'] = DRUPAL_ROOT;
     $data_to_post['nid'] = $nid;
-    $data_to_post['sid'] = $sid;
+    $data_to_post['loggedin_user'] = $user->uid;
     $data_to_post['test'] = $action;
 
     $options = array(
