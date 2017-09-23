@@ -277,7 +277,9 @@ class OwnCloud
 
         if (!$code){
 
-            $formatted = json_decode($res);
+            $res = $res[0];
+
+            $formatted = json_decode($res, true);
 
             if ($formatted['status'] == 'ok') {
 
@@ -285,7 +287,6 @@ class OwnCloud
 
             }
         }
-
 
         return $this->verified;
 

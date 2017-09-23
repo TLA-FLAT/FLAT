@@ -51,10 +51,56 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <inherited>true</inherited>
             <multival>true</multival>
             <options>
+                <option>Audio recordings</option>
+                <option>Behavioural data</option>
+                <option>Breathing measurements</option>
+                <option>Cell biology data</option>
+                <option>Computational modeling data</option>
+                <option>Demographic data</option>
+                <option>Dictionary</option>
                 <option>DNA sequences</option>
+                <option>DTI data</option>
                 <option>EEG data</option>
+                <option>Eye tracking data</option>
+                <option>FCPP (forced choice pointing) data</option>
+                <option>Field notes</option>
                 <option>fMRI data</option>
+                <option>Genome data</option>
+                <option>Geolocation data</option>
+                <option>Grammatical description</option>
+                <option>Grammaticality judgement data</option>
+                <option>GSR data</option>
+                <option>Histology data</option>
+                <option>Images</option>
+                <option>IQ test data</option>
+                <option>Kinematic data</option>
+                <option>Kinship data</option>
+                <option>LENA recording data</option>
+                <option>Lexicographic data</option>
+                <option>Linguistic annotations</option>
+                <option>MEG data</option>
+                <option>Microscopic images</option>
+                <option>Molecular data</option>
+                <option>Neuropsychological test data</option>
+                <option>Phenotype data</option>
+                <option>Phonetic analysis</option>
+                <option>Photographs</option>
+                <option>Phylogenetic data</option>
+                <option>Proteomic data</option>
+                <option>Questionnaire data</option>
+                <option>Reaction time data</option>
+                <option>Resting state fMRI data</option>
+                <option>sMRI data</option>
+                <option>SNP genotype data</option>
+                <option>Statistical data</option>
+                <option>Stimuli</option>
+                <option>tACS data</option>
+                <option>tDCS data</option>
+                <option>TMS data</option>
+                <option>Transcriptions</option>
+                <option>Transcriptome data</option>
                 <option>Video recordings</option>
+                <option>Word list</option>
             </options>
         </field>
         <field id="field_03" name="ResearchField">
