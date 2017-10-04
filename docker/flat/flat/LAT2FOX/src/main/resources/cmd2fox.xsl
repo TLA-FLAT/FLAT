@@ -804,33 +804,9 @@
 												<dc:identifier>
 													<xsl:value-of select="replace($resPID, '^hdl:', 'https://hdl.handle.net/')"/>
 												</dc:identifier>
-												<xsl:choose>
-													<xsl:when test="exists($fits-dir)">
-														<xsl:variable name="fits" select="cmd:firstFile($fits-dir,concat($res/@id,'.FITS.xml'),$base)" as="xs:anyURI?"/>
-														<xsl:if test="exists($fits)">
-															<dc:identifier>
-																<xsl:text>md5:</xsl:text>
-																<xsl:value-of select="doc($fits)//fits:md5checksum" xmlns:fits="http://hul.harvard.edu/ois/xml/ns/fits/fits_output"/>
-															</dc:identifier>
-														</xsl:if>
-													</xsl:when>
-													<xsl:when test="starts-with($resURI,'file:')">
-														<xsl:choose>
-															<xsl:when test="sx:fileExists($resURI cast as xs:anyURI)">
-																<dc:identifier>
-																	<xsl:text>md5:</xsl:text>
-																	<xsl:value-of select="sx:md5($resURI cast as xs:anyURI)" xmlns:fits="http://hul.harvard.edu/ois/xml/ns/fits/fits_output"/>
-																</dc:identifier>
-															</xsl:when>
-															<xsl:when test="$lax-resource-check">
-																<xsl:message>WRN: can't compute a MD5 checksum as the Resource[<xsl:value-of select="$resURI"/>] doesn't exist!</xsl:message>
-															</xsl:when>
-															<xsl:otherwise>
-																<xsl:message>ERR: can't compute a MD5 checksum as the Resource[<xsl:value-of select="$resURI"/>] doesn't exist!</xsl:message>
-															</xsl:otherwise>
-														</xsl:choose>
-													</xsl:when>
-												</xsl:choose>
+												<xsl:apply-templates select="current()" mode="checksum">
+													<xsl:with-param name="resURI" select="$resURI"/>
+												</xsl:apply-templates>
 											</oai_dc:dc>
 										</foxml:xmlContent>
 									</foxml:datastreamVersion>
@@ -1239,5 +1215,39 @@
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
+	
+	<!-- checksum -->
+	<xsl:template match="cmd:ResourceProxy" mode="checksum">
+		<xsl:param name="base" select="base-uri()"/>
+		<xsl:param name="resURI"/>
+		<xsl:variable name="res" select="current()"/>
+		<xsl:choose xmlns:dc="http://purl.org/dc/elements/1.1/">
+			<xsl:when test="exists($fits-dir)">
+				<xsl:variable name="fits" select="cmd:firstFile($fits-dir,concat($res/@id,'.FITS.xml'),$base)" as="xs:anyURI?"/>
+				<xsl:if test="exists($fits)">
+					<dc:identifier>
+						<xsl:text>md5:</xsl:text>
+						<xsl:value-of select="doc($fits)//fits:md5checksum" xmlns:fits="http://hul.harvard.edu/ois/xml/ns/fits/fits_output"/>
+					</dc:identifier>
+				</xsl:if>
+			</xsl:when>
+			<xsl:when test="starts-with($resURI,'file:')">
+				<xsl:choose>
+					<xsl:when test="sx:fileExists($resURI cast as xs:anyURI)">
+						<dc:identifier>
+							<xsl:text>md5:</xsl:text>
+							<xsl:value-of select="sx:md5($resURI cast as xs:anyURI)"/>
+						</dc:identifier>
+					</xsl:when>
+					<xsl:when test="$lax-resource-check">
+						<xsl:message>WRN: can't compute a MD5 checksum as the Resource[<xsl:value-of select="$resURI"/>] doesn't exist!</xsl:message>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:message>ERR: can't compute a MD5 checksum as the Resource[<xsl:value-of select="$resURI"/>] doesn't exist!</xsl:message>
+					</xsl:otherwise>
+				</xsl:choose>
+			</xsl:when>
+		</xsl:choose>
+	</xsl:template>	
 	
 </xsl:stylesheet>
