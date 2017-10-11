@@ -33,5 +33,35 @@
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
+	
+	<!-- checksum -->
+	<xsl:template match="cmd:ResourceProxy" mode="checksum">
+		<xsl:param name="base" select="base-uri()"/>
+		<xsl:param name="resURI"/>
+		<xsl:variable name="res" select="current()"/>
+		<xsl:choose xmlns:dc="http://purl.org/dc/elements/1.1/">
+			<!--
+			NOTE: implement here your own way to get the md5 checksum
+			<xsl:when test="">
+				<xsl:variable name="md5" select="doc($checksum)/md5"/>
+				<xsl:choose>
+					<xsl:when test="normalize-space($md5)!=''">
+						<dc:identifier>
+							<xsl:text>md5:</xsl:text>
+							<xsl:value-of select="$md5"/>
+						</dc:identifier>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:message>ERR: no checksum for resource[<xsl:value-of select="$resURI"/>]</xsl:message>
+					</xsl:otherwise>
+				</xsl:choose>
+			</xsl:when>
+			-->
+			<xsl:when test="false()"/>
+			<xsl:otherwise>
+				<xsl:next-match/>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>	
 
 </xsl:stylesheet>
