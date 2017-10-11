@@ -7,7 +7,7 @@
 	version="2.0">
 	
 	<xsl:param name="dir" select="'./'"/>
-    <xsl:param name="ext" select="'cmdi'"/>
+        <xsl:param name="ext" select="'cmdi'"/>
 	
 	<xsl:function name="cmd:hdl">
 		<xsl:param name="pid"/>
@@ -19,6 +19,7 @@
 			<xsl:for-each select="collection(concat($dir,concat('?select=*.',$ext,';recurse=yes;on-error=warning')))">
 				<xsl:variable name="rec" select="current()"/>
 				<xsl:variable name="src" select="base-uri($rec)"/>
+                                <xsl:message>INF: finding relations for CMD record[<xsl:value-of select="$src"/>]</xsl:message>
 				<xsl:variable name="frm">
 					<xsl:choose>
 						<xsl:when test="normalize-space($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink)=''">
@@ -122,6 +123,7 @@
 						<type>Metadata</type>
 					</relation>
 				</xsl:for-each>
+                                <xsl:message>INF: found relations for CMD record[<xsl:value-of select="$src"/>]</xsl:message>
 			</xsl:for-each>
 		</relations>
 	</xsl:template>
