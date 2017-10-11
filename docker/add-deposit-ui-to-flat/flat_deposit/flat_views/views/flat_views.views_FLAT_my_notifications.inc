@@ -9,7 +9,7 @@
  *
  */
 $view = new view();
-$view->name = 'notifications';
+$view->name = 'FLAT My Notifications view';
 $view->description = 'Displays feedback regarding backend uploads';
 $view->tag = 'default';
 $view->base_table = 'node';
@@ -20,7 +20,7 @@ $view->disabled = FALSE; /* Edit this to true to make a default view disabled in
 
 /* Display: Master */
 $handler = $view->new_display('default', 'Master', 'default');
-$handler->display->display_options['title'] = 'Notifications';
+$handler->display->display_options['title'] = 'Flat My Notifications display';
 $handler->display->display_options['use_more_always'] = FALSE;
 $handler->display->display_options['access']['type'] = 'perm';
 $handler->display->display_options['access']['perm'] = 'use deposit module';
@@ -82,15 +82,28 @@ $handler->display->display_options['filters']['uid_current']['field'] = 'uid_cur
 $handler->display->display_options['filters']['uid_current']['relationship'] = 'uid';
 $handler->display->display_options['filters']['uid_current']['value'] = '1';
 
-/* Display: Page */
-$handler = $view->new_display('page', 'Page', 'page');
-$handler->display->display_options['path'] = 'notifications';
-
-/* Display: Block */
-$handler = $view->new_display('block', 'Block', 'block');
-$handler->display->display_options['defaults']['pager'] = FALSE;
+/* Display: User Tab Page */
+/*
+$handler = $view->new_display('page', 'User Notification Tab Page', 'page_1');
+$handler->display->display_options['path'] = 'user/%/dashboard';
+$handler->display->display_options['menu']['type'] = 'tab';
+$handler->display->display_options['menu']['title'] = 'Notifications';
+$handler->display->display_options['menu']['weight'] = '0';
+$handler->display->display_options['menu']['context'] = 0;
 $handler->display->display_options['pager']['type'] = 'some';
 $handler->display->display_options['pager']['options']['items_per_page'] = '5';
-$handler->display->display_options['block_description'] = 'blog_block';
+$handler->display->display_options['block_description'] = 'notification_block_description';
+$handler->display->display_options['defaults']['pager'] = TRUE;
+*/
+
+/* Display: Block */
+$handler = $view->new_display('block', 'Block', 'flat_user_notification_block');
+$handler->display->display_options['block_description'] = 'Flat user notifications';
+$handler->display->display_options['menu']['title'] = 'Notifications';
+$handler->display->display_options['defaults']['pager'] = TRUE;
+$handler->display->display_options['pager']['type'] = 'some';
+$handler->display->display_options['pager']['options']['items_per_page'] = '5';
+
+
 
 $views[$view->name] = $view;

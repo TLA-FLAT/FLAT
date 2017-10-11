@@ -37,7 +37,7 @@ function flat_collection_add_form($form, &$form_state, $parent){
         '#default_value' => $user->name,
     );
 
-    if (!user_access('Admin collections')){$form['owner']['#disabled'] = TRUE; }
+    if (!user_access('admin collection')){$form['owner']['#disabled'] = TRUE; }
 
     $form['trigger']['select_profile_name'] = array(
         '#title' => t('Which profile do you want to use?'),
@@ -170,6 +170,8 @@ function flat_collection_add_form_final_validate($form, &$form_state){
         // todo Validate imported cmdi titles
     }
 
+
+
     // Existing collection with same label as title
 // Validate chosen option
 
@@ -199,9 +201,23 @@ function flat_collection_add_form_final_validate($form, &$form_state){
 
         }
 
+        // Validate that no other collection at same collection with very similar name exists
+        module_load_include('inc','flat_deposit', 'inc/class.FlatTuque');
+        $title = $form_state['values']['template_container']['elements']['field_01'][0];
+
+
+        $values = FlatTuque::getChildrenLabels($collection_pid);
+
+        if (!$values){form_set_error('title','Unable to validate collection naming');}
+
+        if (in_array(strtoupper($title),array_unique(strtoupper($values)))){
+
+            form_set_error('title','Another collection or bundle with same name exists at this location. Please use other name');
+            return $form;
+        }
+
 
     }
-
 
     // Validate owner.
     $owner =  $form_state['values']['owner'];
@@ -246,7 +262,7 @@ function flat_collection_add_form_final_validate($form, &$form_state){
     $test = FALSE;
 
     module_load_include('php','flat_deposit','Helpers/IngestService/IngestClient');
-    $ingest_client = new IngestClient($sipType, $userName, $recordCmdi, $parentFid, $test);
+    $ingest_client = new IngestClient($sipType, $owner, $recordCmdi, $parentFid, $test);
 
     $options = [];
     $options ['policy'] = $form_state['values']['select_policy'];
@@ -264,7 +280,7 @@ function flat_collection_add_form_final_validate($form, &$form_state){
     $form_state['values']['data']['fid'] = (string)$fid;
     $form_state['values']['data']['label']=  $fObject->label;
     $form_state['values']['data']['owner']=  $fObject->owner;
-    #form_set_error('debug','debug');
+
     return $form;
 
 }

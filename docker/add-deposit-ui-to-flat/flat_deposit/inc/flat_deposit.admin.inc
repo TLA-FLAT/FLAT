@@ -122,6 +122,13 @@ function flat_deposit_admin_form($form, &$form_state)
         '#default_value' => $service['log_all'],
         '#required' => FALSE,
     );
+    $form['ingest_service']['max_ingest_files'] = array (
+        '#type' => 'textfield',
+        '#title' => t('Maximal number of files per bundle'),
+        '#description' => t('Validation parameter for bundles before ingest'),
+        '#default_value' => $service['max_ingest_files'],
+        '#required' => FALSE,
+    );
 
 
 

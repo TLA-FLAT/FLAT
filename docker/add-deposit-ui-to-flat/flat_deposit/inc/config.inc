@@ -81,6 +81,8 @@ function flat_deposit_set_ingest_service($updated_values=NULL)
         'error_log_file' => '/app/flat/backend/Ingest_service_log/',
         # Should everything be logged
         'log_all' => TRUE,
+        # Amount of files allowed to be in one bundle
+        'max_ingest_files' => 3,
     );
 
     //clean up stored values

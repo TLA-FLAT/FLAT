@@ -204,9 +204,22 @@ function flat_deposit_permission()
         'view collection' => array(
             'title' => t('View collections'),
             'description' => t('See overview collections')),
-        'admin collection' => array(
-            'title' => t('Admin collections'),
-            'description' => t('Admin flat_supercollections')),
+        'add bundle menu' => array(
+            'title' => t('Add bundles to own account'),
+            'description' => t('Allows to create personal archive bundles'),
+        ),
+        'update bundle menu' => array(
+            'title' => t('Update existing bundle and add to own account'),
+            'description' => t('Allows to create personal archive bundle on basis of existing bundle'),
+        ),
+        'add collection menu' => array(
+            'title' => t('Add collection to own account'),
+            'description' => t('Allows to create personal archive collection'),
+        ),
+        'add current collection menu' => array(
+            'title' => t('Add current collection to own account'),
+            'description' => t('Allows to create personal archive collection of current fedora node'),
+        ),
     );
 }
 
@@ -283,18 +296,49 @@ function flat_deposit_menu()
         'file' => 'inc/flat_deposit.admin.inc',
         'access arguments' => array('admin deposit module'));
 
-    //FLAT_BUNDLE
+    //User menus
+
+
+    $items['user/%user/dashboard'] = array(
+        'title' => 'Dashboard',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'flat_deposit_dashboard_view',
+        'page arguments' => array(1),
+        'access callback' => 'user_edit_access',
+        'access arguments' => array(1),
+        'weight' => -20,
+    );
+
+    $items['user/%user/dashboard/bundles'] = array(
+        'title' => 'My bundles',
+        'type' => MENU_CALLBACK,
+        'page callback' => 'flat_deposit_dashboard_bundle_view',
+        'page arguments' => array(1),
+        'access callback' => 'user_edit_access',
+        'access arguments' => array(1),
+    );
+
+    $items['user/%user/dashboard/collections'] = array(
+        'title' => 'My collections',
+        'type' => MENU_CALLBACK,
+        'page callback' => 'flat_deposit_dashboard_collections_view',
+        'page arguments' => array(1),
+        'access callback' => 'user_edit_access',
+        'access arguments' => array(1),
+    );
+
+//FLAT_BUNDLE
     // bundle creation
     $items['islandora/object/%islandora_object/add_bundle'] = array(
         'title' => 'Add bundle',
         'type' => MENU_LOCAL_TASK,
         'page callback' => 'flat_bundle_add_bundle',
         'page arguments' => array(2),
-        'access callback' => 'islandora_object_add_bundle_access_callback',
-        'access arguments' => array( 2),
+        'access callback' => 'islandora_object_access_callback',
+        'access arguments' => array('add bundle menu', 2),
         'weight' => 99,
     );
-/*
+
 
     // bundle update
     $items['islandora/object/%islandora_object/update_bundle'] = array(
@@ -303,10 +347,10 @@ function flat_deposit_menu()
         'page callback' => 'flat_bundle_update_bundle',
         'page arguments' => array(2),
         'access callback' => 'islandora_object_manage_access_callback',
-        'access arguments' => array(array(ISLANDORA_MANAGE_PROPERTIES,), 2),
+        'access arguments' => array('update bundle menu', 2),
         'weight' => 99,
     );
-*/
+
     // flat bundle cmdi file creator form
     $items['node/%node/cmdi'] = array(
         'title' => 'Flat bundle cmdi generation',
@@ -320,57 +364,49 @@ function flat_deposit_menu()
 
 
     // FLAT_Collection
-    $items['islandora/object/%islandora_object/manage/access'] = array(
-        'title' => 'User write access',
-        'type' => MENU_LOCAL_TASK,
-        'page callback' => 'flat_supercollection_admin',
-        'page arguments' => array(2),
-        'access callback' => 'islandora_object_manage_access_callback',
-        'access arguments' => array(
-            array(ISLANDORA_MANAGE_PROPERTIES,), 2),
-        'weight' => 95,
-        );
-
-
-    // FLAT_Collection
     $items['islandora/object/%islandora_object/add_collection'] = array(
         'title' => 'Add collection',
         'type' => MENU_LOCAL_TASK,
         'page callback' => 'drupal_get_form',
         'file' =>'inc/flat_collection.add_collection.inc',
         'page arguments' => array('flat_collection_add_form',2),
-        'access callback' => 'islandora_object_add_collection_access_callback',
-        'access arguments' => array(2),
+        'access callback' => 'islandora_object_access_callback',
+        'access arguments' => array('add collection menu', 2),
         'weight' => 95,
     );
 
-    /*
+
     $items['islandora/object/%islandora_object/add_current_collection'] = array(
         'title' => 'Add current collection to \'My collections\'',
         'type' => MENU_LOCAL_TASK,
         'page callback' => 'drupal_get_form',
         'file' =>'inc/flat_collection.add_current_collection.inc',
         'page arguments' => array('flat_collection_add_current_collection_form',2),
-        'access callback' => 'islandora_object_manage_access_callback',
-        'access arguments' => array(
-            array(
-                ISLANDORA_MANAGE_PROPERTIES,
-            ), 2),
+        'access callback' => 'islandora_object_access_callback',
+        'access arguments' => array('add current collection menu', 2),
         'weight' => 95,
     );
 
-    */
+
 
     return $items;
 }
 
+function flat_deposit_dashboard_view($var){
 
 
-function flat_supercollection_admin(AbstractObject $object){
-
-       print_r('hello');
+    return '';
 }
 
+function flat_deposit_dashboard_bundle_view($var){
+
+    return '';
+}
+
+function flat_deposit_dashboard_collections_view($var){
+
+    return '';
+}
 /**
  * Implements hook_menu_local_task_alter
  *
@@ -388,7 +424,7 @@ function flat_deposit_menu_local_tasks_alter(&$data, $router_item, $root_path)
                 $pid_parent = end($pid_parent);
 
                 module_load_include('php', 'flat_deposit', 'inc/drupal_queries');
-                $collections = query_user_supercollections(array( $pid_parent));
+
 
                 if (empty($collections)) {
                     $data['tabs'][0]['output'][$index]['#link']['access'] = FALSE;
@@ -961,6 +997,35 @@ function flat_bundle_node_form_add_validate($form, &$form_state){
     $form_state['values']['flat_parent_title']['und'][0]['value'] = $collection;
 
 
+    if ($collection != 'unassigned'){
+        // Validate that no other bundle or collection at same location exists
+        $collection_node = node_load($collection_nid);
+        $wrapper = entity_metadata_wrapper('node', $collection_node);
+
+        $collection_fid = $wrapper->flat_fid->value();
+
+        module_load_include('inc', 'flat_deposit', '/inc/class.FlatTuque');
+
+        $values = FlatTuque::getChildrenLabels($collection_fid);
+
+
+
+
+
+        if (in_array(strtoupper($bundle_name),array_unique(array_map('strtoupper',$values)))){
+
+            form_set_error('title','Another collection or bundle with same name exists at this location. Please use other name');
+            return $form;
+        }
+
+
+
+
+
+
+    }
+
+
     // Assign value to flat_original_path field
     if ($form_state['values']['flat_source']['und'][0]['value'] == 'external') {
 
@@ -1027,7 +1092,7 @@ function flat_bundle_node_form_add_submit($form, &$form_state){
     // initiate user directories if necessary
     module_load_include('inc', 'imce', 'inc/imce.page');
     global $user;
-    imce_initiate_profile ($user);
+    imce_initiate_profile ($user, 'external');
 
     // Determine directories for metadata and resources
     $meta_dir = 'metadata://' . str_replace('@' ,'_at_' , $user->name) . "/$collection/$bundle";
@@ -1143,16 +1208,15 @@ function flat_bundle_node_form_edit_validate($form, &$form_state){
     if ((integer)$new_collection_nid != 0){
 
         $collection_node = node_load($new_collection_nid);
-        $new_collection_name = $collection_node->title;
 
     } else {
 
-        $new_collection_name = 'unassigned';
-
+        $collection_node = new stdClass();
+        $collection_node->title = 'hello';
     }
 
     // Set parent nid value of this bundle to the name of the new collection
-    $form_state['values']['flat_parent_title']['und'][0]['value'] = $new_collection_name;
+    $form_state['values']['flat_parent_title']['und'][0]['value'] = $collection_node->title;
 
     // If parent nid has not changed pass validation
     #if ($original_collection_nid === $new_collection_nid){
@@ -1163,7 +1227,7 @@ function flat_bundle_node_form_edit_validate($form, &$form_state){
     // Validate that no record.cmdi exists with metadata related to a collection and then, the collection changes
     $cmdi_option = $wrapper->flat_cmdi_option->value();
     $cmdi_file = $wrapper->flat_cmdi_file->value();
-    if ($cmdi_option == 'new' AND $new_collection_name == 'unassigned' AND !is_null($cmdi_file)){
+    if ($cmdi_option == 'new' AND $collection_node->title == 'unassigned' AND !is_null($cmdi_file)){
 
         form_set_error('flat_parent_nid', 'It is not possible to change the collection if new metadata file has been saved. Please remove record.cmdi first');
         return $form;
@@ -1175,7 +1239,7 @@ function flat_bundle_node_form_edit_validate($form, &$form_state){
     //Check that bundle name within collection is distinctive from existing bundles, otherwise we get problems with creating new folders.
     $user_id = $node->uid ;
     module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
-    $unique = FlatBundle::checkUniquenessNaming($user_id, $new_collection_name, $wrapper->title);
+    $unique = FlatBundle::checkUniquenessNaming($user_id, $collection_node->title, $wrapper->title);
 
     if (!$unique) {
 
@@ -1185,7 +1249,8 @@ function flat_bundle_node_form_edit_validate($form, &$form_state){
     /*
 */
     // Move files to new location
-    $new_location = FlatBundle::moveBundleData($node, 'data', 'unfreeze', $new_collection_name);
+
+    $new_location = FlatBundle::moveBundleData($node, 'data', 'unfreeze', $collection_node);
 
     if (!$new_location){
 
@@ -1198,7 +1263,7 @@ function flat_bundle_node_form_edit_validate($form, &$form_state){
 
     if(!is_null($wrapper->flat_cmdi_file->value())){
 
-        $move = FlatBundle::moveBundleData($node, 'metadata', 'unfreeze', $new_collection_name);
+        $move = FlatBundle::moveBundleData($node, 'metadata', 'unfreeze', $collection_node);
 
         if(!$move) {
 
@@ -1259,6 +1324,23 @@ function flat_collection_view($node, $view_mode) {
                 'html' => FALSE,
             ),
         );
+
+        global $user;
+        $node->content['link_my_collections'] = array(
+            '#weight' => 10,
+            '#theme' => 'link',
+            '#path' => 'user/' .$user->uid . '/dashboard/collections',
+            '#text' => t('Back to \'My collections\''),
+            '#options' => array(
+                'attributes' => array(),
+                'html' => FALSE,
+            ),
+            '#prefix' => '<div class="collection-link">',
+            '#suffix' => '</div>',
+
+
+        );
+
         #flat_fid
 
         // Add form to node
@@ -1300,11 +1382,47 @@ function flat_bundle_view($node, $view_mode) {
         }
     }
 
+    global $user;
+    $link_my_bundles = array(
+        '#weight' => 10,
+        '#theme' => 'link',
+        '#path' => 'user/' .$user->uid . '/dashboard/bundles',
+        '#text' => t('Back to \'My bundles\''),
+        '#options' => array(
+            'attributes' => array(),
+            'html' => FALSE,
+        ),
+        '#prefix' => '<div class="bundle-link">',
+        '#suffix' => '</div>',
+
+
+    );
+
+    $node->content['link_my_bundles'] = $link_my_bundles;
 
 
     return $node;
 }
 
+function flat_deposit_menu_alter(&$items){
+
+    $items['user/%user/edit']['title'] = 'Edit user';
+
+    $items['user/%user/imce']['weight'] = -18;
+
+
+
+    // Specify the View page as just a regular tab.
+    // You do not need to change this block: this will always be the same as long
+    // as you don't want View to be the default tab.
+    $items['user/%user/view']['title'] = 'User Settings';
+    #$items['user/%user/view']['type'] = MENU_LOCAL_TASK;
+
+    // Normal tabs don't have a weight
+    unset($items['user/%user/view']['weight']);
+
+
+    }
 
 /**
  *
@@ -1333,18 +1451,18 @@ function flat_deposit_node_view($node, $view_mode, $langcode)
 
         if ($wrapper->flat_source->value() == 'external' and isset($node->content['flat_original_path'])) {
 
-#            unset($node->content['flat_original_path']);
+            unset($node->content['flat_original_path']);
 
         }
 
         unset ($node->content['flat_bundle_status']);
-        unset ($node->content['flat_parent_nid']);
+        #unset ($node->content['flat_parent_nid']);
         unset ($node->content['flat_parent_title']);
         unset ($node->content['flat_cmdi_option']);
         unset ($node->content['flat_policies']);
         unset ($node->content['flat_source']);
         unset ($node->content['flat_external']);
-        unset ($node->content['flat_location']);
+        #unset ($node->content['flat_location']);
 
         if (isset($node->content['flat_fid'])){
             $node->content['flat_fid']['#title'] = 'Link to archived bundle ';
@@ -1405,7 +1523,7 @@ function flat_deposit_block_info()
     $blocks['node_actions'] = array(
         'info' => t('FLAT deposit upload bundle actions '),
         'status' => TRUE,
-        'weight' => -999,
+        #'weight' => -999,
         'region' => 'content',
         'visibility' => BLOCK_VISIBILITY_PHP,
         'pages' => '<?php $val = (is_numeric(arg(1)) AND arg(2) == FALSE ) ? TRUE :  FALSE; return $val; ?>'
@@ -1424,9 +1542,10 @@ function flat_deposit_block_info()
     $blocks['flat_deposit_menu'] = array(
         'info' => t('FLAT deposit main menu'),
         'status' => TRUE,
-        'region' => 'sidebar_second',
-        'visibility' => BLOCK_VISIBILITY_NOTLISTED,
-        'pages' => 'islandora/*',
+        'region' => 'highlight',
+        'visibility' => BLOCK_VISIBILITY_LISTED,
+        'pages' => "user/*/dashboard\nuser/*/dashboard/*" ,
+        'weight' => -999,
 
     );
 
@@ -1435,8 +1554,8 @@ function flat_deposit_block_info()
         'status' => TRUE,
         'region' => 'content',
         'visibility' => BLOCK_VISIBILITY_LISTED,
-        'pages' => 'my_collections',
-        'weight' => -18,
+        'pages' => "user/*/dashboard/collections" ,
+        'weight' => 999,
 
     );
 
@@ -1506,21 +1625,27 @@ function flat_deposit_block_view($delta = '')
             break;
 
         case 'flat_deposit_menu':
+            global $user;
             $image_links = array(
-                'link_workspace' => array(
-                    'name' => 'My bundles',
-                    'href' => 'workspace',
-                    'image_path' => drupal_get_path('module','flat_deposit') .'/Images/Upload.png',
+                'link_notifications' => array(
+                    'name' => 'My notification center',
+                    'href' => 'user/' .  $user->uid . '/dashboard',
+                    'image_path' => drupal_get_path('module','flat_deposit') .'/Images/My_notifications.png',
                 ),
                 'link_my_collections' => array(
                     'name' => 'My collections',
-                    'href' => 'my_collections',
-                    'image_path' => drupal_get_path('module','flat_deposit') .'/Images/Manage_coll.png',
+                    'href' => 'user/' .  $user->uid . '/dashboard/collections',
+                    'image_path' => drupal_get_path('module','flat_deposit') .'/Images/My_collections.png',
+                ),
+                'link_bundles' => array(
+                    'name' => 'My bundles',
+                    'href' => 'user/' .  $user->uid . '/dashboard/bundles',
+                    'image_path' => drupal_get_path('module','flat_deposit') .'/Images/My_bundles.png',
                 ),
 
             );
 
-            $output = array();
+            $rendered_image_links = array();
             // Create complete variables to be sent to theme_image_link
             foreach ($image_links as $key => $image_link) {
 
@@ -1541,13 +1666,18 @@ function flat_deposit_block_view($delta = '')
                 );
 
                 // Attach render array to array of outputted block items.
-                $output [$key] = array(
-                    '#prefix' => '<div>',
-                    '#type' => 'markup',
-                    '#markup' => theme('image_link', $variables),
-                    '#suffix' => '</div>',
-                );
+                $rendered_image_links [] = theme('image_link', $variables);
             }
+
+
+
+            $output = array(
+                'tabled_links' => array(
+                    '#type' => 'markup',
+                    '#markup' => theme('table', ['header' => $rendered_image_links])
+                )
+
+            );
 
             $block = array (
                 'subject' => t('FLAT Deposit Main Menu'),
@@ -1571,193 +1701,34 @@ function flat_deposit_block_view($delta = '')
 }
 
 
+function flat_deposit_islandora_object_access($op, $object, $user) {
 
-
-
-
-
-
-
-/**
- * FLAT_COLLECTION RELATED FUNCTIONS
- */
-
-
-/**
- * Implements hook_entity_info
- *
- * makes custom entity type flat_supercollection available
- */
-function flat_deposit_entity_info() {
-    $entities = array();
-
-    $entities['flat_supercollection'] = array(
-
-        // Define basic information.
-        'label' => t('FLAT Supercollection'),
-        'plural label' => t('FLAT Supercollections'),
-        'fieldable' => FALSE,
-
-        // Provide information about the database table.
-        'base table' => 'flat_supercollection',
-        'entity keys' => array(
-            'id' => 'collection_id',
-            'label' => 'label',
-
-        ),
-
-        // Use classes from the Entity API module.
-        'entity class' => 'Entity',
-        'controller class' => 'EntityAPIController',
-
-        // Have Entity API set up an administrative UI.
-        'admin ui' => array(
-            'path' => 'admin/supercollections',
-            'file' => 'inc/flat_supercollections.inc'
-        ),
-        'module' => 'flat_deposit',
-        'access callback' => 'flat_supercollection_access',
-
-        // For content-type entities only, define the callback that
-        // returns the URL for the entity.
-        'uri callback' => 'flat_supercollection_uri',
-    );
-
-    return $entities;
-}
-
-
-/*
- * Sets the page title of flat_supercollections to collection name
- */
-function flat_supercollection_page_title($entity){
-    return $entity->collection_name;
-}
-
-
-// For content-type entities, return the URI for an entity.
-function flat_supercollection_uri($entity) {
-    return array(
-        'path' => 'flat_supercollection/' . $entity->collection_id,
-    );
-}
-
-
-/**
- * Access callback: Checks entity access.
- *
- * From "Defining an Entity Type in Drupal 7", chapter 4.
- *
- * @param string $op
- *   Operation to check: 'view', 'update', 'create', etc.
- * @param object|null $entity
- *   Object to check access on, or NULL to check for all entities.
- * @param object|null $account
- *   Account to check access permissions for. NULL means "current user".
- *
- * @return bool
- *   TRUE to allow access; FALSE to deny access.
- */
-function flat_supercollection_access($op, $entity, $account = NULL) {
-    if ($op == 'view') {
-        return user_access('view collection', $account);
-    }
-
-    // All other operations use the generic "administer" permission.
-    return user_access('administer collection', $account);
-}
-
-/**
- * Implements hook_page_alter().
- */
-function flat_deposit_page_alter(&$page)
-{
-    #krumo ($page);
-}
-
-
-
-/**
- * Implements hook_view().
- */
-function flat_supercollection_view($node, $view_mode) {
-
-
-    if ($view_mode == 'full' && node_is_page($node)) {
-        // Breadcrumb navigation.  l() escapes title, so we should not escape !name.manage
-        drupal_set_breadcrumb(array(
-            l(t('Home'), NULL),
-            l(t("!name's bundles", array(
-                '!name' => format_username($node))), 'flat_bundle/' . $node->uid)));
-
-        $exception = field_get_items('node', $node, 'flat_exception')[0]['value'];
-        if ($exception) {
-            $node->content["flat_exception"] = field_view_field('node', $node, 'flat_exception');
-        }
-    }
-
-    return $node;
-}
-
-
-
-/**
- * Checks whether the user can access the given object's add bundle tab.
- *
- * Checks for object existence, accessibility and objects' content model
- *
- *
- * @param AbstractObject $object
- *   The object to test, if NULL given the object doesn't exist or is
- *   inaccessible.
- *
- * @return bool
- *   TRUE if the object has the collectionCModel content model, FALSE otherwise.
- */
-function islandora_object_add_bundle_access_callback($object = NULL) {
     module_load_include('inc', 'islandora', 'includes/utilities');
-
-    if (!$object && !islandora_describe_repository()) {
-        islandora_display_repository_inaccessible_message();
-        return FALSE;
-    }
-
     $has_access = FALSE;
-    $collection_content_models = $object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:collectionCModel');
-    if (!empty($collection_content_models)){
-        $has_access = TRUE;
-    }
 
+    switch ($op){
+        case 'add bundle menu':
+        case 'add collection menu':
+        case 'add current collection menu':
+        case 'update bundle menu':
+
+            /**
+             *   TRUE if the object has the collectionCModel content model, FALSE otherwise.
+             */
+            $collection_content_models = $object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:collectionCModel');
+            $has_access = !empty($collection_content_models) ? TRUE : FALSE;
+
+            break;
+
+        default:
+            $has_access = NULL;
+            break;
+
+
+
+    }
     return $has_access;
+
+
+
 }
-
-/**
- * Checks whether the user can access the given object's add collection tab.
- *
- * Checks for object existence, accessibility and objects' content model
- *
- *
- * @param AbstractObject $object
- *   The object to test, if NULL given the object doesn't exist or is
- *   inaccessible.
- *
- * @return bool
- *   TRUE if the object has the collectionCModel content model, FALSE otherwise.
- */
-function islandora_object_add_collection_access_callback($object = NULL) {
-    module_load_include('inc', 'islandora', 'includes/utilities');
-
-    if (!$object && !islandora_describe_repository()) {
-        islandora_display_repository_inaccessible_message();
-        return FALSE;
-    }
-
-    $has_access = FALSE;
-    $collection_content_models = $object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:collectionCModel');
-    if (!empty($collection_content_models)){
-        $has_access = TRUE;
-    }
-
-    return $has_access;
-}
-

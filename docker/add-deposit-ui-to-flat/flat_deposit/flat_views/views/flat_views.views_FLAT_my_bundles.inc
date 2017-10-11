@@ -9,7 +9,7 @@
  *
  */
 $view = new view();
-$view->name = 'flat_workspace';
+$view->name = 'flat_my_bundles';
 $view->description = 'View of an individuals uploads and notifications ';
 $view->tag = 'default';
 $view->base_table = 'node';
@@ -20,7 +20,7 @@ $view->disabled = FALSE; /* Edit this to true to make a default view disabled in
 
 /* Display: Master */
 $handler = $view->new_display('default', 'Master', 'default');
-$handler->display->display_options['title'] = 'My workspace';
+$handler->display->display_options['title'] = 'My bundles';
 $handler->display->display_options['use_more_always'] = FALSE;
 $handler->display->display_options['access']['type'] = 'perm';
 $handler->display->display_options['access']['perm'] = 'use deposit module';
@@ -86,7 +86,7 @@ $handler->display->display_options['header']['area']['table'] = 'views';
 $handler->display->display_options['header']['area']['field'] = 'area';
 $handler->display->display_options['header']['area']['label'] = 'link_create_new_bundle';
 $handler->display->display_options['header']['area']['empty'] = TRUE;
-$handler->display->display_options['header']['area']['content'] = '<a href="node/add/flat-bundle">Initiate new bundle</a>';
+$handler->display->display_options['header']['area']['content'] = '<a href="/node/add/flat-bundle">Initiate new bundle</a>';
 $handler->display->display_options['header']['area']['format'] = 'filtered_html';
 /* Header: Global: View area */
 $handler->display->display_options['header']['view_1']['id'] = 'view_1';
@@ -175,9 +175,12 @@ $handler->display->display_options['filters']['uid_current']['value'] = '1';
 
 
 /* Display: Personal upload view page */
-$handler = $view->new_display('page', 'Personal upload view page', 'page');
-$handler->display->display_options['display_description'] = 'View of all personal uploads';
-$handler->display->display_options['path'] = 'workspace';
+$handler = $view->new_display('block', 'Block', 'flat_my_bundle_block');
+$handler->display->display_options['block_description'] = 'FLAT my bundles';
+$handler->display->display_options['menu']['title'] = 'User Bundles';
+$handler->display->display_options['defaults']['pager'] = TRUE;
+$handler->display->display_options['pager']['type'] = 'some';
+$handler->display->display_options['pager']['options']['items_per_page'] = '5';
 
 
 $views[$view->name] = $view;

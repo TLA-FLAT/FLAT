@@ -1,0 +1,68 @@
+<?php
+
+function flat_xacml_islandora_object_access($op, $object, $user) {
+
+    module_load_include('inc', 'islandora', 'includes/utilities');
+    $has_access = FALSE;
+
+    switch ($op) {
+        case 'add bundle menu':
+        case 'add collection menu':
+        case 'add current collection menu':
+
+        // return false for anonymous users
+        if ($user->uid === 0) {
+            break;
+        }
+
+
+        $user_name = $user->name;
+
+        $user_roles = $user->roles;
+
+
+        // return true for administrators
+        if (in_array('administrator', $user_roles)){
+            $has_access = TRUE;
+            break;}
+
+
+
+        $id = "POLICY";
+        $predicate = 'isManageableByUser';
+        $manageable_by_users = [];
+
+
+        foreach ($object->relationships->get(ISLANDORA_RELS_EXT_URI, $predicate) as $entry){
+            $manageable_by_users [] = $entry['object']['value'];
+
+        }
+
+        $is_manageable_user = in_array($user_name, $manageable_by_users);
+
+
+        $predicate = 'isManageableByRole';
+        $manageable_by_roles = [];
+
+        foreach ($object->relationships->get(ISLANDORA_RELS_EXT_URI, $predicate) as $entry){
+            $manageable_by_roles [] = $entry['object']['value'];
+
+        }
+
+        $has_manageable_role = !empty(array_intersect($manageable_by_roles, $user_roles));
+
+        $has_access = ($is_manageable_user OR $has_manageable_role) ? TRUE: FALSE;
+        break;
+
+        default:
+            $has_access = NULL;
+            break;
+
+
+
+    }
+    return $has_access;
+
+
+
+}

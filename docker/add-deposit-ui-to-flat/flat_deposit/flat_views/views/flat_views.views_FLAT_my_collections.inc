@@ -9,7 +9,7 @@
  *
  */
 $view = new view();
-$view->name = 'flat_my_collections';
+$view->name = 'FLAT My Collections View';
 $view->description = 'View of an individuals collections';
 $view->tag = 'default';
 $view->base_table = 'node';
@@ -110,14 +110,19 @@ $handler->display->display_options['filters']['uid_current']['relationship'] = '
 $handler->display->display_options['filters']['uid_current']['value'] = '1';
 
 /* Display: Personal upload view page */
-$handler = $view->new_display('page', 'Personal Collections view page', 'page');
+/*$handler = $view->new_display('page', 'Personal Collections view page', 'page');
 $handler->display->display_options['display_description'] = 'View of all personal collections';
 $handler->display->display_options['path'] = 'my_collections';
+*/
 
 /* Display: Block */
-$handler = $view->new_display('block', 'Block name', 'flat_deposit_inactive_collections');
-$handler->display->display_options['block_description'] = 'Block description';
-#$handler->display->display_options['block_caching'] = '2';
+/* Display: Personal upload view page */
+$handler = $view->new_display('block', 'Block', 'flat_my_collections_block');
+$handler->display->display_options['block_description'] = 'FLAT my collections';
+$handler->display->display_options['menu']['title'] = 'User Collections';
+$handler->display->display_options['defaults']['pager'] = TRUE;
+$handler->display->display_options['pager']['type'] = 'some';
+$handler->display->display_options['pager']['options']['items_per_page'] = '5';
 
 $views[$view->name] = $view;
 

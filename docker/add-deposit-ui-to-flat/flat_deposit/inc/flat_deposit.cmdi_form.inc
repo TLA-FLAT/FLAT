@@ -86,7 +86,7 @@ function flat_deposit_cmdi_form($form, &$form_state){
 
 
 
-    if (!user_access('Admin collections')){$form['owner']['#disabled'] = TRUE; }
+    if (!user_access('admin collection')){$form['owner']['#disabled'] = TRUE; }
 
     // attach hidden data
     $form['data'] = array(
