@@ -339,14 +339,13 @@ function flat_deposit_menu()
         'weight' => 99,
     );
 
-
-    // bundle update
+// bundle creation
     $items['islandora/object/%islandora_object/update_bundle'] = array(
         'title' => 'Update bundle',
         'type' => MENU_LOCAL_TASK,
         'page callback' => 'flat_bundle_update_bundle',
         'page arguments' => array(2),
-        'access callback' => 'islandora_object_manage_access_callback',
+        'access callback' => 'islandora_object_access_callback',
         'access arguments' => array('update bundle menu', 2),
         'weight' => 99,
     );
@@ -996,8 +995,9 @@ function flat_bundle_node_form_add_validate($form, &$form_state){
 
     $form_state['values']['flat_parent_title']['und'][0]['value'] = $collection;
 
+    $is_update = $form_state['values']['flat_type']['und'][0]['value'] == "update" ? TRUE : FALSE;
 
-    if ($collection != 'unassigned'){
+    if ($collection != 'unassigned' AND !$is_update){
         // Validate that no other bundle or collection at same location exists
         $collection_node = node_load($collection_nid);
         $wrapper = entity_metadata_wrapper('node', $collection_node);
@@ -1456,13 +1456,13 @@ function flat_deposit_node_view($node, $view_mode, $langcode)
         }
 
         unset ($node->content['flat_bundle_status']);
-        #unset ($node->content['flat_parent_nid']);
+        unset ($node->content['flat_parent_nid']);
         unset ($node->content['flat_parent_title']);
         unset ($node->content['flat_cmdi_option']);
         unset ($node->content['flat_policies']);
         unset ($node->content['flat_source']);
         unset ($node->content['flat_external']);
-        #unset ($node->content['flat_location']);
+        unset ($node->content['flat_location']);
 
         if (isset($node->content['flat_fid'])){
             $node->content['flat_fid']['#title'] = 'Link to archived bundle ';
@@ -1523,7 +1523,7 @@ function flat_deposit_block_info()
     $blocks['node_actions'] = array(
         'info' => t('FLAT deposit upload bundle actions '),
         'status' => TRUE,
-        #'weight' => -999,
+        #'weight' => 999,
         'region' => 'content',
         'visibility' => BLOCK_VISIBILITY_PHP,
         'pages' => '<?php $val = (is_numeric(arg(1)) AND arg(2) == FALSE ) ? TRUE :  FALSE; return $val; ?>'
@@ -1532,7 +1532,7 @@ function flat_deposit_block_info()
     $blocks['cmdi_resource_actions'] = array(
         'info' => t('FLAT deposit bundle cmdi resource actions '),
         'status' => TRUE,
-        'weight' => -999,
+        #'weight' => -999,
         'region' => 'content',
         'visibility' => BLOCK_VISIBILITY_PHP,
         'pages' => "<?php if (arg(0) == 'node' AND is_numeric(arg(1)) AND arg(2) == FALSE ) {return TRUE ;} else {return FALSE;}  ?>"
@@ -1542,7 +1542,7 @@ function flat_deposit_block_info()
     $blocks['flat_deposit_menu'] = array(
         'info' => t('FLAT deposit main menu'),
         'status' => TRUE,
-        'region' => 'highlight',
+        'region' => 'content',
         'visibility' => BLOCK_VISIBILITY_LISTED,
         'pages' => "user/*/dashboard\nuser/*/dashboard/*" ,
         'weight' => -999,
@@ -1710,13 +1710,22 @@ function flat_deposit_islandora_object_access($op, $object, $user) {
         case 'add bundle menu':
         case 'add collection menu':
         case 'add current collection menu':
-        case 'update bundle menu':
 
             /**
              *   TRUE if the object has the collectionCModel content model, FALSE otherwise.
              */
             $collection_content_models = $object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:collectionCModel');
             $has_access = !empty($collection_content_models) ? TRUE : FALSE;
+
+            break;
+        case 'update bundle menu':
+            $compound_content_models = $object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:compoundCModel');
+            $cmdi_content_models = $object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:sp_cmdiCModel');
+            if( !empty($compound_content_models) AND !empty($cmdi_content_models)){
+                $has_access = TRUE;
+            } else {
+                $has_access = false;
+            }
 
             break;
 
