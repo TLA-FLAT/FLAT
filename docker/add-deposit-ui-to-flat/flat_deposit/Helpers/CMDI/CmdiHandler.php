@@ -326,6 +326,22 @@ class CmdiHandler
     }
 
     /**
+     * Sets MdSelfLink in XML header
+     *
+     * @param $xml SimpleXMLElement cmdi xml file
+     * @param $fid String fedora id of MdSelfLink
+     * @param $handle String handle assigned to MdSelfLink
+     */
+    static public function setMdSelfLink(&$xml, $fid, $handle)
+    {
+        $xml->Header->MdSelfLink = $handle;
+        $xml->Header->MdSelfLink->addAttribute('lat:flatURI', $fid, 'http://lat.mpi.nl/');
+
+    }
+
+
+
+    /**
      * Removes MdSelfLink child from xml
      *
      * @param $xml SimpleXMLElement cmdi xml file

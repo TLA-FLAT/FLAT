@@ -1,8 +1,9 @@
 <?php
 
-function flat_collection_add_form($form, &$form_state, $parent){
+function flat_collection_update_form($form, &$form_state, $fedora_object){
 
-    drupal_set_title(t('Collection Form'));
+    $profile = 'MPI_Collection';
+    drupal_set_title(t('Update Collection Metadata'));
 
     // Set selected profile as this is updated on every AJAX request
     if (isset($form_state['values']['select_profile_name'])) {
@@ -26,8 +27,6 @@ function flat_collection_add_form($form, &$form_state, $parent){
     // set '$load_profile_specific_form' which will trigger loading of container with form elements
     #$load_profile_specific_form = array_search($form_state['selected'], $available_profiles);
 
-    // Add option to import a external file
-    $available_profiles ['Import'] = 'I want to import an existing CMDI file';
 
     global $user;
     $form['owner'] = array(
@@ -35,6 +34,8 @@ function flat_collection_add_form($form, &$form_state, $parent){
         '#type' => 'textfield',
         '#required' => TRUE,
         '#default_value' => $user->name,
+        '#disabled' => TRUE,
+
     );
 
     if (!user_access('admin collection')){$form['owner']['#disabled'] = TRUE; }
@@ -44,26 +45,14 @@ function flat_collection_add_form($form, &$form_state, $parent){
         '#type' => 'select',
         '#empty_option' => '-- Select --',
         '#required' => TRUE,
+        '#disabled' => TRUE,
         '#options' => $available_profiles,
+        '#default_value' => $profile,
         '#ajax' => array(
             'callback' => 'select_profile_name_ajax_callback',
             'wrapper' => 'template-form',
             'method' => 'replace',
             'effect' => 'fade',
-        ),
-    );
-    if (isset($form_state['selected'])){$form['trigger']['select_profile_name']['#default_value'] = $form_state['selected'];};
-
-    $form['cmdi_file'] = array(
-        '#type' => 'file',
-        '#title' => t('Choose a file'),
-        '#states' => array(
-            'visible' => array(
-                ':input[name="select_profile_name"]' => array('value' => 'Import'),
-            ),
-            'required' => array(
-                ':input[name="select_profile_name"]' => array('value' => 'Import'),
-            ),
         ),
     );
 
@@ -91,65 +80,86 @@ function flat_collection_add_form($form, &$form_state, $parent){
         ),
     );
 
-
-
     //**************************************************
     // Get profile specific form and attach to container
     //**************************************************
 
     // load form element container if profile with available template is chosen
-    if (isset($form_state['selected']) and $form_state['selected'] == 'MPI_Collection'){
 
-        $fields = CmdiHandler::generateDrupalForm($form_state['selected']);
-
-
-         CmdiHandler::aggregateClickedButtons($form_state);
-
-        // add manually generated fields to form depending on tracked button presses
-        if (isset($form_state['count'])) {
-            $fields = CmdiHandler::addMultivalElements($fields, $form_state['count'] );
-        }
+    $fields = CmdiHandler::generateDrupalForm($profile);
 
 
+    // Fill form field with inherited data and add form fields for fields with multivals
 
-        // check if everything worked as expected
-        if (!is_array($fields)){
+    $fObj = $fedora_object;
 
-            drupal_set_message($fields,'warning');
-            return $form;
+    $cmdi = CmdiHandler::getCmdiFromDatastream($fObj->id);
 
-        }
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/Cmdi2FormParser');
+    $parser = new Cmdi2FormParser;
+    try {
+        $default_values = $parser->getDefaultValuesFromCmdi($profile, $cmdi, true);
+
+        CmdiHandler::createInheritedMultivalForm($fields, $default_values, $form_state);
+
+        $formPlusDefaults = $parser->array_merge_recursive_new($fields, $default_values);
+        $form['template_container']['elements'] = $formPlusDefaults;
 
 
+    } catch (Cmdi2FormParserException $exception) {
 
-
-        $form['template_container']['elements'] = $fields;
+        drupal_set_message($exception->getMessage(), 'warning');
+        return $form;
     }
+
+
+    // count button presses per field
+    CmdiHandler::aggregateClickedButtons($form_state);
+
+    //
+    if(isset($form_state['count'])){
+
+        $allFields = CmdiHandler::addMultivalElements($formPlusDefaults, $form_state['count'] );
+        $form['template_container']['elements'] = $allFields;
+
+    }
+
+    // check if everything worked as expected
+    if (!is_array($form['template_container']['elements'])){
+
+        drupal_set_message('Unable to generate cmdi form based on profile','warning');
+
+    }
+
+
+
+
+    // attach hidden data
+    $form_state['extra_data'] =  array(
+        'fid' => $fedora_object->id,
+        'profile' => $profile,
+    );
 
     $form['Submit'] = array(
         '#type' => 'submit',
         '#value' => t('Submit'),
-        '#validate' => array('flat_collection_add_form_final_validate'),
+        '#validate' => array('flat_collection_update_form_final_validate'),
     );
 
-
-    // attach hidden data
-    $form['data'] = array(
-        '#type' => 'value',
-        '#value' => array(
-            'parentFid' => $parent->id,
-        ),
-    );
 
 
     return $form;
+
+
 }
 
 
 
-function flat_collection_add_form_final_validate($form, &$form_state){
 
-    // don't run validation if other validation has failed
+
+function flat_collection_update_form_final_validate($form, &$form_state){
+
+
     if (!empty(form_get_errors())) {
 
         form_set_error('debug','Other validations have failed');
@@ -160,49 +170,32 @@ function flat_collection_add_form_final_validate($form, &$form_state){
 
     //Validate title
     // Special characters
-    if ($form_state['values']['select_profile_name'] == 'MPI_Collection'){
-
-        $title = $form_state['values']['template_container']['elements']['field_01'][0];
-        if (!preg_match('/^[a-zA-Z0-9\_\s]{2,40}+$/', $title)) {
-            form_set_error('title', t('Allowed are all letters, numbers and underscores (max length 40)'));
-        }
-
-        // todo Validate imported cmdi titles
+    $title = $form_state['values']['template_container']['elements']['field_01'][0];
+    if (!preg_match('/^[a-zA-Z0-9\_\s]{2,40}+$/', $title)) {
+        form_set_error('title', t('Allowed are all letters, numbers and underscores (max length 40)'));
     }
 
 
 
-    // Existing collection with same label as title
-// Validate chosen option
+    // Validate that no other collection at same collection with very similar name exists
+    module_load_include('inc','flat_deposit', 'inc/class.FlatTuque');
+    $title = $form_state['values']['template_container']['elements']['field_01'][0];
 
-    // Validate chosen option
-    if ($form_state['values']['select_profile_name'] === ''){
-        form_set_error('select_profile_name','Please choose correct option');
+    $fid = $form_state['extra_data']['fid'];
+    $values = FlatTuque::getChildrenLabels($fid);
+
+    if ($values === false){form_set_error('title','Unable to validate collection naming');
+    return $form;
+    }
+
+    if (in_array(strtoupper($title),array_unique(array_map('strtoupper',$values)))){
+
+        form_set_error('title','Another collection or bundle with same name exists at this location. Please use other name');
         return $form;
     }
 
-    if ($form_state['values']['select_profile_name'] !== 'Import'){
-
-        // Validate that no other collection at same collection with very similar name exists
-        module_load_include('inc','flat_deposit', 'inc/class.FlatTuque');
-        $title = $form_state['values']['template_container']['elements']['field_01'][0];
-
-        $collection_pid = $form_state['values']['data']['parentFid'];
-        $values = FlatTuque::getChildrenLabels($collection_pid);
-
-        if ($values === false){form_set_error('title','Unable to validate collection naming');
-            return $form;
-        }
 
 
-        if (in_array(strtoupper($title),array_unique(array_map('strtoupper',$values)))){
-
-            form_set_error('title','Another collection or bundle with same name exists at this location. Please use other name');
-            return $form;
-        }
-
-
-    }
 
     // Validate owner.
     $owner =  $form_state['values']['owner'];
@@ -224,13 +217,12 @@ function flat_collection_add_form_final_validate($form, &$form_state){
         return $form;
     }
 
-
     // set cmdi filename
-    $profile = $form_state['values']['select_profile_name'];
+    $profile = $form_state['extra_data']['profile'];
     $recordCmdi = $export_dir . '/' . $profile . '_' . uniqid() . '.cmdi';
 
     // Get cmdi
-    $import = $form_state['values']['select_profile_name'] === 'Import' ? TRUE : FALSE;
+    $import = FALSE;
     $msg = get_cmdi($form_state['values'], $recordCmdi, $import);
 
 
@@ -239,15 +231,32 @@ function flat_collection_add_form_final_validate($form, &$form_state){
         return $form;
     }
 
+    // add SelfLink to cmdi
+    $old_cmdi = CmdiHandler::getCmdiFromDatastream($fid);
+    $handle = (string)$old_cmdi->Header->children('cmd',TRUE)->MdSelfLink;
+    #$att = (string)$link->attributes('lat',TRUE)->flatURI;
+
+    $new_cmdi = CmdiHandler::loadXml($recordCmdi);
+    CmdiHandler::setMdSelfLink($new_cmdi, $fid, $handle);
+    $new_cmdi->asXML($recordCmdi);
+
     /// do INGEST
     global $user;
     $userName = $user->name ;
     $sipType = 'Collection';
-    $parentFid = $form_state['values']['data']['parentFid'];
+
+    $fObject = islandora_object_load($form_state['extra_data']['fid']);
+    $relationships = $fObject->relationships->get(FEDORA_RELS_EXT_URI, 'isMemberOfCollection');
+
+    $parent_fid = $relationships[0]['object']['value'];
+    if (!$relationships){
+        form_set_error('Unable to derive parent information from collection','error');
+        return $form;
+    }
     $test = FALSE;
 
     module_load_include('php','flat_deposit','Helpers/IngestService/IngestClient');
-    $ingest_client = new IngestClient($sipType, $owner, $recordCmdi, $parentFid, $test);
+    $ingest_client = new IngestClient($sipType, $owner, $recordCmdi, $parent_fid, $test);
 
     $options = [];
     $options ['policy'] = $form_state['values']['select_policy'];
@@ -282,27 +291,11 @@ function flat_collection_add_form_submit($form, &$form_state){
     $label = $form_state['values']['data']['label'];
     $fid = $form_state['values']['data']['fid'];
 
-    create_collection_node($label, $uid, $fid);
+    module_load_include('inc','flat_deposit', 'inc/flat_collection.add_collection');
+    #create_collection_node($label, $uid, $fid);
 
     drupal_set_message('New collection item has been created');
     $form_state['redirect']= 'islandora/object/' . $form_state['values']['data'][ 'parentFid'];
 
 }
 
-
-function create_collection_node($label, $uid, $fid){
-
-    $new_node = new stdClass();
-    $new_node->type = 'flat_collection';
-    $new_node->language = 'und';
-    $new_node->title = $label;
-    $new_node->uid = $uid;
-    $new_node->status = 1;
-    $new_node->sticky = 0;
-    $new_node->promote = 0;
-    $new_node->format = 3;
-    $new_node->revision = 0;
-    $new_node->flat_fid['und'][0]['value'] = $fid;
-    node_save($new_node);
-
-}

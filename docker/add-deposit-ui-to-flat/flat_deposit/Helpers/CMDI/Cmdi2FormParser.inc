@@ -44,7 +44,7 @@ class Cmdi2FormParser
      *
      * @return mixed array containing a nested #default_value properties
      */
-    public function getDefaultValuesFromCmdi($profile, $parentCmdi)
+    public function getDefaultValuesFromCmdi($profile, $parentCmdi, $all=false)
     {
 
         $this->bundleProfile = $profile;
@@ -63,7 +63,7 @@ class Cmdi2FormParser
 
         if ($this->parentData) {
 
-            $this->default_values = $this->_getInheritedValues();
+            $this->default_values = $this->_getInheritedValues($all);
 
             return $this->default_values;
         }
@@ -77,14 +77,14 @@ class Cmdi2FormParser
      * Loop through Form Template to get all fields with thw inherited attribute. If is set to true, get values from parent cmdi and save as default_value.
      *
      */
-    private function _getInheritedValues(){
+    private function _getInheritedValues($all = false){
 
         $default_values = [];
 
         // loop through array to get core attributes of each element
         foreach ($this->template->fields->field as $field) {
 
-            if((bool)$field->inherited) {
+            if( $all === true OR ((bool)$field->inherited)) {
 
 
                 $id = (string)$field['id'];

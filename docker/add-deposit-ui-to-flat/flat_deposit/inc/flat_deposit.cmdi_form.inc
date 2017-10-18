@@ -107,7 +107,7 @@ function flat_deposit_cmdi_form($form, &$form_state){
         $fields = CmdiHandler::generateDrupalForm($form_state['selected']);
 
 
-        // Fill form field with inherited data and add form fields for fields with mulitvals
+        // Fill form field with inherited data and add form fields for fields with multivals
         $parent = node_load($parent_nid);
         $pwrapper = entity_metadata_wrapper('node', $parent);
         $pFid = $pwrapper->flat_fid->value();

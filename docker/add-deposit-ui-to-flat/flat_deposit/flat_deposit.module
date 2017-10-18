@@ -216,6 +216,10 @@ function flat_deposit_permission()
             'title' => t('Add collection to own account'),
             'description' => t('Allows to create personal archive collection'),
         ),
+        'update collection menu' => array(
+            'title' => t('Update collection metadata'),
+            'description' => t('Allows to update metadata of an archived collection'),
+        ),
         'add current collection menu' => array(
             'title' => t('Add current collection to own account'),
             'description' => t('Allows to create personal archive collection of current fedora node'),
@@ -374,6 +378,16 @@ function flat_deposit_menu()
         'weight' => 95,
     );
 
+    $items['islandora/object/%islandora_object/update_collection'] = array(
+        'title' => 'Update collection',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'drupal_get_form',
+        'file' =>'inc/flat_collection.update_collection.inc',
+        'page arguments' => array('flat_collection_update_form',2),
+        'access callback' => 'islandora_object_access_callback',
+        'access arguments' => array('update collection menu', 2),
+        'weight' => 95,
+    );
 
     $items['islandora/object/%islandora_object/add_current_collection'] = array(
         'title' => 'Add current collection to \'My collections\'',
@@ -1170,6 +1184,12 @@ function flat_bundle_node_form_update_submit($form, &$form_state){
 
         drupal_set_message('Unable to create managed file entry', 'error');
     }
+
+    if ($new_file->uri !=  $fName){
+        drupal_set_message(t('Filename of attached file has changed for unknown reasons from !fname to !uri',
+            array('!fname'=>$fName, 'uri' => $new_file->uri)), 'warning');
+    }
+
 
 
 
