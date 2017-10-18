@@ -170,25 +170,35 @@ function flat_collection_update_form_final_validate($form, &$form_state){
 
     //Validate title
     // Special characters
-    $title = $form_state['values']['template_container']['elements']['field_01'][0];
-    if (!preg_match('/^[a-zA-Z0-9\_\s]{2,40}+$/', $title)) {
+    $new_title = $form_state['values']['template_container']['elements']['field_01'][0];
+    if (!preg_match('/^[a-zA-Z0-9\_\s]{2,40}+$/', $new_title)) {
         form_set_error('title', t('Allowed are all letters, numbers and underscores (max length 40)'));
     }
 
 
 
-    // Validate that no other collection at same collection with very similar name exists
+    // Validate that there is just exactly 1 collection with the same label with isPartOfCollection attribute set to parent
     module_load_include('inc','flat_deposit', 'inc/class.FlatTuque');
-    $title = $form_state['values']['template_container']['elements']['field_01'][0];
+    $new_title = $form_state['values']['template_container']['elements']['field_01'][0];
+
+
+
 
     $fid = $form_state['extra_data']['fid'];
-    $values = FlatTuque::getChildrenLabels($fid);
 
-    if ($values === false){form_set_error('title','Unable to validate collection naming');
-    return $form;
+
+    $parent_fid = FlatTuque::getIsPartOfCollection($fid);
+
+    if ($parent_fid === false){
+        form_set_error('title','Unable to validate collection naming');
+        return $form;
     }
 
-    if (in_array(strtoupper($title),array_unique(array_map('strtoupper',$values)))){
+
+    $values = FlatTuque::getChildrenLabels($parent_fid);
+
+    $array_up = array_map('strtoupper',$values);
+    if (count(preg_grep('/^'.strtoupper($new_title).'/',$array_up)) > 1){
 
         form_set_error('title','Another collection or bundle with same name exists at this location. Please use other name');
         return $form;
@@ -245,15 +255,8 @@ function flat_collection_update_form_final_validate($form, &$form_state){
     $userName = $user->name ;
     $sipType = 'Collection';
 
-    $fObject = islandora_object_load($form_state['extra_data']['fid']);
-    $relationships = $fObject->relationships->get(FEDORA_RELS_EXT_URI, 'isMemberOfCollection');
-
-    $parent_fid = $relationships[0]['object']['value'];
-    if (!$relationships){
-        form_set_error('Unable to derive parent information from collection','error');
-        return $form;
-    }
     $test = FALSE;
+
 
     module_load_include('php','flat_deposit','Helpers/IngestService/IngestClient');
     $ingest_client = new IngestClient($sipType, $owner, $recordCmdi, $parent_fid, $test);
@@ -271,9 +274,9 @@ function flat_collection_update_form_final_validate($form, &$form_state){
     }
 
 
-    $form_state['values']['data']['fid'] = (string)$fid;
-    $form_state['values']['data']['label']=  $fObject->label;
-    $form_state['values']['data']['owner']=  $fObject->owner;
+    #$form_state['values']['data']['fid'] = (string)$fid;
+    #$form_state['values']['data']['label']=  $fObject->label;
+    #$form_state['values']['data']['owner']=  $fObject->owner;
 
     return $form;
 
@@ -284,18 +287,24 @@ function flat_collection_update_form_final_validate($form, &$form_state){
 * Creates new flat_collection node and redirects to parent node.
  *
  */
-function flat_collection_add_form_submit($form, &$form_state){
+function flat_collection_update_form_submit($form, &$form_state){
 
-    $owner = user_load_by_name($form_state['values']['data']['owner']);
-    $uid = $owner->uid;
-    $label = $form_state['values']['data']['label'];
-    $fid = $form_state['values']['data']['fid'];
 
-    module_load_include('inc','flat_deposit', 'inc/flat_collection.add_collection');
+    #$owner = user_load_by_name($form_state['values']['data']['owner']);
+    #$uid = $owner->uid;
+    #$label = $form_state['values']['data']['label'];
+
+    // Change label of fedora object if Title in cmdi has changed.
+
+
+
+
+
+    #module_load_include('inc','flat_deposit', 'inc/flat_collection.add_collection');
     #create_collection_node($label, $uid, $fid);
 
-    drupal_set_message('New collection item has been created');
-    $form_state['redirect']= 'islandora/object/' . $form_state['values']['data'][ 'parentFid'];
+    drupal_set_message('Collection item has been updated');
+    $form_state['redirect']= 'islandora/object/' . $form_state['extra_data'][ 'fid'];
 
 }
 
