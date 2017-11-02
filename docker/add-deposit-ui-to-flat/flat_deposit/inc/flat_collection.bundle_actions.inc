@@ -34,12 +34,18 @@ function flat_collection_bundle_action_form($form, &$form_state, $var)
             $metadata = !is_null($bundle_wrapper->flat_cmdi_file->value()) ? 'available' : 'not available';
             $status = $bundle_wrapper->flat_bundle_status->value();
 
+            $source = $bundle_wrapper->flat_source->value();
+
             $disabled = ($metadata == 'available' AND ($status == 'open' OR $status == 'failed' OR $status == 'valid')) ? FALSE : TRUE;
 
             $form['table_container'][$count]['title'] = array(
                 '#type' => 'link',
                 '#title' => $bundle->title,
                 '#href' => 'node/' . $bundle->nid,
+            );
+
+            $form['table_container'][$count]['location'] = array(
+                '#markup' => t('!source', array('!source' => $source))
             );
 
             $form['table_container'][$count]['status'] = array(

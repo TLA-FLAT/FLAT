@@ -303,34 +303,61 @@ function flat_deposit_menu()
     //User menus
 
 
-    $items['user/%user/dashboard'] = array(
-        'title' => 'Dashboard',
-        'type' => MENU_LOCAL_TASK,
+    $items['dashboard'] = array(
+        'type' => MENU_NORMAL_ITEM,
+        'title' => 'My dashboard',
+        'description' => 'User deposit menu link in navigation bar',
         'page callback' => 'flat_deposit_dashboard_view',
-        'page arguments' => array(1),
-        'access callback' => 'user_edit_access',
-        'access arguments' => array(1),
-        'weight' => -20,
+        'access callback' => TRUE,
+        'menu_name' => 'main-menu', // comment out to place next to my account
     );
 
-    $items['user/%user/dashboard/bundles'] = array(
-        'title' => 'My bundles',
-        'type' => MENU_CALLBACK,
-        'page callback' => 'flat_deposit_dashboard_bundle_view',
-        'page arguments' => array(1),
-        'access callback' => 'user_edit_access',
-        'access arguments' => array(1),
+    $items['dashboard/%user'] = array(
+        'title' => 'My dashboard',
+        'type' => MENU_DEFAULT_LOCAL_TASK,
+        #'page callback' => 'flat_deposit_dashboard_collections_view',
+        #'page arguments' => array(1),
+        'access callback' => TRUE,
     );
 
-    $items['user/%user/dashboard/collections'] = array(
+
+    $items['dashboard/%user/collections'] = array(
         'title' => 'My collections',
-        'type' => MENU_CALLBACK,
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'flat_deposit_dashboard_collections',
+        'page arguments' => array(1),
+        'access callback' => TRUE,
+    );
+
+    $items['dashboard/%user/bundles'] = array(
+        'type' => MENU_LOCAL_TASK,
+        'title' => 'My bundles',
+        'page callback' => 'flat_deposit_dashboard_bundles',
+        'page arguments' => array(1),
+        'access callback' => TRUE,
+
+    );
+
+
+    $items['dashboard/%user/notifications'] = array(
+        'title' => 'My reports',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'flat_deposit_dashboard_notifications',
+        'page arguments' => array(1),
+        'access callback' => TRUE,
+    );
+
+
+/*
+    $items['user/%user/collections'] = array(
+        'title' => 'My collections',
+        'type' => MENU_LOCAL_TASK,
         'page callback' => 'flat_deposit_dashboard_collections_view',
         'page arguments' => array(1),
         'access callback' => 'user_edit_access',
         'access arguments' => array(1),
     );
-
+*/
 //FLAT_BUNDLE
     // bundle creation
     $items['islandora/object/%islandora_object/add_bundle'] = array(
@@ -405,21 +432,33 @@ function flat_deposit_menu()
     return $items;
 }
 
-function flat_deposit_dashboard_view($var){
+function flat_deposit_dashboard_view(){
 
+
+    global $user;
+    krumo($user);
+    var_dump($user);
+    drupal_goto('dashboard/' . $user->uid. '/bundles');
+
+    return '';
+}
+
+function flat_deposit_dashboard_bundles($var){
 
     return '';
 }
 
-function flat_deposit_dashboard_bundle_view($var){
+function flat_deposit_dashboard_collections($var){
+
+    return '';
+}
+function flat_deposit_dashboard_notifications($var){
 
     return '';
 }
 
-function flat_deposit_dashboard_collections_view($var){
 
-    return '';
-}
+
 /**
  * Implements hook_menu_local_task_alter
  *
@@ -427,25 +466,11 @@ function flat_deposit_dashboard_collections_view($var){
 
 function flat_deposit_menu_local_tasks_alter(&$data, $router_item, $root_path)
 {
-    if (isset($data['tabs'][0]['output'])){
+
+    if (isset($data['tabs'][0]['output'])) {
         $tabs = $data['tabs'][0]['output'];
         foreach ($tabs as $index => $tab) {
-            /*
-            // Remove the 'Add bundle'-menu from every islandora object view if user is not member of the collection
-            if ($tab['#link']['path'] == 'islandora/object/%/add_bundle') {
-                $pid_parent = explode('/', $tab['#link']['tab_parent_href']);
-                $pid_parent = end($pid_parent);
 
-                module_load_include('php', 'flat_deposit', 'inc/drupal_queries');
-
-
-                if (empty($collections)) {
-                    $data['tabs'][0]['output'][$index]['#link']['access'] = FALSE;
-                    unset($data['tabs'][0]['output'][$index]);
-                }
-
-            }
-            */
             // Remove edit- menu from node view
             if ($tab['#link']['path'] == 'node/%/edit') {
 
@@ -456,9 +481,29 @@ function flat_deposit_menu_local_tasks_alter(&$data, $router_item, $root_path)
         }
     }
 
-    #krumo($data);
+    // Add icons
+    if (isset($data['tabs'][1]['output'])) {
+        $tabs = &$data['tabs'][1]['output'];
+        foreach ($tabs as $index => $tab) {
+
+            if ($tab['#link']['path'] == 'dashboard/%/reports') {
+                #$tab['#link']['path']['title'] .= '<img alt = "' . '" src = "' . drupal_get_path('module', 'flat_deposit') . '/Images/My_notifications.png' . '" />';
+                #krumo($tab['#link']);
+                #$tab['#link']['localized_options']['html'] = TRUE;
+            }
+
+        }
+
+        #krumo($data);
+    }
 }
 
+
+function flat_deposit_process_menu_local_tasks(&$variables)
+{
+
+#krumo ($variables);
+}
 
 
 /**
@@ -535,7 +580,7 @@ function theme_flat_collection_form_table($variables)
     $form = $variables['form'];
 
 // Define our $header and $rows variables
-    $header = array(t('Name'), t('ID'), t('link'),t('Activate'));
+    $header = array(t('Name'), t('link'),t('Activate'));
     $rows = array();
 
     foreach(element_children($form) as $index) {
@@ -543,7 +588,7 @@ function theme_flat_collection_form_table($variables)
         $row = array();
 
         $row[] = drupal_render($form[$index]['label']);
-        $row[] = drupal_render($form[$index]['pid']);
+#        $row[] = drupal_render($form[$index]['pid']);
         $row[] = drupal_render($form[$index]['link']);
         $row[] = drupal_render($form[$index]['activate']);
 
@@ -563,7 +608,7 @@ function theme_flat_bundle_action_table($variables)
     $form = $variables['form'];
 
 // Define our $header and $rows variables
-    $header = array(t('Bundle Name'), t('Status'),t('Metadata'), t('Select'));
+    $header = array(t('Bundle Name'), t('Data Location'), t('Status'),t('Metadata'), t('Select'));
     $rows = array();
 
     foreach(element_children($form) as $index) {
@@ -571,6 +616,7 @@ function theme_flat_bundle_action_table($variables)
         $row = array();
 
         $row[] = drupal_render($form[$index]['title']);
+        $row[] = drupal_render($form[$index]['location']);
         $row[] = drupal_render($form[$index]['status']);
         $row[] = drupal_render($form[$index]['metadata']);
         $row[] = drupal_render($form[$index]['checked']);
@@ -640,12 +686,11 @@ function flat_bundle_add_bundle($pid){
 
 // Query all flat_collection nodes that are owned by the user and have no empty fedora_fid (flat_fid) value.
     // Resulting nodes will be added as options with the node's nid as option-key and node's title as option-labels.
-    $query = new EntityFieldQuery();
-    $entities = $query->entityCondition('entity_type', 'node')
-        ->propertyCondition('type', 'flat_collection')
-        ->propertyCondition('uid', $user->uid)
-        ->fieldCondition('flat_fid', 'value',  $pid->id, '=')
-        ->execute();
+
+
+    module_load_include('inc', 'flat_deposit', 'inc/class.FlatCollection');
+    $user_collection_nodes = FlatCollection::getUserCollectionNodes($user->uid, $pid->id);
+
     if (!empty($entities['node']) AND count($entities['node']) == 1) {
         foreach ($entities['node'] as $entity){
             $parent_nid = $entity->nid;
@@ -1329,6 +1374,12 @@ function flat_bundle_validate($node, $form, &$form_state){
 function flat_collection_view($node, $view_mode) {
 
     if ($view_mode == 'full' && node_is_page($node)) {
+        global $user;
+        drupal_set_breadcrumb(array(
+            l(t('Home'),  NULL),
+            l(t('Dashboard'), 'dashboard/'. $user->uid . '/collections'),
+        ));
+
         $output = field_view_field('node', $node, 'flat_fid');
 
         $wrapper = entity_metadata_wrapper('node', $node);
@@ -1345,23 +1396,7 @@ function flat_collection_view($node, $view_mode) {
             ),
         );
 
-        global $user;
-        $node->content['link_my_collections'] = array(
-            '#weight' => 10,
-            '#theme' => 'link',
-            '#path' => 'user/' .$user->uid . '/dashboard/collections',
-            '#text' => t('Back to \'My collections\''),
-            '#options' => array(
-                'attributes' => array(),
-                'html' => FALSE,
-            ),
-            '#prefix' => '<div class="collection-link">',
-            '#suffix' => '</div>',
-
-
-        );
-
-        #flat_fid
+                #flat_fid
 
         // Add form to node
         module_load_include('inc', 'flat_deposit','/inc/flat_collection.bundle_actions');
@@ -1392,6 +1427,7 @@ function flat_bundle_view($node, $view_mode) {
         // Breadcrumb navigation.  l() escapes title, so we should not escape !name.
         drupal_set_breadcrumb(array(
             l(t('Home'),  NULL),
+            l(t('Dashboard'), 'dashboard'),
             l(t('!name', array ('!name'=> $wrapper->flat_parent_title->value())),'node/' . $wrapper->flat_parent_nid->value()),
         ));
 
@@ -1402,47 +1438,10 @@ function flat_bundle_view($node, $view_mode) {
         }
     }
 
-    global $user;
-    $link_my_bundles = array(
-        '#weight' => 10,
-        '#theme' => 'link',
-        '#path' => 'user/' .$user->uid . '/dashboard/bundles',
-        '#text' => t('Back to \'My bundles\''),
-        '#options' => array(
-            'attributes' => array(),
-            'html' => FALSE,
-        ),
-        '#prefix' => '<div class="bundle-link">',
-        '#suffix' => '</div>',
-
-
-    );
-
-    $node->content['link_my_bundles'] = $link_my_bundles;
-
-
     return $node;
 }
 
-function flat_deposit_menu_alter(&$items){
 
-    $items['user/%user/edit']['title'] = 'Edit user';
-
-    $items['user/%user/imce']['weight'] = -18;
-
-
-
-    // Specify the View page as just a regular tab.
-    // You do not need to change this block: this will always be the same as long
-    // as you don't want View to be the default tab.
-    $items['user/%user/view']['title'] = 'User Settings';
-    #$items['user/%user/view']['type'] = MENU_LOCAL_TASK;
-
-    // Normal tabs don't have a weight
-    unset($items['user/%user/view']['weight']);
-
-
-    }
 
 /**
  *
@@ -1549,6 +1548,16 @@ function flat_deposit_block_info()
         'pages' => '<?php $val = (is_numeric(arg(1)) AND arg(2) == FALSE ) ? TRUE :  FALSE; return $val; ?>'
     );
 
+    $blocks['node_file_listing'] = array(
+        'info' => t('FLAT deposit listing of uploaded files'),
+        'status' => TRUE,
+        #'weight' => 999,
+        'region' => 'content',
+        'visibility' => BLOCK_VISIBILITY_PHP,
+        'pages' => '<?php if (arg(0) == "node" AND is_numeric(arg(1)) AND arg(2) == FALSE ) {$node = node_load(arg(1)); return ($node->type == "flat_bundle");} else {return FALSE;}  ?>'
+    );
+
+
     $blocks['cmdi_resource_actions'] = array(
         'info' => t('FLAT deposit bundle cmdi resource actions '),
         'status' => TRUE,
@@ -1574,7 +1583,7 @@ function flat_deposit_block_info()
         'status' => TRUE,
         'region' => 'content',
         'visibility' => BLOCK_VISIBILITY_LISTED,
-        'pages' => "user/*/dashboard/collections" ,
+        'pages' => "dashboard/*/collections/inactive" ,
         'weight' => 999,
 
     );
@@ -1604,6 +1613,37 @@ function flat_deposit_block_view($delta = '')
             $block = array(
                 'subject' => '',
                 'content' => $rendered_form,
+            );
+            break;
+
+        case 'node_file_listing':
+/*
+*/
+            $node = menu_get_object();
+            $node_wrapper = entity_metadata_wrapper('node', $node);
+
+            $location = $node_wrapper->flat_original_path->value();
+
+            $file_found = [];
+            if (file_exists($location)){
+                $file_found = array_diff(scandir($location), array('..', '.'));
+            }
+
+            if (empty($file_found)){$file_found[]='No files in working directory';}
+
+            $rows = array();
+
+            foreach ($file_found as $value){
+
+                $rows [] = array($value);
+            }
+
+            $header = array('Existing files');
+            $content = theme('table', array('header' => $header, 'rows' => $rows));
+
+            $block = array(
+                'subject' => '',
+                'content' => $content,
             );
             break;
 
@@ -1727,25 +1767,46 @@ function flat_deposit_islandora_object_access($op, $object, $user) {
     $has_access = FALSE;
 
     switch ($op){
-        case 'add bundle menu':
-        case 'add collection menu':
         case 'add current collection menu':
+            // object should have the collectionCModel
+            $has_collectionCModel = !empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:collectionCModel'));
 
-            /**
-             *   TRUE if the object has the collectionCModel content model, FALSE otherwise.
-             */
-            $collection_content_models = $object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:collectionCModel');
-            $has_access = !empty($collection_content_models) ? TRUE : FALSE;
+            // User should not have a collection node with the same fid in 'My collections'
+            $fid = $object->id;
+
+            module_load_include('inc', 'flat_deposit', 'inc/class.FlatCollection');
+            $has_no_node_in_my_collections = empty(FlatCollection::getUserCollectionNodes($user->uid, $fid));
+
+            $has_access = ($has_collectionCModel AND $has_no_node_in_my_collections) ? TRUE : FALSE;
 
             break;
+
+        case 'add bundle menu':
+            // object should have the collectionCModel
+            $has_collectionCModel = !empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:collectionCModel'));
+
+            // User need to have a collection node with the same fid in 'My collections'
+            $fid = $object->id;
+
+            module_load_include('inc', 'flat_deposit', 'inc/class.FlatCollection');
+            $has_node_in_my_collections = !empty(FlatCollection::getUserCollectionNodes($user->uid, $fid));
+
+            $has_access = ($has_collectionCModel AND $has_node_in_my_collections) ? TRUE : FALSE;
+
+            break;
+
+        case 'add collection menu':
+        // visible objects need the collectionCModel
+        $has_access = !empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:collectionCModel'));
+
+            break;
+
         case 'update bundle menu':
-            $compound_content_models = $object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:compoundCModel');
-            $cmdi_content_models = $object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:sp_cmdiCModel');
-            if( !empty($compound_content_models) AND !empty($cmdi_content_models)){
-                $has_access = TRUE;
-            } else {
-                $has_access = false;
-            }
+            // visible objects need the compoundCModel
+            $has_compoundCModel = !empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:compoundCModel'));
+            $has_cmdi_content_model = !empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:sp_cmdiCModel'));
+
+            $has_access = ($has_compoundCModel AND $has_cmdi_content_model) ? TRUE: false;
 
             break;
 
@@ -1759,5 +1820,75 @@ function flat_deposit_islandora_object_access($op, $object, $user) {
     return $has_access;
 
 
+}
+
+/*
+function flat_deposit_islandora_compoundCModel_islandora_view_object_alter(&$object, &$rendered) {
+
+    $output = array(
+        '#type' => 'markup',
+        '#markup' => '<div>compoundCModel content</div>',
+    );
+
+    $rendered["Default output"]['#markup'] .= drupal_render($output);
 
 }
+*/
+
+/**
+ * Implements hook_cmodel_pid_view_object_alter
+ *
+ * Adding rendered cmdi metadata to view of object with cmdi model. Only for bundles!!!
+ *
+ */
+function flat_deposit_islandora_sp_cmdiCModel_islandora_view_object_alter(&$object, &$rendered) {
+
+
+    $markup = array(
+        '#theme' => 'islandora_cmdi_display',
+        '#islandora_object' => $object,
+    );
+
+    #krumo($object);
+    #krumo($rendered);
+
+    if (isset($rendered["Default output"]['#markup'])){
+
+        $rendered["Default output"]['#markup'] .= drupal_render($markup);
+
+    }
+
+
+
+
+
+}
+
+/**
+ * Implements hook_cmodel_pid_view_object_alter
+ *
+ * Adding rendered cmdi metadata to view of object with collection model. Thus only for collections
+ *
+ */
+function flat_deposit_islandora_collectionCModel_islandora_view_object_alter(&$object, &$rendered) {
+
+    $markup = array(
+        '#theme' => 'islandora_cmdi_display',
+        '#islandora_object' => $object,
+    );
+
+
+    module_load_include('inc', 'flat_deposit', 'inc/class.FlatTuque');
+    $object_content_models = FlatTuque::getCModels($object);
+
+
+    if (isset($rendered['wrapper']['metadata']['#markup'])  AND in_array('islandora:sp_cmdiCModel',$object_content_models)){
+
+        krumo($rendered['wrapper']['metadata']['#markup']);
+        $rendered['wrapper']['metadata']['#markup'] .= drupal_render($markup);
+
+    }
+
+}
+
+

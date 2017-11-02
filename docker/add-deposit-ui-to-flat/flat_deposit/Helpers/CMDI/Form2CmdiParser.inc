@@ -177,7 +177,7 @@ class Form2CmdiParser
             if ($converted_values){
 
                 foreach ($converted_values as $val){
-                    $parent->addChild($name,$val);
+                    $parent->addChild($name, utf8_encode(htmlspecialchars($val)));
                 }
             }
         }

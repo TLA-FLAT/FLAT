@@ -42,21 +42,21 @@ function flat_views_block_info_alter(&$blocks, $theme, $code_blocks)
             case "Flat user notifications":
                 $view_block['region'] = 'content';
                 $view_block['visibility'] = BLOCK_VISIBILITY_LISTED;
-                $view_block['pages'] = 'user/*/dashboard';
+                $view_block['pages'] = 'dashboard/*/notifications';
                 $view_block['status'] = TRUE;
                 break;
 
             case "FLAT my bundles":
                 $view_block['region'] = 'content';
                 $view_block['visibility'] = BLOCK_VISIBILITY_LISTED;
-                $view_block['pages'] = 'user/*/dashboard/bundles';
+                $view_block['pages'] = 'dashboard/*/bundles';
                 $view_block['status'] = TRUE;
                 break;
 
             case "FLAT my collections":
                 $view_block['region'] = 'content';
                 $view_block['visibility'] = BLOCK_VISIBILITY_LISTED;
-                $view_block['pages'] = 'user/*/dashboard/collections';
+                $view_block['pages'] = 'dashboard/*/collections';
                 $view_block['status'] = TRUE;
                 break;
         }
@@ -75,21 +75,4 @@ function flat_views_block_info_alter(&$blocks, $theme, $code_blocks)
 }
 
 
-
-
-function flat_views_pre_render(&$view) {
-    #krumo ($view);
-
-    if ($view->name == 'flat_my_collections') {
-
-        foreach ($view->result as $key => $result) {
-
-            $val = $result->field_data_flat_fid_flat_fid_value;
-            $link = l('link to archive', 'islandora/object/' . rawurlencode($val));
-            $result->field_flat_flat_fid[0]['rendered']['#markup'] = $link;
-            #krumo ($result);
-            #var_dump($result->field_data_flat_fid_flat_fid_value);
-        }
-    }
-}
 

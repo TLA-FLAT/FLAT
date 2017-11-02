@@ -32,6 +32,15 @@ $handler->display->display_options['pager']['type'] = 'full';
 $handler->display->display_options['pager']['options']['items_per_page'] = '10';
 $handler->display->display_options['style_plugin'] = 'table';
 
+/* Header: Global: Text area */
+$handler->display->display_options['header']['area']['id'] = 'area';
+$handler->display->display_options['header']['area']['table'] = 'views';
+$handler->display->display_options['header']['area']['field'] = 'area';
+$handler->display->display_options['header']['area']['label'] = 'link_create_new_bundle';
+$handler->display->display_options['header']['area']['empty'] = TRUE;
+$handler->display->display_options['header']['area']['content'] = '<a href="/node/add/flat-bundle">Initiate new bundle</a>';
+$handler->display->display_options['header']['area']['format'] = 'filtered_html';
+
 /* Field: Content: Title */
 $handler->display->display_options['fields']['title']['id'] = 'title';
 $handler->display->display_options['fields']['title']['table'] = 'node';
@@ -60,17 +69,17 @@ $handler->display->display_options['fields']['created']['label'] = 'Initiated on
 $handler->display->display_options['fields']['created']['date_format'] = 'long';
 $handler->display->display_options['fields']['created']['second_date_format'] = 'long';
 
-/* Field: Content: Edit link */
+/* Field: Content: Edit link
 $handler->display->display_options['fields']['edit_node']['id'] = 'edit_node';
 $handler->display->display_options['fields']['edit_node']['table'] = 'views_entity_node';
 $handler->display->display_options['fields']['edit_node']['field'] = 'edit_node';
 $handler->display->display_options['fields']['edit_node']['label'] = 'Edit';
-
+*/
 /* Field: Content: Delete link */
 $handler->display->display_options['fields']['delete_node']['id'] = 'delete_node';
 $handler->display->display_options['fields']['delete_node']['table'] = 'views_entity_node';
 $handler->display->display_options['fields']['delete_node']['field'] = 'delete_node';
-$handler->display->display_options['fields']['delete_node']['label'] = 'Delete';
+$handler->display->display_options['fields']['delete_node']['label'] = 'Remove shortcut to collection';
 
 /* Sort criterion: Content: Post date */
 $handler->display->display_options['sorts']['created']['id'] = 'created';

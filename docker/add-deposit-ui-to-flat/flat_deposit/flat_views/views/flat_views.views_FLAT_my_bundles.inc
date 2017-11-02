@@ -20,7 +20,7 @@ $view->disabled = FALSE; /* Edit this to true to make a default view disabled in
 
 /* Display: Master */
 $handler = $view->new_display('default', 'Master', 'default');
-$handler->display->display_options['title'] = 'My bundles';
+$handler->display->display_options['title'] = 'My bundles in progress';
 $handler->display->display_options['use_more_always'] = FALSE;
 $handler->display->display_options['access']['type'] = 'perm';
 $handler->display->display_options['access']['perm'] = 'use deposit module';
@@ -139,7 +139,7 @@ $handler->display->display_options['fields']['edit_node']['label'] = 'Edit';
 $handler->display->display_options['fields']['delete_node']['id'] = 'delete_node';
 $handler->display->display_options['fields']['delete_node']['table'] = 'views_entity_node';
 $handler->display->display_options['fields']['delete_node']['field'] = 'delete_node';
-$handler->display->display_options['fields']['delete_node']['label'] = 'Delete';
+$handler->display->display_options['fields']['delete_node']['label'] = 'Delete bundle in progress';
 /* Sort criterion: Content: Post date */
 $handler->display->display_options['sorts']['created']['id'] = 'created';
 $handler->display->display_options['sorts']['created']['table'] = 'node';

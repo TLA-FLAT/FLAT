@@ -33,7 +33,7 @@ class FlatTuque
                     $values[] = $result['label']['value'];
                 }
             }
-.
+
         }
         return $values;
 
@@ -66,6 +66,27 @@ class FlatTuque
 
         }
         return $return_value;
+
+    }
+
+    /**
+     * Gets RELS-EXT 'isPartOfCollection' property for a certain fedora object
+     *
+     * @param $fid fedora ID
+     * @return bool|String value of the isMemberOfCollection property or false
+     */
+    static public function getCModels($fedoraObject){
+        $model_array = [];
+
+        $cmodels = $fedoraObject->relationships->get('info:fedora/fedora-system:def/model#', 'hasModel');
+
+        foreach ($cmodels as $cmodel){
+
+            $model_array[] = $cmodel['object']['value'];
+
+        }
+
+        return $model_array;
 
     }
 
