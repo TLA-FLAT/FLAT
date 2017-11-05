@@ -553,6 +553,18 @@
 										</oai:itemID>
 									</xsl:if>
 								</xsl:if>
+								<!-- add POLICY RELS-EXT statements -->
+								<xsl:for-each select="zero-or-one(cmd:firstFile($policies-dir, (concat(replace($fid, '[^a-zA-Z0-9]', '_'), '.RELS-EXT.xml')), $base))">
+									<xsl:variable name="policy-rels" select="."/>
+									<xsl:message use-when="$debug">
+										<xsl:text>DBG: CMD FOX[</xsl:text>
+										<xsl:value-of select="$fid"/>
+										<xsl:text>] will additionaly use access policy RELS-EXT statements[</xsl:text>
+										<xsl:value-of select="$policy-rels"/>
+										<xsl:text>]!</xsl:text>
+									</xsl:message>
+									<xsl:copy-of select="doc($policy-rels)/rdf:RDF/rdf:Description/*"/>
+								</xsl:for-each>
 							</rdf:Description>
 						</rdf:RDF>
 					</foxml:xmlContent>
