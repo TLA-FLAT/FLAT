@@ -169,7 +169,7 @@ RUN cd /var/www/fedora/data/fedora-xacml-policies/repository-policies/ &&\
 
 # authorisation filter
 RUN cd /var/www/fedora/tomcat/webapps/fedora/WEB-INF/lib &&\
-	wget "https://github.com/Islandora/islandora_drupal_filter/releases/download/v7.1.9/fcrepo-drupalauthfilter-3.8.1.jar"
+	wget "https://github.com/Islandora/islandora_drupal_filter/releases/download/7.1.10/fcrepo-drupalauthfilter-3.8.1.jar"
 ADD fedora/jaas.conf /var/www/fedora/server/config/jaas.conf
 ADD fedora/filter-drupal.xml /var/www/fedora/server/config/filter-drupal.xml
 
@@ -212,36 +212,36 @@ RUN sed -i "s|base64_encode(\$uri\['user'\]|base64_encode(rawurldecode(\$uri['us
 
 RUN mkdir /tmp/tuque &&\
 	cd /tmp/tuque &&\
-	wget "https://github.com/islandora/tuque/archive/1.9.zip" &&\
-	unzip 1.9.zip &&\
-	mv /tmp/tuque/tuque-1.9 /var/www/html/$FLAT_NAME/sites/all/libraries/tuque &&\
+	wget "https://github.com/islandora/tuque/archive/1.10.zip" &&\
+	unzip 1.10.zip &&\
+	mv /tmp/tuque/tuque-1.10 /var/www/html/$FLAT_NAME/sites/all/libraries/tuque &&\
 	sed -i 's|public $verifyPeer = TRUE;|public $verifyPeer = FALSE;|g' /var/www/html/$FLAT_NAME/sites/all/libraries/tuque/HttpConnection.php
 
 RUN mkdir -p /tmp/islandora &&\
 	mkdir -p /var/www/html/$FLAT_NAME/sites/all/modules/contrib &&\
 	mkdir -p /var/www/html/$FLAT_NAME/sites/all/themes &&\
 	cd /tmp/islandora &&\
-	wget "https://github.com/Islandora/islandora/archive/7.x-1.9.tar.gz" &&\
-	tar -xf 7.x-1.9.tar.gz -C /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
+	wget "https://github.com/Islandora/islandora/archive/7.x-1.10.tar.gz" &&\
+	tar -xf 7.x-1.10.tar.gz -C /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
-	wget "https://github.com/islandora/islandora_solution_pack_collection/archive/7.x-1.9.zip" &&\
-	mv 7.x-1.9.zip islandora_solution_pack_collection-7.x-1.9.zip &&\
-	unzip islandora_solution_pack_collection-7.x-1.9.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
+	wget "https://github.com/islandora/islandora_solution_pack_collection/archive/7.x-1.10.zip" &&\
+	mv 7.x-1.10.zip islandora_solution_pack_collection-7.x-1.10.zip &&\
+	unzip islandora_solution_pack_collection-7.x-1.10.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
-	wget "https://github.com/Islandora/islandora_solution_pack_compound/archive/7.x-1.9.zip" &&\
-	mv 7.x-1.9.zip islandora_solution_pack_compound-7.x-1.9.zip &&\
-	unzip islandora_solution_pack_compound-7.x-1.9.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
-    sed -i 's|function islandora_compound_object_islandora_compoundCModel_islandora_view_object|function islandora_compound_object_islandora_compoundCModel_islandora_view_object_DISABLED_BY_FLAT|g' /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora_solution_pack_compound-7.x-1.9/islandora_compound_object.module
+	wget "https://github.com/Islandora/islandora_solution_pack_compound/archive/7.x-1.10.zip" &&\
+	mv 7.x-1.10.zip islandora_solution_pack_compound-7.x-1.10.zip &&\
+	unzip islandora_solution_pack_compound-7.x-1.10.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
+    sed -i 's|function islandora_compound_object_islandora_compoundCModel_islandora_view_object|function islandora_compound_object_islandora_compoundCModel_islandora_view_object_DISABLED_BY_FLAT|g' /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora_solution_pack_compound-7.x-1.10/islandora_compound_object.module
 # overwrites the collection object view, so we get file details
-ADD islandora/islandora_basic_collection.module /var/www/html/flat/sites/all/modules/contrib/islandora_solution_pack_collection-7.x-1.9/islandora_basic_collection.module
+ADD islandora/islandora_basic_collection.module /var/www/html/flat/sites/all/modules/contrib/islandora_solution_pack_collection-7.x-1.10/islandora_basic_collection.module
 
 # add CMDI solution pack
 RUN mkdir -p /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora_solution_pack_cmdi
 ADD flat/islandora_solution_pack_cmdi /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora_solution_pack_cmdi
 
 # tell islandora about CMDI
-RUN sed -i "/\"json\"/a \"cmdi\" => \"application/x-cmdi+xml\"," /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora-7.x-1.9/includes/mimetype.utils.inc &&\
-	sed -i "/header('Content-type: ' . \$datastream/a if (\$datastream->ID == 'CMD') {\nheader('Content-type: ' . 'application/xml');\n}" /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora-7.x-1.9/includes/datastream.inc
+RUN sed -i "/\"json\"/a \"cmdi\" => \"application/x-cmdi+xml\"," /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora-7.x-1.10/includes/mimetype.utils.inc &&\
+	sed -i "/header('Content-type: ' . \$datastream/a if (\$datastream->ID == 'CMD') {\nheader('Content-type: ' . 'application/xml');\n}" /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora-7.x-1.10/includes/datastream.inc
     
 RUN mkdir -p /tmp/bootstrap &&\
 	cd /tmp/bootstrap &&\

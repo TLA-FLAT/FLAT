@@ -60,9 +60,9 @@ ADD solr/solrcore.properties $FEDORA_HOME/solr/collection1/conf/solrcore.propert
 
 RUN mkdir -p /tmp &&\
     cd /tmp &&\
-    git clone -b v0.1.1 https://github.com/discoverygarden/dgi_gsearch_extensions.git &&\
+    git clone -b v0.1.3 https://github.com/discoverygarden/dgi_gsearch_extensions.git &&\
     cd dgi_gsearch_extensions &&\
-    mvn package && cp target/gsearch_extensions-0.1.1-jar-with-dependencies.jar $FEDORA_HOME/tomcat/webapps/fedoragsearch/WEB-INF/lib &&\
+    mvn package && cp target/gsearch_extensions-0.1.3-jar-with-dependencies.jar $FEDORA_HOME/tomcat/webapps/fedoragsearch/WEB-INF/lib &&\
     rm -r /tmp/dgi_gsearch_extensions
 
 #
@@ -80,7 +80,9 @@ RUN mkdir -p /tmp &&\
     cd /tmp/basic-solr-config &&\
     sed -i "s|/usr/local/fedora|$FEDORA_HOME|g" foxmlToSolr.xslt &&\
     sed -i "s|/usr/local/fedora|$FEDORA_HOME|g" islandora_transforms/slurp_all_MODS_to_solr.xslt &&\
-    sed -i "s|/usr/local/fedora|$FEDORA_HOME|g" islandora_transforms/WORKFLOW_to_solr.xslt && cp foxmlToSolr.xslt /var/www/fedora/tomcat/webapps/fedoragsearch/WEB-INF/classes/fgsconfigFinal/index/FgsIndex/foxmlToSolr.xslt && cp -r islandora_transforms /var/www/fedora/tomcat/webapps/fedoragsearch/WEB-INF/classes/fgsconfigFinal/index/FgsIndex/ &&\
+    sed -i "s|/usr/local/fedora|$FEDORA_HOME|g" islandora_transforms/WORKFLOW_to_solr.xslt &&\
+    cp foxmlToSolr.xslt /var/www/fedora/tomcat/webapps/fedoragsearch/WEB-INF/classes/fgsconfigFinal/index/FgsIndex/foxmlToSolr.xslt &&\
+    cp -r islandora_transforms /var/www/fedora/tomcat/webapps/fedoragsearch/WEB-INF/classes/fgsconfigFinal/index/FgsIndex/ &&\
     rm -r /tmp/basic-solr-config
     
 #
