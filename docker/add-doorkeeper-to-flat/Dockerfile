@@ -43,7 +43,7 @@ RUN cd /tmp &&\
     mvn clean install
 
 RUN cd /tmp &&\
-    git clone https://github.com/meertensinstituut/EPICify.git epicify &&\
+    git clone -b 1.0.0 https://github.com/meertensinstituut/EPICify.git epicify &&\
     cd /tmp/epicify &&\
     mvn clean install &&\
     cp cli/target/epicify.jar /app/flat/lib/
