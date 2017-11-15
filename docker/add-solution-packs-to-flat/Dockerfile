@@ -13,9 +13,9 @@ RUN apt-get update &&\
     apt-get -y install lame libmp3lame0
     
 RUN cd /tmp/islandora &&\
-	wget "https://github.com/Islandora/islandora_solution_pack_audio/archive/7.x-1.9.zip" &&\
-	mv 7.x-1.9.zip islandora_solution_pack_audio-7.x-1.9.zip &&\
-	unzip islandora_solution_pack_audio-7.x-1.9.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
+	wget "https://github.com/Islandora/islandora_solution_pack_audio/archive/7.x-1.10.zip" &&\
+	mv 7.x-1.10.zip islandora_solution_pack_audio-7.x-1.10.zip &&\
+	unzip islandora_solution_pack_audio-7.x-1.10.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
 	cd /var/www/html/$FLAT_NAME/ &&\
 	export PGPASSWORD=fedora &&\
 	service supervisor start &&\
@@ -36,17 +36,17 @@ RUN service supervisor start &&\
 	supervisorctl start tomcat &&\
 	/wait-tomcat.sh &&\
 	cd /tmp/islandora &&\
-	wget "https://github.com/Islandora/php_lib/archive/7.x-1.9.zip" &&\
-	mv 7.x-1.9.zip php_lib-7.x-1.9.zip &&\
-	unzip php_lib-7.x-1.9.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
+	wget "https://github.com/Islandora/php_lib/archive/7.x-1.10.zip" &&\
+	mv 7.x-1.10.zip php_lib-7.x-1.10.zip &&\
+	unzip php_lib-7.x-1.10.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
-	wget "https://github.com/Islandora/objective_forms/archive/7.x-1.9.zip" &&\
-	mv 7.x-1.9.zip objective_forms-7.x-1.9.zip &&\
-	unzip objective_forms-7.x-1.9.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
+	wget "https://github.com/Islandora/objective_forms/archive/7.x-1.10.zip" &&\
+	mv 7.x-1.10.zip objective_forms-7.x-1.10.zip &&\
+	unzip objective_forms-7.x-1.10.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
-	wget "https://github.com/Islandora/islandora_xml_forms/archive/7.x-1.9.zip" &&\
-	mv 7.x-1.9.zip islandora_xml_forms-7.x-1.9.zip &&\
-	unzip islandora_xml_forms-7.x-1.9.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
+	wget "https://github.com/Islandora/islandora_xml_forms/archive/7.x-1.10.zip" &&\
+	mv 7.x-1.10.zip islandora_xml_forms-7.x-1.10.zip &&\
+	unzip islandora_xml_forms-7.x-1.10.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
 	wget "https://github.com/qadan/islandora_batch_derivative_trigger/archive/7.x.zip" &&\
 	mv 7.x.zip islandora_batch_derivative_trigger-7.x.zip &&\
