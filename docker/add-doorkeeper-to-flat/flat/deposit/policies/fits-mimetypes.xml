@@ -11,7 +11,7 @@
 			<assert xpath="//fits:metadata/fits:text/fits:charset = 'UTF-8'" message="The character encoding of the text file [{replace(//fits:fileinfo/fits:filename,$work,'')}] is [{//fits:metadata/fits:text/fits:charset}], should be UTF-8"/>
 		</assertions>
 		<assertions xpath="//fits:identity[fits:tool/@toolname = 'Jhove']/@format = 'Plain text'">
-			<assert xpath="//metadata/text/linebreak = 'LF'" message="The text file [{replace(//fits:fileinfo/fits:filename,$work,'')}] has a linebreak type [{//fits:metadata/fits:text/fits:linebreak}], should be LF"/>
+			<assert xpath="//fits:metadata/fits:text/fits:linebreak = 'LF'" message="The text file [{replace(//fits:fileinfo/fits:filename,$work,'')}] has a linebreak type [{//fits:metadata/fits:text/fits:linebreak}], should be LF"/>
 		</assertions>
 	</mimetype>
 	<mimetype value="image/jpg"><!-- use default XPath for mimetype -->
