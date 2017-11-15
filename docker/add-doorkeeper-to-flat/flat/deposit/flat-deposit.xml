@@ -51,10 +51,9 @@
         <action class="nl.mpi.tla.flat.deposit.action.HandleAssignment">
             <parameter name="prefix" value="{$epicPrefix}"/>
         </action>
-        <!--<action name="persist resources" class="nl.mpi.tla.flat.deposit.action.MPIPersists">
-            <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
-            <parameter name="resourcesDir" value="/app/flat/data"/>
-            <parameter name="xpathDatasetName" value="/cmd:CMD/cmd:Components/cmd:ComicBook/cmd:Title"/>
+        <!--<action class="nl.mpi.tla.flat.deposit.action.Locking">
+            <parameter name="mode" value="lock"/>
+            <parameter name="what" value="sip"/>
         </action>-->
         <action name="persist resources" class="nl.mpi.tla.flat.deposit.action.Persist">
             <parameter name="resourcesDir" value="/app/flat/data"/>
@@ -74,7 +73,6 @@
             <parameter name="icons" value="{$env-FLAT_ICON_DIR}"/>
             <parameter name="policies" value="{$work}/acl"/>
             <parameter name="policies" value="{$base}/policies"/>
-            <parameter name="fits" value="{$work}/fits"/>
             <!--<parameter name="license-uri" value="https://www.meertens.knaw.nl/flat/content/terms"/>-->
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.FOXUpdate">
@@ -88,6 +86,17 @@
             <parameter name="drupal" value="/var/www/html/flat"/>
             <parameter name="drush"  value="/var/www/composer/vendor/drush/drush/drush"/>
         </action>
+        <!--<action class="nl.mpi.tla.flat.deposit.action.Locking">
+            <parameter name="mode" value="lock"/>
+            <!-\-
+            <parameter name="what" value="sip"/>
+            <parameter name="what" value="parent collections"/>
+            <parameter name="what" value="all collections"/>
+            <parameter name="what" value="foo"/>
+            <parameter name="what" value="{//xpath}"/>
+            -\->
+            <parameter name="what" value="collections"/>
+        </action>-->        
         <action class="nl.mpi.tla.flat.deposit.action.UpdateCollections">
             <parameter name="prefix" value="{$epicPrefix}"/>
             <parameter name="fedoraConfig" value="{$work}/acl/fedora-config.xml"/>
@@ -97,6 +106,9 @@
             <parameter name="fedoraConfig" value="{$work}/acl/fedora-config.xml"/>
             <parameter name="dir" value="{$work}/fox"/>
         </action>
+        <!--<action class="nl.mpi.tla.flat.deposit.action.Locking">
+            <parameter name="mode" value="unlock"/>
+        </action>-->        
         <action class="nl.mpi.tla.flat.deposit.action.FedoraDelete">
             <parameter name="fedoraConfig" value="{$work}/acl/fedora-config.xml"/>
         </action>
