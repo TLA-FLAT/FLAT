@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context>
+  <Loader
+    className="org.apache.catalina.loader.VirtualWebappLoader"
+    virtualClasspath="/opt/trippi-sail/*.jar"
+    searchVirtualFirst="true"/>
+  <Parameter name="fedora.home" value="/var/www/fedora" />
+</Context>
