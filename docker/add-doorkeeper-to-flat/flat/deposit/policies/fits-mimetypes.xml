@@ -18,5 +18,5 @@
 	<mimetype value="application/pdf"><!-- use default XPath for mimetype -->
 		<!-- no further assertions -->
 	</mimetype>
-	<!--<otherwise value="unknown" xpath="empty(//fits:identity[fits:tool/@format])"/>--><!-- fallback in case FITS does not return a mime type -->
+	<!--<otherwise value="unknown" xpath="empty(//fits:identity[fits:tool/@format])"/><!-/- fallback in case FITS does not return a mime type -/->-->
 </mimetypes>
