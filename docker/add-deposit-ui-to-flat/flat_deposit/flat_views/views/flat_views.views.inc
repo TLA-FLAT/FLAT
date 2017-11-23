@@ -5,12 +5,35 @@
  * Views hooks and callback registries.
  */
 
-function flat_views_views_data_alter(&$data)
-{
- #   var_dump('flat_views_views_data_alter');
-    // This example alters the title of the node:nid field in the Views UI.
-    $data['node']['nid']['title'] = t('Node-Nide');
+/**
+* Implements hook_views_data().
+ */
+function flat_views_views_data() {
+    $data['flat_views']['table']['group'] = t('Flat Views');
+    $data['flat_views']['table']['join'] = array(
+        // Exist in all views.
+        '#global' => array(),
+    );
+
+    $data['flat_views']['Edit bundle'] = array(
+        'title' => t('Edit bundle'),
+        'help' => t('Redirects to node view.'),
+        'field' => array(
+            'handler' => 'views_handler_my_custom_field',
+        ),
+    );
+
+    return $data;
 }
+
+function flat_views_views_data_alter(&$data){
+
+ #   var_dump($data['field_data_flat_cmdi_file']['flat_cmdi_file']);
+#    $data['field_data_flat_cmdi_file']['flat_cmdi_file']['field']['handler'] = 'flat_views_views_handler_cmdi_file_field';
+
+    return $data;
+}
+
 
 function flat_views_views_pre_render(&$view) {
     if ($view->name == 'FLAT My Collections View') {

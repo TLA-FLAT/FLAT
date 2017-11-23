@@ -212,6 +212,9 @@ function flat_deposit_permission()
             'title' => t('Update existing bundle and add to own account'),
             'description' => t('Allows to create personal archive bundle on basis of existing bundle'),
         ),
+        'update bundle metadata menu' => array(
+            'title' => t('Update existing bundle metadata'),
+        ),
         'add collection menu' => array(
             'title' => t('Add collection to own account'),
             'description' => t('Allows to create personal archive collection'),
@@ -378,6 +381,18 @@ function flat_deposit_menu()
         'page arguments' => array(2),
         'access callback' => 'islandora_object_access_callback',
         'access arguments' => array('update bundle menu', 2),
+        'weight' => 99,
+    );
+
+// bundle creation
+    $items['islandora/object/%islandora_object/update_bundle_metadata'] = array(
+        'title' => 'Update bundle metadata',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'drupal_get_form',
+        'file' =>'inc/flat_bundle.update_cmdi.inc',
+        'page arguments' => array('flat_bundle_update_cmdi_form', 2),
+        'access callback' => 'islandora_object_access_callback',
+        'access arguments' => array('update bundle metadata menu', 2),
         'weight' => 99,
     );
 
@@ -691,9 +706,9 @@ function flat_bundle_add_bundle($pid){
     module_load_include('inc', 'flat_deposit', 'inc/class.FlatCollection');
     $user_collection_nodes = FlatCollection::getUserCollectionNodes($user->uid, $pid->id);
 
-    if (!empty($entities['node']) AND count($entities['node']) == 1) {
-        foreach ($entities['node'] as $entity){
-            $parent_nid = $entity->nid;
+    if (!empty($user_collection_nodes['node']) AND count($user_collection_nodes['node']) == 1) {
+        foreach ($user_collection_nodes['node'] as $node){
+            $parent_nid = $node->nid;
 
             $parent_node = node_load($parent_nid);
             $parent_title = $parent_node->title;
@@ -1097,11 +1112,6 @@ function flat_bundle_node_form_add_validate($form, &$form_state){
 
     $original_path = $form_state['values']['flat_original_path']['und'][0]['value'];
 
-    //Validate bundle name
-    if (!preg_match('/^[a-zA-Z0-9\_]{2,40}+$/', $bundle_name)) {
-        form_set_error('title', t('Allowed are all letters, numbers and underscores (max length 40)'));
-    }
-
     //Check that bundle name within collection is distinctive from existing bundles, otherwise we get problems with creating new folders.
     $user_id = $GLOBALS['user']->uid ;
 
@@ -1389,6 +1399,8 @@ function flat_collection_view($node, $view_mode) {
             '#weight' => 10,
             '#theme' => 'link',
             '#path' => 'islandora/object/' . $val,
+            '#prefix' => '<div>',
+            '#suffix' => '</div>',
             '#text' => t('Shortcut to archived collection'),
             '#options' => array(
                 'attributes' => array(),
@@ -1396,7 +1408,20 @@ function flat_collection_view($node, $view_mode) {
             ),
         );
 
-                #flat_fid
+        $node->content['add_bundle'] = array(
+            '#weight' => 10,
+            '#prefix' => '<div>',
+            '#suffix' => '</div>',
+            '#theme' => 'link',
+            '#path' => 'islandora/object/' . $val . '/add_bundle',
+            '#text' => t('Add new bundle to this collection'),
+            '#options' => array(
+                'attributes' => array(),
+                'html' => FALSE,
+            ),
+        );
+
+        #flat_fid
 
         // Add form to node
         module_load_include('inc', 'flat_deposit','/inc/flat_collection.bundle_actions');
@@ -1809,7 +1834,14 @@ function flat_deposit_islandora_object_access($op, $object, $user) {
             $has_access = ($has_compoundCModel AND $has_cmdi_content_model) ? TRUE: false;
 
             break;
+        case 'update bundle metadata menu':
+            // visible objects need the compoundCModel
+            $has_compoundCModel = !empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:compoundCModel'));
+            $has_cmdi_content_model = !empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:sp_cmdiCModel'));
 
+            $has_access = ($has_compoundCModel AND $has_cmdi_content_model) ? TRUE: false;
+
+            break;
         default:
             $has_access = NULL;
             break;

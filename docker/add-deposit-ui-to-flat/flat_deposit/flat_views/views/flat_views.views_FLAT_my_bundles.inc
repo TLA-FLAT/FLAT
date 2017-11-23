@@ -62,6 +62,13 @@ $handler->display->display_options['style_options']['info'] = array(
         'separator' => '',
         'empty_column' => 0,
     ),
+    'flat_cmdi_file' => array(
+        'sortable' => 0,
+        'default_sort_order' => 'asc',
+        'align' => '',
+        'separator' => '',
+        'empty_column' => 0,
+    ),
     'created' => array(
         'sortable' => 0,
         'default_sort_order' => 'asc',
@@ -122,6 +129,15 @@ $handler->display->display_options['fields']['flat_bundle_status']['id'] = 'flat
 $handler->display->display_options['fields']['flat_bundle_status']['table'] = 'field_data_flat_bundle_status';
 $handler->display->display_options['fields']['flat_bundle_status']['field'] = 'flat_bundle_status';
 $handler->display->display_options['fields']['flat_bundle_status']['label'] = 'Upload status';
+/* Field: Content: Metadata */
+
+$handler->display->display_options['fields']['flat_cmdi_file']['id'] = 'flat_cmdi_file';
+$handler->display->display_options['fields']['flat_cmdi_file']['table'] = 'field_data_flat_cmdi_file';
+$handler->display->display_options['fields']['flat_cmdi_file']['field'] = 'flat_cmdi_file';
+$handler->display->display_options['fields']['flat_cmdi_file']['label'] = 'Metadata file available';
+$handler->display->display_options['fields']['flat_cmdi_file']['click_sort_column'] = 'fid';
+/*
+*/
 
 /* Field: Content: Post date */
 $handler->display->display_options['fields']['created']['id'] = 'created';
@@ -130,16 +146,16 @@ $handler->display->display_options['fields']['created']['field'] = 'created';
 $handler->display->display_options['fields']['created']['label'] = 'Initiated on';
 $handler->display->display_options['fields']['created']['date_format'] = 'long';
 $handler->display->display_options['fields']['created']['second_date_format'] = 'long';
-/* Field: Content: Edit link */
-$handler->display->display_options['fields']['edit_node']['id'] = 'edit_node';
-$handler->display->display_options['fields']['edit_node']['table'] = 'views_entity_node';
-$handler->display->display_options['fields']['edit_node']['field'] = 'edit_node';
-$handler->display->display_options['fields']['edit_node']['label'] = 'Edit';
+/* Field: Flat Views: Edit bundle */
+$handler->display->display_options['fields']['Edit bundle']['id'] = 'Edit bundle';
+$handler->display->display_options['fields']['Edit bundle']['table'] = 'flat_views';
+$handler->display->display_options['fields']['Edit bundle']['field'] = 'Edit bundle';
 /* Field: Content: Delete link */
 $handler->display->display_options['fields']['delete_node']['id'] = 'delete_node';
 $handler->display->display_options['fields']['delete_node']['table'] = 'views_entity_node';
 $handler->display->display_options['fields']['delete_node']['field'] = 'delete_node';
 $handler->display->display_options['fields']['delete_node']['label'] = 'Delete bundle in progress';
+
 /* Sort criterion: Content: Post date */
 $handler->display->display_options['sorts']['created']['id'] = 'created';
 $handler->display->display_options['sorts']['created']['table'] = 'node';

@@ -41,6 +41,16 @@ $handler->display->display_options['header']['area']['empty'] = TRUE;
 $handler->display->display_options['header']['area']['content'] = '<a href="/node/add/flat-bundle">Initiate new bundle</a>';
 $handler->display->display_options['header']['area']['format'] = 'filtered_html';
 
+/* Footer: Global: Text area */
+$handler->display->display_options['footer']['area']['id'] = 'area';
+$handler->display->display_options['footer']['area']['table'] = 'views';
+$handler->display->display_options['footer']['area']['field'] = 'area';
+$handler->display->display_options['footer']['area']['label'] = 'link_inactive_collections';
+$handler->display->display_options['footer']['area']['empty'] = TRUE;
+global $user;
+$handler->display->display_options['footer']['area']['content'] = l('Link to inactive collections','dashboard/' . $user->uid . '/collections/inactive' );
+$handler->display->display_options['footer']['area']['format'] = 'full_html';
+
 /* Field: Content: Title */
 $handler->display->display_options['fields']['title']['id'] = 'title';
 $handler->display->display_options['fields']['title']['table'] = 'node';

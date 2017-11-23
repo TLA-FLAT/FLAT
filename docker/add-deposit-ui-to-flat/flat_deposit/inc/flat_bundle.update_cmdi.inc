@@ -1,11 +1,40 @@
 <?php
 
-function flat_collection_update_form($form, &$form_state, $fedora_object){
+function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object){
 
-    $profile = 'MPI_Collection';
-    drupal_set_title(t('Update Collection Metadata'));
+    drupal_set_title(t('Update Bundle Metadata'));
+    $form = [];
 
-    // Set selected profile as this is updated on every AJAX request
+    // get all available template xml
+    form_load_include($form_state, 'inc','flat_deposit','Helpers/CMDI/Cmdi2FormParser');
+    form_load_include($form_state, 'php','flat_deposit','Helpers/CMDI/CmdiHandler');
+    $available_profiles = CmdiHandler::getAvailableTemplates('flat_bundle');
+
+    // Get cmdi from existing object
+    $fObj = $fedora_object;
+
+    $cmdi = CmdiHandler::getCmdiFromDatastream($fObj->id);
+
+    if (!$cmdi){
+        form_set_error('Unable to retrieve objects\' cmdi datastream');
+        return $form;
+    }
+
+
+    $profile = CmdiHandler::getNameById((string) $cmdi->Header->children()->MdProfile);
+
+    if (!$profile){
+        form_set_error('Unable to extra cmdi profile from objects\' cmdi datastream');
+        return $form;
+    }
+
+    if (!in_array($profile, $available_profiles)){
+        form_set_error('No drupal form profile available for this cmdi profile');
+        return $form;
+    }
+
+
+// Set selected profile as this is updated on every AJAX request
     if (isset($form_state['values']['select_profile_name'])) {
         $form_state['selected'] =  $form_state['values']['select_profile_name'];
 
@@ -18,17 +47,10 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
     }
 
 
-
-    // get all available template xml
-    form_load_include($form_state, 'inc','flat_deposit','Helpers/CMDI/Cmdi2FormParser');
-    form_load_include($form_state, 'php','flat_deposit','Helpers/CMDI/CmdiHandler');
-    $available_profiles = CmdiHandler::getAvailableTemplates('flat_collection');
-
-    // set '$load_profile_specific_form' which will trigger loading of container with form elements
-    #$load_profile_specific_form = array_search($form_state['selected'], $available_profiles);
-
+    if (!user_access('admin collection')){$form['owner']['#disabled'] = TRUE; }
 
     global $user;
+
     $form['owner'] = array(
         '#title' => t('Owner of the collection'),
         '#type' => 'textfield',
@@ -37,8 +59,6 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
         '#disabled' => TRUE,
 
     );
-
-    if (!user_access('admin collection')){$form['owner']['#disabled'] = TRUE; }
 
     $form['trigger']['select_profile_name'] = array(
         '#title' => t('Which profile do you want to use?'),
@@ -89,12 +109,6 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
     $fields = CmdiHandler::generateDrupalForm($profile);
 
 
-    // Fill form field with inherited data and add form fields for fields with multivals
-
-    $fObj = $fedora_object;
-
-    $cmdi = CmdiHandler::getCmdiFromDatastream($fObj->id);
-
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/Cmdi2FormParser');
     $parser = new Cmdi2FormParser;
     try {
@@ -143,7 +157,7 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
     $form['Submit'] = array(
         '#type' => 'submit',
         '#value' => t('Submit'),
-        '#validate' => array('flat_collection_update_form_final_validate'),
+        '#validate' => array('flat_bundle_update_form_final_validate'),
     );
 
 
@@ -154,10 +168,7 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
 }
 
 
-
-
-
-function flat_collection_update_form_final_validate($form, &$form_state){
+function flat_bundle_update_form_final_validate($form, &$form_state){
 
 
     if (!empty(form_get_errors())) {
@@ -217,7 +228,7 @@ function flat_collection_update_form_final_validate($form, &$form_state){
 
 
     //validate existence output dir
-    $export_dir = 'metadata://'  . str_replace('@', '_at_' , $owner) . "/.collection/" ;
+    $export_dir = 'metadata://' . str_replace('@', '_at_' , $owner) . "/.collection/" ;
     if (!file_exists($export_dir)){
         drupal_mkdir($export_dir, NULL, TRUE);
     }
@@ -263,6 +274,7 @@ function flat_collection_update_form_final_validate($form, &$form_state){
 
     $options = [];
     $options ['policy'] = $form_state['values']['select_policy'];
+    $options ['fid'] = $form_state['extra_data']['fid'];
 
     $fid = $ingest_client->requestSipIngest($options);
 
@@ -284,10 +296,10 @@ function flat_collection_update_form_final_validate($form, &$form_state){
 
 
 /**
-* Creates new flat_collection node and redirects to parent node.
+ * Creates new flat_collection node and redirects to parent node.
  *
  */
-function flat_collection_update_form_submit($form, &$form_state){
+function flat_bundle_update_form_submit($form, &$form_state){
 
 
     #$owner = user_load_by_name($form_state['values']['data']['owner']);
@@ -303,8 +315,9 @@ function flat_collection_update_form_submit($form, &$form_state){
     #module_load_include('inc','flat_deposit', 'inc/flat_collection.add_collection');
     #create_collection_node($label, $uid, $fid);
 
-    drupal_set_message('Collection item has been updated');
+    drupal_set_message('Bundle metadata has been updated');
     $form_state['redirect']= 'islandora/object/' . $form_state['extra_data'][ 'fid'];
 
 }
+
 

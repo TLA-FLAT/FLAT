@@ -5,6 +5,7 @@ include_once('SIP.php');
 class Collection extends SIP
 {
 
+
     /**
      * Set up function for collection ingest; also validates provided input.
      *
@@ -14,6 +15,8 @@ class Collection extends SIP
      *
      * 'policy': which policy (ACL) to generate; either
      *
+     * 'fid': whether the ingest fid is already known
+     *
      * @return bool
      *
      * @throws IngestServiceException
@@ -21,9 +24,15 @@ class Collection extends SIP
     public function init($info){
 
         $this->logging('Starting init');
+
+
         $required = array(
+            'fid',
             'policy',
         );
+
+        if (!isset($info['fid'])){$info['fid'] ='';}
+
 
         $diff = array_diff($required,array_keys($info));
         if($diff){
@@ -71,8 +80,49 @@ class Collection extends SIP
      */
     function addResourcesToCmdi()
     {
-     return TRUE;
+
+        $this->logging('Starting addResourcesToCmdi');
+
+        module_load_include('php','flat_deposit','/Helpers/CMDI/CmdiHandler');
+
+        $file_name = $this->cmdiTarget;
+        $xml = CmdiHandler::loadXml($file_name);
+        if (is_string($xml)){
+            throw new IngestServiceException($xml);
+        }
+
+        if (!isset($xml->Header->MdProfile)){
+            throw new IngestServiceException('Element MdProfile in Cmdi Header is not set');
+        }
+
+
+        $id = (string)$xml->Header->MdProfile;
+        $profile = CmdiHandler::getNameById($id);
+
+        if ($this->info['fid'] AND $profile == 'MPI_Bundle') {
+            try {
+
+                CmdiHandler::addResourcesFromDatastream($xml, $this->info['fid']);
+
+            } catch (CmdiHandlerException $exception) {
+
+                throw new IngestServiceException($exception->getMessage());
+
+            }
+        }
+
+        $check = $xml->asXML($file_name);
+        if ($check !== TRUE){
+            throw new IngestServiceException($check);
+        }
+        #$check = $xml->asXML('/lat/test.xml');
+
+        $this->logging('Finishing addResourcesToCmdi');
+        return TRUE;
     }
+
+
+
 
 
 

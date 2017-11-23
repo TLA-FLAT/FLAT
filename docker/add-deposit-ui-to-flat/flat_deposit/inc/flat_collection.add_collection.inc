@@ -214,7 +214,7 @@ function flat_collection_add_form_final_validate($form, &$form_state){
 
 
     //validate existence output dir
-    $export_dir = 'metadata://' . '/' . $owner . "/.collection/" ;
+    $export_dir = 'metadata://' . str_replace('@', '_at_' , $owner) . "/.collection/" ;
     if (!file_exists($export_dir)){
         drupal_mkdir($export_dir, NULL, TRUE);
     }

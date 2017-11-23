@@ -330,7 +330,7 @@ function flat_bundle_action_form_submit($form, &$form_state)
             $processed = ($wrapper->flat_bundle_status->value() == 'valid') ? 'archived' : 'validated';
 
             global $user;
-            $form_state['redirect'] = 'user/' . $user->uid . '/dashboard';
+            $form_state['redirect'] = 'dashboard';
             drupal_set_message("Bundle is being $processed");
 
             break;

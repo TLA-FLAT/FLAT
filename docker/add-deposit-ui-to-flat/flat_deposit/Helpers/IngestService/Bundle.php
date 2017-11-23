@@ -296,7 +296,7 @@ class Bundle extends SIP
 
         } else {
 
-            $url_link = '/node/' . (string)$this->node->nid;
+            $url_link = 'node/' . (string)$this->node->nid;
 
         }
 
