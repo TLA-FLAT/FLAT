@@ -22,8 +22,8 @@
 	<xsl:template match="text()" mode="dc"/>
 	
 	<xsl:template match="cmd:ResourceProxy" mode="thumbnail">
-		<xsl:param name="resURI"/>
-		<xsl:param name="resMIME"/>
+		<xsl:param name="resURI" tunnel="yes"/>
+		<xsl:param name="resMIME" tunnel="yes"/>
 		<xsl:choose>
 			<xsl:when test="starts-with($resMIME,'application/pdf')">
 				<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/comic.png"/>
@@ -36,8 +36,8 @@
 	
 	<!-- checksum -->
 	<xsl:template match="cmd:ResourceProxy" mode="checksum">
-		<xsl:param name="base" select="base-uri()"/>
-		<xsl:param name="resURI"/>
+		<xsl:param name="base" select="base-uri()" tunnel="yes"/>
+		<xsl:param name="resURI" tunnel="yes"/>
 		<xsl:variable name="res" select="current()"/>
 		<xsl:choose xmlns:dc="http://purl.org/dc/elements/1.1/">
 			<!--
@@ -59,6 +59,7 @@
 			-->
 			<xsl:when test="false()"/>
 			<xsl:otherwise>
+				<xsl:message>DBG: use default checksum for resource[<xsl:value-of select="$resURI"/>]</xsl:message>
 				<xsl:next-match/>
 			</xsl:otherwise>
 		</xsl:choose>

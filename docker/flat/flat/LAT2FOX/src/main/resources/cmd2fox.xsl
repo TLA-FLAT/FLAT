@@ -835,7 +835,7 @@
 													<xsl:value-of select="replace($resPID, '^hdl:', 'https://hdl.handle.net/')"/>
 												</dc:identifier>
 												<xsl:apply-templates select="current()" mode="checksum">
-													<xsl:with-param name="resURI" select="$resURI"/>
+													<xsl:with-param name="resURI" select="$resURI" tunnel="yes"/>
 												</xsl:apply-templates>
 											</oai_dc:dc>
 										</foxml:xmlContent>
@@ -912,8 +912,8 @@
 								<foxml:datastream ID="TN" STATE="A" CONTROL_GROUP="E" VERSIONABLE="false">
 									<foxml:datastreamVersion ID="TN.0" LABEL="icon.png" MIMETYPE="image/png">
 										<xsl:apply-templates select="current()" mode="thumbnail">
-											<xsl:with-param name="resURI" select="$resURI"/>
-											<xsl:with-param name="resMIME" select="$resMIME"/>
+											<xsl:with-param name="resURI" select="$resURI" tunnel="yes"/>
+											<xsl:with-param name="resMIME" select="$resMIME" tunnel="yes"/>
 										</xsl:apply-templates>
 									</foxml:datastreamVersion>
 								</foxml:datastream>
@@ -1216,8 +1216,8 @@
 	
 	<!-- thumbnail -->
 	<xsl:template match="cmd:ResourceProxy" mode="thumbnail">
-		<xsl:param name="resURI"/>
-		<xsl:param name="resMIME"/>
+		<xsl:param name="resURI" tunnel="yes"/>
+		<xsl:param name="resMIME" tunnel="yes"/>
 		<xsl:choose>
 			<xsl:when test="starts-with($resMIME,'audio/')">
 				<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/audio.png"/>
@@ -1248,26 +1248,35 @@
 	
 	<!-- checksum -->
 	<xsl:template match="cmd:ResourceProxy" mode="checksum">
-		<xsl:param name="base" select="base-uri()"/>
-		<xsl:param name="resURI"/>
+		<xsl:param name="base" select="base-uri()" tunnel="yes"/>
+		<xsl:param name="resURI" tunnel="yes"/>
+		<xsl:message>DBG: determine default checksum for resource[<xsl:value-of select="$resURI"/>]</xsl:message>
 		<xsl:variable name="res" select="current()"/>
 		<xsl:choose xmlns:dc="http://purl.org/dc/elements/1.1/">
-			<xsl:when test="exists($fits-dir)">
+			<xsl:when test="exists($fits-dir)" xmlns:fits="http://hul.harvard.edu/ois/xml/ns/fits/fits_output">
 				<xsl:variable name="fits" select="cmd:firstFile($fits-dir,concat($res/@id,'.FITS.xml'),$base)" as="xs:anyURI?"/>
-				<xsl:if test="exists($fits)">
-					<dc:identifier>
-						<xsl:text>md5:</xsl:text>
-						<xsl:value-of select="doc($fits)//fits:md5checksum" xmlns:fits="http://hul.harvard.edu/ois/xml/ns/fits/fits_output"/>
-					</dc:identifier>
-				</xsl:if>
+				<xsl:choose>
+					<xsl:when test="exists($fits)">
+						<dc:identifier>
+							<xsl:text>md5:</xsl:text>
+							<xsl:value-of select="doc($fits)//fits:md5checksum"/>
+						</dc:identifier>
+						<xsl:message>DBG: FITS checksum[<xsl:value-of select="doc($fits)//fits:md5checksum"/>] for resource[<xsl:value-of select="$resURI"/>]</xsl:message>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:message>ERR: lookup FITS checksum failed for resource[<xsl:value-of select="$resURI"/>]!</xsl:message>
+					</xsl:otherwise>
+				</xsl:choose>
 			</xsl:when>
 			<xsl:when test="starts-with($resURI,'file:')">
 				<xsl:choose>
 					<xsl:when test="sx:fileExists($resURI cast as xs:anyURI)">
+						<xsl:variable name="md5" select="sx:md5($resURI cast as xs:anyURI)"/>
 						<dc:identifier>
 							<xsl:text>md5:</xsl:text>
-							<xsl:value-of select="sx:md5($resURI cast as xs:anyURI)"/>
+							<xsl:value-of select="$md5"/>
 						</dc:identifier>
+						<xsl:message>DBG: calculated checksum[<xsl:value-of select="$md5"/>] for resource[<xsl:value-of select="$resURI"/>]</xsl:message>
 					</xsl:when>
 					<xsl:when test="$lax-resource-check">
 						<xsl:message>WRN: can't compute a MD5 checksum as the Resource[<xsl:value-of select="$resURI"/>] doesn't exist!</xsl:message>
@@ -1277,6 +1286,9 @@
 					</xsl:otherwise>
 				</xsl:choose>
 			</xsl:when>
+			<xsl:otherwise>
+				<xsl:message>DBG: skipped checksum for resource[<xsl:value-of select="$resURI"/>]</xsl:message>
+			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>	
 	
