@@ -476,7 +476,16 @@
 										</foxml:datastreamVersion>
 									</foxml:datastream>
 									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="CMD" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
-										<foxml:datastreamVersion ID="CMD.0" FORMAT_URI="{/cmd:CMD/@xsii:schemaLocation}" LABEL="CMD Record for this object" MIMETYPE="application/x-cmdi+xml">
+										<foxml:datastreamVersion ID="CMD.0" FORMAT_URI="{/cmd:CMD/@xsii:schemaLocation}" MIMETYPE="application/x-cmdi+xml">
+											<xsl:variable name="label" select="($dc//dc:title[normalize-space() != ''])[1]" xmlns:dc="http://purl.org/dc/elements/1.1/"/>
+											<xsl:choose>
+												<xsl:when test="exists($label)">
+													<xsl:attribute name="LABEL" select="replace(replace(normalize-unicode($label,'NFKD'),'\P{IsBasicLatin}','_'),'\s+','_')"/>
+												</xsl:when>
+												<xsl:otherwise>
+													<xsl:attribute name="LABEL" select="'CMD Record for this object'"/>
+												</xsl:otherwise>
+											</xsl:choose>
 											<foxml:xmlContent>
 												<xsl:apply-templates mode="cmd">
 													<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
@@ -507,7 +516,16 @@
 				</xsl:when>
 				<xsl:otherwise>
 					<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="CMD" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
-						<foxml:datastreamVersion ID="CMD.0" FORMAT_URI="{/cmd:CMD/@xsii:schemaLocation}" LABEL="CMD Record for this object" MIMETYPE="application/x-cmdi+xml">
+						<foxml:datastreamVersion ID="CMD.0" FORMAT_URI="{/cmd:CMD/@xsii:schemaLocation}" MIMETYPE="application/x-cmdi+xml">
+							<xsl:variable name="label" select="($dc//dc:title[normalize-space() != ''])[1]" xmlns:dc="http://purl.org/dc/elements/1.1/"/>
+							<xsl:choose>
+								<xsl:when test="exists($label)">
+									<xsl:attribute name="LABEL" select="replace(replace(normalize-unicode($label,'NFKD'),'\P{IsBasicLatin}','_'),'\s+','_')"/>
+								</xsl:when>
+								<xsl:otherwise>
+									<xsl:attribute name="LABEL" select="'CMD Record for this object'"/>
+								</xsl:otherwise>
+							</xsl:choose>
 							<foxml:xmlContent>
 								<xsl:apply-templates mode="cmd">
 									<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
@@ -870,6 +888,9 @@
 										</xsl:otherwise>
 									</xsl:choose>
 									<foxml:datastreamVersion ID="OBJ.0" LABEL="{substring($resTitle,1,255)}" MIMETYPE="{$resMIME}">
+										<xsl:if test="starts-with($resURI, 'file:') and sx:fileExists($resURI cast as xs:anyURI)">
+											<xsl:attribute name="SIZE" select="sx:fileSize($resURI cast as xs:anyURI)"/>
+										</xsl:if>
 										<foxml:contentLocation TYPE="URL">
 											<xsl:choose>
 												<xsl:when test="starts-with($resURI, 'file:') and exists($import-base)">
