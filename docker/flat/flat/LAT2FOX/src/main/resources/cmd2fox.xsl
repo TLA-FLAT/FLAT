@@ -888,9 +888,6 @@
 										</xsl:otherwise>
 									</xsl:choose>
 									<foxml:datastreamVersion ID="OBJ.0" LABEL="{substring($resTitle,1,255)}" MIMETYPE="{$resMIME}">
-										<xsl:if test="starts-with($resURI, 'file:') and sx:fileExists($resURI cast as xs:anyURI)">
-											<xsl:attribute name="SIZE" select="sx:fileSize($resURI cast as xs:anyURI)"/>
-										</xsl:if>
 										<foxml:contentLocation TYPE="URL">
 											<xsl:choose>
 												<xsl:when test="starts-with($resURI, 'file:') and exists($import-base)">
