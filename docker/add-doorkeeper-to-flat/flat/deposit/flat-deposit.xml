@@ -100,11 +100,18 @@
         <action class="nl.mpi.tla.flat.deposit.action.UpdateCollections">
             <parameter name="prefix" value="{$epicPrefix}"/>
             <parameter name="fedoraConfig" value="{$work}/acl/fedora-config.xml"/>
-            <parameter name="dir" value="{$work}/fox"/>
+            <parameter name="firstDir" value="{$work}/fox"/>
+            <parameter name="dir" value="{$work}/admin-fox"/>
         </action>
+        <!-- SIP + parent collection -->
         <action class="nl.mpi.tla.flat.deposit.action.FedoraInteract">
             <parameter name="fedoraConfig" value="{$work}/acl/fedora-config.xml"/>
             <parameter name="dir" value="{$work}/fox"/>
+        </action>
+        <!-- ancestor collections -->
+        <action class="nl.mpi.tla.flat.deposit.action.FedoraInteract">
+            <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
+            <parameter name="dir" value="{$work}/admin-fox"/>
         </action>
         <!--<action class="nl.mpi.tla.flat.deposit.action.Locking">
             <parameter name="mode" value="unlock"/>
