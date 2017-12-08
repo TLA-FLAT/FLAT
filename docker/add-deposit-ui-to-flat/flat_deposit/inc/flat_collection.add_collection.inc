@@ -27,7 +27,7 @@ function flat_collection_add_form($form, &$form_state, $parent){
     #$load_profile_specific_form = array_search($form_state['selected'], $available_profiles);
 
     // Add option to import a external file
-    $available_profiles ['Import'] = 'I want to import an existing CMDI file';
+    $available_profiles ['Import'] = 'I want to upload a CMDI metadata file';
 
     global $user;
     $form['owner'] = array(
@@ -40,7 +40,7 @@ function flat_collection_add_form($form, &$form_state, $parent){
     if (!user_access('admin collection')){$form['owner']['#disabled'] = TRUE; }
 
     $form['trigger']['select_profile_name'] = array(
-        '#title' => t('Which profile do you want to use?'),
+        '#title' => t('Which metadata profile do you want to use?'),
         '#type' => 'select',
         '#empty_option' => '-- Select --',
         '#required' => TRUE,
@@ -68,7 +68,7 @@ function flat_collection_add_form($form, &$form_state, $parent){
     );
 
     $form['select_policy'] = array(
-        '#title' => t('Which accessibility policy do you want to apply'),
+        '#title' => t('Which access policy do you want to apply?'),
         '#type' => 'select',
         '#required' => TRUE,
         '#options' => drupal_map_assoc(array('public','private')),

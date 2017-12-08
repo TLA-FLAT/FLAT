@@ -77,7 +77,7 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object){
     );
 
     $form['select_policy'] = array(
-        '#title' => t('Which accessibility policy do you want to apply'),
+        '#title' => t('Which access policy do you want to apply?'),
         '#type' => 'select',
         '#required' => TRUE,
         '#options' => drupal_map_assoc(array('public','private')),
@@ -319,5 +319,3 @@ function flat_bundle_update_form_submit($form, &$form_state){
     $form_state['redirect']= 'islandora/object/' . $form_state['extra_data'][ 'fid'];
 
 }
-
-

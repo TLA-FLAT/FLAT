@@ -478,6 +478,8 @@ function flat_deposit_admin_form_import_validate ($form, &$form_state)
     // Check mime type of file
     $tmp = $_FILES['File_selector']['tmp_name'];
 
+
+    /* check fails, apparently FITS gives it another mime type than text/plain
     module_load_include('php', 'flat_deposit', '/Helpers/CMDI/CmdiHandler');
     $type = CmdiHandler::fits_mimetype_check($tmp);
 
@@ -485,7 +487,7 @@ function flat_deposit_admin_form_import_validate ($form, &$form_state)
 
         form_set_error('import', t('File needs to be a plain text file '));
     }
-
+    */
 
     // Check if file can be read in
     $content = file_get_contents($tmp);
