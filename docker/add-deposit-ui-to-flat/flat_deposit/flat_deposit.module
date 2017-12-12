@@ -261,14 +261,14 @@ function flat_deposit_enable(){
 
             if (!file_exists($directory)){
 
-                drupal_set_message(t('Private directory for storing bundles (!directory) does not exist and cannot be created. 
-                Please change the variable file_private_path by visiting admin/config/media/file-system or create the directory manually. 
+                drupal_set_message(t('Private directory for storing bundles (!directory) does not exist and cannot be created.
+                Please change the variable file_private_path by visiting admin/config/media/file-system or create the directory manually.
                 Make sure also to adapt profile User-1 in admin/config/media/imce/profile',
                     array('!directory'=> $directory)),'warning');
 
             } elseif (posix_getpwuid(fileowner($directory)) !== exec('whoami')){
 
-                drupal_set_message(t('Private directory (!directory) is not owned by apache user. Please change manually ownership of the directory. 
+                drupal_set_message(t('Private directory (!directory) is not owned by apache user. Please change manually ownership of the directory.
                 Make sure also to adapt profile User-1 in admin/config/media/imce/profile',
                     array('!directory'=> $directory)),'warning');
 
@@ -312,7 +312,7 @@ function flat_deposit_menu()
         'description' => 'User deposit menu link in navigation bar',
         'page callback' => 'flat_deposit_dashboard_view',
         'access callback' => TRUE,
-        'menu_name' => 'main-menu', // comment out to place next to my account
+        //'menu_name' => 'main-menu', // uncomment to place in main menu instead of user menu
     );
 
     $items['dashboard/%user'] = array(
@@ -386,7 +386,7 @@ function flat_deposit_menu()
 
 // bundle creation
     $items['islandora/object/%islandora_object/update_bundle_metadata'] = array(
-        'title' => 'Update bundle metadata',
+        'title' => 'Update metadata',
         'type' => MENU_LOCAL_TASK,
         'page callback' => 'drupal_get_form',
         'file' =>'inc/flat_bundle.update_cmdi.inc',
@@ -398,7 +398,7 @@ function flat_deposit_menu()
 
     // flat bundle cmdi file creator form
     $items['node/%node/cmdi'] = array(
-        'title' => 'Flat bundle cmdi generation',
+        'title' => 'Create bundle metadata',
         'type' => MENU_CALLBACK,
         'page callback' => 'drupal_get_form',
         'page arguments' => array('flat_deposit_cmdi_form',1),
@@ -421,7 +421,7 @@ function flat_deposit_menu()
     );
 
     $items['islandora/object/%islandora_object/update_collection'] = array(
-        'title' => 'Update collection',
+        'title' => 'Update',
         'type' => MENU_LOCAL_TASK,
         'page callback' => 'drupal_get_form',
         'file' =>'inc/flat_collection.update_collection.inc',
@@ -432,7 +432,7 @@ function flat_deposit_menu()
     );
 
     $items['islandora/object/%islandora_object/add_current_collection'] = array(
-        'title' => 'Add current collection to \'My collections\'',
+        'title' => 'Activate',
         'type' => MENU_LOCAL_TASK,
         'page callback' => 'drupal_get_form',
         'file' =>'inc/flat_collection.add_current_collection.inc',
@@ -682,12 +682,12 @@ function theme_flat_bundle_cmdi_resource_table($variables)
 function flat_deposit_node_info() {
     return array(
         'flat_bundle' => array(
-            'name' => t('FLAT upload bundle'),
+            'name' => t('Bundle'),
             'base' => 'flat_bundle',
-            'description' => t('A bundle of one or more data files upload entity'),
+            'description' => t('A bundle of one or more data files'),
         ),
         'flat_collection' => array(
-            'name' => t('FLAT upload collection'),
+            'name' => t('Collection'),
             'base' => 'flat_collection',
             'description' => t('A container node for subcollections and bundles'),
         )
@@ -697,7 +697,7 @@ function flat_deposit_node_info() {
 
 function flat_bundle_add_bundle($pid){
     global $user;
-    
+
 
 // Query all flat_collection nodes that are owned by the user and have no empty fedora_fid (flat_fid) value.
     // Resulting nodes will be added as options with the node's nid as option-key and node's title as option-labels.
@@ -1196,7 +1196,7 @@ function flat_bundle_node_form_add_submit($form, &$form_state){
 
 
 function flat_bundle_node_form_update_validate($form, &$form_state){
-    
+
     //Todo add extra validation
 
 }
@@ -1654,7 +1654,7 @@ function flat_deposit_block_view($delta = '')
                 $file_found = array_diff(scandir($location), array('..', '.'));
             }
 
-            if (empty($file_found)){$file_found[]='No files in working directory';}
+            if (empty($file_found)){$file_found[]='No files specified';}
 
             $rows = array();
 
@@ -1663,7 +1663,7 @@ function flat_deposit_block_view($delta = '')
                 $rows [] = array($value);
             }
 
-            $header = array('Existing files');
+            $header = array('Files to be included in bundle');
             $content = theme('table', array('header' => $header, 'rows' => $rows));
 
             $block = array(
@@ -1703,7 +1703,7 @@ function flat_deposit_block_view($delta = '')
             }
 
 
-            $block['subject'] = t('All existing resources');
+            $block['subject'] = t('Current files in bundle');
             $block['content'] = drupal_get_form('flat_bundle_update_cmdi_resources_form', ['node' => $node]);
 
 
@@ -1922,5 +1922,3 @@ function flat_deposit_islandora_collectionCModel_islandora_view_object_alter(&$o
     }
 
 }
-
-

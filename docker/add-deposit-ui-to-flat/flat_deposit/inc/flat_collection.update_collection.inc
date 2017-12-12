@@ -41,7 +41,7 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
     if (!user_access('admin collection')){$form['owner']['#disabled'] = TRUE; }
 
     $form['trigger']['select_profile_name'] = array(
-        '#title' => t('Which profile do you want to use?'),
+        '#title' => t('Which metadata profile do you want to use?'),
         '#type' => 'select',
         '#empty_option' => '-- Select --',
         '#required' => TRUE,
@@ -57,7 +57,7 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
     );
 
     $form['select_policy'] = array(
-        '#title' => t('Which accessibility policy do you want to apply'),
+        '#title' => t('Which access policy do you want to apply?'),
         '#type' => 'select',
         '#required' => TRUE,
         '#options' => drupal_map_assoc(array('public','private')),
@@ -307,4 +307,3 @@ function flat_collection_update_form_submit($form, &$form_state){
     $form_state['redirect']= 'islandora/object/' . $form_state['extra_data'][ 'fid'];
 
 }
-

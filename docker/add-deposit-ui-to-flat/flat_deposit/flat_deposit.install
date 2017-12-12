@@ -195,7 +195,7 @@ function flat_deposit_install()
             'max_length' => 255,
             'allowed_values' => array(
                 'new' => 'Newly created content',
-                'update' => 'Update of an existing content',
+                'update' => 'Update of existing content',
             ),
         ),
         'locked' => TRUE,
@@ -695,7 +695,7 @@ function flat_deposit_uninstall(){
         drupal_set_message($t('Nodes containing custom content types have been removed'));
     }
 
-    
+
     //Remove all custom content type fields and field instances and clean up entries in field_config / field_config_instance tables
  /*   foreach (field_read_fields(array('module' => 'flat_deposit')) as $field) {
         foreach(field_read_instances(array('field_name' => $field['field_name'])) as $instance) {

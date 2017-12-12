@@ -87,7 +87,7 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
 
     $form['buttons']['delete'] = array(
         '#type' => 'submit',
-        '#value' => t('Delete selected resource(s)'),
+        '#value' => t('Remove selected file(s)'),
         '#submit' => array('flat_bundle_delete_cmdi_resource_submit'),
     );
 
