@@ -480,7 +480,7 @@
 											<xsl:variable name="label" select="($dc//dc:title[normalize-space() != ''])[1]" xmlns:dc="http://purl.org/dc/elements/1.1/"/>
 											<xsl:choose>
 												<xsl:when test="exists($label)">
-													<xsl:attribute name="LABEL" select="replace(replace(normalize-unicode($label,'NFKD'),'\P{IsBasicLatin}','_'),'\s+','_')"/>
+													<xsl:attribute name="LABEL" select="substring(replace(replace(normalize-unicode($label,'NFKD'),'\P{IsBasicLatin}','_'),'\s+','_'),1,255)"/>
 												</xsl:when>
 												<xsl:otherwise>
 													<xsl:attribute name="LABEL" select="'CMD Record for this object'"/>
@@ -520,7 +520,7 @@
 							<xsl:variable name="label" select="($dc//dc:title[normalize-space() != ''])[1]" xmlns:dc="http://purl.org/dc/elements/1.1/"/>
 							<xsl:choose>
 								<xsl:when test="exists($label)">
-									<xsl:attribute name="LABEL" select="replace(replace(normalize-unicode($label,'NFKD'),'\P{IsBasicLatin}','_'),'\s+','_')"/>
+									<xsl:attribute name="LABEL" select="substring(replace(replace(normalize-unicode($label,'NFKD'),'\P{IsBasicLatin}','_'),'\s+','_'),1,255)"/>
 								</xsl:when>
 								<xsl:otherwise>
 									<xsl:attribute name="LABEL" select="'CMD Record for this object'"/>

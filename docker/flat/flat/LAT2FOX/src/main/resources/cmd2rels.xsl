@@ -1,33 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-	xmlns:xs="http://www.w3.org/2001/XMLSchema"
-	xmlns:cmd="http://www.clarin.eu/cmd/"
-	xmlns:lat="http://lat.mpi.nl/"
-	exclude-result-prefixes="xs"
-	version="2.0">
-	
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cmd="http://www.clarin.eu/cmd/" xmlns:lat="http://lat.mpi.nl/" exclude-result-prefixes="xs" version="2.0">
+
 	<xsl:param name="dir" select="'./'"/>
-        <xsl:param name="ext" select="'cmdi'"/>
-	
+	<xsl:param name="ext" select="'cmdi'"/>
+
 	<xsl:function name="cmd:hdl">
 		<xsl:param name="pid"/>
 		<xsl:sequence select="replace(replace($pid, '^http(s?)://hdl.handle.net/', 'hdl:'), '@format=[a-z]+', '')"/>
 	</xsl:function>
-	
+
+	<xsl:function name="cmd:escFile" as="xs:anyURI">
+		<xsl:param name="uri" as="xs:anyURI"/>
+		<xsl:choose>
+			<xsl:when test="starts-with($uri, 'file:') and not(contains($uri, '%'))">
+				<xsl:variable name="paths" as="xs:string*">
+					<xsl:for-each select="tokenize(replace($uri, 'file:', ''), '/')">
+						<xsl:sequence select="encode-for-uri(.)"/>
+					</xsl:for-each>
+				</xsl:variable>
+				<xsl:sequence select="concat('file:', string-join($paths, '/')) cast as xs:anyURI"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:sequence select="$uri"/>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:function>
+
 	<xsl:template name="main">
 		<relations>
-			<xsl:for-each select="collection(concat($dir,concat('?select=*.',$ext,';recurse=yes;on-error=warning')))">
+			<xsl:for-each select="collection(concat($dir, concat('?select=*.', $ext, ';recurse=yes;on-error=warning')))">
 				<xsl:variable name="rec" select="current()"/>
 				<xsl:variable name="src" select="base-uri($rec)"/>
-                                <xsl:message>INF: finding relations for CMD record[<xsl:value-of select="$src"/>]</xsl:message>
+				<xsl:message>INF: finding relations for CMD record[<xsl:value-of select="$src"/>]</xsl:message>
 				<xsl:variable name="frm">
 					<xsl:choose>
-						<xsl:when test="normalize-space($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink)=''">
+						<xsl:when test="normalize-space($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink) = ''">
 							<xsl:message>ERR: CMD record[<xsl:value-of select="$src"/>] has no or empty MdSelfLink!</xsl:message>
 							<xsl:message>WRN: using base URI instead.</xsl:message>
 							<xsl:sequence select="$src"/>
 						</xsl:when>
-						<xsl:when test="starts-with(cmd:hdl($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink),'hdl:')">
+						<xsl:when test="starts-with(cmd:hdl($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink), 'hdl:')">
 							<xsl:sequence select="cmd:hdl($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink)"/>
 						</xsl:when>
 						<xsl:otherwise>
@@ -38,41 +50,41 @@
 				<xsl:for-each select="$rec/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy">
 					<relation>
 						<src>
-							<xsl:value-of select="$src"/>
+							<xsl:value-of select="cmd:escFile($src)"/>
 						</src>
 						<from>
-							<xsl:value-of select="$frm"/>
+							<xsl:value-of select="cmd:escFile($frm)"/>
 						</from>
 						<to>
 							<xsl:choose>
-								<xsl:when test="starts-with(cmd:hdl(cmd:ResourceRef),'hdl:')">
+								<xsl:when test="starts-with(cmd:hdl(cmd:ResourceRef), 'hdl:')">
 									<xsl:value-of select="cmd:hdl(cmd:ResourceRef)"/>
 								</xsl:when>
 								<xsl:otherwise>
-									<xsl:value-of select="resolve-uri(cmd:ResourceRef,$src)"/>
+									<xsl:value-of select="cmd:escFile(resolve-uri(cmd:ResourceRef, $src))"/>
 								</xsl:otherwise>
 							</xsl:choose>
 						</to>
 						<dst>
 							<xsl:choose>
-								<xsl:when test="normalize-space(cmd:ResourceRef/@lat:localURI)=''">
-									<xsl:if test="cmd:ResourceType=('Metadata','Resource')">
+								<xsl:when test="normalize-space(cmd:ResourceRef/@lat:localURI) = ''">
+									<xsl:if test="cmd:ResourceType = ('Metadata', 'Resource')">
 										<xsl:message>WRN: no local URI for ResourceRef[<xsl:value-of select="cmd:ResourceRef"/>] in CMD record[<xsl:value-of select="$src"/>], using ResourceRef instead.</xsl:message>
 									</xsl:if>
 									<xsl:choose>
-										<xsl:when test="starts-with(cmd:hdl(cmd:ResourceRef),'hdl:')">
+										<xsl:when test="starts-with(cmd:hdl(cmd:ResourceRef), 'hdl:')">
 											<xsl:value-of select="cmd:hdl(cmd:ResourceRef)"/>
 										</xsl:when>
 										<xsl:otherwise>
-											<xsl:value-of select="resolve-uri(cmd:ResourceRef,$src)"/>
+											<xsl:value-of select="cmd:escFile(resolve-uri(cmd:ResourceRef, $src))"/>
 										</xsl:otherwise>
 									</xsl:choose>
 								</xsl:when>
-								<xsl:when test="starts-with(cmd:hdl(cmd:ResourceRef/@lat:localURI),'hdl:')">
+								<xsl:when test="starts-with(cmd:hdl(cmd:ResourceRef/@lat:localURI), 'hdl:')">
 									<xsl:value-of select="cmd:hdl(cmd:ResourceRef/@lat:localURI)"/>
 								</xsl:when>
 								<xsl:otherwise>
-									<xsl:value-of select="resolve-uri(cmd:ResourceRef/@lat:localURI,$src)"/>
+									<xsl:value-of select="cmd:escFile(resolve-uri(cmd:ResourceRef/@lat:localURI, $src))"/>
 								</xsl:otherwise>
 							</xsl:choose>
 						</dst>
@@ -85,49 +97,49 @@
 					<relation>
 						<src>
 							<xsl:choose>
-								<xsl:when test="normalize-space(@lat:localURI)=''">
+								<xsl:when test="normalize-space(@lat:localURI) = ''">
 									<xsl:message>WRN: no local URI for IsPartOf[<xsl:value-of select="."/>] in CMD record[<xsl:value-of select="$src"/>], using ref instead.</xsl:message>
 									<xsl:choose>
-										<xsl:when test="starts-with(cmd:hdl(.),'hdl:')">
+										<xsl:when test="starts-with(cmd:hdl(.), 'hdl:')">
 											<xsl:value-of select="cmd:hdl(.)"/>
 										</xsl:when>
 										<xsl:otherwise>
-											<xsl:value-of select="resolve-uri(.,$src)"/>
+											<xsl:value-of select="cmd:escFile(resolve-uri(., $src))"/>
 										</xsl:otherwise>
 									</xsl:choose>
 								</xsl:when>
-								<xsl:when test="starts-with(cmd:hdl(@lat:localURI),'hdl:')">
+								<xsl:when test="starts-with(cmd:hdl(@lat:localURI), 'hdl:')">
 									<xsl:value-of select="cmd:hdl(@lat:localURI)"/>
 								</xsl:when>
 								<xsl:otherwise>
-									<xsl:value-of select="resolve-uri(@lat:localURI,$src)"/>
+									<xsl:value-of select="cmd:escFile(resolve-uri(@lat:localURI, $src))"/>
 								</xsl:otherwise>
 							</xsl:choose>
 						</src>
 						<from>
 							<xsl:choose>
-								<xsl:when test="starts-with(cmd:hdl(.),'hdl:')">
+								<xsl:when test="starts-with(cmd:hdl(.), 'hdl:')">
 									<xsl:value-of select="cmd:hdl(.)"/>
 								</xsl:when>
 								<xsl:otherwise>
-									<xsl:value-of select="resolve-uri(.,$src)"/>
+									<xsl:value-of select="cmd:escFile(resolve-uri(., $src))"/>
 								</xsl:otherwise>
 							</xsl:choose>
 						</from>
 						<dst>
-							<xsl:value-of select="$src"/>
+							<xsl:value-of select="cmd:escFile($src)"/>
 						</dst>
 						<to>
-							<xsl:value-of select="$frm"/>
+							<xsl:value-of select="cmd:escFile($frm)"/>
 						</to>
 						<type>Metadata</type>
 					</relation>
 				</xsl:for-each>
-                                <xsl:message>INF: found relations for CMD record[<xsl:value-of select="$src"/>]</xsl:message>
+				<xsl:message>INF: found relations for CMD record[<xsl:value-of select="$src"/>]</xsl:message>
 			</xsl:for-each>
 		</relations>
 	</xsl:template>
-	
+
 	<xsl:template match="/">
 		<xsl:call-template name="main"/>
 	</xsl:template>

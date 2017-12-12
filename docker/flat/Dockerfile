@@ -302,21 +302,6 @@ RUN	service supervisor start &&\
 	/wait-sergtsop.sh
 
 #
-# proai
-#
-
-RUN mkdir /tmp/proai &&\
-	cd /tmp/proai &&\
-	wget http://downloads.sourceforge.net/project/fedora-commons/services/3.4/oaiprovider-1.2.2.zip &&\
-	unzip oaiprovider-1.2.2.zip &&\
-	cp oaiprovider-1.2.2/oaiprovider.war /var/www/fedora/tomcat/webapps/oaiprovider.war &&\
-	mkdir -p /var/www/fedora/tomcat/webapps/oaiprovider &&\
-	cd /var/www/fedora/tomcat/webapps/oaiprovider &&\
-	jar xf ../oaiprovider.war
-ADD proai/proai.properties /var/www/fedora/tomcat/webapps/oaiprovider/WEB-INF/classes/proai.properties
-ADD proai/identify.xml /var/www/html/identify.xml
-
-#
 # Add LAT2FOX
 #
 

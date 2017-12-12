@@ -28,6 +28,7 @@ import org.codehaus.stax2.evt.XMLEvent2;
 public class FindProfiles {
     
     static final String CMD_NS = "http://www.clarin.eu/cmd/";
+    static final String CMD1_NS = "http://www.clarin.eu/cmd/1";
     static final String CR_URI = "http(s)?://catalog.clarin.eu/ds/ComponentRegistry/";
     static final String XSI_NS = "http://www.w3.org/2001/XMLSchema-instance";
     
@@ -118,7 +119,7 @@ public class FindProfiles {
                         case START:
                             switch (eventType) {
                                 case XMLEvent2.START_ELEMENT:
-                                    if (qn.getNamespaceURI().equals(CMD_NS) && qn.getLocalPart().equals("CMD")) {
+                                    if ((qn.getNamespaceURI().equals(CMD_NS) || qn.getNamespaceURI().equals(CMD1_NS)) && qn.getLocalPart().equals("CMD")) {
                                         state = OPEN_CMD;
                                         sdepth = depth;
                                         String prof = xmlr.getAttributeValue(XSI_NS,"schemaLocation");
@@ -147,7 +148,7 @@ public class FindProfiles {
                         case OPEN_CMD:
                             switch (eventType) {
                                 case XMLEvent2.START_ELEMENT:
-                                    if (qn.getNamespaceURI().equals(CMD_NS) && qn.getLocalPart().equals("Header")) {
+                                    if ((qn.getNamespaceURI().equals(CMD_NS) || qn.getNamespaceURI().equals(CMD1_NS)) && qn.getLocalPart().equals("Header")) {
                                         state = OPEN_HEADER;
                                         sdepth = depth;
                                     } else {
@@ -156,7 +157,7 @@ public class FindProfiles {
                                     }
                                     break;
                                 case XMLEvent2.END_ELEMENT:
-                                    if (qn.getNamespaceURI().equals(CMD_NS) && qn.getLocalPart().equals("CMD") && sdepth == depth) {
+                                    if ((qn.getNamespaceURI().equals(CMD_NS) || qn.getNamespaceURI().equals(CMD1_NS)) && qn.getLocalPart().equals("CMD") && sdepth == depth) {
                                         System.err.println("!ERR: "+input+": no cmd:CMD/cmd:Header found!");
                                         state = ERROR;
                                     }
@@ -166,12 +167,12 @@ public class FindProfiles {
                         case OPEN_HEADER:
                             switch (eventType) {
                                 case XMLEvent2.START_ELEMENT:
-                                    if (qn.getNamespaceURI().equals(CMD_NS) && qn.getLocalPart().equals("MdProfile") && sdepth+1==depth) {
+                                    if ((qn.getNamespaceURI().equals(CMD_NS) || qn.getNamespaceURI().equals(CMD1_NS)) && qn.getLocalPart().equals("MdProfile") && sdepth+1==depth) {
                                         state = OPEN_MDPROFILE;
                                     }
                                     break;
                                 case XMLEvent2.END_ELEMENT:
-                                    if (qn.getNamespaceURI().equals(CMD_NS) && qn.getLocalPart().equals("Header") && sdepth == depth) {
+                                    if ((qn.getNamespaceURI().equals(CMD_NS) || qn.getNamespaceURI().equals(CMD1_NS)) && qn.getLocalPart().equals("Header") && sdepth == depth) {
                                         System.err.println("!"+(profile==null?"ERR":"WRN")+": "+input+": no cmd:CMD/cmd:Header/cmd:MdProfile found!");
                                         state = ERROR;
                                     }
@@ -185,11 +186,11 @@ public class FindProfiles {
                                     prof = cr_rest.matcher(prof).replaceFirst("");
                                     prof = cr_ext.matcher(prof).replaceFirst("");
                                     if (verbose || debug)
-                                        System.out.println("?"+(debug?"DBG":"INF")+": "+input+": MdProfile["+prof+"]");
+                                        System.err.println("?"+(debug?"DBG":"INF")+": "+input+": MdProfile["+prof+"]");
                                     if (profile == null)
                                         profile = prof;
                                     else if (!prof.equals(profile))
-                                        System.out.println("!WRN: "+input+": MdProfile["+prof+"] and xsi:schemaLocation["+profile+"] contradict!");
+                                        System.err.println("!WRN: "+input+": MdProfile["+prof+"] and xsi:schemaLocation["+profile+"] contradict!");
                                     state = STOP;
                                     break;
                                 default:

@@ -15,43 +15,41 @@ RUN mkdir /tmp/tomcat &&\
     tar xf apache-tomcat-7.0.82.tar.gz &&\
     mv apache-tomcat-7.0.82 /usr/share/tomcat-blzg
 
-RUN	cd /tmp &&\
-		rm -r /tmp/tomcat
-
 ADD tomcat/server.xml /usr/share/tomcat-blzg/conf/server.xml
 ADD tomcat/setenv.sh /usr/share/tomcat-blzg/bin/setenv.sh
 ADD supervisor/supervisord-tomcat-blzg.conf /etc/supervisor/conf.d/
 ADD blazegraph/wait-tomcat-blzg.sh /wait-tomcat-blzg.sh
 RUN chmod u+x /wait-tomcat-blzg.sh
-ADD supervisor/start.sh /start.sh
-RUN chmod u+x /start.sh
-RUN service supervisor start
 
 # install Blazegraph
 RUN mkdir /tmp/blazegraph_conf &&\
-		mkdir -p /var/bigdata/logs &&\
-		mkdir -p /etc/bigdata/ &&\
-		cd /tmp/blazegraph_conf &&\
-		git clone https://github.com/discoverygarden/blazegraph_conf &&\
-		cp blazegraph_conf/RWStore.properties /etc/bigdata &&\
-		cp blazegraph_conf/log4j.properties /etc/bigdata &&\
-		cd /usr/share/tomcat-blzg/webapps &&\
-		wget https://sourceforge.net/projects/bigdata/files/bigdata/2.1.4/blazegraph.war/download -O blazegraph.war &&\
-		supervisorctl start tomcat-blzg &&\
-		/wait-tomcat-blzg.sh &&\
-		rm -r /tmp/blazegraph_conf
+	mkdir -p /var/bigdata/logs &&\
+	mkdir -p /etc/bigdata/ &&\
+	cd /tmp/blazegraph_conf &&\
+	git clone https://github.com/discoverygarden/blazegraph_conf &&\
+	cp blazegraph_conf/RWStore.properties /etc/bigdata &&\
+	cp blazegraph_conf/log4j.properties /etc/bigdata &&\
+	cd /usr/share/tomcat-blzg/webapps &&\
+	wget https://sourceforge.net/projects/bigdata/files/bigdata/2.1.4/blazegraph.war/download -O blazegraph.war &&\
+	service supervisor start &&\
+	/wait-postgres.sh &&\
+	supervisorctl start tomcat &&\
+	/wait-tomcat.sh &&\
+	/wait-tomcat-blzg.sh &&\
+	supervisorctl stop all &&\
+	service supervisor stop &&\
+	/wait-sergtsop.sh
 
 # build and install DGI trippi-sail
 RUN mkdir /tmp/trippi-sail &&\
-		cd /tmp/trippi-sail &&\
-		git clone https://github.com/discoverygarden/trippi-sail.git &&\
-		cd trippi-sail &&\
-		mvn package -Dfedora.version=3.8.1 &&\
-		cd trippi-sail-blazegraph-remote/target &&\
-		tar xf trippi-sail-blazegraph-remote-0.0.1-SNAPSHOT-bin.tar.gz &&\
-		mv trippi-sail-blazegraph-remote-0.0.1-SNAPSHOT /opt/trippi-sail &&\
-		rm -r /tmp/trippi-sail  &&\
-		supervisorctl stop tomcat
+	cd /tmp/trippi-sail &&\
+	git clone https://github.com/discoverygarden/trippi-sail.git &&\
+	cd trippi-sail &&\
+	mvn package -Dfedora.version=3.8.1 -DskipTests &&\
+	cd trippi-sail-blazegraph-remote/target &&\
+	tar xf trippi-sail-blazegraph-remote-0.0.1-SNAPSHOT-bin.tar.gz &&\
+	mv trippi-sail-blazegraph-remote-0.0.1-SNAPSHOT /opt/trippi-sail &&\
+	rm -r /tmp/trippi-sail
 
 # reconfigure fedora
 ADD fedora/fedora.xml /var/www/fedora/tomcat/conf/Catalina/localhost/fedora.xml
@@ -60,7 +58,15 @@ ADD fedora/fedora.fcfg /usr/local/fedora/server/config/fedora.fcfg
 ADD fedora/env-server.sh /var/www/fedora/server/bin/env-server.sh
 
 # rebuild the resource index
-RUN supervisorctl start postgres &&\
-		/wait-postgres.sh
-RUN /var/www/fedora/server/bin/fedora-rebuild.sh -r org.fcrepo.server.resourceIndex.ResourceIndexRebuilder
-RUN /var/www/fedora/server/bin/fedora-rebuild.sh -r org.fcrepo.server.utilities.rebuild.SQLRebuilder
+RUN service supervisor start &&\
+	/wait-postgres.sh &&\
+	/wait-tomcat-blzg.sh &&\
+	/var/www/fedora/server/bin/fedora-rebuild.sh -r org.fcrepo.server.resourceIndex.ResourceIndexRebuilder &&\
+	/var/www/fedora/server/bin/fedora-rebuild.sh -r org.fcrepo.server.utilities.rebuild.SQLRebuilder &&\
+	supervisorctl stop all &&\
+	service supervisor stop &&\
+	/wait-sergtsop.sh
+
+# clean up APT and /tmp when done.
+RUN apt-get clean &&\
+	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

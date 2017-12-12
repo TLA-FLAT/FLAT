@@ -6,7 +6,7 @@ This docker file depends on the FLAT base image.
 
 ## Provides ##
  * the DoorKeeper tool/library that can validate a SIP and deposits it in Fedora Commons
- * the flat REST API to trigger a DoorKeeper check/deposition for a SIP uploaded via SWORD
+ * the flat REST API to trigger a DoorKeeper check/deposition for a SIP uploaded via SWORD, available at http://IP/flat/doorkeeper
 
 ## Building the image ##
 ```sh
