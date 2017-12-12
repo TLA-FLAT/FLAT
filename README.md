@@ -18,51 +18,51 @@ Currently the setup of this project consists of a series of docker setups:
 2. A [FLAT Blazegraph image](docker/add-blazegraph-to-flat) builds on the base image and 
     1. replaces the builtin Mulgara triplestore by [Blazegraph](https://www.blazegraph.com/)
 
-2. A [FLAT Islandora SOLR image](docker/add-islandora-solr-to-flat) builds on the base image and
+3. A [FLAT Islandora SOLR image](docker/add-islandora-solr-to-flat) builds on the base image and
     1. installs Islandora's SOLR modules
 
-3. A [FLAT Islandora OAI image](docker/add-islandora-oai-to-flat) builds on the base image and the Islandora SOLR image
+4. A [FLAT Islandora OAI image](docker/add-islandora-oai-to-flat) builds on the base image and the Islandora SOLR image
     1. installs Islandora's OAI module
     2. installs the [FLAT OAI Islandora module](/TLA-FLAT/slandora_oai_cmdi_olac), which adds support for providing CMD (and OLAC) records via OAI-PMH
 
-4. A [FLAT search image](docker/add-gsearch-to-flat) builds on the base image and the Islandora SOLR image, and
+5. A [FLAT search image](docker/add-gsearch-to-flat) builds on the base image and the Islandora SOLR image, and
     1. installs generic search for Fedora Commons
     2. provides tools and scripts to configure the index proces for a specific set of CMD records and profiles
 
-5. A [FLAT SWORD image](docker/add-sword-to-flat) builds on the base image and
+6. A [FLAT SWORD image](docker/add-sword-to-flat) builds on the base image and
     1. installs a SWORD v2 API to receive bags
    
-6. A [FLAT DoorKeeper image](docker/add-doorkeeper-to-flat) builds on the base image and
+7. A [FLAT DoorKeeper image](docker/add-doorkeeper-to-flat) builds on the base image and
     1. installs the [DoorKeeper](/TLA-FLAT/DoorKeeper), which guards the repository and checks new or updated resources and metadata
     2. installs the DoorKeeper API to process bags
 
-7. A [FLAT example setup image](docker/add-example-setup-to-flat) builds on the doorkeeper image and
+8. A [FLAT example setup image](docker/add-example-setup-to-flat) builds on the doorkeeper image and
     1. adds a comic book collection,
     2. a comic book SIP, and
     3. related users
 
-8. An *experimental* [FLAT deposit UI image](docker/add-deposit-ui-to-flat) builds on the base image and the SWORD image, and
+9. An *experimental* [FLAT deposit UI image](docker/add-deposit-ui-to-flat) builds on the base image and the SWORD image, and
     1. installs a module that provides an UI for users to deposit data
    
-9. An *experimental* [FLAT Shibbolet image](docker/add-shibboleth-to-flat) builds on the base image and
+10. An *experimental* [FLAT Shibbolet image](docker/add-shibboleth-to-flat) builds on the base image and
     1. installs Shibboleth
     2. installs Drupal's Shibboleth modules
    
-10. An *experimental* [FLAT solution packs image](docker/add-solution-packs-to-flat) builds on the base image and
+11. An *experimental* [FLAT solution packs image](docker/add-solution-packs-to-flat) builds on the base image and
     1. installs Islandora solution packs
     2. provides scripts to trigger the addition of derived datastreams like thumbnails
 
-11. A *deprecated* [FLAT proai image](docker/add-proai-to-flat) builds on the base image and
+12. A *deprecated* [FLAT proai image](docker/add-proai-to-flat) builds on the base image and
     1. installs and configures the proai Fedora extension
 
 The FLAT base image is required, but the other ones can be added to it as needed (but might depend on eachother).
 
 Additionally there are two docker setups specific for IMDI and CMDIfied IMDI:
 
-12. A [FLAT IMDI conversion image](docker/add-imdi-conversion-to-flat) builds on the base image and
+13. A [FLAT IMDI conversion image](docker/add-imdi-conversion-to-flat) builds on the base image and
     1. provides tools and scripts to convert from IMDI to CMDI
 
-13. A [FLAT IMDI search image](docker/add-imdi-gsearch-to-flat) builds on the search image and
+14. A [FLAT IMDI search image](docker/add-imdi-gsearch-to-flat) builds on the search image and
     1. provides the mapping to configure the index proces for CMDIfied IMDI records and profiles
 
 ## Building a FLAT docker image ##
