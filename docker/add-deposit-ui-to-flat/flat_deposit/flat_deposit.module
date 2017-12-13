@@ -1773,7 +1773,7 @@ function flat_deposit_block_view($delta = '')
 
         case 'flat_deposit_collections':
             module_load_include('inc','flat_deposit','/inc/flat_collection.fedora_collections_actions');
-            $block['subject'] = t('All inactive collections in repository');
+            $block['subject'] = t('My inactive collections');
             $block['content'] = drupal_get_form('flat_fedora_collections_form');
             break;
 

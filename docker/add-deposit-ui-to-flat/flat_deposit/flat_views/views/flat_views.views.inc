@@ -41,7 +41,7 @@ function flat_views_views_pre_render(&$view) {
         foreach ($view->result as $key => $result) {
 
             $val = $result->field_data_flat_fid_flat_fid_value;
-            $link = l('link to archived collection', 'islandora/object/' . rawurlencode($val));
+            $link = l('link', 'islandora/object/' . rawurlencode($val));
             $result->field_flat_flat_fid[0]['rendered']['#markup'] = $link;
         }
     }

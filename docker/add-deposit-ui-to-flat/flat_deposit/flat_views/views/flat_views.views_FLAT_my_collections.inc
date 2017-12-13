@@ -48,7 +48,7 @@ $handler->display->display_options['footer']['area']['field'] = 'area';
 $handler->display->display_options['footer']['area']['label'] = 'link_inactive_collections';
 $handler->display->display_options['footer']['area']['empty'] = TRUE;
 global $user;
-$handler->display->display_options['footer']['area']['content'] = l('Link to inactive collections','dashboard/' . $user->uid . '/collections/inactive' );
+$handler->display->display_options['footer']['area']['content'] = l('Link to my inactive collections','dashboard/' . $user->uid . '/collections/inactive' );
 $handler->display->display_options['footer']['area']['format'] = 'full_html';
 
 /* Field: Content: Title */
@@ -63,13 +63,7 @@ $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FAL
 $handler->display->display_options['fields']['flat_flat_fid']['id'] = 'flat_fid';
 $handler->display->display_options['fields']['flat_flat_fid']['table'] = 'field_data_flat_fid';
 $handler->display->display_options['fields']['flat_flat_fid']['field'] = 'flat_fid';
-$handler->display->display_options['fields']['flat_flat_fid']['label'] = 'Link name in archive';
-
-/* Field: Content: Status of the upload */
-$handler->display->display_options['fields']['flat_collection_status']['id'] = 'flat_collection_status';
-$handler->display->display_options['fields']['flat_collection_status']['table'] = 'field_data_flat_collection_status';
-$handler->display->display_options['fields']['flat_collection_status']['field'] = 'flat_collection_status';
-$handler->display->display_options['fields']['flat_collection_status']['label'] = 'Collection status';
+$handler->display->display_options['fields']['flat_flat_fid']['label'] = 'Collection in archive';
 
 /* Field: Content: Post date */
 $handler->display->display_options['fields']['created']['id'] = 'created';
@@ -89,7 +83,7 @@ $handler->display->display_options['fields']['edit_node']['label'] = 'Edit';
 $handler->display->display_options['fields']['delete_node']['id'] = 'delete_node';
 $handler->display->display_options['fields']['delete_node']['table'] = 'views_entity_node';
 $handler->display->display_options['fields']['delete_node']['field'] = 'delete_node';
-$handler->display->display_options['fields']['delete_node']['label'] = 'Remove shortcut to collection';
+$handler->display->display_options['fields']['delete_node']['label'] = 'Remove from active collections';
 
 /* Sort criterion: Content: Post date */
 $handler->display->display_options['sorts']['created']['id'] = 'created';
@@ -144,8 +138,3 @@ $handler->display->display_options['pager']['type'] = 'some';
 $handler->display->display_options['pager']['options']['items_per_page'] = '5';
 
 $views[$view->name] = $view;
-
-
-
-
-
