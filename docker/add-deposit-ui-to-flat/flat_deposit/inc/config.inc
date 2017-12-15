@@ -4,9 +4,8 @@
 DEFAULT SETTINGS OF THE FLAT_DEPOSIT MODULE AND FUNCTIONS TO SET THESE
 */
 
-function flat_deposit_set_general($updated_values=NULL)
+function flat_deposit_set_general($updated_values=null)
 {
-
     $defaults =  array(
         #directory for uploading external data
         'external' => '/var/www/html/flat/sites/default/files/private/flat_deposit/data',
@@ -19,19 +18,21 @@ function flat_deposit_set_general($updated_values=NULL)
     //remove already installed variables
     $values_stored_in_database = variable_get('flat_deposit_general', array());
 
-    if (!empty($values_stored_in_database[0])) {variable_del('flat_deposit_general'); }
+    if (!empty($values_stored_in_database[0])) {
+        variable_del('flat_deposit_general');
+    }
 
 
     // set or update values
     $values = $updated_values ? array_merge($values_stored_in_database, $updated_values) : $defaults;
-    variable_set('flat_deposit_general', $values );
+    variable_set('flat_deposit_general', $values);
 
 
     // warn if directory does not exist
     $checks = ['external', 'metadata', 'freeze'];
     $paths = variable_get('flat_deposit_general');
-    foreach ($checks as $check){
-        if (!file_exists($paths[$check])){
+    foreach ($checks as $check) {
+        if (!file_exists($paths[$check])) {
             drupal_set_message(t('%check directory (%dir) as specified in flat_deposit module settings does not exist', array('%check'=> $check, '%dir'=> $paths[$check])), 'error');
         }
     }
@@ -40,7 +41,7 @@ function flat_deposit_set_general($updated_values=NULL)
 }
 
 
-function flat_deposit_set_fits($updated_values=NULL)
+function flat_deposit_set_fits($updated_values=null)
 {
     $defaults = array(
         'url' => 'http://127.0.0.1/fits',
@@ -51,18 +52,19 @@ function flat_deposit_set_fits($updated_values=NULL)
     $values_stored_in_database = variable_get('flat_deposit_fits', array());
 
     //already installed
-    if (!empty($values_stored_in_database[0])) {variable_del('flat_deposit_fits'); }
+    if (!empty($values_stored_in_database[0])) {
+        variable_del('flat_deposit_fits');
+    }
 
     // set or update values
     $values = $updated_values ? array_merge($values_stored_in_database, $updated_values) : $defaults;
-    variable_set('flat_deposit_fits', $values );
+    variable_set('flat_deposit_fits', $values);
 
     return TRUE;
-
 }
 
 
-function flat_deposit_set_ingest_service($updated_values=NULL)
+function flat_deposit_set_ingest_service($updated_values=null)
 {
     $defaults = array(
         # host name of http server
@@ -89,31 +91,28 @@ function flat_deposit_set_ingest_service($updated_values=NULL)
     $values_stored_in_database = variable_get('flat_deposit_ingest_service', array());
 
     //already installed
-    if (!empty($values_stored_in_database[0])) {variable_del('flat_deposit_ingest_service'); }
+    if (!empty($values_stored_in_database[0])) {
+        variable_del('flat_deposit_ingest_service');
+    }
 
     // set or update values
     $values = $updated_values ? array_merge($values_stored_in_database, $updated_values) : $defaults;
-    variable_set('flat_deposit_ingest_service', $values );
+    variable_set('flat_deposit_ingest_service', $values);
 
     // warn if directory does not exist
     $checks = ['bag_exe','bag_dir','error_log_file','sword_tmp_dir'];
     $paths = variable_get('flat_deposit_ingest_service');
-    foreach ($checks as $check){
-        if (!file_exists($paths[$check])){
+    foreach ($checks as $check) {
+        if (!file_exists($paths[$check])) {
             drupal_set_message(t('%check directory (%dir) as specified in flat_deposit module settings does not exist', array('%check'=> $check, '%dir'=> $paths[$check])), 'error');
         }
     }
-
-
 
     return TRUE;
 }
 
 
-
-
-
-function flat_deposit_set_sword($updated_values=NULL)
+function flat_deposit_set_sword($updated_values=null)
 {
     $defaults = array(
         'url' => 'https://localhost/easy-deposit/',
@@ -127,18 +126,19 @@ function flat_deposit_set_sword($updated_values=NULL)
     $values_stored_in_database = variable_get('flat_deposit_sword', array());
 
     //already installed
-    if (!empty($values_stored_in_database[0])) {variable_del('flat_deposit_sword'); }
+    if (!empty($values_stored_in_database[0])) {
+        variable_del('flat_deposit_sword');
+    }
 
     // set or update values
     $values = $updated_values ? array_merge($values_stored_in_database, $updated_values) : $defaults;
-    variable_set('flat_deposit_sword', $values );
+    variable_set('flat_deposit_sword', $values);
 
     return TRUE;
-
 }
 
 
-function flat_deposit_set_doorkeeper($updated_values=NULL)
+function flat_deposit_set_doorkeeper($updated_values=null)
 {
     $defaults =  array(
         'url' => "http://localhost/flat/doorkeeper/",
@@ -148,19 +148,21 @@ function flat_deposit_set_doorkeeper($updated_values=NULL)
     //clean up stored values
     $values_stored_in_database = variable_get('flat_deposit_doorkeeper', array());
 
-//already installed
-    if (!empty($values_stored_in_database[0])) {variable_del('flat_deposit_doorkeeper'); }
+    //already installed
+    if (!empty($values_stored_in_database[0])) {
+        variable_del('flat_deposit_doorkeeper');
+    }
 
     // set or update values
     $values = $updated_values ? array_merge($values_stored_in_database, $updated_values) : $defaults;
-    variable_set('flat_deposit_doorkeeper', $values );
+    variable_set('flat_deposit_doorkeeper', $values);
 
     return TRUE;
 }
 
 
-function flat_deposit_set_fedora($updated_values=NULL) {
-
+function flat_deposit_set_fedora($updated_values=null)
+{
     $defaults =  array(
         'host_name' => 'localhost',
         'host_ip' => '127.0.0.1',
@@ -175,18 +177,19 @@ function flat_deposit_set_fedora($updated_values=NULL) {
     $values_stored_in_database = variable_get('flat_deposit_fedora', array());
 
     //already installed
-    if (!empty($values_stored_in_database[0])) {variable_del('flat_deposit_fedora'); }
+    if (!empty($values_stored_in_database[0])) {
+        variable_del('flat_deposit_fedora');
+    }
 
     // set or update values
     $values = $updated_values ? array_merge($values_stored_in_database, $updated_values) : $defaults;
-    variable_set('flat_deposit_fedora', $values );
+    variable_set('flat_deposit_fedora', $values);
 
     return TRUE;
 }
 
 
-
-function flat_deposit_set_solr($updated_values=NULL)
+function flat_deposit_set_solr($updated_values=null)
 {
     $defaults =  array(
         'schema' => 'https',
@@ -200,74 +203,69 @@ function flat_deposit_set_solr($updated_values=NULL)
     $values_stored_in_database = variable_get('flat_deposit_solr', array());
 
     //already installed
-    if (!empty($values_stored_in_database[0])) {variable_del('flat_deposit_solr'); }
+    if (!empty($values_stored_in_database[0])) {
+        variable_del('flat_deposit_solr');
+    }
 
     // set or update values
     $values = $updated_values ? array_merge($values_stored_in_database, $updated_values) : $defaults;
-    variable_set('flat_deposit_solr', $values );
-
+    variable_set('flat_deposit_solr', $values);
 
     return TRUE;
 }
 
 
+function flat_deposit_set_anonymous_user_permissions()
+{
 
-function flat_deposit_set_anonymous_user_permissions(){
-
-// Define authenticated user role permissions
+// Define default anonymous user role permissions
     $anonymous_user_permissions = array(
         'access content' => FALSE,
 
     );
 
-    // Grant permissions to our 'corpman' role
+    // Grant permissions to anonymous users
     user_role_change_permissions(DRUPAL_ANONYMOUS_RID, $anonymous_user_permissions);
-
 }
 
-function flat_deposit_set_authenticated_user_permissions(){
+function flat_deposit_set_authenticated_user_permissions()
+{
 
 // Define authenticated user role permissions
     $authenticated_user_permissions = array(
+        'access content' => TRUE,
+
+    );
+
+    // Grant permissions to authenticated user
+    user_role_change_permissions(DRUPAL_AUTHENTICATED_RID, $authenticated_user_permissions);
+}
+
+function flat_deposit_set_custom_roles()
+{
+    $roles = array('manager', 'depositor');
+    foreach ($roles as $role) {
+        $role_exists = user_role_load_by_name($role);
+
+        if (!$role_exists) {
+            // Create manager and depositor custom roles
+            $roleObject = new stdClass();
+            $roleObject->name = $role;
+            user_role_save($roleObject);
+        }
+    }
+
+    // Manager role
+    $manager_role = user_role_load_by_name('manager');
+    $manager_rid = $manager_role->rid;
+
+    // Define 'manager' role permissions
+    $manager_permissions = array(
         'validate bundles' => TRUE,
         'create flat_bundle content' => TRUE,
         'edit own flat_bundle content' => TRUE,
         'delete own flat_bundle content' => TRUE,
         'use deposit module' => TRUE,
-        'access content' => TRUE,
-
-    );
-
-    // Grant permissions to our 'corpman' role
-    user_role_change_permissions(DRUPAL_AUTHENTICATED_RID, $authenticated_user_permissions);
-
-}
-
-
-
-
-function flat_deposit_set_custom_roles(){
-    $roles = array('corpman', 'developer');
-    foreach ($roles as $role){
-        $role_exists = user_role_load_by_name($role);
-
-        if (!$role_exists){
-            // Create corpus manager permission role
-            $roleObject = new stdClass();
-            $roleObject->name = $role;
-            user_role_save($roleObject);
-
-        }
-    }
-
-
-
-    // Role to grant the permissions to
-    $corpman_role = user_role_load_by_name('corpman');
-    $corpman_rid = $corpman_role->rid;
-
-    // Define our 'corpman' role permissions
-    $corpman_permissions = array(
         'edit any flat_bundle content' => TRUE,
         'delete any flat_bundle content' => TRUE,
         'ingest bundles' => TRUE,
@@ -275,27 +273,21 @@ function flat_deposit_set_custom_roles(){
         'admin collection' => TRUE,
     );
 
-    // Grant permissions to our 'corpman' role
-    user_role_change_permissions($corpman_rid, $corpman_permissions);
+    // Grant permissions to the 'manager' role
+    user_role_change_permissions($manager_rid, $manager_permissions);
 
 
-    $certified_user = user_role_load_by_name('certified user');
+    // Depositor role
+    $depositor_role = user_role_load_by_name('depositor');
+    $depositor_rid = $depositor_role->rid;
 
-    if (!$certified_user){
-
-        // Create corpus manager permission role
-        $role = new stdClass();
-        $role->name = 'certified user';
-        user_role_save($role);
-
-    }
-
-    // Role to grant the permissions to
-    $certified_user_role = user_role_load_by_name('certified user');
-    $certified_user_rid = $certified_user_role->rid;
-
-    // Define our 'corpman' role permissions
-    $certified_user_permissions = array(
+    // Define 'depositor' role permissions
+    $depositor_permissions = array(
+        'validate bundles' => TRUE,
+        'create flat_bundle content' => TRUE,
+        'edit own flat_bundle content' => TRUE,
+        'delete own flat_bundle content' => TRUE,
+        'use deposit module' => TRUE,
         'edit any flat_bundle content' => FALSE,
         'delete any flat_bundle content' => FALSE,
         'ingest bundles' => TRUE,
@@ -303,19 +295,15 @@ function flat_deposit_set_custom_roles(){
         'admin collection' => TRUE,
     );
 
-    // Grant permissions to our 'certified user' role
-    user_role_change_permissions($certified_user_rid, $certified_user_permissions);
-
-
+    // Grant permissions to 'depositor' role
+    user_role_change_permissions($depositor_rid, $depositor_permissions);
 }
 
 
-function flat_deposit_set_content_access(){
-
-
+function flat_deposit_set_content_access()
+{
     $admin = user_role_load_by_name('administrator');
-    $corpman = user_role_load_by_name('corpman');
-
+    $manager = user_role_load_by_name('manager');
 
     $permissions =  array(
         'view_own' => array(
@@ -325,11 +313,9 @@ function flat_deposit_set_content_access(){
         'view' =>
             array(
                 0 => (int)$admin->rid,
-                1 => $corpman->rid,
+                1 => $manager->rid,
             ),
         );
 
-
     variable_set('content_access_flat_bundle', $permissions);
-
-    }
+}

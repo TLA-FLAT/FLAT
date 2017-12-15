@@ -305,13 +305,12 @@ function flat_deposit_menu()
 
     //User menus
 
-
     $items['dashboard'] = array(
         'type' => MENU_NORMAL_ITEM,
         'title' => 'My dashboard',
         'description' => 'User deposit menu link in navigation bar',
         'page callback' => 'flat_deposit_dashboard_view',
-        'access callback' => TRUE,
+        'access callback' => 'flat_deposit_dashboard_access',
         //'menu_name' => 'main-menu', // uncomment to place in main menu instead of user menu
     );
 
@@ -447,11 +446,22 @@ function flat_deposit_menu()
     return $items;
 }
 
+function flat_deposit_dashboard_access(){
+    global $user;
+    $roles = array('administrator', 'manager', 'depositor');
+    foreach ($roles as $role) {
+      if (in_array($role, $user->roles)) {
+        return TRUE;
+      }
+    }
+  return FALSE;
+}
+
 function flat_deposit_dashboard_view(){
 
 
     global $user;
-    krumo($user);
+    #krumo($user);
     var_dump($user);
     drupal_goto('dashboard/' . $user->uid. '/bundles');
 
@@ -1916,7 +1926,7 @@ function flat_deposit_islandora_collectionCModel_islandora_view_object_alter(&$o
 
     if (isset($rendered['wrapper']['metadata']['#markup'])  AND in_array('islandora:sp_cmdiCModel',$object_content_models)){
 
-        krumo($rendered['wrapper']['metadata']['#markup']);
+        #krumo($rendered['wrapper']['metadata']['#markup']);
         $rendered['wrapper']['metadata']['#markup'] .= drupal_render($markup);
 
     }
