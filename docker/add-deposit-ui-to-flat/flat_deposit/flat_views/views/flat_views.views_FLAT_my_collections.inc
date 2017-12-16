@@ -55,7 +55,7 @@ $handler->display->display_options['footer']['area']['format'] = 'full_html';
 $handler->display->display_options['fields']['title']['id'] = 'title';
 $handler->display->display_options['fields']['title']['table'] = 'node';
 $handler->display->display_options['fields']['title']['field'] = 'title';
-$handler->display->display_options['fields']['title']['label'] = 'Collection name';
+$handler->display->display_options['fields']['title']['label'] = 'Collection title';
 $handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
 $handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
 

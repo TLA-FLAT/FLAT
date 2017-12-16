@@ -27,6 +27,8 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
     // set '$load_profile_specific_form' which will trigger loading of container with form elements
     #$load_profile_specific_form = array_search($form_state['selected'], $available_profiles);
 
+    $form['#prefix'] = "<div id='flat_collection_update_form_wrapper'>";
+    $form['#suffix'] = "</div>";
 
     global $user;
     $form['owner'] = array(
@@ -131,9 +133,6 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
 
     }
 
-
-
-
     // attach hidden data
     $form_state['extra_data'] =  array(
         'fid' => $fedora_object->id,
@@ -143,19 +142,21 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
     $form['Submit'] = array(
         '#type' => 'submit',
         '#value' => t('Submit'),
+        '#ajax' => array(
+          'callback' => 'flat_collection_update_form_ajax_handler',
+          'wrapper' => 'flat_collection_update_form_wrapper',
+          'effect' => 'fade',
+          ),
         '#validate' => array('flat_collection_update_form_final_validate'),
     );
 
-
-
     return $form;
-
 
 }
 
-
-
-
+function flat_collection_update_form_ajax_handler (&$form, &$form_state){
+    return $form;
+}
 
 function flat_collection_update_form_final_validate($form, &$form_state){
 
@@ -284,26 +285,26 @@ function flat_collection_update_form_final_validate($form, &$form_state){
 
 
 /**
-* Creates new flat_collection node and redirects to parent node.
+* Updates flat_collection node and redirects to parent node.
  *
  */
 function flat_collection_update_form_submit($form, &$form_state){
 
-
     #$owner = user_load_by_name($form_state['values']['data']['owner']);
     #$uid = $owner->uid;
     #$label = $form_state['values']['data']['label'];
-
+    $target = 'islandora/object/' . $form_state['extra_data'][ 'fid'];
     // Change label of fedora object if Title in cmdi has changed.
-
-
-
-
 
     #module_load_include('inc','flat_deposit', 'inc/flat_collection.add_collection');
     #create_collection_node($label, $uid, $fid);
 
     drupal_set_message('Collection item has been updated');
-    $form_state['redirect']= 'islandora/object/' . $form_state['extra_data'][ 'fid'];
+    ctools_include('ajax');
+    ctools_add_js('ajax-responder');
+    $commands[] = ctools_ajax_command_redirect($target);
+    print ajax_render($commands);
+    exit;
+    //$form_state['redirect']= 'islandora/object/' . $form_state['extra_data'][ 'fid'];
 
 }
