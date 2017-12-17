@@ -40,6 +40,27 @@ function flat_deposit_set_general($updated_values=null)
     return TRUE;
 }
 
+function flat_deposit_set_cmdi_profiles($updated_values=null)
+{
+    $defaults = array(
+        'collection_profiles' => 'clarin.eu:cr1:p_1475136016239,clarin.eu:cr1:p_1407745712064',
+        'bundle_profiles' => 'clarin.eu:cr1:p_1475136016242,clarin.eu:cr1:p_1407745712035',
+    );
+
+    //clean up stored values
+    $values_stored_in_database = variable_get('flat_deposit_cmdi_profiles', array());
+
+    //already installed
+    if (!empty($values_stored_in_database[0])) {
+        variable_del('flat_deposit_cmdi_profiles');
+    }
+
+    // set or update values
+    $values = $updated_values ? array_merge($values_stored_in_database, $updated_values) : $defaults;
+    variable_set('flat_deposit_cmdi_profiles', $values);
+
+    return TRUE;
+}
 
 function flat_deposit_set_fits($updated_values=null)
 {
