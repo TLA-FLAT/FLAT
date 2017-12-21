@@ -1657,7 +1657,7 @@ function flat_deposit_block_view($delta = '')
             $node = menu_get_object();
             $node_wrapper = entity_metadata_wrapper('node', $node);
 
-            $location = $node_wrapper->flat_original_path->value();
+            $location = $node_wrapper->flat_location->value();
 
             $file_found = [];
             if (file_exists($location)){
@@ -1673,7 +1673,7 @@ function flat_deposit_block_view($delta = '')
                 $rows [] = array($value);
             }
 
-            $header = array('Files to be included in bundle');
+            $header = array('Files to be added to this bundle');
             $content = theme('table', array('header' => $header, 'rows' => $rows));
 
             $block = array(
@@ -1831,19 +1831,13 @@ function flat_deposit_islandora_object_access($op, $object, $user) {
             break;
 
         case 'add collection menu':
+        case 'update collection menu':
         // visible objects need the collectionCModel
         $has_access = !empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:collectionCModel'));
 
             break;
 
         case 'update bundle menu':
-            // visible objects need the compoundCModel
-            $has_compoundCModel = !empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:compoundCModel'));
-            $has_cmdi_content_model = !empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:sp_cmdiCModel'));
-
-            $has_access = ($has_compoundCModel AND $has_cmdi_content_model) ? TRUE: false;
-
-            break;
         case 'update bundle metadata menu':
             // visible objects need the compoundCModel
             $has_compoundCModel = !empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:compoundCModel'));

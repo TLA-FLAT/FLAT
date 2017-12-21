@@ -51,6 +51,6 @@ class views_handler_my_custom_field extends views_handler_field {
      */
     function render($values) {
 
-        return l('Edit', 'node/' . $values->nid);
+        return l('edit', 'node/' . $values->nid);
     }
 }
