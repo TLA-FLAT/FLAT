@@ -4,6 +4,13 @@ MAINTAINER	Daniel von Rhein <daniel.vonrhein@mpi.nl>
 # Add deposit module to installation
 ADD flat_deposit /var/www/html/flat/sites/all/modules/custom/flat_deposit
 
+# Create external data and metadata directories, error log directory
+RUN mkdir -p /var/www/html/flat/sites/default/files/private/flat_deposit/data &&\
+    mkdir -p /var/www/html/flat/sites/default/files/private/flat_deposit/metadata &&\
+    mkdir -p /app/flat/backend/Ingest_service_log/app/flat/backend/Ingest_service_log &&\
+    chown -R www-data:www-data /var/www/html/flat/sites/default/files/private/flat_deposit &&\
+    chown -R www-data:www-data /app/flat/backend/Ingest_service_log
+
 # add WYSIWYG editor
 RUN cd /var/www/html/flat/sites/all/libraries/ &&\
     wget http://download.cksource.com/CKEditor/CKEditor/CKEditor%203.6.2/ckeditor_3.6.2.tar.gz &&\
@@ -38,9 +45,13 @@ RUN cd /var/www/html/flat/ &&\
     /var/www/composer/vendor/drush/drush/drush -y dl job_scheduler &&\
     /var/www/composer/vendor/drush/drush/drush -y dl token &&\
     /var/www/composer/vendor/drush/drush/drush -y cache-clear all &&\
+    /var/www/composer/vendor/drush/drush/drush -y dl feeds &&\
+    /var/www/composer/vendor/drush/drush/drush -y en feeds &&\
     /var/www/composer/vendor/drush/drush/drush -y dl views  &&\
     /var/www/composer/vendor/drush/drush/drush -y en views  &&\
     /var/www/composer/vendor/drush/drush/drush -y en views_ui &&\
+    /var/www/composer/vendor/drush/drush/drush -y dl views_autorefresh &&\
+    /var/www/composer/vendor/drush/drush/drush -y en views_autorefresh &&\
     # /var/www/composer/vendor/drush/drush/drush en flat_deposit -y &&\
     # enable module manually, otherwise docker build fails due to directories not being present
     supervisorctl stop all &&\
@@ -67,14 +78,16 @@ RUN cd /var/www/html/flat/ &&\
     service supervisor stop &&\
     sleep 1
 
+RUN apt-get update &&\
+    apt-get install -y php-zip php-mbstring
+
 # add owncloud to version
 RUN wget -nv https://download.owncloud.org/download/repositories/stable/Ubuntu_16.04/Release.key -O Release.key &&\
     apt-key add - < Release.key
 
 RUN sh -c "echo 'deb http://download.owncloud.org/download/repositories/stable/Ubuntu_16.04/ /' >> /etc/apt/sources.list.d/owncloud.list" &&\
     apt-get update &&\
-    apt-get install -y owncloud
-
+    apt-get install -y --allow-unauthenticated owncloud-files
 
 RUN /etc/init.d/postgresql start &&\
     su -c "createdb -O fedora owncloud" postgres &&\

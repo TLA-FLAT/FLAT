@@ -178,7 +178,7 @@ class OwnCloud
         } else {
 
             global $user;
-            $datadir =drupal_realpath('external://'. $user->name);
+            $datadir = drupal_realpath('external://'. str_replace('@' ,'_at_' , $user->name));
             $mpoint = "/MPI_Archive_" . $user->name;
             $message = 'Trying to create owncloud user mount';
         }
@@ -228,7 +228,7 @@ class OwnCloud
             $datadir = $config['temp_dir'];
         } else {
             global $user;
-            $datadir =drupal_realpath('external://'. $user->name);
+            $datadir = drupal_realpath('external://'. str_replace('@' ,'_at_' , $user->name));
         }
 
         $res = $this->GetOwncloudMounts();
