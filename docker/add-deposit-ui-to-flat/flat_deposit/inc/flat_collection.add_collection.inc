@@ -16,8 +16,6 @@ function flat_collection_add_form($form, &$form_state, $parent){
         $form_state['selected'] = '';
     }
 
-
-
     // get all available template xml
     form_load_include($form_state, 'inc','flat_deposit','Helpers/CMDI/Cmdi2FormParser');
     form_load_include($form_state, 'php','flat_deposit','Helpers/CMDI/CmdiHandler');
@@ -28,6 +26,9 @@ function flat_collection_add_form($form, &$form_state, $parent){
 
     // Add option to import a external file
     $available_profiles ['Import'] = 'I want to upload a CMDI metadata file';
+
+    $form['#prefix'] = "<div id='flat_collection_add_form_wrapper'>";
+    $form['#suffix'] = "</div>";
 
     global $user;
     $form['owner'] = array(
@@ -81,8 +82,6 @@ function flat_collection_add_form($form, &$form_state, $parent){
         '#required' => FALSE,
     );
 
-
-
     $form['template_container'] = array(
         '#type' => 'container',
         '#tree' => TRUE,
@@ -90,8 +89,6 @@ function flat_collection_add_form($form, &$form_state, $parent){
             'id' => array('template-form'),
         ),
     );
-
-
 
     //**************************************************
     // Get profile specific form and attach to container
@@ -129,6 +126,11 @@ function flat_collection_add_form($form, &$form_state, $parent){
     $form['Submit'] = array(
         '#type' => 'submit',
         '#value' => t('Submit'),
+        '#ajax' => array(
+          'callback' => 'flat_collection_add_form_ajax_handler',
+          'wrapper' => 'flat_collection_add_form_wrapper',
+          'effect' => 'fade',
+          ),
         '#validate' => array('flat_collection_add_form_final_validate'),
     );
 
@@ -145,14 +147,16 @@ function flat_collection_add_form($form, &$form_state, $parent){
     return $form;
 }
 
-
+function flat_collection_add_form_ajax_handler (&$form, &$form_state){
+    return $form;
+}
 
 function flat_collection_add_form_final_validate($form, &$form_state){
 
     // don't run validation if other validation has failed
     if (!empty(form_get_errors())) {
 
-        form_set_error('debug','Other validations have failed');
+        ('debug','Other validations have failed');
         return $form;
     }
 
@@ -281,11 +285,16 @@ function flat_collection_add_form_submit($form, &$form_state){
     $uid = $owner->uid;
     $label = $form_state['values']['data']['label'];
     $fid = $form_state['values']['data']['fid'];
-
+    $target = 'islandora/object/' . $form_state['values']['data'][ 'parentFid'];
     create_collection_node($label, $uid, $fid);
 
     drupal_set_message('New collection item has been created');
-    $form_state['redirect']= 'islandora/object/' . $form_state['values']['data'][ 'parentFid'];
+    ctools_include('ajax');
+    ctools_add_js('ajax-responder');
+    $commands[] = ctools_ajax_command_redirect($target);
+    print ajax_render($commands);
+    exit;
+    //$form_state['redirect']= 'islandora/object/' . $form_state['values']['data'][ 'parentFid'];
 
 }
 

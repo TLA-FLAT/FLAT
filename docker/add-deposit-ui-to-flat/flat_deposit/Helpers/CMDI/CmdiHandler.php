@@ -123,6 +123,39 @@ class CmdiHandler
 
     }
 
+    // function to get CMDI profile from CMDI datastream
+
+    static public function getCmdiProfileFromDatastream($fid){
+      $cmdi_xml = getCmdiFromDatastream($fid);
+      if $cmdi_xml {
+        $cmdi_profile_id = $cmdi_xml->Header->MdProfile;
+        if $cmdi_profile_id {
+          return $cmdi_profile_id;
+          }
+          return false;
+        }
+      return false;
+    }
+
+    // determine CMDI profile type as defined in general settings
+
+    static public function getCmdiProfileType($fid){
+      $profile_id = getCmdiProfileFromDatastream($fid);
+      $collection_profiles = variable_get('flat_deposit_cmdi_profiles')['collection_profile_ids'];
+      $collection_profile_values = explode(',',$collection_profiles);
+      $bundle_profiles = variable_get('flat_deposit_cmdi_profiles')['bundle_profile_ids'];
+      $bundle_profile_values = explode(',',$bundle_profiles);
+      if (in_array($profile_id, $collection_profile_values)) {
+        return "collection";
+      }
+      else if (in_array($profile_id, $bundle_profile_values)) {
+        return "bundle";
+      }
+      else {
+        return false;
+      }
+    }
+
 
     /**
      * Performs the generation of a drupal form on basis of a specified profile

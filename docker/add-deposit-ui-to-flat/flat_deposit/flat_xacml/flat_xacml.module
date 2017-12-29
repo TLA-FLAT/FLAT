@@ -16,38 +16,39 @@ function flat_xacml_islandora_object_access($op, $object, $user) {
             break;
         }
 
-
         $user_name = $user->name;
 
         $user_roles = $user->roles;
 
-
-        // return true for administrators
-        if (in_array('administrator', $user_roles)){
+        // administrator and manager roles should always have access
+        if (in_array('administrator', $user_roles) || in_array('manager', $user_roles)) {
             $has_access = TRUE;
-            break;}
+            break;
+        }
 
+        // object owner should always have access
+        $owners = explode(',',$object->owner);
+        if (in_array($user_name, $owners)){
+          $has_access = TRUE;
+          break;
+        }
 
-
+        // check if user has manager permissions in XACML policy, either as user or by role
         $id = "POLICY";
         $predicate = 'isManageableByUser';
         $manageable_by_users = [];
 
-
         foreach ($object->relationships->get(ISLANDORA_RELS_EXT_URI, $predicate) as $entry){
             $manageable_by_users [] = $entry['object']['value'];
-
         }
 
         $is_manageable_user = in_array($user_name, $manageable_by_users);
-
 
         $predicate = 'isManageableByRole';
         $manageable_by_roles = [];
 
         foreach ($object->relationships->get(ISLANDORA_RELS_EXT_URI, $predicate) as $entry){
             $manageable_by_roles [] = $entry['object']['value'];
-
         }
 
         $has_manageable_role = !empty(array_intersect($manageable_by_roles, $user_roles));
@@ -58,12 +59,7 @@ function flat_xacml_islandora_object_access($op, $object, $user) {
         default:
             $has_access = NULL;
             break;
-
-
-
     }
     return $has_access;
-
-
 
 }

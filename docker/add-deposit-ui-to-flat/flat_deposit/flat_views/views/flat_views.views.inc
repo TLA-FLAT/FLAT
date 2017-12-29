@@ -40,8 +40,8 @@ function flat_views_views_pre_render(&$view) {
 #        krumo($view->result);
         foreach ($view->result as $key => $result) {
 
-            $val = $result->field_data_flat_fid_flat_fid_value;
-            $link = l('link to archived collection', 'islandora/object/' . rawurlencode($val));
+            $val = $result->field_flat_flat_fid['0']['raw']['value'];
+            $link = l('link', 'islandora/object/' . rawurlencode($val));
             $result->field_flat_flat_fid[0]['rendered']['#markup'] = $link;
         }
     }

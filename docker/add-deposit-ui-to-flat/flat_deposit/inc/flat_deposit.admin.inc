@@ -47,6 +47,32 @@ function flat_deposit_admin_form($form, &$form_state)
         '#required' => TRUE,
     );
 
+    // CMDI profiles
+    $form['cmdi_profiles'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('CMDI profile settings'),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+        '#tree' => TRUE,
+    );
+
+    $profiles = variable_get('flat_deposit_cmdi_profiles');
+
+    $form['cmdi_profiles']['collection_profile_ids'] = array (
+        '#type' => 'textfield',
+        '#title' => t('Collection CMDI profile IDs'),
+        '#description' => t('CMDI profiles that should be treated as collections'),
+        '#default_value' => $profiles['collection_profiles'],
+        '#required' => TRUE,
+    );
+
+    $form['cmdi_profiles']['bundle_profile_ids'] = array (
+        '#type' => 'textfield',
+        '#title' => t('Bundle CMDI profile IDs'),
+        '#description' => t('CMDI profiles that should be treated as bundles'),
+        '#default_value' => $profiles['bundle_profiles'],
+        '#required' => TRUE,
+    );
 
     // INGEST SERVICE
     $form['ingest_service'] = array(
