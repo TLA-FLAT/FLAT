@@ -24,8 +24,6 @@
 
 	<xsl:param name="repository" select="'http://flat.example.com/'"/>
 
-	<xsl:param name="create-cmd-object" select="true()"/>
-
 	<xsl:param name="collections-map">
 		<map/>
 	</xsl:param>
@@ -409,180 +407,78 @@
 				</foxml:datastreamVersion>
 			</foxml:datastream>
 			<!-- Metadata: CMD -->
-			<xsl:choose>
-				<xsl:when test="$create-cmd-object">
-					<xsl:variable name="cmdID" select="cmd:lat('lat:', concat($pid, '-CMD'))"/>
-					<xsl:variable name="cmdFOX" select="concat($fox-base, '/', replace($cmdID, '[^a-zA-Z0-9]', '_'), '.xml')"/>
+			<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="CMD" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
+				<foxml:datastreamVersion ID="CMD.0" FORMAT_URI="{/cmd:CMD/@xsii:schemaLocation}" MIMETYPE="application/x-cmdi+xml">
+					<xsl:variable name="label" select="($dc//dc:title[normalize-space() != ''])[1]" xmlns:dc="http://purl.org/dc/elements/1.1/"/>
 					<xsl:choose>
-						<xsl:when test="not(doc-available($cmdFOX))">
-							<xsl:message use-when="$debug">DBG: creating CMD FOX[<xsl:value-of select="$cmdFOX"/>]</xsl:message>
-							<xsl:result-document href="{$cmdFOX}">
-								<foxml:digitalObject VERSION="1.1" PID="{$cmdID}" xmlns:xsii="http://www.w3.org/2001/XMLSchema-instance" xsii:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/definitions/1/0/foxml1-1.xsd">
-									<xsl:comment>
-									<xsl:text>Source: </xsl:text>
-									<xsl:value-of select="base-uri()"/>
-								</xsl:comment>
-									<foxml:objectProperties>
-										<!-- [A]ctive state -->
-										<foxml:property NAME="info:fedora/fedora-system:def/model#state" VALUE="A"/>
-										<!-- take the first title found in the Dublin Core -->
-										<foxml:property NAME="info:fedora/fedora-system:def/model#label">
-											<xsl:variable name="label" select="($dc//dc:title[normalize-space() != ''])[1]" xmlns:dc="http://purl.org/dc/elements/1.1/"/>
-											<xsl:choose>
-												<xsl:when test="exists($label)">
-													<xsl:attribute name="VALUE" select="substring($label, 1, 255)"/>
-												</xsl:when>
-												<xsl:otherwise>
-													<xsl:attribute name="VALUE" select="$pid"/>
-												</xsl:otherwise>
-											</xsl:choose>
-										</foxml:property>
-									</foxml:objectProperties>
-									<!-- Metadata: Dublin Core -->
-									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="DC" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
-										<foxml:datastreamVersion ID="DC.0" FORMAT_URI="http://www.openarchives.org/OAI/2.0/oai_dc/" MIMETYPE="text/xml" LABEL="Dublin Core Record for this object">
-											<foxml:xmlContent>
-												<xsl:copy-of select="$dc"/>
-											</foxml:xmlContent>
-										</foxml:datastreamVersion>
-									</foxml:datastream>
-									<!-- Relations: RELS-EXT -->
-									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="RELS-EXT" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
-										<foxml:datastreamVersion ID="RELS-EXT.0" LABEL="RDF Statements about this object" MIMETYPE="text/xml">
-											<foxml:xmlContent>
-												<rdf:RDF xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:fedora-model="info:fedora/fedora-system:def/model#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:islandora="http://islandora.ca/ontology/relsext#">
-													<rdf:Description rdf:about="info:fedora/{$cmdID}">
-														<!-- OAI -->
-														<xsl:if test="sx:evaluate($rec, $oai-include-eval, $NS)">
-															<oai:itemID xmlns="http://www.openarchives.org/OAI/2.0/">
-																<xsl:value-of select="concat('oai:', replace(replace($repository,'^http(s)?://',''),'/','.'), ':', $cmdID)"/>
-															</oai:itemID>
-														</xsl:if>
-														<!-- relationship to the compound -->
-														<fedora:isConstituentOf rdf:resource="info:fedora/{$fid}"/>
-														<!-- make it the first object in the compound -->
-														<xsl:element name="{concat('islandora:isSequenceNumberOf',replace($fid,':','_'))}">
-															<xsl:text>1</xsl:text>
-														</xsl:element>
-														<!-- CMD object has to become a member of the collections the compound is a member of -->
-														<xsl:for-each select="$parents">
-															<fedora:isMemberOfCollection rdf:resource="info:fedora/{current()}"/>
-														</xsl:for-each>
-														<!-- a CMD object uses the CMDI content model -->
-														<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_cmdiCModel"/>
-													</rdf:Description>
-												</rdf:RDF>
-											</foxml:xmlContent>
-										</foxml:datastreamVersion>
-									</foxml:datastream>
-									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="CMD" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
-										<foxml:datastreamVersion ID="CMD.0" FORMAT_URI="{/cmd:CMD/@xsii:schemaLocation}" MIMETYPE="application/x-cmdi+xml">
-											<xsl:variable name="label" select="($dc//dc:title[normalize-space() != ''])[1]" xmlns:dc="http://purl.org/dc/elements/1.1/"/>
-											<xsl:choose>
-												<xsl:when test="exists($label)">
-													<xsl:attribute name="LABEL" select="substring(replace(replace(normalize-unicode($label,'NFKD'),'\P{IsBasicLatin}','_'),'\s+','_'),1,255)"/>
-												</xsl:when>
-												<xsl:otherwise>
-													<xsl:attribute name="LABEL" select="'CMD Record for this object'"/>
-												</xsl:otherwise>
-											</xsl:choose>
-											<foxml:xmlContent>
-												<xsl:apply-templates mode="cmd">
-													<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
-													<xsl:with-param name="fid" select="$fid" tunnel="yes"/>
-													<xsl:with-param name="base" select="$base" tunnel="yes"/>
-												</xsl:apply-templates>
-											</foxml:xmlContent>
-										</foxml:datastreamVersion>
-									</foxml:datastream>
-									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="TN" STATE="A" CONTROL_GROUP="E" VERSIONABLE="false">
-										<foxml:datastreamVersion ID="TN.0" LABEL="icon.png" MIMETYPE="image/png">
-											<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/metadata.png"/>
-										</foxml:datastreamVersion>
-									</foxml:datastream>
-									<!-- Metadata: other -->
-									<xsl:apply-templates mode="other">
-										<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
-										<xsl:with-param name="fid" select="$fid" tunnel="yes"/>
-										<xsl:with-param name="base" select="$base" tunnel="yes"/>
-									</xsl:apply-templates>
-								</foxml:digitalObject>
-							</xsl:result-document>
+						<xsl:when test="exists($label)">
+							<xsl:attribute name="LABEL" select="substring(replace(replace(normalize-unicode($label,'NFKD'),'\P{IsBasicLatin}','_'),'\s+','_'),1,255)"/>
 						</xsl:when>
 						<xsl:otherwise>
-							<xsl:message>WRN: skipped creating CMD FOX[<xsl:value-of select="$cmdFOX"/>], it already exists!</xsl:message>
+							<xsl:attribute name="LABEL" select="'CMD Record for this object'"/>
 						</xsl:otherwise>
 					</xsl:choose>
-				</xsl:when>
-				<xsl:otherwise>
-					<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="CMD" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
-						<foxml:datastreamVersion ID="CMD.0" FORMAT_URI="{/cmd:CMD/@xsii:schemaLocation}" MIMETYPE="application/x-cmdi+xml">
-							<xsl:variable name="label" select="($dc//dc:title[normalize-space() != ''])[1]" xmlns:dc="http://purl.org/dc/elements/1.1/"/>
-							<xsl:choose>
-								<xsl:when test="exists($label)">
-									<xsl:attribute name="LABEL" select="substring(replace(replace(normalize-unicode($label,'NFKD'),'\P{IsBasicLatin}','_'),'\s+','_'),1,255)"/>
-								</xsl:when>
-								<xsl:otherwise>
-									<xsl:attribute name="LABEL" select="'CMD Record for this object'"/>
-								</xsl:otherwise>
-							</xsl:choose>
-							<foxml:xmlContent>
-								<xsl:apply-templates mode="cmd">
-									<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
-									<xsl:with-param name="fid" select="$fid" tunnel="yes"/>
-									<xsl:with-param name="base" select="$base" tunnel="yes"/>
-								</xsl:apply-templates>
-							</foxml:xmlContent>
-						</foxml:datastreamVersion>
-					</foxml:datastream>
-					<!-- Metadata: other -->
-					<xsl:apply-templates mode="other">
-						<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
-						<xsl:with-param name="fid" select="$fid" tunnel="yes"/>
-						<xsl:with-param name="base" select="$base" tunnel="yes"/>
-					</xsl:apply-templates>
-				</xsl:otherwise>
-			</xsl:choose>
+					<foxml:xmlContent>
+						<xsl:apply-templates mode="cmd">
+							<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
+							<xsl:with-param name="fid" select="$fid" tunnel="yes"/>
+							<xsl:with-param name="base" select="$base" tunnel="yes"/>
+						</xsl:apply-templates>
+					</foxml:xmlContent>
+				</foxml:datastreamVersion>
+			</foxml:datastream>
+			<!-- Metadata: other -->
+			<xsl:apply-templates mode="other">
+				<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
+				<xsl:with-param name="fid" select="$fid" tunnel="yes"/>
+				<xsl:with-param name="base" select="$base" tunnel="yes"/>
+			</xsl:apply-templates>
 			<!-- Relations: RELS-EXT -->
 			<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="RELS-EXT" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
 				<foxml:datastreamVersion ID="RELS-EXT.0" LABEL="RDF Statements about this object" MIMETYPE="text/xml">
 					<foxml:xmlContent>
-						<rdf:RDF xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:fedora-model="info:fedora/fedora-system:def/model#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+						<rdf:RDF xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:fedora-model="info:fedora/fedora-system:def/model#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:islandora="http://islandora.ca/ontology/relsext#">
 							<rdf:Description rdf:about="info:fedora/{$fid}">
 								<!-- relationships to (parent) collections -->
 								<xsl:for-each select="$parents">
 									<fedora:isMemberOfCollection rdf:resource="info:fedora/{current()}"/>
 								</xsl:for-each>
-								<!-- if the CMD is a separate object and/or the CMD has references to resources it's a compound -->
-								<xsl:if test="sx:evaluate($rec, $always-compound-eval, $NS) or $create-cmd-object or exists(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType = 'Resource'])">
+								<!-- if the CMD has references to resources it's a compound, or we always want compounds -->
+								<xsl:if test="sx:evaluate($rec, $always-compound-eval, $NS) or exists(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType = 'Resource'])">
 									<fedora-model:hasModel rdf:resource="info:fedora/islandora:compoundCModel"/>
 								</xsl:if>
-								<!-- if the CMD has references to other metadata files it's a collection -->
+								<!-- if the CMD has references to other metadata files it's a collection, or we always want collections -->
 								<xsl:if test="sx:evaluate($rec, $always-collection-eval, $NS) or exists(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType = 'Metadata']) or exists($rels-doc/key('rels-from', ($pid,cmd:hdl($base)))[type = 'Metadata'])">
 									<fedora-model:hasModel rdf:resource="info:fedora/islandora:collectionCModel"/>
 								</xsl:if>
-								<!-- if the CMD is part of the compound FOXML it uses the cmdi content model and is member of the cmdi collection -->
-								<xsl:if test="not($create-cmd-object)">
-									<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_cmdiCModel"/>
-									<!-- OAI -->
-									<xsl:if test="sx:evaluate($rec, $oai-include-eval, $NS)">
+								<!-- the CMD is part of the compound FOXML so it uses the cmdi content model -->
+								<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_cmdiCModel"/>
+								<!-- add POLICY RELS-EXT statements -->
+								<xsl:variable name="rels">
+									<xsl:for-each select="zero-or-one(cmd:firstFile($policies-dir, (concat(replace($fid, '[^a-zA-Z0-9]', '_'), '.RELS-EXT.xml')), $base))">
+										<xsl:variable name="policy-rels" select="."/>
+										<xsl:message use-when="$debug">
+											<xsl:text>DBG: CMD FOX[</xsl:text>
+											<xsl:value-of select="$fid"/>
+											<xsl:text>] will additionaly use access policy RELS-EXT statements[</xsl:text>
+											<xsl:value-of select="$policy-rels"/>
+											<xsl:text>]!</xsl:text>
+										</xsl:message>
+										<xsl:copy-of select="doc($policy-rels)/rdf:RDF/rdf:Description/*"/>
+									</xsl:for-each>
+								</xsl:variable>
+								<xsl:copy-of select="$rels"/>
+								<!-- OAI -->
+								<xsl:choose>
+									<xsl:when test="exists(($rels/islandora:isViewableByUser,$rels/islandora:isViewableByRole))">
+										<!-- is there is an islandora:isViewableBy predicate the CMD is never public -->
+									</xsl:when>
+									<xsl:when test="sx:evaluate($rec, $oai-include-eval, $NS)">
 										<oai:itemID xmlns="http://www.openarchives.org/OAI/2.0/">
 											<xsl:value-of select="concat('oai:', replace(replace($repository,'^http(s)?://',''),'/','.'), ':', $fid)"/>
 										</oai:itemID>
-									</xsl:if>
-								</xsl:if>
-								<!-- add POLICY RELS-EXT statements -->
-								<xsl:for-each select="zero-or-one(cmd:firstFile($policies-dir, (concat(replace($fid, '[^a-zA-Z0-9]', '_'), '.RELS-EXT.xml')), $base))">
-									<xsl:variable name="policy-rels" select="."/>
-									<xsl:message use-when="$debug">
-										<xsl:text>DBG: CMD FOX[</xsl:text>
-										<xsl:value-of select="$fid"/>
-										<xsl:text>] will additionaly use access policy RELS-EXT statements[</xsl:text>
-										<xsl:value-of select="$policy-rels"/>
-										<xsl:text>]!</xsl:text>
-									</xsl:message>
-									<xsl:copy-of select="doc($policy-rels)/rdf:RDF/rdf:Description/*"/>
-								</xsl:for-each>
+									</xsl:when>
+								</xsl:choose>
 							</rdf:Description>
 						</rdf:RDF>
 					</foxml:xmlContent>
