@@ -224,12 +224,13 @@ RUN mkdir -p /tmp/islandora &&\
 	wget "https://github.com/Islandora/islandora/archive/7.x-1.10.tar.gz" &&\
 	tar -xf 7.x-1.10.tar.gz -C /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
-	wget "https://github.com/islandora/islandora_solution_pack_collection/archive/7.x-1.10.zip" &&\
-	mv 7.x-1.10.zip islandora_solution_pack_collection-7.x-1.10.zip &&\
+	wget -O islandora_solution_pack_collection-7.x-1.10.zip "https://github.com/islandora/islandora_solution_pack_collection/archive/7.x-1.10.zip" &&\
 	unzip islandora_solution_pack_collection-7.x-1.10.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
-	wget "https://github.com/Islandora/islandora_solution_pack_compound/archive/7.x-1.10.zip" &&\
-	mv 7.x-1.10.zip islandora_solution_pack_compound-7.x-1.10.zip &&\
+	wget -O islandora_xacml_editor-7.x-1.10.zip "https://github.com/Islandora/islandora_xacml_editor/archive/7.x-1.10.zip" &&\
+	unzip islandora_xacml_editor-7.x-1.10.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
+	cd /tmp/islandora &&\
+	wget -O islandora_solution_pack_compound-7.x-1.10.zip "https://github.com/Islandora/islandora_solution_pack_compound/archive/7.x-1.10.zip" &&\
 	unzip islandora_solution_pack_compound-7.x-1.10.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
     sed -i 's|function islandora_compound_object_islandora_compoundCModel_islandora_view_object|function islandora_compound_object_islandora_compoundCModel_islandora_view_object_DISABLED_BY_FLAT|g' /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora_solution_pack_compound-7.x-1.10/islandora_compound_object.module
 # overwrites the collection object view, so we get file details
@@ -269,6 +270,7 @@ RUN service supervisor start &&\
 	cd /var/www/html/$FLAT_NAME/ &&\
 	/var/www/composer/vendor/drush/drush/drush vset islandora_base_url http://localhost:8080/fedora &&\
 	/var/www/composer/vendor/drush/drush/drush en islandora -y &&\
+	/var/www/composer/vendor/drush/drush/drush en islandora_xacml_editor -y &&\
 	/var/www/composer/vendor/drush/drush/drush en islandora_basic_collection -y &&\
 	/var/www/composer/vendor/drush/drush/drush en islandora_compound_object -y &&\
 	/var/www/composer/vendor/drush/drush/drush en islandora_cmdi -y &&\
