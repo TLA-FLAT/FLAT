@@ -455,7 +455,7 @@
 								<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_cmdiCModel"/>
 								<!-- add POLICY RELS-EXT statements -->
 								<xsl:variable name="rels">
-									<xsl:for-each select="zero-or-one(cmd:firstFile($policies-dir, (concat(replace($fid, '[^a-zA-Z0-9]', '_'), '.RELS-EXT.xml')), $base))">
+									<xsl:for-each select="zero-or-one(cmd:firstFile($policies-dir, (concat(replace($fid, '[^a-zA-Z0-9]', '_'), '.RELS-EXT.xml'),'default-cmd-policy.RELS-EXT.xml','default-policy.RELS-EXT.xml'), $base))">
 										<xsl:variable name="policy-rels" select="."/>
 										<xsl:message use-when="$debug">
 											<xsl:text>DBG: CMD FOX[</xsl:text>
@@ -469,16 +469,11 @@
 								</xsl:variable>
 								<xsl:copy-of select="$rels"/>
 								<!-- OAI -->
-								<xsl:choose>
-									<xsl:when test="exists(($rels/islandora:isViewableByUser,$rels/islandora:isViewableByRole))">
-										<!-- is there is an islandora:isViewableBy predicate the CMD is never public -->
-									</xsl:when>
-									<xsl:when test="sx:evaluate($rec, $oai-include-eval, $NS)">
-										<oai:itemID xmlns="http://www.openarchives.org/OAI/2.0/">
-											<xsl:value-of select="concat('oai:', replace(replace($repository,'^http(s)?://',''),'/','.'), ':', $fid)"/>
-										</oai:itemID>
-									</xsl:when>
-								</xsl:choose>
+								<xsl:if test="($rels/islandora:isViewableByRole='anonymous user' or empty(($rels/islandora:isViewableByUser,$rels/islandora:isViewableByRole))) and sx:evaluate($rec, $oai-include-eval, $NS)">
+									<oai:itemID xmlns="http://www.openarchives.org/OAI/2.0/">
+										<xsl:value-of select="concat('oai:', replace(replace($repository,'^http(s)?://',''),'/','.'), ':', $fid)"/>
+									</oai:itemID>
+								</xsl:if>
 							</rdf:Description>
 						</rdf:RDF>
 					</foxml:xmlContent>
@@ -760,10 +755,23 @@
 													<xsl:for-each select="$parents">
 														<fedora:isMemberOfCollection rdf:resource="info:fedora/{current()}"/>
 													</xsl:for-each>
+													<!-- content model -->
 													<xsl:apply-templates select="current()" mode="cmodel">
 														<xsl:with-param name="resURI" select="$resURI"/>
 														<xsl:with-param name="resMIME" select="$resMIME"/>
 													</xsl:apply-templates>
+													<!-- add POLICY RELS-EXT statements -->
+													<xsl:for-each select="zero-or-one(cmd:firstFile($policies-dir, (concat(replace($resID, '[^a-zA-Z0-9]', '_'), '.RELS-EXT.xml'),'default-resource-policy.RELS-EXT.xml','default-policy.RELS-EXT.xml'), $base))">
+														<xsl:variable name="policy-rels" select="."/>
+														<xsl:message use-when="$debug">
+															<xsl:text>DBG: FOX[</xsl:text>
+															<xsl:value-of select="$fid"/>
+															<xsl:text>] will additionaly use access policy RELS-EXT statements[</xsl:text>
+															<xsl:value-of select="$policy-rels"/>
+															<xsl:text>]!</xsl:text>
+														</xsl:message>
+														<xsl:copy-of select="doc($policy-rels)/rdf:RDF/rdf:Description/*"/>
+													</xsl:for-each>
 												</rdf:Description>
 											</rdf:RDF>
 										</foxml:xmlContent>
