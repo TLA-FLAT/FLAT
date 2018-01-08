@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rdf:RDF xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:fedora-model="info:fedora/fedora-system:def/model#" xmlns:islandora="http://islandora.ca/ontology/relsext#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
     <rdf:Description rdf:about="info:fedora/lat:123_abc">
-        <islandora:isViewableByRole>anonymous user</islandora:isViewableByRole>
+        <!--<islandora:isViewableByRole>anonymous user</islandora:isViewableByRole>-->
         <islandora:isManageableByUser>john@example.com</islandora:isManageableByUser>
         <islandora:isManageableByRole>administrator</islandora:isManageableByRole>
     </rdf:Description>
