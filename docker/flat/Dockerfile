@@ -329,7 +329,8 @@ ADD flat/scripts/* /app/flat/bin/
 RUN chmod +x /app/flat/bin/*.sh &&\
 	mv /app/flat/bin/do-*.sh /app/flat/
 
-ADD flat/policies /app/flat/policies
+RUN mkdir -p /app/flat/deposit
+ADD flat/policies /app/flat/deposit/policies
 
 RUN mkdir -p $FLAT_ICON_DIR
 ADD flat/icons $FLAT_ICON_DIR

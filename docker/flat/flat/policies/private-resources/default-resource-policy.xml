@@ -11,7 +11,7 @@
 			<AnyAction/>
 		</Actions>
 	</Target>
-	<Rule RuleId="permit-access-functions" Effect="Permit">
+	<Rule RuleId="deny-access-functions" Effect="Deny">
 		<Target>
 			<Subjects>
 				<AnySubject/>
@@ -40,6 +40,14 @@
 				</Action>
 			</Actions>
 		</Target>
+		<Condition FunctionId="urn:oasis:names:tc:xacml:1.0:function:not">
+			<Apply FunctionId="urn:oasis:names:tc:xacml:1.0:function:string-at-least-one-member-of">
+				<SubjectAttributeDesignator DataType="http://www.w3.org/2001/XMLSchema#string" MustBePresent="false" AttributeId="fedoraRole"/>
+				<Apply FunctionId="urn:oasis:names:tc:xacml:1.0:function:string-bag">
+					<AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">administrator</AttributeValue>
+				</Apply>
+			</Apply>
+		</Condition>
 	</Rule>
 	<Rule RuleId="deny-management-functions" Effect="Deny">
 		<Target>

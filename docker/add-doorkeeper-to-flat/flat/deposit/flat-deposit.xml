@@ -64,6 +64,10 @@
             <parameter name="policy" value="{$work}/metadata/policy.n3"/>
             <parameter name="dir" value="{$work}/acl"/>
         </action>
+        <action class="nl.mpi.tla.flat.deposit.action.ACLUpdate">
+            <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
+            <parameter name="dir" value="{$work}/acl"/>
+        </action>
         <action class="nl.mpi.tla.flat.deposit.action.FOXCreate">
             <parameter name="owner" value="{$work}/acl/owner.xml"/>
             <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
@@ -133,9 +137,12 @@
         -->        
     </main>
     <exception>
-        <!--
-        <action name="log" class="nl.mpi.tla.flat.deposit.action.Log"/>
-        -->
+        <!--<action class="nl.mpi.tla.flat.deposit.action.Mail">
+            <parameter name="config" value="{$base}/policies/mail-config.xml"/>
+            <parameter name="subject" value="FLAT: failed deposit for SIP[{$sip}]"/>
+            <parameter name="template" value="{$base}/policies/mail-exception.xsl"/>
+            <parameter name="tmpl-bag" value="{$bag}"/>
+        </action>-->
     </exception>
     <final>
         <action name="status" class="nl.mpi.tla.flat.deposit.action.UpdateSwordStatus">
