@@ -11,7 +11,7 @@ RUN service supervisor stop
 # install second tomcat instance
 RUN mkdir /tmp/tomcat &&\
     cd /tmp/tomcat &&\
-    wget http://apache.mirror1.spango.com/tomcat/tomcat-7/v7.0.82/bin/apache-tomcat-7.0.82.tar.gz &&\
+    wget https://archive.apache.org/dist/tomcat/tomcat-7/v7.0.82/bin/apache-tomcat-7.0.82.tar.gz &&\
     tar xf apache-tomcat-7.0.82.tar.gz &&\
     mv apache-tomcat-7.0.82 /usr/share/tomcat-blzg
 
