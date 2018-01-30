@@ -172,10 +172,10 @@
 				<xsl:variable name="file" select="."/>
 				<xsl:for-each select="$paths">
 					<xsl:variable name="path" select="."/>
-					<xsl:variable name="uri" select="resolve-uri(concat($path, '/',$file),$base)"/>
-					<xsl:message use-when="$debug">DBG: firstFile(...): try[<xsl:value-of select="$uri"/>]</xsl:message>
-					<xsl:if test="sx:fileExists($uri)">
-						<xsl:sequence select="$uri"/>
+					<xsl:message use-when="$debug">DBG: firstFile(...): try[<xsl:value-of select="$path"/>][<xsl:value-of select="$file"/>]</xsl:message>
+					<xsl:variable name="fp" select="sx:findFirstFile($path,$file)"/>
+					<xsl:if test="exists($fp)">
+						<xsl:sequence select="xs:anyURI(concat('file:',$fp))"/>
 					</xsl:if>
 				</xsl:for-each>
 			</xsl:for-each>
