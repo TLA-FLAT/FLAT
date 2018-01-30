@@ -331,6 +331,8 @@ RUN chmod +x /app/flat/bin/*.sh &&\
 
 RUN mkdir -p /app/flat/deposit
 ADD flat/policies /app/flat/deposit/policies
+ADD flat/policies-private-resources /app/flat/deposit/policies-private-resources
+ADD flat/policies /app/flat/deposit/policies
 
 RUN mkdir -p $FLAT_ICON_DIR
 ADD flat/icons $FLAT_ICON_DIR
