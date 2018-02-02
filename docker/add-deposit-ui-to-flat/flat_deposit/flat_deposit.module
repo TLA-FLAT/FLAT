@@ -1843,9 +1843,14 @@ function flat_deposit_islandora_object_access($op, $object, $user) {
             $has_compoundCModel = !empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:compoundCModel'));
             $has_cmdi_content_model = !empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:sp_cmdiCModel'));
 
+
+
             $has_access = ($has_compoundCModel AND $has_cmdi_content_model) ? TRUE: false;
 
             break;
+
+
+
         default:
             $has_access = NULL;
             break;
@@ -1920,7 +1925,6 @@ function flat_deposit_islandora_collectionCModel_islandora_view_object_alter(&$o
 
     if (isset($rendered['wrapper']['metadata']['#markup'])  AND in_array('islandora:sp_cmdiCModel',$object_content_models)){
 
-        #krumo($rendered['wrapper']['metadata']['#markup']);
         $rendered['wrapper']['metadata']['#markup'] .= drupal_render($markup);
 
     }

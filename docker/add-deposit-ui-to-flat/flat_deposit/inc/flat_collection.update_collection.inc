@@ -2,7 +2,16 @@
 
 function flat_collection_update_form($form, &$form_state, $fedora_object){
 
-    $profile = 'MPI_Collection';
+    module_load_include('php', 'flat_deposit', 'Helpers/CMDI/CmdiHandler');
+    $ds = islandora_datastream_load("CMD",$fedora_object->id);
+    $inheritedData = simplexml_load_string($ds->content,'CmdiHandler');
+
+    if ($inheritedData){
+        $profile = $inheritedData->getNameById();
+    } else {
+        $profile= null;
+    }
+
     drupal_set_title(t('Update Collection Metadata'));
 
     // Set selected profile as this is updated on every AJAX request
@@ -18,14 +27,9 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
     }
 
 
-
-    // get all available template xml
-    form_load_include($form_state, 'inc','flat_deposit','Helpers/CMDI/Cmdi2FormParser');
-    form_load_include($form_state, 'php','flat_deposit','Helpers/CMDI/CmdiHandler');
-    $available_profiles = CmdiHandler::getAvailableTemplates('flat_collection');
-
-    // set '$load_profile_specific_form' which will trigger loading of container with form elements
-    #$load_profile_specific_form = array_search($form_state['selected'], $available_profiles);
+    // get all available form template files
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
+    $available_profiles = FormBuilder::getAvailableTemplates('flat_collection');
 
     $form['#prefix'] = "<div id='flat_collection_update_form_wrapper'>";
     $form['#suffix'] = "</div>";
@@ -43,19 +47,8 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
     if (!user_access('admin collection')){$form['owner']['#disabled'] = TRUE; }
 
     $form['trigger']['select_profile_name'] = array(
-        '#title' => t('Which metadata profile do you want to use?'),
-        '#type' => 'select',
-        '#empty_option' => '-- Select --',
-        '#required' => TRUE,
-        '#disabled' => TRUE,
-        '#options' => $available_profiles,
-        '#default_value' => $profile,
-        '#ajax' => array(
-            'callback' => 'select_profile_name_ajax_callback',
-            'wrapper' => 'template-form',
-            'method' => 'replace',
-            'effect' => 'fade',
-        ),
+        '#type' => 'value',
+        '#value' => $profile,
     );
 
     $form['select_policy'] = array(
@@ -82,73 +75,61 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
         ),
     );
 
-    //**************************************************
-    // Get profile specific form and attach to container
-    //**************************************************
-
-    // load form element container if profile with available template is chosen
-
-    $fields = CmdiHandler::generateDrupalForm($profile);
-
-
-    // Fill form field with inherited data and add form fields for fields with multivals
-
-    $fObj = $fedora_object;
-
-    $cmdi = CmdiHandler::getCmdiFromDatastream($fObj->id);
-
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/Cmdi2FormParser');
-    $parser = new Cmdi2FormParser;
-    try {
-        $default_values = $parser->getDefaultValuesFromCmdi($profile, $cmdi, true);
-
-        CmdiHandler::createInheritedMultivalForm($fields, $default_values, $form_state);
-
-        $formPlusDefaults = $parser->array_merge_recursive_new($fields, $default_values);
-        $form['template_container']['elements'] = $formPlusDefaults;
-
-
-    } catch (Cmdi2FormParserException $exception) {
-
-        drupal_set_message($exception->getMessage(), 'warning');
-        return $form;
-    }
-
-
-    // count button presses per field
-    CmdiHandler::aggregateClickedButtons($form_state);
-
-    //
-    if(isset($form_state['count'])){
-
-        $allFields = CmdiHandler::addMultivalElements($formPlusDefaults, $form_state['count'] );
-        $form['template_container']['elements'] = $allFields;
-
-    }
-
-    // check if everything worked as expected
-    if (!is_array($form['template_container']['elements'])){
-
-        drupal_set_message('Unable to generate cmdi form based on profile','warning');
-
-    }
-
     // attach hidden data
-    $form_state['extra_data'] =  array(
-        'fid' => $fedora_object->id,
-        'profile' => $profile,
+    $form['data'] = array(
+        '#type' => 'value',
+        '#value' => array(
+            'parentFid' => $fedora_object->id,
+        ),
     );
 
     $form['Submit'] = array(
         '#type' => 'submit',
         '#value' => t('Submit'),
         '#ajax' => array(
-          'callback' => 'flat_collection_update_form_ajax_handler',
-          'wrapper' => 'flat_collection_update_form_wrapper',
-          'effect' => 'fade',
-          ),
+            'callback' => 'flat_collection_update_form_ajax_handler',
+            'wrapper' => 'flat_collection_update_form_wrapper',
+            'effect' => 'fade',
+        ),
         '#validate' => array('flat_collection_update_form_final_validate'),
     );
+
+
+    //********************************************************************
+    // Generate profile specific form render array and attach to container
+    //********************************************************************
+
+    if (!$profile) {
+
+        drupal_set_message('Online editing of the metadata of this collection is not supported');
+        $form['Submit']['#disabled'] = TRUE;
+
+    } else {
+        // Load form builder app
+        $formBuilder = new FormBuilder();
+
+        // count button presses per field
+        $formBuilder->aggregatePressedButtons($form_state);
+
+        // get the node in nested array from which we can start iterating all button presses per field
+        if (isset($form_state['pressedButtons']['template_container']['elements'])){
+            $pressedButtonsRoot = $form_state['pressedButtons']['template_container']['elements'];
+        } else {
+            $pressedButtonsRoot = null;
+        }
+
+        // Generate the form elements
+        $formBuilder->setForm($profile, $inheritedData, $pressedButtonsRoot);
+
+        // Attach form elements to base form
+        $elements = $formBuilder->getForm();
+        $form['template_container']['elements'] = $elements;
+
+        // check if everything worked as expected
+        if (!is_array($form['template_container']['elements'])) {
+            drupal_set_message('Unable to generate cmdi form based on profile', 'warning');
+        }
+    }
 
     return $form;
 

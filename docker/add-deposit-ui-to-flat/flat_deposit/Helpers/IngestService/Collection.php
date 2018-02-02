@@ -2,6 +2,10 @@
 
 include_once('SIP.php');
 
+/**
+ * Collection is responsible to ingest new/updated MPI_collections and updated MPI_BUndles into the fedora commons repository.
+ *
+ */
 class Collection extends SIP
 {
 
@@ -76,6 +80,7 @@ class Collection extends SIP
 
 
     /**
+     *
      * @return mixed
      */
     function addResourcesToCmdi()
@@ -83,35 +88,23 @@ class Collection extends SIP
 
         $this->logging('Starting addResourcesToCmdi');
 
-        module_load_include('php','flat_deposit','/Helpers/CMDI/CmdiHandler');
-
         $file_name = $this->cmdiTarget;
-        $xml = CmdiHandler::loadXml($file_name);
-        if (is_string($xml)){
-            throw new IngestServiceException($xml);
+        module_load_include('php', 'flat_deposit', 'Helpers/CMDI/CmdiHandler');
+        $cmdi = simplexml_load_file($file_name, 'CmdiHandler');
+
+        if (!$cmdi OR !$cmdi->getNameById()){
+            throw new IngestServiceException('Unable to load record.cmdi file');
         }
 
-        if (!isset($xml->Header->MdProfile)){
-            throw new IngestServiceException('Element MdProfile in Cmdi Header is not set');
-        }
-
-
-        $id = (string)$xml->Header->MdProfile;
-        $profile = CmdiHandler::getNameById($id);
-
-        if ($this->info['fid'] AND $profile == 'MPI_Bundle') {
+        if ($this->info['fid'] AND $cmdi->getNameById() == 'MPI_Bundle') {
             try {
-
-                CmdiHandler::addResourcesFromDatastream($xml, $this->info['fid']);
-
+                $cmdi->addResourcesFromDatastream($this->info['fid']);
             } catch (CmdiHandlerException $exception) {
-
                 throw new IngestServiceException($exception->getMessage());
-
             }
         }
 
-        $check = $xml->asXML($file_name);
+        $check = $cmdi->asXML($file_name);
         if ($check !== TRUE){
             throw new IngestServiceException($check);
         }
