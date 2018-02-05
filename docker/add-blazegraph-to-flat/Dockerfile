@@ -6,8 +6,6 @@ MAINTAINER  Paul Trilsbeek <Paul.Trilsbeek@mpi.nl>
 RUN apt-get update &&\
 	apt-get -y dist-upgrade
 
-RUN service supervisor stop
-
 # install second tomcat instance
 RUN mkdir /tmp/tomcat &&\
     cd /tmp/tomcat &&\
