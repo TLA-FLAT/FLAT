@@ -158,12 +158,12 @@ abstract class SIP
         $file_name = $this->cmdiTarget;
 
         module_load_include('php','flat_deposit','/Helpers/CMDI/CmdiHandler');
-        $xml = CmdiHandler::loadXml($file_name);
-        if (is_string($xml)){
-            throw new IngestServiceException($xml);
+        $cmdi = simplexml_load_file($file_name, 'CmdiHandler');
+        if (is_string($cmdi)){
+            throw new IngestServiceException($cmdi);
         }
-        CmdiHandler::addIsPartOfProperty($xml , $parentFid);
-        $check = $xml->asXML($file_name);
+        $cmdi->addIsPartOfProperty($parentFid);
+        $check = $cmdi->asXML($file_name);
         if ($check !== TRUE){
             throw new IngestServiceException($check);
         }

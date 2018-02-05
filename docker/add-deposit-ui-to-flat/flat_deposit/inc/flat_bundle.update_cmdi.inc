@@ -138,6 +138,7 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object){
 
     }
 
+
     // check if everything worked as expected
     if (!is_array($form['template_container']['elements'])){
 

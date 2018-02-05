@@ -37,7 +37,7 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
 
     module_load_include('php','flat_deposit','Helpers/CMDI/CmdiHandler');
 
-    $cmd = CmdiHandler::loadXml($fName);
+    $cmd = simplexml_load_file($fName, 'CmdiHandler');
 
     $count = 0;
     $data = [];
