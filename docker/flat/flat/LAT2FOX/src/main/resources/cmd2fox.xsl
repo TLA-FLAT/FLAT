@@ -956,9 +956,9 @@
 				</xsl:for-each>
 			</xsl:variable>
 			<xsl:variable name="children" select="$rels-doc/key('rels-from', ($pid,cmd:hdl($base)))[type = 'Metadata']"/>
-			<!-- legimate children -->
-			<xsl:message use-when="$debug">DBG: - legimate children</xsl:message>
-			<xsl:comment>legimate metadata children</xsl:comment>
+			<!-- legitimate children -->
+			<xsl:message use-when="$debug">DBG: - legitimate children</xsl:message>
+			<xsl:comment>legitimate metadata children</xsl:comment>
 			<xsl:for-each select="$children">
 				<xsl:variable name="ref" select="resolve-uri(cmd:ResourceRef,$base)"/>
 				<xsl:variable name="lcl" select="cmd:ResourceRef/resolve-uri(@lat:localURI,$base)"/>
@@ -981,9 +981,9 @@
 					<xsl:apply-templates select="$ref" mode="#current"/>
 				</cmd:ResourceProxy>
 			</xsl:for-each>
-			<!-- illegimate children (could be dead links) -->
-			<xsl:message use-when="$debug">DBG: - illegimate children</xsl:message>
-			<xsl:comment>illegimate metadata children (could be dead links)</xsl:comment>
+			<!-- illegitimate children (could be dead links) -->
+			<xsl:message use-when="$debug">DBG: - illegitimate children</xsl:message>
+			<xsl:comment>illegitimate metadata children (could be dead links)</xsl:comment>
 			<xsl:for-each select="$md">
 				<xsl:if test="empty((cmd:ResourceRef,cmd:ResourceRef/@lat:localURI)=($children/to,$children/dst))">
 					<xsl:apply-templates select="." mode="#current"/>
