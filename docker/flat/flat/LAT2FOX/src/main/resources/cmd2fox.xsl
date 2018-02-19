@@ -401,7 +401,7 @@
 							<dc:identifier>
 								<xsl:value-of select="replace($pid, '^hdl:', 'https://hdl.handle.net/')"/>
 							</dc:identifier>
-							<xsl:copy-of select="$dc/oai_dc:dc/* except dc:identifier[@type='hdl']"/>
+							<xsl:copy-of copy-namespaces="no" select="$dc/oai_dc:dc/* except dc:identifier[@type='hdl']"/>
 						</oai_dc:dc>						
 					</foxml:xmlContent>
 				</foxml:datastreamVersion>
@@ -467,7 +467,7 @@
 										<xsl:copy-of select="doc($policy-rels)/rdf:RDF/rdf:Description/*"/>
 									</xsl:for-each>
 								</xsl:variable>
-								<xsl:copy-of select="$rels"/>
+								<xsl:copy-of copy-namespaces="no" select="$rels"/>
 								<!-- OAI -->
 								<xsl:if test="($rels/islandora:isViewableByRole='anonymous user' or empty(($rels/islandora:isViewableByUser,$rels/islandora:isViewableByRole))) and sx:evaluate($rec, $oai-include-eval, $NS)">
 									<oai:itemID xmlns="http://www.openarchives.org/OAI/2.0/">
