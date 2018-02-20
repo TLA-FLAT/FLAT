@@ -3,11 +3,6 @@
 
 	<xsl:param name="debug" select="false()" static="yes"/>
 
-	<xd:doc>
-		<xd:desc>
-			<xd:p><xd:i>rec</xd:i> contains a reference to the current CMD record</xd:p>
-		</xd:desc>
-	</xd:doc>
 	<xsl:variable name="rec" select="/"/>
 
 	<xsl:param name="rels-uri" select="'./relations.xml'"/>
@@ -31,8 +26,6 @@
 	<xsl:param name="oai-include-eval" select="'true()'"/>
 	
 	<xsl:param name="policies-dir" select="()" as="xs:string*"/>
-	
-	<xsl:param name="management-dir" select="()" as="xs:string*"/>
 	
 	<xsl:param name="fits-dir" select="()" as="xs:string?"/>
 
@@ -168,9 +161,9 @@
 		<xsl:param name="base"  as="xs:anyURI"/>
 		<xsl:message use-when="$debug">DBG: firstFile(paths[<xsl:value-of select="string-join($paths,',')"/>],files[<xsl:value-of select="string-join($files,',')"/>],base[<xsl:value-of select="$base"/>])</xsl:message>
 		<xsl:variable name="res" as="xs:anyURI*">
-			<xsl:for-each select="$files">
+			<xsl:for-each select="$files[normalize-space(.)!='']">
 				<xsl:variable name="file" select="."/>
-				<xsl:for-each select="$paths">
+				<xsl:for-each select="$paths[normalize-space(.)!='']">
 					<xsl:variable name="path" select="."/>
 					<xsl:message use-when="$debug">DBG: firstFile(...): try[<xsl:value-of select="$path"/>][<xsl:value-of select="$file"/>]</xsl:message>
 					<xsl:variable name="fp" select="sx:findFirstFile($path,$file)"/>
@@ -455,7 +448,7 @@
 								<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_cmdiCModel"/>
 								<!-- add POLICY RELS-EXT statements -->
 								<xsl:variable name="rels">
-									<xsl:for-each select="zero-or-one(cmd:firstFile($policies-dir, (concat(replace($fid, '[^a-zA-Z0-9]', '_'), '.RELS-EXT.xml'),'default-cmd-policy.RELS-EXT.xml','default-policy.RELS-EXT.xml'), $base))">
+									<xsl:for-each select="zero-or-one(cmd:firstFile($policies-dir, (concat(replace($fid, '[^a-zA-Z0-9]', '_'), '.RELS-EXT.xml'), replace(($collections/policy[@type='cmd'])[1],'.xml','.RELS-EXT.xml'),'default-cmd-policy.RELS-EXT.xml','default-policy.RELS-EXT.xml'), $base))">
 										<xsl:variable name="policy-rels" select="."/>
 										<xsl:message use-when="$debug">
 											<xsl:text>DBG: CMD FOX[</xsl:text>
@@ -479,24 +472,6 @@
 					</foxml:xmlContent>
 				</foxml:datastreamVersion>
 			</foxml:datastream>
-			<!-- add MGMT data stream -->
-			<xsl:for-each select="zero-or-one(cmd:firstFile($management-dir,(concat(replace($fid, '[^a-zA-Z0-9]', '_'), '.xml'), concat('lat_',replace(replace($base,'.*/',''), '[^a-zA-Z0-9]', '_'), '.xml')), $base))">
-				<xsl:variable name="mgmt" select="."/>
-				<xsl:message use-when="$debug">
-					<xsl:text>DBG: CMD FOX[</xsl:text>
-					<xsl:value-of select="$fid"/>
-					<xsl:text>] will include management info[</xsl:text>
-					<xsl:value-of select="$mgmt"/>
-					<xsl:text>]!</xsl:text>
-				</xsl:message>
-				<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="MGMT" STATE="A" CONTROL_GROUP="X" VERSIONABLE="false">
-					<foxml:datastreamVersion ID="MGMT.0" LABEL="Collection management info for this object" MIMETYPE="text/xml">
-						<foxml:xmlContent>
-							<xsl:copy-of select="doc($mgmt)"/>
-						</foxml:xmlContent>
-					</foxml:datastreamVersion>
-				</foxml:datastream>
-			</xsl:for-each>
 			<!-- ADD TN data stream -->
 			<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="TN" STATE="A" CONTROL_GROUP="E">
 				<foxml:datastreamVersion ID="TN.0" LABEL="icon.png" MIMETYPE="image/png">
@@ -761,7 +736,7 @@
 														<xsl:with-param name="resMIME" select="$resMIME"/>
 													</xsl:apply-templates>
 													<!-- add POLICY RELS-EXT statements -->
-													<xsl:for-each select="zero-or-one(cmd:firstFile($policies-dir, (concat(replace($resID, '[^a-zA-Z0-9]', '_'), '.RELS-EXT.xml'),'default-resource-policy.RELS-EXT.xml','default-policy.RELS-EXT.xml'), $base))">
+													<xsl:for-each select="zero-or-one(cmd:firstFile($policies-dir, (concat(replace($resID, '[^a-zA-Z0-9]', '_'), '.RELS-EXT.xml'), replace(($collections/policy[@type='resource'])[1],'.xml','.RELS-EXT.xml'), 'default-resource-policy.RELS-EXT.xml','default-policy.RELS-EXT.xml'), $base))">
 														<xsl:variable name="policy-rels" select="."/>
 														<xsl:message use-when="$debug">
 															<xsl:text>DBG: FOX[</xsl:text>
