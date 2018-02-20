@@ -10,9 +10,10 @@ RUN apt-get update &&\
 # FITS
 #
 
-RUN mkdir /tmp/fits &&\
-    cd /tmp/fits &&\
-    wget http://projects.iq.harvard.edu/files/fits/files/fits-1.2.0.zip &&\
+ADD fits /tmp/fits
+RUN ls /tmp/
+RUN cd /tmp/fits &&\
+    if [ ! -f fits-1.2.0.zip ]; then wget http://projects.iq.harvard.edu/files/fits/files/fits-1.2.0.zip; fi &&\
     unzip fits-1.2.0.zip &&\
     mv fits-1.2.0 /app/fits &&\
     mkdir /app/fits/log-lib &&\
@@ -40,7 +41,7 @@ RUN cd /tmp &&\
 RUN cd /tmp &&\
     git clone https://github.com/menzowindhouwer/fedora-client.git fedora-client &&\
     cd /tmp/fedora-client &&\
-    mvn clean install
+    mvn -DskipTests clean install
 
 RUN cd /tmp &&\
     git clone -b 1.0.0 https://github.com/meertensinstituut/EPICify.git epicify &&\
