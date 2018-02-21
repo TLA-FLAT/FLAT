@@ -904,9 +904,9 @@
 		<xsl:param name="base" tunnel="yes"/>
 		<xsl:message use-when="$debug">DBG: cmd:ResourceProxyList</xsl:message>
 		<xsl:copy>
-			<!-- process non-Metadata or LandingPage resource proxies -->
+			<!-- process non-Metadata or LandingPage resource proxies. Skip SearchPage because we don't have content search in FLAT (yet) -->
 			<xsl:message use-when="$debug">DBG: - non metadata or landing page</xsl:message>
-			<xsl:apply-templates select="cmd:ResourceProxy[not(cmd:ResourceType = ('LandingPage','Metadata'))]" mode="#current"/>
+			<xsl:apply-templates select="cmd:ResourceProxy[not(cmd:ResourceType = ('LandingPage','Metadata','SearchPage'))]" mode="#current"/>
 			<xsl:message use-when="$debug">DBG: - create landing page</xsl:message>
 			<cmd:ResourceProxy id="home-{replace($fid,'lat:','')}">
 				<cmd:ResourceType mimetype="text/html">LandingPage</cmd:ResourceType>
