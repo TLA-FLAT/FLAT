@@ -1,14 +1,9 @@
 @prefix acl: <http://www.w3.org/ns/auth/acl#> .
+@prefix lat: <http://lat.mpi.nl/ns/auth/acl#> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
 
-# make the whole SIP public
-#[acl:accessTo <sip>; acl:mode acl:Read; acl:agentClass foaf:Agent].
-
-# resource h1 is public
-[acl:accessTo <sip#h1>; acl:mode acl:Read; acl:agentClass foaf:Agent].
-
-# resource h2 is shared
-[acl:accessTo <sip#h2>; acl:mode acl:Read;  acl:agent <#other>].
+# hide the SIP
+[acl:accessTo <sip>; acl:mode lat:Hide; acl:agentClass foaf:Agent].
 
 #give the owner read and write access
 [acl:accessTo <sip>; acl:mode acl:Read, acl:Write;  acl:agent <#owner>].

@@ -47,11 +47,11 @@ class FlatBundle
      *
      * @param string $move_direction Direction in which data will be moved. Allowed values are: 'freeze' and 'unfreeze'
      *
-     * @param string $toNewCollection [optional] Name of a new collection
+     * @param array $collection_node [optional] drupal collection node pointing to fedora node that will parent the bundle
      *
      * @return bool|string new location of the bundle data or false
      */
-    static public function moveBundleData($node, $data_type, $move_direction, $toNewCollection = '')
+    static public function moveBundleData($node, $data_type, $move_direction, $collection_node = null)
     {
 
         $wrapper = entity_metadata_wrapper('node', $node);
@@ -61,8 +61,9 @@ class FlatBundle
             self::validate_node($node);
             $source_location = self::set_original_location($wrapper, $data_type);
             self::validate_source($wrapper, $source_location, $data_type);
-            $target_location = self::set_target_location($node, $wrapper, $data_type, $move_direction, $toNewCollection);
+            $target_location = self::set_target_location($node, $wrapper, $data_type, $move_direction, $collection_node);
             self::validate_target($wrapper, $data_type, $source_location, $target_location);
+            self::validate_naming($node, $collection_node);
             $new_location = self::move_data($wrapper, $data_type, $source_location, $target_location);
 
         } catch (FlatBundleException $exception) {
@@ -76,6 +77,32 @@ class FlatBundle
 
     }
 
+    /**
+     * Validates if new collection already has a bundle or collection with the same name (i.e. fedora object label).
+     *
+     * @param $node
+     */
+    static public function validate_naming($node, $collection_node){
+        if (!is_null($collection_node) AND $collection_node->title != 'unassigned'){
+
+            $title = $node->title;
+            $wrapper = entity_metadata_wrapper('node', $collection_node);
+            $collection_fid = $wrapper->flat_fid->value();
+
+            module_load_include('inc', 'flat_deposit', '/inc/class.FlatTuque');
+            $values = FlatTuque::getChildrenLabels($collection_fid);
+
+
+
+            if (in_array(strtoupper($title),array_unique(array_map('strtoupper', $values)))){
+                throw new FlatBundleException("A collection or bundle with almost identical name already exists in archive");
+            }
+
+
+
+
+        }
+    }
 
     static public function recursiveRmDir($dir)
     {
@@ -119,10 +146,10 @@ class FlatBundle
     }
 
     // generate new target path
-    static public function set_target_location($node, $wrapper, $data_type, $move_direction, $toNewCollection)
+    static public function set_target_location($node, $wrapper, $data_type, $move_direction, $collection_node)
     {
         $bundle = $node->title;
-        $collection_name = ($toNewCollection != '') ? $toNewCollection : $wrapper->flat_parent_title->value();
+        $collection_name = !is_null($collection_node) ? $collection_node->title : $wrapper->flat_parent_title->value();
 
         $usr = user_load($node->uid);
         $tail = str_replace('@', '_at_' , $usr->name) . "/$collection_name/$bundle";

@@ -11,11 +11,7 @@
       <cmd:ResourceProxyList>
          <cmd:ResourceProxy id="c1">
             <cmd:ResourceType>Metadata</cmd:ResourceType>
-            <cmd:ResourceRef>hdl:12345/comic-1</cmd:ResourceRef>
-         </cmd:ResourceProxy>
-         <cmd:ResourceProxy id="c2">
-            <cmd:ResourceType>Metadata</cmd:ResourceType>
-            <cmd:ResourceRef>hdl:12345/comic-2</cmd:ResourceRef>
+            <cmd:ResourceRef>hdl:12345/comic_green_hornet</cmd:ResourceRef>
          </cmd:ResourceProxy>
       </cmd:ResourceProxyList>
       <cmd:JournalFileProxyList/>

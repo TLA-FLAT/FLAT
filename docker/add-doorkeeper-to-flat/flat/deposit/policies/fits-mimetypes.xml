@@ -1,6 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mimetypes>
-	<mimetype value="application/pdf"/>
-	<mimetype value="text/plain"/>
-	<mimetype value="image/jpg"/>
+	<mimetype value="video/mp4">
+		<assertions  xpath="//fits:identity[fits:tool/@toolname = 'file utility']/@format = 'ISO Media, MP4 v2 [ISO 14496-14]'">
+			<assert xpath="//fits:metadata/fits:video/number(fits:bitRate) > 300000" message="The bitrate of the MP4 file [{//fileinfo/filename}] is too low. [{//metadata/video/bitRate}], should be higher than 300000!"/>
+		</assertions>
+	</mimetype>
+	<mimetype value="text/plain">
+		<assertions  xpath="//fits:identity[fits:tool/@toolname = 'Droid']/@format = 'Plain text'"/>
+		<assertions xpath="//fits:identity[fits:tool/@toolname = 'Jhove']/@format = 'Plain text'">
+			<assert xpath="//fits:metadata/fits:text/fits:linebreak = 'LF'" message="The text file [{replace(//fits:fileinfo/fits:filename,$work,'')}] has a linebreak type [{//fits:metadata/fits:text/fits:linebreak}], should be LF"/>
+			<assert xpath="//fits:metadata/fits:text/fits:charset = ('US-ASCII','UTF-8')" message="The character encoding of the text file [{replace(//fits:fileinfo/fits:filename,$work,'')}] is [{//fits:metadata/fits:text/fits:charset}], should be UTF-8"/>
+		</assertions>
+	</mimetype>
+	<mimetype value="image/jpg"><!-- use default XPath for mimetype -->
+		<!-- no further assertions -->
+	</mimetype>
+	<mimetype value="application/pdf"><!-- use default XPath for mimetype -->
+		<!-- no further assertions -->
+	</mimetype>
+	<!--<otherwise value="unknown" xpath="empty(//fits:identity[fits:tool/@format])"/><!-/- fallback in case FITS does not return a mime type -/->-->
 </mimetypes>

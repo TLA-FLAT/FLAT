@@ -1,0 +1,50 @@
+<?php
+spl_autoload_register(function ($class_name) {
+    include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiCreator/class.' . $class_name . '.inc';
+
+});
+/**
+ * User: danrhe
+ * Date: 25/01/2018
+ * Time: 10:04
+ */
+class CmdiLeaf extends CmdiComponent{
+
+
+    /**
+     * CmdiComponent constructor.
+     */
+    public function __construct(){}
+
+
+    public function setCmdiComponent(&$rootNewComponents, $component, $data){
+
+        $id = (string)$component['id'];
+
+        $name = (string)$component['name'];
+
+        $componentData = $data[$id];
+
+        foreach (array_keys($componentData) as $key){
+            if (!is_numeric($key))
+                unset($componentData[$key]);
+
+        }
+
+
+        if (isset($componentData)) {
+            foreach ($componentData as $key => $value) {
+
+                if ($value != null AND $value != ""){
+                    $converted = $this->convertValue((string)$component->type, $value);
+                    $rootNewComponents->addChild($name, utf8_encode(htmlspecialchars($converted)));
+
+                }
+            }
+        }
+
+
+
+    }
+
+}

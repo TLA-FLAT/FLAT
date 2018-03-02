@@ -3,11 +3,6 @@
 
 	<xsl:param name="debug" select="false()" static="yes"/>
 
-	<xd:doc>
-		<xd:desc>
-			<xd:p><xd:i>rec</xd:i> contains a reference to the current CMD record</xd:p>
-		</xd:desc>
-	</xd:doc>
 	<xsl:variable name="rec" select="/"/>
 
 	<xsl:param name="rels-uri" select="'./relations.xml'"/>
@@ -24,8 +19,6 @@
 
 	<xsl:param name="repository" select="'http://flat.example.com/'"/>
 
-	<xsl:param name="create-cmd-object" select="true()"/>
-
 	<xsl:param name="collections-map">
 		<map/>
 	</xsl:param>
@@ -33,8 +26,6 @@
 	<xsl:param name="oai-include-eval" select="'true()'"/>
 	
 	<xsl:param name="policies-dir" select="()" as="xs:string*"/>
-	
-	<xsl:param name="management-dir" select="()" as="xs:string*"/>
 	
 	<xsl:param name="fits-dir" select="()" as="xs:string?"/>
 
@@ -170,14 +161,14 @@
 		<xsl:param name="base"  as="xs:anyURI"/>
 		<xsl:message use-when="$debug">DBG: firstFile(paths[<xsl:value-of select="string-join($paths,',')"/>],files[<xsl:value-of select="string-join($files,',')"/>],base[<xsl:value-of select="$base"/>])</xsl:message>
 		<xsl:variable name="res" as="xs:anyURI*">
-			<xsl:for-each select="$files">
+			<xsl:for-each select="$files[normalize-space(.)!='']">
 				<xsl:variable name="file" select="."/>
-				<xsl:for-each select="$paths">
+				<xsl:for-each select="$paths[normalize-space(.)!='']">
 					<xsl:variable name="path" select="."/>
-					<xsl:variable name="uri" select="resolve-uri(concat($path, '/',$file),$base)"/>
-					<xsl:message use-when="$debug">DBG: firstFile(...): try[<xsl:value-of select="$uri"/>]</xsl:message>
-					<xsl:if test="sx:fileExists($uri)">
-						<xsl:sequence select="$uri"/>
+					<xsl:message use-when="$debug">DBG: firstFile(...): try[<xsl:value-of select="$path"/>][<xsl:value-of select="$file"/>]</xsl:message>
+					<xsl:variable name="fp" select="sx:findFirstFile($path,$file)"/>
+					<xsl:if test="exists($fp)">
+						<xsl:sequence select="xs:anyURI(concat('file:',$fp))"/>
 					</xsl:if>
 				</xsl:for-each>
 			</xsl:for-each>
@@ -403,179 +394,84 @@
 							<dc:identifier>
 								<xsl:value-of select="replace($pid, '^hdl:', 'https://hdl.handle.net/')"/>
 							</dc:identifier>
-							<xsl:copy-of select="$dc/oai_dc:dc/* except dc:identifier[@type='hdl']"/>
+							<xsl:copy-of copy-namespaces="no" select="$dc/oai_dc:dc/* except dc:identifier[@type='hdl']"/>
 						</oai_dc:dc>						
 					</foxml:xmlContent>
 				</foxml:datastreamVersion>
 			</foxml:datastream>
 			<!-- Metadata: CMD -->
-			<xsl:choose>
-				<xsl:when test="$create-cmd-object">
-					<xsl:variable name="cmdID" select="cmd:lat('lat:', concat($pid, '-CMD'))"/>
-					<xsl:variable name="cmdFOX" select="concat($fox-base, '/', replace($cmdID, '[^a-zA-Z0-9]', '_'), '.xml')"/>
+			<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="CMD" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
+				<foxml:datastreamVersion ID="CMD.0" FORMAT_URI="{/cmd:CMD/@xsii:schemaLocation}" MIMETYPE="application/x-cmdi+xml">
+					<xsl:variable name="label" select="($dc//dc:title[normalize-space() != ''])[1]" xmlns:dc="http://purl.org/dc/elements/1.1/"/>
 					<xsl:choose>
-						<xsl:when test="not(doc-available($cmdFOX))">
-							<xsl:message use-when="$debug">DBG: creating CMD FOX[<xsl:value-of select="$cmdFOX"/>]</xsl:message>
-							<xsl:result-document href="{$cmdFOX}">
-								<foxml:digitalObject VERSION="1.1" PID="{$cmdID}" xmlns:xsii="http://www.w3.org/2001/XMLSchema-instance" xsii:schemaLocation="info:fedora/fedora-system:def/foxml# http://www.fedora.info/definitions/1/0/foxml1-1.xsd">
-									<xsl:comment>
-									<xsl:text>Source: </xsl:text>
-									<xsl:value-of select="base-uri()"/>
-								</xsl:comment>
-									<foxml:objectProperties>
-										<!-- [A]ctive state -->
-										<foxml:property NAME="info:fedora/fedora-system:def/model#state" VALUE="A"/>
-										<!-- take the first title found in the Dublin Core -->
-										<foxml:property NAME="info:fedora/fedora-system:def/model#label">
-											<xsl:variable name="label" select="($dc//dc:title[normalize-space() != ''])[1]" xmlns:dc="http://purl.org/dc/elements/1.1/"/>
-											<xsl:choose>
-												<xsl:when test="exists($label)">
-													<xsl:attribute name="VALUE" select="substring($label, 1, 255)"/>
-												</xsl:when>
-												<xsl:otherwise>
-													<xsl:attribute name="VALUE" select="$pid"/>
-												</xsl:otherwise>
-											</xsl:choose>
-										</foxml:property>
-									</foxml:objectProperties>
-									<!-- Metadata: Dublin Core -->
-									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="DC" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
-										<foxml:datastreamVersion ID="DC.0" FORMAT_URI="http://www.openarchives.org/OAI/2.0/oai_dc/" MIMETYPE="text/xml" LABEL="Dublin Core Record for this object">
-											<foxml:xmlContent>
-												<xsl:copy-of select="$dc"/>
-											</foxml:xmlContent>
-										</foxml:datastreamVersion>
-									</foxml:datastream>
-									<!-- Relations: RELS-EXT -->
-									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="RELS-EXT" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
-										<foxml:datastreamVersion ID="RELS-EXT.0" LABEL="RDF Statements about this object" MIMETYPE="text/xml">
-											<foxml:xmlContent>
-												<rdf:RDF xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:fedora-model="info:fedora/fedora-system:def/model#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:islandora="http://islandora.ca/ontology/relsext#">
-													<rdf:Description rdf:about="info:fedora/{$cmdID}">
-														<!-- OAI -->
-														<xsl:if test="sx:evaluate($rec, $oai-include-eval, $NS)">
-															<oai:itemID xmlns="http://www.openarchives.org/OAI/2.0/">
-																<xsl:value-of select="concat('oai:', replace(replace($repository,'^http(s)?://',''),'/','.'), ':', $cmdID)"/>
-															</oai:itemID>
-														</xsl:if>
-														<!-- relationship to the compound -->
-														<fedora:isConstituentOf rdf:resource="info:fedora/{$fid}"/>
-														<!-- make it the first object in the compound -->
-														<xsl:element name="{concat('islandora:isSequenceNumberOf',replace($fid,':','_'))}">
-															<xsl:text>1</xsl:text>
-														</xsl:element>
-														<!-- CMD object has to become a member of the collections the compound is a member of -->
-														<xsl:for-each select="$parents">
-															<fedora:isMemberOfCollection rdf:resource="info:fedora/{current()}"/>
-														</xsl:for-each>
-														<!-- a CMD object uses the CMDI content model -->
-														<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_cmdiCModel"/>
-													</rdf:Description>
-												</rdf:RDF>
-											</foxml:xmlContent>
-										</foxml:datastreamVersion>
-									</foxml:datastream>
-									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="CMD" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
-										<foxml:datastreamVersion ID="CMD.0" FORMAT_URI="{/cmd:CMD/@xsii:schemaLocation}" LABEL="CMD Record for this object" MIMETYPE="application/x-cmdi+xml">
-											<foxml:xmlContent>
-												<xsl:apply-templates mode="cmd">
-													<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
-													<xsl:with-param name="fid" select="$fid" tunnel="yes"/>
-													<xsl:with-param name="base" select="$base" tunnel="yes"/>
-												</xsl:apply-templates>
-											</foxml:xmlContent>
-										</foxml:datastreamVersion>
-									</foxml:datastream>
-									<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="TN" STATE="A" CONTROL_GROUP="E" VERSIONABLE="false">
-										<foxml:datastreamVersion ID="TN.0" LABEL="icon.png" MIMETYPE="image/png">
-											<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/metadata.png"/>
-										</foxml:datastreamVersion>
-									</foxml:datastream>
-									<!-- Metadata: other -->
-									<xsl:apply-templates mode="other">
-										<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
-										<xsl:with-param name="fid" select="$fid" tunnel="yes"/>
-										<xsl:with-param name="base" select="$base" tunnel="yes"/>
-									</xsl:apply-templates>
-								</foxml:digitalObject>
-							</xsl:result-document>
+						<xsl:when test="exists($label)">
+							<xsl:attribute name="LABEL" select="substring(replace(replace(normalize-unicode($label,'NFKD'),'\P{IsBasicLatin}','_'),'\s+','_'),1,255)"/>
 						</xsl:when>
 						<xsl:otherwise>
-							<xsl:message>WRN: skipped creating CMD FOX[<xsl:value-of select="$cmdFOX"/>], it already exists!</xsl:message>
+							<xsl:attribute name="LABEL" select="'CMD Record for this object'"/>
 						</xsl:otherwise>
 					</xsl:choose>
-				</xsl:when>
-				<xsl:otherwise>
-					<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="CMD" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
-						<foxml:datastreamVersion ID="CMD.0" FORMAT_URI="{/cmd:CMD/@xsii:schemaLocation}" LABEL="CMD Record for this object" MIMETYPE="application/x-cmdi+xml">
-							<foxml:xmlContent>
-								<xsl:apply-templates mode="cmd">
-									<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
-									<xsl:with-param name="fid" select="$fid" tunnel="yes"/>
-									<xsl:with-param name="base" select="$base" tunnel="yes"/>
-								</xsl:apply-templates>
-							</foxml:xmlContent>
-						</foxml:datastreamVersion>
-					</foxml:datastream>
-					<!-- Metadata: other -->
-					<xsl:apply-templates mode="other">
-						<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
-						<xsl:with-param name="fid" select="$fid" tunnel="yes"/>
-						<xsl:with-param name="base" select="$base" tunnel="yes"/>
-					</xsl:apply-templates>
-				</xsl:otherwise>
-			</xsl:choose>
+					<foxml:xmlContent>
+						<xsl:apply-templates mode="cmd">
+							<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
+							<xsl:with-param name="fid" select="$fid" tunnel="yes"/>
+							<xsl:with-param name="base" select="$base" tunnel="yes"/>
+						</xsl:apply-templates>
+					</foxml:xmlContent>
+				</foxml:datastreamVersion>
+			</foxml:datastream>
+			<!-- Metadata: other -->
+			<xsl:apply-templates mode="other">
+				<xsl:with-param name="pid" select="$pid" tunnel="yes"/>
+				<xsl:with-param name="fid" select="$fid" tunnel="yes"/>
+				<xsl:with-param name="base" select="$base" tunnel="yes"/>
+			</xsl:apply-templates>
 			<!-- Relations: RELS-EXT -->
 			<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="RELS-EXT" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
 				<foxml:datastreamVersion ID="RELS-EXT.0" LABEL="RDF Statements about this object" MIMETYPE="text/xml">
 					<foxml:xmlContent>
-						<rdf:RDF xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:fedora-model="info:fedora/fedora-system:def/model#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+						<rdf:RDF xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:fedora-model="info:fedora/fedora-system:def/model#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:islandora="http://islandora.ca/ontology/relsext#">
 							<rdf:Description rdf:about="info:fedora/{$fid}">
 								<!-- relationships to (parent) collections -->
 								<xsl:for-each select="$parents">
 									<fedora:isMemberOfCollection rdf:resource="info:fedora/{current()}"/>
 								</xsl:for-each>
-								<!-- if the CMD is a separate object and/or the CMD has references to resources it's a compound -->
-								<xsl:if test="sx:evaluate($rec, $always-compound-eval, $NS) or $create-cmd-object or exists(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType = 'Resource'])">
+								<!-- if the CMD has references to resources it's a compound, or we always want compounds -->
+								<xsl:if test="sx:evaluate($rec, $always-compound-eval, $NS) or exists(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType = 'Resource'])">
 									<fedora-model:hasModel rdf:resource="info:fedora/islandora:compoundCModel"/>
 								</xsl:if>
-								<!-- if the CMD has references to other metadata files it's a collection -->
+								<!-- if the CMD has references to other metadata files it's a collection, or we always want collections -->
 								<xsl:if test="sx:evaluate($rec, $always-collection-eval, $NS) or exists(/cmd:CMD/cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[cmd:ResourceType = 'Metadata']) or exists($rels-doc/key('rels-from', ($pid,cmd:hdl($base)))[type = 'Metadata'])">
 									<fedora-model:hasModel rdf:resource="info:fedora/islandora:collectionCModel"/>
 								</xsl:if>
-								<!-- if the CMD is part of the compound FOXML it uses the cmdi content model and is member of the cmdi collection -->
-								<xsl:if test="not($create-cmd-object)">
-									<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_cmdiCModel"/>
-									<!-- OAI -->
-									<xsl:if test="sx:evaluate($rec, $oai-include-eval, $NS)">
-										<oai:itemID xmlns="http://www.openarchives.org/OAI/2.0/">
-											<xsl:value-of select="concat('oai:', replace(replace($repository,'^http(s)?://',''),'/','.'), ':', $fid)"/>
-										</oai:itemID>
-									</xsl:if>
+								<!-- the CMD is part of the compound FOXML so it uses the cmdi content model -->
+								<fedora-model:hasModel rdf:resource="info:fedora/islandora:sp_cmdiCModel"/>
+								<!-- add POLICY RELS-EXT statements -->
+								<xsl:variable name="rels">
+									<xsl:for-each select="zero-or-one(cmd:firstFile($policies-dir, (concat(replace($fid, '[^a-zA-Z0-9]', '_'), '.RELS-EXT.xml'), replace(($collections/policy[@type='cmd'])[1],'.xml','.RELS-EXT.xml'),'default-cmd-policy.RELS-EXT.xml','default-policy.RELS-EXT.xml'), $base))">
+										<xsl:variable name="policy-rels" select="."/>
+										<xsl:message use-when="$debug">
+											<xsl:text>DBG: CMD FOX[</xsl:text>
+											<xsl:value-of select="$fid"/>
+											<xsl:text>] will additionaly use access policy RELS-EXT statements[</xsl:text>
+											<xsl:value-of select="$policy-rels"/>
+											<xsl:text>]!</xsl:text>
+										</xsl:message>
+										<xsl:copy-of select="doc($policy-rels)/rdf:RDF/rdf:Description/*"/>
+									</xsl:for-each>
+								</xsl:variable>
+								<xsl:copy-of copy-namespaces="no" select="$rels"/>
+								<!-- OAI -->
+								<xsl:if test="($rels/islandora:isViewableByRole='anonymous user' or empty(($rels/islandora:isViewableByUser,$rels/islandora:isViewableByRole))) and sx:evaluate($rec, $oai-include-eval, $NS)">
+									<oai:itemID xmlns="http://www.openarchives.org/OAI/2.0/">
+										<xsl:value-of select="concat('oai:', replace(replace($repository,'^http(s)?://',''),'/','.'), ':', $fid)"/>
+									</oai:itemID>
 								</xsl:if>
 							</rdf:Description>
 						</rdf:RDF>
 					</foxml:xmlContent>
 				</foxml:datastreamVersion>
 			</foxml:datastream>
-			<!-- add MGMT data stream -->
-			<xsl:for-each select="zero-or-one(cmd:firstFile($management-dir,(concat(replace($fid, '[^a-zA-Z0-9]', '_'), '.xml'), concat('lat_',replace(replace($base,'.*/',''), '[^a-zA-Z0-9]', '_'), '.xml')), $base))">
-				<xsl:variable name="mgmt" select="."/>
-				<xsl:message use-when="$debug">
-					<xsl:text>DBG: CMD FOX[</xsl:text>
-					<xsl:value-of select="$fid"/>
-					<xsl:text>] will include management info[</xsl:text>
-					<xsl:value-of select="$mgmt"/>
-					<xsl:text>]!</xsl:text>
-				</xsl:message>
-				<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="MGMT" STATE="A" CONTROL_GROUP="X" VERSIONABLE="false">
-					<foxml:datastreamVersion ID="MGMT.0" LABEL="Collection management info for this object" MIMETYPE="text/xml">
-						<foxml:xmlContent>
-							<xsl:copy-of select="doc($mgmt)"/>
-						</foxml:xmlContent>
-					</foxml:datastreamVersion>
-				</foxml:datastream>
-			</xsl:for-each>
 			<!-- ADD TN data stream -->
 			<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="TN" STATE="A" CONTROL_GROUP="E">
 				<foxml:datastreamVersion ID="TN.0" LABEL="icon.png" MIMETYPE="image/png">
@@ -805,7 +701,7 @@
 													<xsl:value-of select="replace($resPID, '^hdl:', 'https://hdl.handle.net/')"/>
 												</dc:identifier>
 												<xsl:apply-templates select="current()" mode="checksum">
-													<xsl:with-param name="resURI" select="$resURI"/>
+													<xsl:with-param name="resURI" select="$resURI" tunnel="yes"/>
 												</xsl:apply-templates>
 											</oai_dc:dc>
 										</foxml:xmlContent>
@@ -815,7 +711,7 @@
 								<foxml:datastream xmlns:foxml="info:fedora/fedora-system:def/foxml#" ID="RELS-EXT" STATE="A" CONTROL_GROUP="X" VERSIONABLE="true">
 									<foxml:datastreamVersion ID="RELS-EXT.0" LABEL="RDF Statements about this object" MIMETYPE="text/xml">
 										<foxml:xmlContent>
-											<rdf:RDF xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:fedora-model="info:fedora/fedora-system:def/model#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+											<rdf:RDF xmlns:oai="http://www.openarchives.org/OAI/2.0/" xmlns:fedora="info:fedora/fedora-system:def/relations-external#" xmlns:fedora-model="info:fedora/fedora-system:def/model#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:islandora="http://islandora.ca/ontology/relsext#">
 												<rdf:Description rdf:about="info:fedora/{$resID}">
 													<!-- relationships to (parent) compounds -->
 													<xsl:variable name="compounds" select="distinct-values($rels-doc/key('rels-to', ($resPID,cmd:hdl($resURI)))[type = 'Resource']/from)"/>
@@ -834,10 +730,23 @@
 													<xsl:for-each select="$parents">
 														<fedora:isMemberOfCollection rdf:resource="info:fedora/{current()}"/>
 													</xsl:for-each>
+													<!-- content model -->
 													<xsl:apply-templates select="current()" mode="cmodel">
 														<xsl:with-param name="resURI" select="$resURI"/>
 														<xsl:with-param name="resMIME" select="$resMIME"/>
 													</xsl:apply-templates>
+													<!-- add POLICY RELS-EXT statements -->
+													<xsl:for-each select="zero-or-one(cmd:firstFile($policies-dir, (concat(replace($resID, '[^a-zA-Z0-9]', '_'), '.RELS-EXT.xml'), replace(($collections/policy[@type='resource'])[1],'.xml','.RELS-EXT.xml'), 'default-resource-policy.RELS-EXT.xml','default-policy.RELS-EXT.xml'), $base))">
+														<xsl:variable name="policy-rels" select="."/>
+														<xsl:message use-when="$debug">
+															<xsl:text>DBG: FOX[</xsl:text>
+															<xsl:value-of select="$fid"/>
+															<xsl:text>] will additionaly use access policy RELS-EXT statements[</xsl:text>
+															<xsl:value-of select="$policy-rels"/>
+															<xsl:text>]!</xsl:text>
+														</xsl:message>
+														<xsl:copy-of select="doc($policy-rels)/rdf:RDF/rdf:Description/*"/>
+													</xsl:for-each>
 												</rdf:Description>
 											</rdf:RDF>
 										</foxml:xmlContent>
@@ -882,8 +791,8 @@
 								<foxml:datastream ID="TN" STATE="A" CONTROL_GROUP="E" VERSIONABLE="false">
 									<foxml:datastreamVersion ID="TN.0" LABEL="icon.png" MIMETYPE="image/png">
 										<xsl:apply-templates select="current()" mode="thumbnail">
-											<xsl:with-param name="resURI" select="$resURI"/>
-											<xsl:with-param name="resMIME" select="$resMIME"/>
+											<xsl:with-param name="resURI" select="$resURI" tunnel="yes"/>
+											<xsl:with-param name="resMIME" select="$resMIME" tunnel="yes"/>
 										</xsl:apply-templates>
 									</foxml:datastreamVersion>
 								</foxml:datastream>
@@ -995,9 +904,9 @@
 		<xsl:param name="base" tunnel="yes"/>
 		<xsl:message use-when="$debug">DBG: cmd:ResourceProxyList</xsl:message>
 		<xsl:copy>
-			<!-- process non-Metadata or LandingPage resource proxies -->
+			<!-- process non-Metadata or LandingPage resource proxies. Skip SearchPage because we don't have content search in FLAT (yet) -->
 			<xsl:message use-when="$debug">DBG: - non metadata or landing page</xsl:message>
-			<xsl:apply-templates select="cmd:ResourceProxy[not(cmd:ResourceType = ('LandingPage','Metadata'))]" mode="#current"/>
+			<xsl:apply-templates select="cmd:ResourceProxy[not(cmd:ResourceType = ('LandingPage','Metadata','SearchPage'))]" mode="#current"/>
 			<xsl:message use-when="$debug">DBG: - create landing page</xsl:message>
 			<cmd:ResourceProxy id="home-{replace($fid,'lat:','')}">
 				<cmd:ResourceType mimetype="text/html">LandingPage</cmd:ResourceType>
@@ -1022,9 +931,9 @@
 				</xsl:for-each>
 			</xsl:variable>
 			<xsl:variable name="children" select="$rels-doc/key('rels-from', ($pid,cmd:hdl($base)))[type = 'Metadata']"/>
-			<!-- legimate children -->
-			<xsl:message use-when="$debug">DBG: - legimate children</xsl:message>
-			<xsl:comment>legimate metadata children</xsl:comment>
+			<!-- legitimate children -->
+			<xsl:message use-when="$debug">DBG: - legitimate children</xsl:message>
+			<xsl:comment>legitimate metadata children</xsl:comment>
 			<xsl:for-each select="$children">
 				<xsl:variable name="ref" select="resolve-uri(cmd:ResourceRef,$base)"/>
 				<xsl:variable name="lcl" select="cmd:ResourceRef/resolve-uri(@lat:localURI,$base)"/>
@@ -1047,9 +956,9 @@
 					<xsl:apply-templates select="$ref" mode="#current"/>
 				</cmd:ResourceProxy>
 			</xsl:for-each>
-			<!-- illegimate children (could be dead links) -->
-			<xsl:message use-when="$debug">DBG: - illegimate children</xsl:message>
-			<xsl:comment>illegimate metadata children (could be dead links)</xsl:comment>
+			<!-- illegitimate children (could be dead links) -->
+			<xsl:message use-when="$debug">DBG: - illegitimate children</xsl:message>
+			<xsl:comment>illegitimate metadata children (could be dead links)</xsl:comment>
 			<xsl:for-each select="$md">
 				<xsl:if test="empty((cmd:ResourceRef,cmd:ResourceRef/@lat:localURI)=($children/to,$children/dst))">
 					<xsl:apply-templates select="." mode="#current"/>
@@ -1186,8 +1095,8 @@
 	
 	<!-- thumbnail -->
 	<xsl:template match="cmd:ResourceProxy" mode="thumbnail">
-		<xsl:param name="resURI"/>
-		<xsl:param name="resMIME"/>
+		<xsl:param name="resURI" tunnel="yes"/>
+		<xsl:param name="resMIME" tunnel="yes"/>
 		<xsl:choose>
 			<xsl:when test="starts-with($resMIME,'audio/')">
 				<foxml:contentLocation TYPE="URL" REF="file:{$icon-base}/audio.png"/>
@@ -1218,26 +1127,35 @@
 	
 	<!-- checksum -->
 	<xsl:template match="cmd:ResourceProxy" mode="checksum">
-		<xsl:param name="base" select="base-uri()"/>
-		<xsl:param name="resURI"/>
+		<xsl:param name="base" select="base-uri()" tunnel="yes"/>
+		<xsl:param name="resURI" tunnel="yes"/>
+		<xsl:message>DBG: determine default checksum for resource[<xsl:value-of select="$resURI"/>]</xsl:message>
 		<xsl:variable name="res" select="current()"/>
 		<xsl:choose xmlns:dc="http://purl.org/dc/elements/1.1/">
-			<xsl:when test="exists($fits-dir)">
+			<xsl:when test="exists($fits-dir)" xmlns:fits="http://hul.harvard.edu/ois/xml/ns/fits/fits_output">
 				<xsl:variable name="fits" select="cmd:firstFile($fits-dir,concat($res/@id,'.FITS.xml'),$base)" as="xs:anyURI?"/>
-				<xsl:if test="exists($fits)">
-					<dc:identifier>
-						<xsl:text>md5:</xsl:text>
-						<xsl:value-of select="doc($fits)//fits:md5checksum" xmlns:fits="http://hul.harvard.edu/ois/xml/ns/fits/fits_output"/>
-					</dc:identifier>
-				</xsl:if>
+				<xsl:choose>
+					<xsl:when test="exists($fits)">
+						<dc:identifier>
+							<xsl:text>md5:</xsl:text>
+							<xsl:value-of select="doc($fits)//fits:md5checksum"/>
+						</dc:identifier>
+						<xsl:message>DBG: FITS checksum[<xsl:value-of select="doc($fits)//fits:md5checksum"/>] for resource[<xsl:value-of select="$resURI"/>]</xsl:message>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:message>ERR: lookup FITS checksum failed for resource[<xsl:value-of select="$resURI"/>]!</xsl:message>
+					</xsl:otherwise>
+				</xsl:choose>
 			</xsl:when>
 			<xsl:when test="starts-with($resURI,'file:')">
 				<xsl:choose>
 					<xsl:when test="sx:fileExists($resURI cast as xs:anyURI)">
+						<xsl:variable name="md5" select="sx:md5($resURI cast as xs:anyURI)"/>
 						<dc:identifier>
 							<xsl:text>md5:</xsl:text>
-							<xsl:value-of select="sx:md5($resURI cast as xs:anyURI)"/>
+							<xsl:value-of select="$md5"/>
 						</dc:identifier>
+						<xsl:message>DBG: calculated checksum[<xsl:value-of select="$md5"/>] for resource[<xsl:value-of select="$resURI"/>]</xsl:message>
 					</xsl:when>
 					<xsl:when test="$lax-resource-check">
 						<xsl:message>WRN: can't compute a MD5 checksum as the Resource[<xsl:value-of select="$resURI"/>] doesn't exist!</xsl:message>
@@ -1247,6 +1165,9 @@
 					</xsl:otherwise>
 				</xsl:choose>
 			</xsl:when>
+			<xsl:otherwise>
+				<xsl:message>DBG: skipped checksum for resource[<xsl:value-of select="$resURI"/>]</xsl:message>
+			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>	
 	

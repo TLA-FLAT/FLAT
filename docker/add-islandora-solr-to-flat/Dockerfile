@@ -2,15 +2,13 @@ FROM		flat
 MAINTAINER	Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 
 RUN apt-get update &&\
-	apt-get -y dist-upgrade &&\
-	apt-get -y install ant
+	apt-get -y dist-upgrade
 
 RUN mkdir /tmp/islandora &&\
 	cd /tmp/islandora &&\
-	wget "https://github.com/Islandora/islandora_solr_search/archive/7.x-1.9.zip" &&\
-	mv 7.x-1.9.zip islandora_gsearch_module-7.x-1.9.zip &&\
-	unzip islandora_gsearch_module-7.x-1.9.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/
-
+	wget -O islandora_gsearch_module-7.x-1.10.zip "https://github.com/Islandora/islandora_solr_search/archive/7.x-1.10.zip" &&\
+	unzip -o islandora_gsearch_module-7.x-1.10.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
+	sed -i 's|self::\$facet_dates = isset(\$islandora_solr_query->islandoraSolrResult)|self::$facet_dates = isset($islandora_solr_query->islandoraSolrResult['"'"'facet_counts'"'"']['"'"'facet_dates'"'"'])|g' /var/www/html/flat/sites/all/modules/contrib/islandora_solr_search-7.x-1.10/includes/results.inc
 ADD drupal/flat_search /var/www/html/$FLAT_NAME/sites/all/modules/custom/
 
 RUN	service supervisor start &&\

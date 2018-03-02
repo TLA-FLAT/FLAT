@@ -42,17 +42,10 @@ function flat_collection_add_current_collection_form_validate($form, &$form_stat
     // User should not have the same collection in 'My collections'
 
     $obj = $form_state['values']['data']['fedoraObject'];
-    $id = $obj->id;
+    $fid = $obj->id;
 
-    // check drupal database if collection node with the fid of the object for this user exists
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', 'flat_collection')
-        ->propertyCondition('uid', $user->uid)
-        ->fieldCondition('flat_fid', 'value', "$id", '=')
-    ;
-
-    $collection_nodes = $query->execute();
+    module_load_include('inc', 'flat_deposit', 'inc/class.FlatCollection');
+    $collection_nodes = FlatCollection::getUserCollectionNodes($user->uid, $fid);
     if (!empty($collection_nodes)){
         form_set_error('submit','Link to current collection already exists');
         return $form;

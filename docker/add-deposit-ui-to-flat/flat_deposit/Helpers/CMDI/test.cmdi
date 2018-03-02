@@ -1,0 +1,88 @@
+<cmd:CMD CMDVersion="1.1" xmlns:cmd="http://www.clarin.eu/cmd/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.clarin.eu/cmd/ http://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/profiles/clarin.eu:cr1:p_1475136016242/xsd">
+    <Header xmlns="http://www.clarin.eu/cmd/" xmlns:functx="http://www.functx.com" xmlns:imdi="http://www.mpi.nl/IMDI/Schema/IMDI" xmlns:iso="http://www.iso.org/" xmlns:lat="http://lat.mpi.nl/" xmlns:sil="http://www.sil.org/" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+        <MdCreator>admin</MdCreator>
+        <MdCreationDate>2017-06-01</MdCreationDate>
+        <cmd:MdSelfLink lat:localURI="lat:12345_1f4da027_ecff_4135_9b8b_a9de8e81f0da">https://hdl.handle.net/12345/1f4da027-ecff-4135-9b8b-a9de8e81f0da</cmd:MdSelfLink>
+        <MdProfile>clarin.eu:cr1:p_1475136016242</MdProfile>
+    </Header>
+    <Resources xmlns="http://www.clarin.eu/cmd/" xmlns:functx="http://www.functx.com" xmlns:imdi="http://www.mpi.nl/IMDI/Schema/IMDI" xmlns:iso="http://www.iso.org/" xmlns:lat="http://lat.mpi.nl/" xmlns:sil="http://www.sil.org/" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+        <ResourceProxyList>
+            <ResourceProxy id="d10001">
+                <ResourceType mimetype="image/jpeg">Resource</ResourceType>
+                <ResourceRef lat:localURI="lat:12345_4626dc8e_ca17_4216_8b8c_dd9ec76ae7d9">https://hdl.handle.net/12345/4626dc8e-ca17-4216-8b8c-dd9ec76ae7d9</ResourceRef>
+            </ResourceProxy>
+            <ResourceProxy id="d10002">
+                <ResourceType mimetype="image/jpeg">Resource</ResourceType>
+                <ResourceRef lat:localURI="lat:12345_939f4d43_ab16_4863_9fe3_a9d3d114d590">https://hdl.handle.net/12345/939f4d43-ab16-4863-9fe3-a9d3d114d590</ResourceRef>
+            </ResourceProxy>
+            <ResourceProxy id="d10003">
+                <ResourceType mimetype="image/jpeg">Resource</ResourceType>
+                <ResourceRef lat:localURI="lat:12345_029614ca_bf49_48b2_afac_f867e7dde90d">https://hdl.handle.net/12345/029614ca-bf49-48b2-afac-f867e7dde90d</ResourceRef>
+            </ResourceProxy>
+            <cmd:ResourceProxy id="home-12345_1f4da027_ecff_4135_9b8b_a9de8e81f0da">
+                <cmd:ResourceType mimetype="text/html">LandingPage</cmd:ResourceType>
+                <cmd:ResourceRef>http://localhost/flat/islandora/object/lat%3A12345_1f4da027_ecff_4135_9b8b_a9de8e81f0da#</cmd:ResourceRef>
+            </cmd:ResourceProxy>
+        </ResourceProxyList>
+        <JournalFileProxyList/>
+        <ResourceRelationList/>
+    </Resources>
+    <Components xmlns="http://www.clarin.eu/cmd/" xmlns:functx="http://www.functx.com" xmlns:imdi="http://www.mpi.nl/IMDI/Schema/IMDI" xmlns:iso="http://www.iso.org/" xmlns:lat="http://lat.mpi.nl/" xmlns:sil="http://www.sil.org/" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+        <MPI_Bundle>
+            <Title>Stimuli</Title>
+            <DataType>Reaction time data</DataType>
+            <ResearchField>Psychology</ResearchField>
+            <ResearchField>Psychology</ResearchField>
+            <Date>2017-06-01</Date>
+            <Description>
+                <Description>Stimuli for this experiment</Description>
+            </Description>
+            <Contributor>
+                <Name>Alma Veenstra</Name>
+                <Role>author</Role>
+                <Role>developer</Role>
+            </Contributor>
+            <Contributor>
+                <Name>Alma Veenstra</Name>
+                <Role>author</Role>
+            </Contributor>
+            <Institution>
+                <Department>Psychology of Language</Department>
+                <Organisation>Max Planck Institute for Psycholinguistics</Organisation>
+                <Url>http://www.mpi.nl</Url>
+            </Institution>
+            <Project>
+                <ProjectName>Keeping it simple</ProjectName>
+                <ProjectDescription>Studying grammatical encoding with lexically-reduced item sets</ProjectDescription>
+            </Project>
+            <Content_Language>
+                <Name>Dutch</Name>
+                <Id>ISO639-3:nld</Id>
+            </Content_Language>
+            <Location>
+                <Continent>Europe</Continent>
+                <Country>The Netherlands</Country>
+                <PlaceName>Nijmegen</PlaceName>
+                <geoCoordinates>
+                    <Latitude>22</Latitude>
+                    <Longitude>22</Longitude>
+                    <Elevation>33.2</Elevation>
+                </geoCoordinates>
+                <geoCoordinates>
+                    <Latitude>22</Latitude>
+                    <Longitude>22</Longitude>
+                    <Elevation>33.2</Elevation>
+                </geoCoordinates>
+            </Location>
+            <Resource ref="d10001">
+                <Size>3922</Size>
+            </Resource>
+            <Resource ref="d10002">
+                <Size>2511</Size>
+            </Resource>
+            <Resource ref="d10003">
+                <Size>2072</Size>
+            </Resource>
+        </MPI_Bundle>
+    </Components>
+</cmd:CMD>

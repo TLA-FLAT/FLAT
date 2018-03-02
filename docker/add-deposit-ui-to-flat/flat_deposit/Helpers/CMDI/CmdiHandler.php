@@ -8,7 +8,7 @@ class CmdiHandlerException extends Exception {}
 /**
  * CmdiHandler class. Processes cmdi profiles
  */
-class CmdiHandler
+class CmdiHandler extends SimpleXMLElement
 {
 
     // Path containing
@@ -17,54 +17,7 @@ class CmdiHandler
     const FORM_TEMPLATES_PATH = '/Helpers/CMDI/FormTemplates/';
 
 
-    /**
-     * Scans the cmdi2Drupal form path for profiles and returns profile names of a certain content type
-     *
-     * @param $content_type drupal content type of the profile (e.g. flat_collection or flat_bundle)
-     *
-     * @return array associative array with file names
-     */
-    static public function getAvailableTemplates($content_type)
-    {
-        $templates = [];
-        foreach (glob(drupal_get_path('module', 'flat_deposit') . self::FORM_TEMPLATES_PATH . "*.xml") as $filename) {
-            $xml = CmdiHandler::loadXml($filename);
-            $ct = (string)$xml->header->content_type;
 
-            if ($ct === $content_type) {
-                $templates [] = (string)$xml->header->template_name;
-            }
-
-        }
-        return drupal_map_assoc($templates);
-    }
-
-
-    /**
-     * Loads specified file as SimpleXML object.
-     *
-     * @param $fileName
-     *
-     * @return mixed SimpleXMLElement or error message
-     */
-    static public function loadXml($fileName)
-    {
-
-        if (@simplexml_load_file($fileName) === false) {
-
-            $message = 'Error loading schema file. ';
-
-            foreach (libxml_get_errors() as $error) {
-                $message .= "Line: $error->line($error->column) $error->message <br>";
-            }
-
-            return $message;
-
-        } else {
-            $xml = simplexml_load_file($fileName);
-            return $xml;
-        }
-    }
 
     /**
      * Uses tuque to return cmdi datastream of a fedora object
@@ -79,13 +32,94 @@ class CmdiHandler
 
         if ($ds) {
 
-            return (simplexml_load_string($ds->content));
+            return simplexml_load_string($ds->content,'CmdiHandler');
 
         }
 
         return false;
     }
 
+    /**
+     * Function that allows including processing instructions into exportable xml object.
+     * @param $name
+     * @param $value
+     */
+    public function addProcessingInstruction( $name, $value )
+    {
+        // Create a DomElement from this simpleXML object
+        $dom_sxe = dom_import_simplexml($this);
+
+        // Create a handle to the owner doc of this xml
+        $dom_parent = $dom_sxe->ownerDocument;
+
+        // Find the topmost element of the domDocument
+        $xpath = new DOMXPath($dom_parent);
+        $first_element = $xpath->evaluate('/*[1]')->item(0);
+
+        // Add the processing instruction before the topmost element
+        $pi = $dom_parent->createProcessingInstruction($name, $value);
+        $dom_parent->insertBefore($pi, $first_element);
+    }
+
+
+
+    /**
+     * Maps name on clarin id. In case of unspecified case, a get request is done to the clarin catalogue.
+     *
+     *
+     * @return bool|string Either name associated with ID or false.
+     */
+    public function getNameById()
+    {
+        $node = $this->Header->MdProfile;
+        if(!isset($node) OR empty((string)$node)){
+
+            return false;
+        }
+
+        $id = (string)$node;
+
+        switch ($id) {
+            case 'clarin.eu:cr1:p_1475136016242' :
+                $name = 'MPI_Bundle';
+                break;
+
+            case 'clarin.eu:cr1:p_1475136016239' :
+                $name = 'MPI_Collection';
+                break;
+
+            case 'clarin.eu:cr1:p_14077457120358' :
+                $name = 'lat-session';
+                break;
+
+            default :
+                $url = "https://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/1.x/profiles/$id";
+
+                $ch = curl_init();
+                curl_setopt_array($ch, array(
+
+                    CURLOPT_RETURNTRANSFER => 1,
+                    CURLOPT_CONNECTTIMEOUT => 5,
+                    CURLOPT_TIMEOUT => 5,
+                    CURLOPT_URL => $url));
+
+                $result = curl_exec($ch);
+                $xml = simplexml_load_string($result);
+                if (!isset($xml->Header->Name)) {
+                    return false;
+                }
+
+                $name = (string)$xml->Header->Name;
+        }
+
+        return $name;
+    }
+
+
+
+    //*************************************
+    //Revise!!!!!!!!!!!
+    //*************************************
 
     /**
      * Uses curl to return cmdi datastream of a fedora object
@@ -123,278 +157,141 @@ class CmdiHandler
 
     }
 
-
     /**
-     * Performs the generation of a drupal form on basis of a specified profile
+     * Extracts CMDI profile name from datastream of fedora object
      *
-     * @return mixed array containing renderable form array or false
-     */
-    static public function generateDrupalForm($profile)
-    {
-
-        $fName = drupal_get_path('module', 'flat_deposit') . CmdiHandler::FORM_TEMPLATES_PATH . $profile . '.xml';
-
-        $template = CmdiHandler::loadXml($fName);
-
-        if (is_string($template)) {
-            return $template;
-        }
-
-        $parser = new Template2FormParser();
-        $form = $parser->buildDrupalForm($template);
-
-
-        return $form;
-
-    }
-
-    /**
-     * Adds 'add' and 'remove' buttons to fields with multival property
-     *
-     * @param $form drupal renderable array with form fields
-     *
-     * @param $multi_fields array with form elements. Keys indicate id of the field.
-     *
-     * @return mixed
-     */
-    static public function addMultivalElements($fields, $multi_fields)
-    {
-
-
-        foreach ($multi_fields as $id => $value) {
-
-            // link to field element depends on subNode property of the element, If set for field ID the element is nested in fieldset
-            if (isset($fields['data']['#value']['subNode'][$id])) {
-
-                $subNode = $fields['data']['#value']['subNode'][$id];
-                $link_field =  &$fields[$subNode][$id];
-
-            } else {
-
-                $link_field =& $fields[$id];
-
-            };
-
-            $copy_form_element = $link_field[0];
-            $copy_add_button = $link_field['add'];
-            $copy_remove_button = $link_field['remove'];
-
-            unset($link_field['add']);
-            unset($link_field['remove']);
-
-            if ($value >= 1) {
-
-                $copy_remove_button ['#access'] = TRUE;
-
-                for ($i = 1; $i <= $value; $i++) {
-                    // if form element does not exist copy the first element and add to form
-                    if (!isset($link_field[$i])){
-
-                        $link_field[$i] = $copy_form_element;
-                        unset($link_field[$i]['#default_value']);
-                    }
-
-                }
-            } else {
-
-                if (isset($link_field[1])){
-
-                    unset($link_field[1]);
-
-                }
-                $copy_remove_button ['#access'] = FALSE;
-            }
-
-
-            // make remove button visible depending on amount of extra fields
-            #krumo($value);
-            $link_field['add'] = $copy_add_button;
-            $link_field['remove'] = $copy_remove_button;
-
-
-        }
-
-        return $fields;
-
-    }
-
-    /**
-     * Transforms form_state 'clicked_button' value in aggregated data (i.e. associative array with '#name' property
-     * as ID and #value-property as switch which action (i.e. add or substract)) to perform. Ass array is saved in form_state
-     *
-     * @param $form_state
+     * @param $fid
+     * @return bool
      *
      */
-    static public function aggregateClickedButtons(&$form_state)
-    {
+     static public function getCmdiProfileFromDatastream($fid){
 
+        $cmdi = CmdiHandler::getCmdiFromDatastream($fid);
 
-        if (isset($form_state['clicked_button'])) {
-
-            $id = $form_state['clicked_button']['#name'];
-
-            if (isset($form_state['count'][$id])) {
-
-                if ($form_state['clicked_button']['#value'] == 'Add') {
-
-                    $form_state['count'][$id]++;
-                } else {
-
-                    if ($form_state['count'][$id] >= 1) $form_state['count'][$id]--;
-
-                }
-
-            } else {
-
-                $form_state['count'][$id] = 1;
-
-            }
+        if (!$cmdi AND isset ($cmdi->Header->MdProfile)) {
+            return (string)$cmdi->Header->MdProfile;
         }
 
+        return false;
 
     }
-    static public function addInheritedElements($form, &$form_state, $parent_nid){
 
-        // Fill form field with loaded data
-        $parent = node_load($parent_nid);
-        $pwrapper = entity_metadata_wrapper('node', $parent);
-        $pFid = $pwrapper->flat_fid->value();
-        $parentCmdi = CmdiHandler::getCmdiFromDatastream($pFid);
+    // determine CMDI profile type as defined in general settings
 
-        try {
-
-            module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/Cmdi2FormParser');
-            $parser = new Cmdi2FormParser;
-
-            $default_values = $parser->getDefaultValuesFromCmdi($form_state['selected'], $parentCmdi);
-
-            $inheritedMultivalForm = self::createInheritedMultivalForm($form['template_container']['elements'], $default_values, $form_state);
-
-        } catch (Cmdi2FormParserException $exception) {
-
-            drupal_set_message($exception->getMessage(), 'warning');
-        }
-
-
+    static public function getCmdiProfileType($fid){
+      $profile_id = getCmdiProfileFromDatastream($fid);
+      $collection_profiles = variable_get('flat_deposit_cmdi_profiles')['collection_profile_ids'];
+      $collection_profile_values = explode(',',$collection_profiles);
+      $bundle_profiles = variable_get('flat_deposit_cmdi_profiles')['bundle_profile_ids'];
+      $bundle_profile_values = explode(',',$bundle_profiles);
+      if (in_array($profile_id, $collection_profile_values)) {
+        return "collection";
+      }
+      else if (in_array($profile_id, $bundle_profile_values)) {
+        return "bundle";
+      }
+      else {
+        return false;
+      }
     }
+
+
 
     /**
-     * Generates a CMDI simplexml object for a cmdi form template populated with data of a drupal form.
+     * Add Cmdi 'isPartOf' property to cmdi Resource
      *
-     * @param $profile name of the form template
-     *
-     * @param $user_name
-     *
-     * @param $form_data form data of drupal form
-     *
-     * @return SimpleXMLElement|string error message
-     */
-    static public function generateCmdi($profile, $user_name, $form_data)
-    {
-
-        $fName = drupal_get_path('module', 'flat_deposit') . CmdiHandler::FORM_TEMPLATES_PATH . $profile . '.xml';
-
-        $template = CmdiHandler::loadXml($fName);
-
-        // return error message if loading of simplexml object hasn't worked
-        if (is_string($template)) {
-            return $template;
-        }
-
-        $parser = new Form2CmdiParser();
-        $cmdi = $parser->buildCmdi($profile, $template, $user_name, $form_data);
-
-        #return 'debug';
-        return $cmdi;
-
-
-    }
-    /**
      * @param $xml SimpleXMLElement cmdi xml file
+     *
      * @param $parent_pid String fedora identifier of the parent
      */
-    static public function addIsPartOfProperty(&$xml, $parent_pid)
+    public function addIsPartOfProperty($parent_pid)
     {
 
         // Add isPartOf property to xml
-        if (!isset($xml->Resources->IsPartOfList)) {
-            $xml->Resources->addChild('IsPartOfList');
+        if (!isset($this->Resources->IsPartOfList)) {
+            $this->Resources->addChild('IsPartOfList');
         }
-        $xml->Resources->IsPartOfList->addChild('IsPartOf', $parent_pid);
+        $this->Resources->IsPartOfList->addChild('IsPartOf', $parent_pid);
 
 
     }
+
+
+
+
+    /**
+     * Sets MdSelfLink in Cmdi header
+     *
+     * @param $fid String fedora id of MdSelfLink
+     *
+     * @param $handle String handle assigned to MdSelfLink
+     */
+    public function setMdSelfLink($fid, $handle)
+    {
+        $this->Header->MdSelfLink = $handle;
+        $this->Header->MdSelfLink->addAttribute('lat:flatURI', $fid, 'http://lat.mpi.nl/');
+    }
+
 
     /**
      * Removes MdSelfLink child from xml
      *
-     * @param $xml SimpleXMLElement cmdi xml file
      */
-    static public function removeMdSelfLink(&$xml)
+    public function removeMdSelfLink()
     {
-        if (isset($xml->Header->MdSelfLink)) {
+        if (isset($this->Header->MdSelfLink)) {
 
-            unset($xml->Header->MdSelfLink);
+            unset($this->Header->MdSelfLink);
         }
     }
 
     /**
      * Removes all resources from xml file
      *
-     * @param $xml SimpleXMLElement cmdi xml file
      */
-    static public function striplocalURI(&$xml)
+    public function striplocalURI()
     {
 
         // Removal existing resources from ResourceProxy child
-        foreach ($xml->Resources->ResourceProxyList->ResourceProxy as $resource) {
+        foreach ($this->Resources->ResourceProxyList->ResourceProxy as $resource) {
             $value = $resource->ResourceRef;
-            if (isset($value)){
+
+            if (isset($value)) {
                 $attributes = $resource->ResourceRef->attributes('lat', TRUE);
-                if (isset($attributes->localURI)){
 
+                if (isset($attributes->localURI)) {
                     unset ($attributes->localURI);
-
                 }
 
             }
-
-
         }
     }
 
     /**
      * Removes a specified resource from xml file
      *
-     * @param $xml stdClass a cmdi simplexml object
-     *
-     * @param $profile string a valid cmdi profile name (e.g. MPI_bundle)
-     *
      * @param $resourceID string resource ID
      */
-    static public function stripSingleResource(&$xml, $profile, $resourceID)
+    public function stripSingleResource($resourceID)
     {
-
-
         // Removal existing resources from ResourceProxy child
-        $proxy_list = $xml->Resources->ResourceProxyList;
-        if ($proxy_list){
-            foreach ($proxy_list->ResourceProxy as $resource){
+        $proxy_list = $this->Resources->ResourceProxyList;
+        if ($proxy_list) {
+            foreach ($proxy_list->ResourceProxy as $resource) {
 
                 if ($resource && $resource->attributes()) {
+
                     if ((string)$resource->attributes()->id == $resourceID) {
                         unset($resource[0]);
                     }
                 }
-
             }
-
         }
 
 
         // Removal exitsing resources from Components->{profile}->Resources child
-
-        foreach ($xml->Components->{$profile}->Resource as $resource) {
+        $profile = $this->getNameById();
+        foreach ($this->Components->{$profile}->Resource as $resource) {
 
             if ((string)$resource->attributes()->ref == $resourceID) {
                 unset($resource[0]);
@@ -403,110 +300,99 @@ class CmdiHandler
         }
 
 
-
-
     }
 
 
 
-
-
-
-
-
-        /**
-     * Maps name on clarin id. In case of unspecified case, a get request is done to the clarin catalogue.
+    /**
+     * Copies resources from an existing fedora object cmdi datastream to a the cmdi object.
      *
-     * @param $id clarin id.
-     *
-     * @return bool|string Either name associated with ID or false.
+     * @param $fid String fedora ID of exsiting fedora object
      */
-    static public function getNameById($id){
-        switch ($id){
-            case 'clarin.eu:cr1:p_14077457120358' :
-                $name = 'lat-session';
-                break;
-            case 'clarin.eu:cr1:p_1475136016239' :
-                $name = 'MPI_Collection';
-                break;
-            case 'clarin.eu:cr1:p_1475136016242' :
-                $name = 'MPI_Bundle';
-                break;
-            default :
+    public function addResourcesFromDatastream($fid)
+    {
 
-                $url ="https://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/1.x/profiles/$id";
+        $ds = islandora_datastream_load('CMD',$fid);
 
-                $ch = curl_init();
-                curl_setopt_array($ch, array(
+        $cmdi2 = simplexml_load_string($ds->content, 'CmdiHandler');
 
-                    CURLOPT_RETURNTRANSFER => 1,
-                    CURLOPT_CONNECTTIMEOUT => 5,
-                    CURLOPT_TIMEOUT => 5,
-                    CURLOPT_URL => $url));
+        $resourceProxyList = $cmdi2->Resources->ResourceProxyList;
 
-                $result = curl_exec($ch);
-                $xml = simplexml_load_string($result);
-                if (!isset($xml->Header->Name)){
+        if (!empty($resourceProxyList)) {
 
-                    trigger_error('Unable to retrieve name from provided profile id');
-                    return false;
-                }
+            // Create new DOMElements from the two SimpleXMLElements
+            $domxml = dom_import_simplexml($this->Resources->ResourceProxyList);
+            foreach ($resourceProxyList->ResourceProxy as $resource) {
 
-                $name = (string)$xml->Header->Name;
+                $domDsResource  = dom_import_simplexml($resource);
+
+                // Import the <Resource> into the xml document
+                $domDsResource  = $domxml->ownerDocument->importNode($domDsResource, TRUE);
+
+                // Append the <Resource> to <ResourceProxyList>
+                $domxml->appendChild($domDsResource);
+
+            }
         }
 
+        $profile = $cmdi2->getNameById();
+        $components = $cmdi2->Components->{$profile};
 
-        return $name;
+        if (!empty($components->Resource)) {
+
+            // Create new DOMElements from the two SimpleXMLElements
+            $domxml = dom_import_simplexml($this->Components->{$profile});
+
+            foreach ($components->Resource as $resource) {
+
+                $domDsResource = dom_import_simplexml($resource);
+
+                // Import the <Resource> into the xml document
+                $domDsResource = $domxml->ownerDocument->importNode($domDsResource, TRUE);
+
+                // Append the <Resource> to <ResourceProxyList>
+                $domxml->appendChild($domDsResource);
+
+            }
+        }
+
     }
-
 
     /**
      * Function for searching a specified directory, and add all found files as resources to xml.
      *
-     * @param $xml
-     *
-     * @param $profile
-     *
      * @param $directory
      */
-    static public function addResources(&$xml, $profile, $directory){
+     public function addResources($directory){
 
         // todo check filenames of exisitng resources in order to identify updated files
 
         // Inventarize existing resources in the cmdi ResourceProxyList
         $existing_resource_ids = [];
         $existing_filenames = [];
-        $resourceProxyList = $xml->Resources->ResourceProxyList;
+        $resourceProxyList = $this->Resources->ResourceProxyList;
         if (!empty($resourceProxyList->children())){
 
             foreach ($resourceProxyList->ResourceProxy as $resource) {
 
                 $attributes = $resource->attributes();
                 $id = (string)$attributes->id;
-
                 $existing_resource_ids[] = $id;
-
                 $lat_attributes = $resource->ResourceRef->attributes('lat', TRUE);
+
                 if (isset($lat_attributes->flatURI)){
                     $flatURI = (string)$lat_attributes->flatURI;
                     $fObj = islandora_object_load($flatURI);
 
                     if ($fObj){
-
                         $existing_filenames[$id] = $fObj->label;
-
                     }
-
-
                 }
             }
         }
 
-
-
         // scan all files of the bundle freeze directory and add theses as resources to the CMDI;
         if (!is_dir($directory)) return false;
-
 
         // Iterate through resources directory and add every file to the array resource with a unique resource ID as key.
         // In case a resource with an existing resource file name is found assign that resource the ID of the existing resource.
@@ -564,7 +450,8 @@ class CmdiHandler
         }
 
         // Add resources to simplexml variable
-        foreach ($resources as $rid => $file_name) {
+         $profile = $this->getNameById();
+         foreach ($resources as $rid => $file_name) {
 
             $file_mime = self::fits_mimetype_check(drupal_realpath($file_name)) ;
             if (!$file_mime){
@@ -577,7 +464,7 @@ class CmdiHandler
                 $id = array_search ( basename($file_name) , $existing_filenames);
 
                 // Add Resource to existing resource at Resources->ResourceProxyList
-                $resourceProxyList = $xml->Resources->ResourceProxyList;
+                $resourceProxyList = $this->Resources->ResourceProxyList;
                 $resourceProxy = $resourceProxyList->xpath('cmd:ResourceProxy[@id="' . $id . '"]');
                 $resourceProxy[0]->ResourceRef->addAttribute('lat:localURI', 'file:' . $file_name, "http://lat.mpi.nl/");
 
@@ -586,8 +473,8 @@ class CmdiHandler
                 if ($profile == 'lat-session'){
 
                     // Add 'Resources'-child to Components->profile if not existing
-                    if (!isset($xml->Components->{$profile}->Resources)){
-                        $xml->Components->{$profile}->addChild('Resources');
+                    if (!isset($this->Components->{$profile}->Resources)){
+                        $this->Components->{$profile}->addChild('Resources');
                     }
 
 
@@ -599,7 +486,7 @@ class CmdiHandler
                     $refType = 'Resource';
 
                 }
-                $node = $xml->Components->{$profile};
+                $node = $this->Components->{$profile};
                 $resource = $node->xpath('//cmd:Resource[@ref="' . $id . '"]');
 
 
@@ -617,7 +504,7 @@ class CmdiHandler
             } else {
 
                 // Add Resource to Resources->ResourceProxyList
-                $resourceProxy = $xml->Resources->ResourceProxyList->addChild('ResourceProxy');
+                $resourceProxy = $this->Resources->ResourceProxyList->addChild('ResourceProxy');
                 $resourceProxy->addAttribute('id', $rid);
 
                 $resourceProxy->addChild('ResourceType', 'Resource');
@@ -630,18 +517,18 @@ class CmdiHandler
                 if ($profile == 'lat-session'){
 
                     // Add 'Resources'-child to Components->profile if not existing
-                    if (!isset($xml->Components->{$profile}->Resources)){
-                        $xml->Components->{$profile}->addChild('Resources');
+                    if (!isset($this->Components->{$profile}->Resources)){
+                        $this->Components->{$profile}->addChild('Resources');
                     }
 
 
                     $refType = 'MediaFile';
-                    $resource = $xml->Components->{$profile}->Resources->addChild($refType);
+                    $resource = $this->Components->{$profile}->Resources->addChild($refType);
 
                 } else{
 
                     $refType = 'Resource';
-                    $resource = $xml->Components->{$profile}->addChild($refType);
+                    $resource = $this->Components->{$profile}->addChild($refType);
 
                 }
 
@@ -676,258 +563,99 @@ class CmdiHandler
     static public function fits_mimetype_check($filename){
 
 
-        $config = variable_get('flat_deposit_fits');
-        $url = $config['url'] . '/examine?file=';
-        $query = rawurlencode($filename);
-        $port = $config['port'];
+                $config = variable_get('flat_deposit_fits');
+                $url = $config['url'] . '/examine?file=';
+                $query = rawurlencode($filename);
+                $port = $config['port'];
 
-        $ch = curl_init();
-        curl_setopt_array($ch, array(
-                CURLOPT_URL => $url . $query,
-                CURLOPT_PORT => $port,
-                CURLOPT_RETURNTRANSFER => 1,
-                CURLOPT_CONNECTTIMEOUT => 5,
-                CURLOPT_TIMEOUT => 5,
-            )
-        );
+                $ch = curl_init();
+                curl_setopt_array($ch, array(
+                        CURLOPT_URL => $url . $query,
+                        CURLOPT_PORT => $port,
+                        CURLOPT_RETURNTRANSFER => 1,
+                        CURLOPT_CONNECTTIMEOUT => 5,
+                        CURLOPT_TIMEOUT => 5,
+                    )
+                );
 
-        $result = curl_exec($ch);
-        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+                $result = curl_exec($ch);
+                $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
 
-        if ($httpcode < 200 OR $httpcode >= 300){
+                if ($httpcode < 200 OR $httpcode >= 300){
 
-            return false;
-
-        }
-
-        $xml = simplexml_load_string($result);
-
-        if (!isset($xml->identification->identity['mimetype'])){
-
-            return false;
-
-        }
-
-        return (string)$xml->identification->identity['mimetype'];
-
-    }
-
-
-    static public function createInheritedMultivalForm(&$field, $default_values, &$form_state){
-
-        foreach ($default_values as $default_key => $default_value){
-
-            // check if values are nested by looking for array keys that are not numeric
-            $not_all_numeric = in_array(false, array_map('is_numeric',array_keys($default_value)));
-
-            if ($not_all_numeric){
-                // nested
-                foreach ($default_value as $field_name => $field_array){
-
-                    #$form_state['count'][$field_name] = 0;
-
-                    foreach ($field_array as $key => $value){
-
-                        if ($key == 0) {
-
-                            $basis = $field[$default_key][$field_name][$key];
-
-                        } else {
-
-                            $field[$default_key][$field_name][(string)$key] = $basis;
-
-                            if (!isset($form_state['addInheritedElements'])) {
-
-                                // keep track of multifield number
-                                if (isset($form_state['count'][$field_name])) {
-
-                                    $form_state['count'][$field_name]++;
-
-                                } else {
-
-                                    $form_state['count'][$field_name] = 1;
-                                }
-                            }
-
-                        }
-                    }
-
+                    return false;
 
                 }
 
-            } else{
-                // not nested
+                $xml = simplexml_load_string($result);
 
-                foreach ($default_value as $key => $value){
+                if (!isset($xml->identification->identity['mimetype'])){
 
-                    if ($key == 0) {
+                    return false;
 
-                        $basis = $field[$default_key][$key];
-
-                    } else {
-
-                        $field[$default_key][(string)$key] = $basis;
-
-
-                        // keep track of multifield number
-                        if (!isset($form_state['addInheritedElements'])) {
-
-                            $form_state['count'][$default_key] = $key;
-
-                        }
-                    }
                 }
+
+                return (string)$xml->identification->identity['mimetype'];
+
             }
-        }
-
-        $form_state['addInheritedElements'] = TRUE;
-
-    }
-
-}
 
 
 
-///////////////////////////////////
-// functions outside class
-///////////////////////////////////
 
+    function add_attribute_tree_to_xml($data, &$xml_data ){
 
-function select_profile_name_ajax_callback ($form, &$form_state)
-{
-
-    return $form['template_container'];
-}
-
-
-
-/**
- * Recursively exchanges array keys with a numeric value with '#default_value'.
- * @param $array
- *
- * @return array|void
- *
- */
-function exchange_numeric_key_with_default_value_property($array) {
-    if (!is_array($array)) return;
-
-    $helper = array();
-
-    foreach ($array as $key => $value) {
-
-        if (is_array($value)) {
-
-            $helper[$key] = exchange_numeric_key_with_default_value_property($value);
-
-        } else {
-            if (is_numeric($key)){
-
-                $helper['#default_value' ] = $value;
-
-            } elseif(is_numeric(array_search($key,['month','day','year']))){
-                $helper['#default_value'][$key] = $value;
-            } else{
-                $helper[$key] = $value;
+        foreach( $data as $key => $value ) {
+            if( is_array($value) ){
+                $subnode = $xml_data->$key;
+                add_attribute_tree_to_xml($value, $subnode );
+            } else {
+                $xml_data->addAttribute($key ,$value);
             }
         }
     }
-    return $helper;
-}
 
 
-/**
- * Helper function that manages a) the generation of a new cmdi file or b) the import of existing cmdi file
- *
- * @param $data array containing a) nothing (empty array) or b) name of cmdi profile, the drupal form data of the specified profile and the id of the owner
- *
- * @param $fName string specifies the name under which cmdi will be stored
- *
- * @param $import bool specifies whether cmdi is imported or generated
- *
- * @return bool|string true in case of success or otherwise error message
- */
-function get_cmdi($data, $fName, $import)
-{
-    // Import file in case this option was selected
-    if ($import) {
-
-        $file = file_save_upload('cmdi_file', array(
-
-            // Validate extensions.
-            'file_validate_extensions' => array('cmdi'),
-        ));
-
-        // If the file did not passed validation:
-        if (!$file) {
-            $message = 'File was not specified or has not correct extension (.cmdi)';
-            return $message;
+    /**
+     * function definition to convert an array to xml. Don't use for attributes, use add_attribute_tree_to_xml instead
+     *
+     * @param $data php array
+     * @param $xml_data simplexml object for which new child branches are created
+     */
+    function array_to_xml( $data, &$xml_data ) {
+        foreach( $data as $key => $value ) {
+            if( is_array($value) ) {
+                if( is_numeric($key) ){
+                    $key = 'item'. $key; //dealing with <0/>..<n/> issues
+                }
+                $subnode = $xml_data->addChild($key);
+                $this->array_to_xml($value, $subnode);
+            } else {
+                $xml_data->addChild("$key",htmlspecialchars("$value"));
+            }
         }
-        // Validate valid xml file
-        if (!@simplexml_load_file($file->uri)) {
-            $message = 'File is not a valid xml file';
-            return $message;
-        }
-
-        copy(drupal_realpath($file->uri), $fName);
-
-        if (!file_exists($fName)) {
-
-            $message = 'Unable to copy specified file to target location';
-            return $message;
-        }
-
-        return TRUE;
-
-    } else {
-
-        $profile = $data['select_profile_name'];
-        $form_data = $data['template_container']['elements'];
-        $user_name = $data['owner'];
-
-        // get new simplexml object
-        $cmdi = CmdiHandler::generateCmdi($profile, $user_name, $form_data);
-
-
-        if (is_string($cmdi)) {
-
-            return $cmdi;
-
-        }
-
-        $export = $cmdi->asXML($fName);
-
-        if (!$export) {
-            return 'Unable to create cmdi record in users\' metadata directory';
-
-        }
-
-        return TRUE;
-
     }
+
+// function definition to convert array to xml
+    function array_to_xml_original ( $data, &$xml_data ) {
+        foreach( $data as $key => $value ) {
+            if( is_array($value) ) {
+                if( is_numeric($key) ){
+                    $key = 'item'. $key; //dealing with <0/>..<n/> issues
+                }
+                $subnode = $xml_data->addChild($key);
+                array_to_xml($value, $subnode);
+            } else {
+                $xml_data->addChild("$key",htmlspecialchars("$value"));
+            }
+        }
+    }
+
+
 }
 
 
 
 
-function add_multival_to_cmdi_form_ajax($form, $form_state) {
 
 
-    return $form['template_container'];
-}
-
-function remove_multival_from_cmdi_form_ajax($form, $form_state) {
-
-    return $form['template_container'];
-}
-
-
-function ajax_submit_button_call($form, $form_state) {
-
-    return $form['container'];
-
-}
-
-function ajax_select_button_call($form, $form_state) {
-    return $form['container'];
-}

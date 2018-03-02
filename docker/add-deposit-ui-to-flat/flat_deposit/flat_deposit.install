@@ -195,7 +195,7 @@ function flat_deposit_install()
             'max_length' => 255,
             'allowed_values' => array(
                 'new' => 'Newly created content',
-                'update' => 'Update of an existing content',
+                'update' => 'Update of existing content',
             ),
         ),
         'locked' => TRUE,
@@ -663,74 +663,6 @@ function flat_deposit_install()
 
 
 
-/**
- * Implements hook_schema().
- */
-function flat_deposit_schema() {
-
-    // Table keeping track of existing collections
-    $schema['flat_supercollection'] = array(
-        'description' => 'Collection-member relation in FLAT.',
-        'fields' => array(
-            'collection_id'  => array(
-                'type' => 'serial',
-                'unsigned' => TRUE,
-                'not null' => TRUE,
-                'description' => 'Unique ID of each member collection relation'
-            ),
-            'collection_name'  => array(
-                'type' => 'varchar',
-                'length' => 255,
-                'not null' => TRUE,
-                'description' => 'Name of the collection'
-            ),
-            'collection_tree'  => array(
-                'type' => 'varchar',
-                'length' => 255,
-                'not null' => TRUE,
-                'description' => 'Complete path of collection (from root collection to final subdirectory)'
-            ),
-            'collection_pid'  => array(
-                'type' => 'varchar',
-                'length' => 255,
-                'not null' => TRUE,
-                'description' => 'PID assigned by fedora to collection'
-            ),
-            'member' => array(
-                'type' => 'varchar',
-                'length' => 63,
-                'not null' => FALSE,
-                'description' => 'Member of the collection.'
-            ),
-            'label'  => array(
-                'type' => 'varchar',
-                'length' => 255,
-                'not null' => TRUE,
-                'description' => 'label of the relation'
-            ),
-            'language' => array(
-                'description' => 'language of the displayed entity',
-                'length' => 12,
-                'type' => 'varchar',
-                'not null' => TRUE,
-                'default' => ''
-            ),
-            'date_created' => array(
-                'description' => 'Date when entry was created',
-                'type' => 'int',
-                'not null' => TRUE,
-            ),
-        ),
-
-        'primary key' => array('collection_id'),
-        'indexes' => array(
-            'language' => array('language'),)
-    );
-
-
-    return $schema;
-}
-
 
 /**
  * Implements hook_uninstall().
@@ -763,7 +695,7 @@ function flat_deposit_uninstall(){
         drupal_set_message($t('Nodes containing custom content types have been removed'));
     }
 
-    
+
     //Remove all custom content type fields and field instances and clean up entries in field_config / field_config_instance tables
  /*   foreach (field_read_fields(array('module' => 'flat_deposit')) as $field) {
         foreach(field_read_instances(array('field_name' => $field['field_name'])) as $instance) {

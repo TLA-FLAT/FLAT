@@ -268,6 +268,33 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
         return $form;
     }
 
+    // Validate path and number of files in bundle
+    $wrapper = entity_metadata_wrapper('node', $node);
+    $path = $wrapper->flat_location->value();
+
+
+    if (!file_exists($path)){
+        form_set_error('validate_bundle', t('Bundle directory does not exist or is not accessible'));
+        return $form;
+    }
+
+    $nFiles = count(array_diff(scandir(drupal_realpath($path)), ['.','..']));
+    $max = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
+
+    if ($nFiles == 0){
+        form_set_error('validate_bundle', t('Bundle contains no files. Please upload files first'));
+        return $form;
+    }
+
+    if ($nFiles > $max){
+        form_set_error('validate_bundle', t('Bundle contains too many files. Please reduce amount of file to !limit', array('!limit'=> $max)));
+        return $form;
+    }
+
+
+
+
+
 }
 
 
@@ -302,7 +329,8 @@ function flat_bundle_action_form_submit($form, &$form_state)
 
             $processed = ($wrapper->flat_bundle_status->value() == 'valid') ? 'archived' : 'validated';
 
-            $form_state['redirect'] = 'workspace';
+            global $user;
+            $form_state['redirect'] = 'dashboard';
             drupal_set_message("Bundle is being $processed");
 
             break;

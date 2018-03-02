@@ -1,0 +1,26 @@
+<?php
+/**
+ * @file
+ * Deposit UI installation
+ */
+
+/**
+ * Implements hook_install().
+ */
+function flat_xacml_install()
+{
+    $t = get_t();
+
+}
+
+
+
+
+/**
+ * Implements hook_uninstall().
+ */
+function flat_xacml_uninstall(){
+    $t = get_t();
+
+
+}

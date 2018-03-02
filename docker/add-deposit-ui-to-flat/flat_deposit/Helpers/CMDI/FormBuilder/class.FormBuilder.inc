@@ -1,0 +1,229 @@
+<?php
+
+spl_autoload_register(function ($class_name) {
+    include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.' . $class_name . '.inc';
+});
+
+/**
+ * Translates an xml form template into a drupal form
+ */
+class FormBuilder
+{
+
+    // Path containing xml form templates files for drupal form generation
+    const FORM_TEMPLATES_PATH = '/Helpers/CMDI/FormTemplates/';
+
+
+    /**
+     * @var array A drupal form render array to be exported.
+     */
+    private $form = array();
+
+    /**
+     * @var array Nested array containing all template components as render arrays
+     */
+    private $formComponents = array();
+
+    /**
+     * @var array Nested array containing a render array with #type data
+     */
+    private $data = array();
+
+    /**
+     * Scans the cmdi2Drupal form path for profiles and returns profile names of a certain content type
+     *
+     * @param $content_type String drupal content type of the profile (e.g. flat_collection or flat_bundle)
+     *
+     * @return array associative array with file names
+     */
+    static public function getAvailableTemplates($content_type)
+    {
+        $templates = [];
+        foreach (glob(drupal_get_path('module', 'flat_deposit') . self::FORM_TEMPLATES_PATH . "*.xml") as $filename) {
+            $xml = simplexml_load_file($filename);
+            $fileContentType = (string)$xml->header->content_type;
+
+            if ($fileContentType === $content_type) {
+                $templates [] = (string)$xml->header->template_name;
+            }
+
+        }
+        return drupal_map_assoc($templates);
+    }
+
+
+    /**
+     * Template2FormParser constructor.
+     */
+    public function __construct(){}
+
+
+    /**
+     * Builds the form based on a template file.
+     *
+     * @param $templateName String Name of the template used to create the drupal form.
+     *
+     * @param $cmdi SimpleXMLElement An existing cmdi file with data to fill form fields with default values.
+     *
+     * @return boolean Success of operation.
+     *
+     */
+    public function setForm($templateName, $cmdi = null, $pressedButtons = null){
+
+        module_load_include('php', 'flat_deposit', 'Helpers/CMDI/CmdiHandler');
+        $fName = drupal_get_path('module', 'flat_deposit') . CmdiHandler::FORM_TEMPLATES_PATH . $templateName . '.xml';
+        $template = simplexml_load_file($fName);
+
+        if (!$template){
+            return false;
+        }
+
+        $dataNode = $this->getHeadNode($cmdi);
+        $this->setFormComponents($template, $dataNode, $pressedButtons);
+        $this->setData($template);
+
+        foreach ($this->formComponents as $key => $component) {
+            $this->form[$key]= $component;
+        }
+
+        $this->form['data']= $this->data;
+
+        return true;
+    }
+
+    /**
+     * Puts form component and data together and exports
+     *
+     */
+    public function getForm()
+    {
+
+        return $this->form;
+
+    }
+
+
+    /**
+     * Creates nested form render arrays from form template.
+     *
+     *  Runs along xml tree of a xml template file to generate visible form fields.
+     *
+     * @param $template SimpleXMLElement A Drupal form template describing the layout of the form.
+     *
+     * @param $dataNode SimpleXMLElement Node of an existing Cmdi file with data to fill form fields with default values.
+     *
+     * @param $pressedButtons array Counts of button presses per component.
+     *
+     * @param int $index Indicates in which branch of the pressedButton array will be searched for counts.
+     *
+     */
+    private function setFormComponents($template, $dataNode = null, $pressedButtons = null, $index = 0){
+
+        foreach ($template->items->item as $component) {
+            $className = "Form" . (string)$component['type'];
+            $numberElements = isset($component['minOccurrence']) ? (int)$component['minOccurrence'] : 0;
+            $formComponent = new $className($numberElements);
+            $formComponent->setFormComponent($component, $dataNode, $pressedButtons, $index);
+            $nodeName = $formComponent->getFormKeyName($component);
+            $this->formComponents[$nodeName] = $formComponent->getFormComponent();
+        }
+
+    }
+
+
+
+    /**
+     * Determines the position in cmdi to look for existing data
+     * @param $cmdi CmdiHandler
+     * @return head node of the cmdi components section
+     */
+    private function getHeadNode($cmdi){
+
+        if ($cmdi) {
+            $name = $cmdi->getNameById();
+            return $cmdi->Components->{$name};
+        }
+
+        return null;
+    }
+
+    /**
+     * Reads in 'data'-child of template to create an invisible form element in drupal with necessary data to process the form
+     *
+     * @param $template SimpleXMLElement Template file with 'data' child
+     */
+    private function setData($template){
+        $data = [];
+
+        // loop through array to get core attributes of each element
+        foreach ($template->data->children() as $key => $value) {
+            $data[$key] = (string)$value;
+        }
+
+        $renderArray = array(
+            '#type' => 'value',
+            '#value' => $data,
+        );
+
+        $this->data = $renderArray;
+    }
+
+
+    /**
+     * Transforms form_state 'clicked_button' value in aggregated data (i.e. associative array with '#name' property
+     * as ID and #value-property as switch which action (i.e. add or substract)) to perform. Ass array is saved in form_state
+     *
+     * @param $form_state
+     *
+     */
+    public function aggregatePressedButtons(&$form_state)
+    {
+        // return if no button has been pressed
+        if (!isset($form_state['clicked_button'])) {
+            return false;
+        }
+
+        $componentId = $form_state['clicked_button']['#componentid'];
+        $isAddButton = is_int(strpos($form_state['clicked_button']['#value'], 'Add '));
+
+        #if (!isset($form_state['pressedButtons'])){$form_state['pressedButtons'] = array();};
+
+        $pointer = &$form_state['pressedButtons'];
+        $parents = $form_state['clicked_button']['#parents'];
+
+        foreach ($parents as $key => $parent) {
+
+            if ($parent === $componentId) {
+                $pointer[$componentId]['base'] = isset($pointer[$componentId]['base']) ? $pointer[$componentId]['base'] :  0;
+                $pointer = &$pointer[$componentId]['base'];
+                break;
+            }
+
+            if (!isset($pointer[$parent])) {
+                $pointer[$parent] = array();
+            }
+
+            $pointer = &$pointer[$parent];
+        }
+
+        // Get saved value or set to 0;
+
+
+        if ($isAddButton) {
+            $pointer = $pointer + 1;
+        } else {
+            $pointer = $pointer - 1;
+        }
+
+    }
+
+}
+
+
+
+
+function select_profile_name_ajax_callback ($form, &$form_state)
+{
+
+    return $form['template_container'];
+}

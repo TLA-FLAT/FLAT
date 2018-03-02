@@ -6,41 +6,43 @@
  */
 
 /**
- * Implements hook_views_data().
+* Implements hook_views_data().
  */
+function flat_views_views_data() {
+    $data['flat_views']['table']['group'] = t('Flat Views');
+    $data['flat_views']['table']['join'] = array(
+        // Exist in all views.
+        '#global' => array(),
+    );
 
+    $data['flat_views']['Edit bundle'] = array(
+        'title' => t('Edit bundle'),
+        'help' => t('Redirects to node view.'),
+        'field' => array(
+            'handler' => 'views_handler_my_custom_field',
+        ),
+    );
 
-/**
- * implement hook_views_data_alter
- * */
-function flat_views_views_data_alter(&$data) {
-
-  // changes the data that will be rendered
-  $data['flat_supercollection']['actions'] = array(
-      'title' => t('Action buttons'),
-      'help' => t('Produces links to actions a user may perform on a collection entity.'),
-      'field' => array(
-          'handler' => 'flat_views_views_handler_field_actions',
-          'group' => 'Collection',
-          'click sortable' => FALSE,
-      ),
-  );
-
-  $data['flat_supercollection']['date_created'] = array(
-      'title' => t('Created date'),
-      'help' => t('The date the relationship was created.'),
-      'field' => array(
-          'handler' => 'views_handler_field_date',
-          'click sortable' => TRUE,
-      ),
-      'sort' => array(
-          'handler' => 'views_handler_sort_date',
-      ),
-      'filter' => array(
-          'handler' => 'views_handler_filter_date',
-      ),
-  );
-
-    #$data['field_data_flat_fid']['flat_fid']['field']['handler'] = 'flat_views_views_handler_collections' ;
+    return $data;
 }
 
+function flat_views_views_data_alter(&$data){
+
+ #   var_dump($data['field_data_flat_cmdi_file']['flat_cmdi_file']);
+#    $data['field_data_flat_cmdi_file']['flat_cmdi_file']['field']['handler'] = 'flat_views_views_handler_cmdi_file_field';
+
+    return $data;
+}
+
+
+function flat_views_views_pre_render(&$view) {
+    if ($view->name == 'FLAT My Collections View') {
+#        krumo($view->result);
+        foreach ($view->result as $key => $result) {
+
+            $val = $result->field_flat_flat_fid['0']['raw']['value'];
+            $link = l('link', 'islandora/object/' . rawurlencode($val));
+            $result->field_flat_flat_fid[0]['rendered']['#markup'] = $link;
+        }
+    }
+}

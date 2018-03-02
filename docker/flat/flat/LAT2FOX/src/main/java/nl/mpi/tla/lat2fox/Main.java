@@ -65,7 +65,6 @@ public class Main {
         System.err.println("INF: -u=<URI>   license URI");
         System.err.println("INF: -v         validate the FOX files (optional)");
         System.err.println("INF: -l         lax check if a local resource exists (optional)");
-        System.err.println("INF: -h         don't create a CMD object as first child of the compound, but include the CMD in the compound itself (optional)");
         System.err.println("INF: -z         skip the relations check");
     }
 
@@ -87,18 +86,15 @@ public class Main {
         XdmNode collsDoc = null;
         boolean validateFOX = false;
         boolean laxResourceCheck = false;
-        boolean createCMDObject = true;
         boolean relationCheck = true;
         int ndir = 0;
         // check command line
-        OptionParser parser = new OptionParser( "zhlve:r:f:i:x:p:q:n:c:o:a:s:b:u:?*" );
+        OptionParser parser = new OptionParser( "zlve:r:f:i:x:p:q:n:c:o:a:s:b:u:?*" );
         OptionSet options = parser.parse(args);
         if (options.has("l"))
             laxResourceCheck = true;
         if (options.has("v"))
             validateFOX = true;
-        if (options.has("h"))
-            createCMDObject = false;
         if (options.has("z"))
             relationCheck = false;
         if (options.has("e"))
@@ -258,7 +254,6 @@ public class Main {
                             fox.setParameter(new QName("management-dir"), new XdmAtomicValue(mdir));
                         if (license != null)
                             fox.setParameter(new QName("license-uri"), new XdmAtomicValue(license));
-                        fox.setParameter(new QName("create-cmd-object"), new XdmAtomicValue(createCMDObject));
                         fox.setSource(new StreamSource(input));
                         XdmDestination destination = new XdmDestination();
                         fox.setDestination(destination);

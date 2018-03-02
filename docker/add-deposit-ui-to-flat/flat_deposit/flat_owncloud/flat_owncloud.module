@@ -94,7 +94,7 @@ function flat_owncloud_user_profile_owncloud_validate (&$form, &$form_state)
         // initiate user directories if necessary
         module_load_include('inc', 'imce', 'inc/imce.page');
         global $user;
-        imce_initiate_profile ($user);
+        imce_initiate_profile ($user, 'external');
 
         // Mount and Verify Drupal folder
         $oc->MountDataFolder();

@@ -34,12 +34,18 @@ function flat_collection_bundle_action_form($form, &$form_state, $var)
             $metadata = !is_null($bundle_wrapper->flat_cmdi_file->value()) ? 'available' : 'not available';
             $status = $bundle_wrapper->flat_bundle_status->value();
 
+            $source = $bundle_wrapper->flat_source->value();
+
             $disabled = ($metadata == 'available' AND ($status == 'open' OR $status == 'failed' OR $status == 'valid')) ? FALSE : TRUE;
 
             $form['table_container'][$count]['title'] = array(
                 '#type' => 'link',
                 '#title' => $bundle->title,
                 '#href' => 'node/' . $bundle->nid,
+            );
+
+            $form['table_container'][$count]['location'] = array(
+                '#markup' => t('!source', array('!source' => $source))
             );
 
             $form['table_container'][$count]['status'] = array(
@@ -82,22 +88,23 @@ function flat_collection_bundle_action_form($form, &$form_state, $var)
 
     $form['actions']['validate_bundle'] = array(
         '#type' => 'submit',
-        '#value' => t('Validate bundle'),
+        '#value' => t('Validate bundle(s)'),
         '#validate' => array('flat_collection_bundle_action_form_validate_validate'),
-        '#description' => t('Validated bundles will be transferred to different location and can not be altered'),
+        '#description' => t('Validate selected bundles. Successfully validated bundles cannot be altered, unless they are re-opened'),
     );
 
     $form['actions']['reopen_bundle'] = array(
         '#type' => 'submit',
-        '#value' => t('Re-open bundle'),
+        '#value' => t('Re-open bundle(s)'),
         '#validate' => array('flat_collection_bundle_action_form_reopen_validate'),
-        '#description' => t('Click to allow modifications of your bundle'),
+        '#description' => t('Re-open valid bundles to allow modifications'),
     );
 
     $form['actions']['archive_bundle'] = array(
         '#type' => 'submit',
-        '#value' => t('Archive bundle'),
+        '#value' => t('Archive bundle(s)'),
         '#validate' => array('flat_collection_bundle_action_form_archive_validate'),
+        '#description' => t('Submit valid bundles to be archived'),
     );
 
     return $form;
@@ -185,7 +192,10 @@ function flat_collection_bundle_action_form_submit($form, &$form_state)
     $action = $form_state['clicked_button']['#value'];
 
     switch ($action) {
-        case 'Re-open bundle':
+        case 'Re-open bundle(s)':
+
+            $action = 'Re-open bundle';
+
             if (!empty($form_state['values']['reopen_bundles'])) {
 
                 foreach ($form_state['values']['reopen_bundles'] as $bundle){
@@ -196,7 +206,7 @@ function flat_collection_bundle_action_form_submit($form, &$form_state)
 
                 }
                 drupal_set_message('Reopen submission succeeded for bundle(s) ' . implode(' and ', $form_state['values']['reopen_bundles']));
-                $form_state['redirect'] = 'my_collections';
+                $form_state['redirect'] = 'dashboard';
             }
 
             if (!empty($form_state['values']['reopen_error'])){
@@ -206,8 +216,9 @@ function flat_collection_bundle_action_form_submit($form, &$form_state)
             }
             break;
 
-        case 'Validate bundle':
+        case 'Validate bundle(s)':
 
+            $action = 'Validate bundle';
 
             if (!empty($form_state['values']['validate_bundles'])) {
 
@@ -218,7 +229,7 @@ function flat_collection_bundle_action_form_submit($form, &$form_state)
                 }
 
                 drupal_set_message('Validation submission succeeded for bundle(s) ' . implode(' and ', $form_state['values']['validate_bundles']));
-                $form_state['redirect'] = 'my_collections';
+                $form_state['redirect'] = 'dashboard';
             }
 
             if (!empty($form_state['values']['reject_bundles'])) {
@@ -227,7 +238,9 @@ function flat_collection_bundle_action_form_submit($form, &$form_state)
             }
             break;
 
-        case 'Archive bundle':
+        case 'Archive bundle(s)':
+
+            $action = 'Archive bundle';
 
             if (!empty($form_state['values']['archive_bundles'])) {
 
@@ -238,7 +251,7 @@ function flat_collection_bundle_action_form_submit($form, &$form_state)
                 }
 
                 drupal_set_message('Submission succeeded ' . implode(' and ', $form_state['values']['archive_bundles']));
-                $form_state['redirect'] = 'my_collections';
+                $form_state['redirect'] = 'dashboard';
 
             }
 

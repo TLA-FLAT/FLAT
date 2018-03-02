@@ -2,18 +2,10 @@
 name = FLAT Views
 description = FLAT Views module - defines views for FLAT deposit module
 dependencies[] = views
+dependencies[] = ctools
+dependencies[] = views_autorefresh
 package = FLAT
 core = 7.x
 php = 5.0
 
-
-files[] = flat_views.module
-
-
-
-; Views handlers
-files[] = views/flat_views_views_handler_field_actions.inc
-
-
-; Classes
-
+files[] = includes/views_handler_my_custom_field.inc

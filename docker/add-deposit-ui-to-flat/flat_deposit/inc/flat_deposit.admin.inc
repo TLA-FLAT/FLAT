@@ -47,6 +47,32 @@ function flat_deposit_admin_form($form, &$form_state)
         '#required' => TRUE,
     );
 
+    // CMDI profiles
+    $form['cmdi_profiles'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('CMDI profile settings'),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+        '#tree' => TRUE,
+    );
+
+    $profiles = variable_get('flat_deposit_cmdi_profiles');
+
+    $form['cmdi_profiles']['collection_profile_ids'] = array (
+        '#type' => 'textfield',
+        '#title' => t('Collection CMDI profile IDs'),
+        '#description' => t('CMDI profiles that should be treated as collections'),
+        '#default_value' => $profiles['collection_profiles'],
+        '#required' => TRUE,
+    );
+
+    $form['cmdi_profiles']['bundle_profile_ids'] = array (
+        '#type' => 'textfield',
+        '#title' => t('Bundle CMDI profile IDs'),
+        '#description' => t('CMDI profiles that should be treated as bundles'),
+        '#default_value' => $profiles['bundle_profiles'],
+        '#required' => TRUE,
+    );
 
     // INGEST SERVICE
     $form['ingest_service'] = array(
@@ -120,6 +146,13 @@ function flat_deposit_admin_form($form, &$form_state)
         '#title' => t('Log all backend actions'),
         '#description' => t('Should all backend service activities be logged?'),
         '#default_value' => $service['log_all'],
+        '#required' => FALSE,
+    );
+    $form['ingest_service']['max_ingest_files'] = array (
+        '#type' => 'textfield',
+        '#title' => t('Maximal number of files per bundle'),
+        '#description' => t('Validation parameter for bundles before ingest'),
+        '#default_value' => $service['max_ingest_files'],
         '#required' => FALSE,
     );
 
@@ -471,6 +504,8 @@ function flat_deposit_admin_form_import_validate ($form, &$form_state)
     // Check mime type of file
     $tmp = $_FILES['File_selector']['tmp_name'];
 
+
+    /* check fails, apparently FITS gives it another mime type than text/plain
     module_load_include('php', 'flat_deposit', '/Helpers/CMDI/CmdiHandler');
     $type = CmdiHandler::fits_mimetype_check($tmp);
 
@@ -478,7 +513,7 @@ function flat_deposit_admin_form_import_validate ($form, &$form_state)
 
         form_set_error('import', t('File needs to be a plain text file '));
     }
-
+    */
 
     // Check if file can be read in
     $content = file_get_contents($tmp);

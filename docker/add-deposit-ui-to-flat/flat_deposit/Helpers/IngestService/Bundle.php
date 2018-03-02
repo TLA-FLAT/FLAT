@@ -182,40 +182,32 @@ class Bundle extends SIP
         module_load_include('php','flat_deposit','/Helpers/CMDI/CmdiHandler');
 
         $file_name = $this->cmdiTarget;
-        $xml = CmdiHandler::loadXml($file_name);
+        $cmdi = simplexml_load_file($file_name,'CmdiHandler');
 
-        if (is_string($xml)){
-            throw new IngestServiceException($xml);
+        if (!$cmdi OR !$cmdi->getNameById()){
+            throw new IngestServiceException('Unable to load record.cmdi file');
         }
-
-        if (!isset($xml->Header->MdProfile)){
-            throw new IngestServiceException('Element MdProfile in Cmdi Header is not set');
-        }
-
-        $id = $xml->Header->MdProfile;
-        $profile_name = CmdiHandler::getNameById($id);
 
 
         $resource_handling = $this->info['cmdi_handling'];
         $directory = $this->wrapper->flat_location->value();
 
 
-
         switch ($resource_handling) {
 
             case 'template':
             case 'import':
-                {
-                    //todo 1 function strip lat:localURI
-                CmdiHandler::striplocalURI($xml);
+            {
+                //todo 1 function strip lat:localURI
+                $cmdi->striplocalURI();
                 break;
             }
 
-
         }
+
         try{
 
-            CmdiHandler::addResources($xml, $profile_name, $directory);
+            $cmdi->addResources($directory);
 
         } catch (CmdiHandlerException $exception){
 
@@ -223,8 +215,8 @@ class Bundle extends SIP
 
         }
 
+        $check = $cmdi->asXML($file_name);
 
-        $check = $xml->asXML($file_name);
         if ($check !== TRUE){
             throw new IngestServiceException($check);
         }
@@ -296,7 +288,7 @@ class Bundle extends SIP
 
         } else {
 
-            $url_link = '/node/' . (string)$this->node->nid;
+            $url_link = 'node/' . (string)$this->node->nid;
 
         }
 
