@@ -1,0 +1,9 @@
+<mailConfig>
+    <server></server>
+    <port></port>
+    <user></user>
+    <password></password>
+    <from></from>
+    <subject>mail from FLAT</subject>
+    <to></to>
+</mailConfig>
