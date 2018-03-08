@@ -12,7 +12,7 @@
 			<assert xpath="//fits:metadata/fits:text/fits:charset = ('US-ASCII','UTF-8')" message="The character encoding of the text file [{replace(//fits:fileinfo/fits:filename,$work,'')}] is [{//fits:metadata/fits:text/fits:charset}], should be UTF-8"/>
 		</assertions>
 	</mimetype>
-	<mimetype value="image/jpg"><!-- use default XPath for mimetype -->
+	<mimetype value="image/jpeg"><!-- use default XPath for mimetype -->
 		<!-- no further assertions -->
 	</mimetype>
 	<mimetype value="application/pdf"><!-- use default XPath for mimetype -->
