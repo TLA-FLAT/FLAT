@@ -16,6 +16,7 @@
 	<xsl:param name="import-base" select="()"/>
 	<xsl:param name="fox-base" select="'./fox'"/>
 	<xsl:param name="lax-resource-check" select="false()"/>
+	<xsl:param name="overwrite-resource-label" select="false()"/>
 
 	<xsl:param name="repository" select="'http://flat.example.com/'"/>
 
@@ -544,7 +545,7 @@
 					<!-- take the filepart of the localURI as the resource title -->
 					<xsl:variable name="resTitle">
 						<xsl:choose>
-							<xsl:when test="normalize-space(@lat:label)!=''">
+							<xsl:when test="not($overwrite-resource-label) and normalize-space(@lat:label)!=''">
 								<xsl:sequence select="normalize-space(@lat:label)"/>
 							</xsl:when>
 							<xsl:otherwise>
