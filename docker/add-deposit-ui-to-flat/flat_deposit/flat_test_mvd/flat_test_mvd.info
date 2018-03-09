@@ -1,0 +1,7 @@
+name = FLAT test mvd
+package = FLAT
+description = A test module by Maurice
+core = 7.x
+version = 7.x-0.1-dev
+configure = admin/config/flat_test_mvd/manage
+dependencies[] = flat_deposit

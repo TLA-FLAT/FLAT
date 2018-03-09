@@ -12,6 +12,8 @@ class FormField
 
     private $defaultValue;
 
+    private $inheritAll = false;
+
 
     /**
      * FormField constructor.
@@ -19,13 +21,17 @@ class FormField
      * @param $formTemplateNode SimpleXMLElement Form Template node containing render-specific info
      *
      * @param $defaultValue Array of default values
+     *
+     * @param $inheritAll boolean Set to true will overwrite template attribute "inherited" and populate all form fields with data from data source
      */
-    public function __construct($formTemplateNode, $defaultValue = null)
+    public function __construct($formTemplateNode, $defaultValue = null, $inheritAll = false)
     {
 
         $this->formTemplateNode = $formTemplateNode;
 
         $this->defaultValue = $defaultValue;
+
+        $this->inheritAll = $inheritAll;
     }
 
 
@@ -82,7 +88,7 @@ class FormField
     private function setFieldDefaultValue(&$formField)
     {
 
-        if ($this->formTemplateNode['inherited'] AND $this->defaultValue) {
+        if (($this->formTemplateNode['inherited'] OR $this->inheritAll) AND $this->defaultValue) {
 
             $formField['#default_value'] = $this->convertValue($this->defaultValue);
         }
@@ -231,7 +237,7 @@ class FormField
      * @param String $buttonId
      *
      */
-    public function addNestedComponents($existingCmdiNode, $pressedButtons, $index = 0, $buttonId){
+    public function addNestedComponents($existingCmdiNode, $pressedButtons, $index = 0, $buttonId, $inheritAll = false){
 
 
         if(isset($this->formTemplateNode->item)) {
@@ -249,7 +255,7 @@ class FormField
                 $nestedDataNode = isset($existingCmdiNode->{$key}[$index]) ? $existingCmdiNode->{$key}[$index] : null;
 
                 $nestedButtonId = $buttonId . "_" . (int)$index ;
-                $nestedFormComponent->setFormComponent($nestedNode, $nestedDataNode, $pressedButtons[$index], $nestedButtonId);
+                $nestedFormComponent->setFormComponent($nestedNode, $nestedDataNode, $pressedButtons[$index], $nestedButtonId, $inheritAll);
 
                 $nestedNodeName = $nestedFormComponent->getFormKeyName($nestedNode);
                 $this->formField[$nestedNodeName] = $nestedFormComponent->getFormComponent();

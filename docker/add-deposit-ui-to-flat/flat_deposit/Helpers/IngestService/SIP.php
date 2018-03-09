@@ -157,7 +157,7 @@ abstract class SIP
         $parentFid = $this->parentFid;
         $file_name = $this->cmdiTarget;
 
-        module_load_include('php','flat_deposit','/Helpers/CMDI/CmdiHandler');
+        module_load_include('inc','flat_deposit','/Helpers/CMDI/class.CmdiHandler');
         $cmdi = simplexml_load_file($file_name, 'CmdiHandler');
         if (is_string($cmdi)){
             throw new IngestServiceException($cmdi);
@@ -177,17 +177,21 @@ abstract class SIP
     {
         $this->logging('Starting generatePolicy');
         $policy = $this->info['policy'];
-        $fname = drupal_get_path('module','flat_deposit') . '/Helpers/IngestService/Policies/' . $policy . '.n3';
+        if ($policy != "inherited"){
 
-        $string = file_get_contents($fname);
-        $new_string = preg_replace('/ACCOUNT_NAME/', $this->owner , $string);
+            $fname = drupal_get_path('module','flat_deposit') . '/Helpers/IngestService/Policies/' . $policy . '.n3';
 
-        $cmdi_dir = dirname($this->cmdiTarget);
-        $write = file_put_contents( $cmdi_dir . '/policy.n3', $new_string);
+            $string = file_get_contents($fname);
+            $new_string = preg_replace('/ACCOUNT_NAME/', $this->owner , $string);
 
-        if (!$write) {
-            throw new IngestServiceException('Unable to write policy to target location (' . $cmdi_dir . ')');
+            $cmdi_dir = dirname($this->cmdiTarget);
+            $write = file_put_contents( $cmdi_dir . '/policy.n3', $new_string);
+
+            if (!$write) {
+                throw new IngestServiceException('Unable to write policy to target location (' . $cmdi_dir . ')');
+            }
         }
+
         $this->logging('Finishing generatePolicy');
         return TRUE;
     }

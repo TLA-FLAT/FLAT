@@ -58,8 +58,10 @@ abstract class FormComponent
      * @param array $pressedButtons array with number of pressed buttons
      *
      * @param String $buttonId
+     *
+     * @param $inheritAll boolean Set to true will overwrite template attribute "inherited" and populate all form fields with data from data source
      **/
-    public function setFormComponent($templateNode, $existingCmdiNode = null, $pressedButtons = null, $buttonId = null)
+    public function setFormComponent($templateNode, $existingCmdiNode = null, $pressedButtons = null, $buttonId = null, $inheritAll = false)
     {
 
         $componentName = (string)$templateNode['name'];
@@ -77,9 +79,9 @@ abstract class FormComponent
         for ($index = 0; $index < $this->numberElements; $index++){
 
             $defaultValue = isset($defaultValues[$index]) ? $defaultValues[$index] : null;
-            $element = new FormField($templateNode, $defaultValue);
+            $element = new FormField($templateNode, $defaultValue, $inheritAll);
             $element->setFormField();
-            $element->addNestedComponents($existingCmdiNode, $componentButtonPresses, $index, $buttonId);
+            $element->addNestedComponents($existingCmdiNode, $componentButtonPresses, $index, $buttonId, $inheritAll);
             $componentElements[]  = $element->getFormField();
 
         }
@@ -162,18 +164,31 @@ abstract class FormComponent
      */
     private function addButtonsToFormComponent($templateNode, &$componentElements, $buttonId)
     {
+        $showButtons = false;
 
-        if (isset($templateNode['multival']) OR (isset($templateNode['minOccurrence']) AND $templateNode['minOccurrence'] == 0)) {
+        if (isset($templateNode['multival'])){
+            $showButtons = TRUE;
+            $nMax = 999;
+        } elseif (isset($templateNode['minOccurrence']) AND $templateNode['minOccurrence'] == 0){
+            $showButtons = TRUE;
+            $nMax = 1;
+        }
+
+        if ($showButtons) {
 
             $componentId = (string)$templateNode['id'];
             $title = (string)$templateNode->title;
+
             // Add 'add' button
+            $isAccessible = $this->numberElements < $nMax ? TRUE : FALSE;
+
             $componentElements['add'] = array(
                 '#weight' => 999,
                 '#name' => $buttonId,
                 '#componentid' => $componentId,
                 '#type' => 'button',
                 '#value' => t('Add ' . $title),
+                '#access' => $isAccessible,
                 '#ajax' => array(
                     'callback' => 'add_multival_to_cmdi_form_ajax',
                     'wrapper' => 'template-form',
@@ -206,66 +221,6 @@ abstract class FormComponent
 
     }
 
-    private function addMenuToFormComponent($templateNode, &$componentElements, $buttonId)
-    {
-
-
-        $componentId = (string)$templateNode['id'];
-        $menuId = 'menu_' . $buttonId;
-
-        if (isset($templateNode->item)) {
-
-            $options = $this->getOptions($templateNode);
-
-            if (!empty ($options)) {
-
-                $componentElements['menu'] = array(
-                    '#weight' => -999,
-                    '#name' => $menuId,
-                    '#componentId' => $componentId . '_checkboxes',
-                    '#type' => 'checkboxes',
-                    '#options' => $options,
-                    '#title' => t('Which fields should be shown?'),
-                    '#ajax' => array(
-                        'callback' => 'add_multival_to_cmdi_form_ajax',
-                        'wrapper' => 'template-form',
-                        'method' => 'replace',
-                        'event' => 'click',
-                        'prevent' => 'submit click mousedown',
-                    ),
-                    '#limit_validation_errors' => array(), // No elements will be validated
-                );
-
-
-            }
-
-        }
-
-    }
-
-
-
-
-    private function getOptions($item, &$options = array())
-    {
-
-        foreach ($item->item as $item) {
-
-            $isLeaf = ((string)$item['type'] == 'Leaf');
-            $isOptional = (!isset($item['minOccurrence']) OR (isset($item['minOccurrence']) AND $item['minOccurrence'] == '0'));
-
-            if ($isOptional) {
-
-                    $id = (string)$item->attributes()->id;
-                    $name = (string)$item->attributes()->name;
-                    $options[$id] = $name;
-
-                }
-            }
-
-        return $options;
-
-    }
 
 }
 

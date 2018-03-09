@@ -14,9 +14,11 @@ function flat_collection_bundle_action_form($form, &$form_state, $var)
 
 // query already existing links to collections
     global $user;
+    $parent_nid = $var->nid;
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'node')
         ->entityCondition('bundle', 'flat_bundle')
+        ->fieldCondition('flat_parent_nid', 'value', "$parent_nid", '=')
         ->propertyCondition('uid', $user->uid);
 
     $user_bundle_nodes = $query->execute();

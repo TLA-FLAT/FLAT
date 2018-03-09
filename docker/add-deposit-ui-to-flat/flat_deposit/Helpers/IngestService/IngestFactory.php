@@ -34,11 +34,11 @@ class IngestFactory
             $this->processLog = [];
             $this->processLog['ingestInitiated'] = $this->factorySIP->init($info);
             $this->processLog['authenticateUser'] = $this->factorySIP->authenticateUser();
-            #throw new IngestServiceException('Debug');
             $this->processLog['prepareSipData'] = $this->factorySIP->prepareSipData();
             $this->processLog['copyMetadata'] = $this->factorySIP->copyMetadata();
             $this->processLog['addIsPartOfProperty'] = $this->factorySIP->addIsPartOfProperty();
             $this->processLog['addResourcesToCmdi'] = $this->factorySIP->addResourcesToCmdi();
+            //throw new IngestServiceException('Debug');
             $this->processLog['generatePolicy'] = $this->factorySIP->generatePolicy();
             $this->processLog['createBag'] = $this->factorySIP->createBag();
             $this->processLog['doSword'] = $this->factorySIP->doSword();

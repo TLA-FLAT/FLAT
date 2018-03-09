@@ -53,7 +53,12 @@ $collection_fid = $collection_wrapper->flat_fid->value();
 
 // instantiate client
 module_load_include('php','flat_deposit','Helpers/IngestService/IngestClient');
-$ingest_client = new IngestClient($sipType, $sipOwnerName, $recordCmdi, $collection_fid, $test);
+
+try {
+    $ingest_client = new IngestClient($sipType, $sipOwnerName, $recordCmdi, $collection_fid, $test);
+} catch (IngestServiceException $exception){
+
+}
 
 // set ingest parameters
 $info['loggedin_user'] = $loggedin_user;

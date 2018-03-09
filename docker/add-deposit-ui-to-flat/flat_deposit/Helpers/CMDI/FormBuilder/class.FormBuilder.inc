@@ -1,5 +1,4 @@
 <?php
-
 spl_autoload_register(function ($class_name) {
     include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.' . $class_name . '.inc';
 });
@@ -10,8 +9,9 @@ spl_autoload_register(function ($class_name) {
 class FormBuilder
 {
 
+
     // Path containing xml form templates files for drupal form generation
-    const FORM_TEMPLATES_PATH = '/Helpers/CMDI/FormTemplates/';
+    const FORM_TEMPLATES_PATH = __DIR__  . '/../FormTemplates/';
 
 
     /**
@@ -39,7 +39,7 @@ class FormBuilder
     static public function getAvailableTemplates($content_type)
     {
         $templates = [];
-        foreach (glob(drupal_get_path('module', 'flat_deposit') . self::FORM_TEMPLATES_PATH . "*.xml") as $filename) {
+        foreach (glob(self::FORM_TEMPLATES_PATH . "*.xml") as $filename) {
             $xml = simplexml_load_file($filename);
             $fileContentType = (string)$xml->header->content_type;
 
@@ -50,6 +50,7 @@ class FormBuilder
         }
         return drupal_map_assoc($templates);
     }
+
 
 
     /**
@@ -65,13 +66,16 @@ class FormBuilder
      *
      * @param $cmdi SimpleXMLElement An existing cmdi file with data to fill form fields with default values.
      *
+     * @param $pressedButtons array associative array with aggregated button presses
+     *
+     * @param $inheritAll boolean Set to true will overwrite template attribute "inherited" and populate all form fields with data from data source
+     *
      * @return boolean Success of operation.
      *
      */
-    public function setForm($templateName, $cmdi = null, $pressedButtons = null){
+    public function setForm($templateName, $cmdi = null, $pressedButtons = null, $inheritAll = false){
 
-        module_load_include('php', 'flat_deposit', 'Helpers/CMDI/CmdiHandler');
-        $fName = drupal_get_path('module', 'flat_deposit') . CmdiHandler::FORM_TEMPLATES_PATH . $templateName . '.xml';
+        $fName = self::FORM_TEMPLATES_PATH . $templateName . '.xml';
         $template = simplexml_load_file($fName);
 
         if (!$template){
@@ -79,7 +83,7 @@ class FormBuilder
         }
 
         $dataNode = $this->getHeadNode($cmdi);
-        $this->setFormComponents($template, $dataNode, $pressedButtons);
+        $this->setFormComponents($template, $dataNode, $pressedButtons, $index = 0, $inheritAll);
         $this->setData($template);
 
         foreach ($this->formComponents as $key => $component) {
@@ -102,7 +106,6 @@ class FormBuilder
 
     }
 
-
     /**
      * Creates nested form render arrays from form template.
      *
@@ -116,14 +119,16 @@ class FormBuilder
      *
      * @param int $index Indicates in which branch of the pressedButton array will be searched for counts.
      *
+     * @param $inheritAll boolean Set to true will overwrite template attribute "inherited" and populate all form fields with data from data source
+     *
      */
-    private function setFormComponents($template, $dataNode = null, $pressedButtons = null, $index = 0){
+    private function setFormComponents($template, $dataNode = null, $pressedButtons = null, $index = 0, $inheritAll = false){
 
         foreach ($template->items->item as $component) {
             $className = "Form" . (string)$component['type'];
             $numberElements = isset($component['minOccurrence']) ? (int)$component['minOccurrence'] : 0;
             $formComponent = new $className($numberElements);
-            $formComponent->setFormComponent($component, $dataNode, $pressedButtons, $index);
+            $formComponent->setFormComponent($component, $dataNode, $pressedButtons, $index, $inheritAll);
             $nodeName = $formComponent->getFormKeyName($component);
             $this->formComponents[$nodeName] = $formComponent->getFormComponent();
         }
@@ -167,7 +172,6 @@ class FormBuilder
 
         $this->data = $renderArray;
     }
-
 
     /**
      * Transforms form_state 'clicked_button' value in aggregated data (i.e. associative array with '#name' property
@@ -216,14 +220,31 @@ class FormBuilder
         }
 
     }
-
 }
 
 
 
 
+/**
+ * Ajax callback for the selected option fields.
+ */
 function select_profile_name_ajax_callback ($form, &$form_state)
 {
+    return $form['template_container'];
+}
+
+/**
+ * Ajax callback for click an add button
+ */
+function add_multival_to_cmdi_form_ajax($form, $form_state) {
+
+    return $form['template_container'];
+}
+
+/**
+ * Ajax callback for click an remove button
+ */
+function remove_multival_from_cmdi_form_ajax($form, $form_state) {
 
     return $form['template_container'];
 }

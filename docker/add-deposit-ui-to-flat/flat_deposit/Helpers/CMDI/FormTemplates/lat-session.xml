@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Specifies which form items will be generate in drupal
+see https://api.drupal.org/api/drupal/developer%21topics%21forms_api_reference.html/7.x for info about drupal form render api.
+
+In the items section you can specify items. items need to have attributes:
+- id: unique id which will become the form item id in drupal
+- name: name of the item in the original  cmdi-profile
+
+and children:
+- type: formatting of the item; implemented values are
+* textitem
+* date
+* dropdown
+* (empty) missing values will be rendered as textitem
+
+- title: The title which will appear on top of the item
+
+
+
+- description (optional): a info button which will show the value this item when hovered onto
+- component (optional): specifies whether a item is located in a component.
+
+Additional fied is data. data items are hidden in drupal. Required info is the clarin profile ID, to which this transform refers
+
+ -->
+
+<profileToDrupal>
+    <header>
+        <content_type>flat_bundle</content_type>
+        <template_name>lat-session</template_name>
+    </header>
+    <resources>
+        <root_path>/CMD/Components/MPI_Bundle</root_path>
+        <subnodes></subnodes>
+        <allowed_tags>
+            <tag id="MediaFile">
+                <updated_values id="size"></updated_values>
+                <updated_values id="type">Annotation</updated_values>
+                <updated_values id="format"></updated_values>
+                <mime_regex>/^(video|audio|image)/.*$/</mime_regex>
+            </tag>
+            <tag id="WrittenResource">
+                <updated_values id="size"></updated_values>
+                <updated_values id="type">Annotation</updated_values>
+                <updated_values id="format"></updated_values>
+                <mime_regex>/^(?!.*text\/x-cmdi\+xml)(text|application)\/.*$/</mime_regex>
+            </tag>
+        </allowed_tags>
+    </resources>
+    <data>
+        <clarinProfileId>clarin.eu:cr1:p_1475136016242</clarinProfileId>
+    </data>
+</profileToDrupal>

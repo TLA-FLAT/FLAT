@@ -1,0 +1,228 @@
+<?php
+/**
+ * Date: 07/02/2018
+ * Just some testing by Maurice
+ */
+
+// Implements hook_help().
+function flat_test_mvd_help($path, $arg) {
+    if ($path == 'admin/help#flat_test_mvd') {
+        return t('Een beetje tekst in de help sectie.');
+}
+}
+
+// Implements hook_menu().
+function flat_test_mvd_menu() {
+    $items['flattestmvd'] = array(
+        'title' => 'Test van Maurice',
+        'type' => MENU_CALLBACK,
+        'page callback' => 'mvd_callback',
+        'access arguments' => array(
+            'access content',
+        ),
+        );
+    
+    $items['mvd2'] = array(
+        'title' => 'Eens kijken',
+        'type' => MENU_CALLBACK,
+        'page callback' => 'mvd_table',
+        'access arguments' => array(
+            'access content',
+        ),
+        );
+    
+    $items['mvdtab'] = array(
+        'title' => 'Tabel met table_theme',
+        'type' => MENU_CALLBACK,
+        'page callback' => 'mvd_table2',
+        'access arguments' => array(
+            'access content',
+        ),
+        );
+    
+    $items['viewblog'] = array(
+        'title' => 'Een view van alle blog nodes',
+        'type' => MENU_CALLBACK,
+        'page callback' => 'view_blog_nodes',
+        'access arguments' => array(
+            'access content',
+        ),
+        );
+      
+    return $items;
+}
+
+function mvd_callback(){
+    
+  //echo displays just HTML  
+  //echo '<h2>Something</h2>';
+  
+  //return shows content within Drupal  
+   $screenoutput = '<i>Something</i>' ;
+   return $screenoutput;
+   
+}
+
+function mvd_table(){
+   // Simple row   
+    $rows = array(
+  // Simple row
+  array(
+    'Cell 1',
+    'Cell 2',
+    'Cell 3',
+  ),
+  // Row with attributes on the row and some of its cells.
+  array(
+    'data' => array(
+      'Cell 1',
+      array(
+        'data' => 'Cell 2',
+        'colspan' => 2,
+      ),
+    ),
+    'class' => array(
+      'funky',
+    ),
+  ),
+);
+
+$output2 = theme('table', 
+           array('rows' => $rows));
+return $output2;
+
+}
+
+function mvd_table2(){
+//define variables
+    
+    $headers = array(
+      array('data' => 'First_Name', 'field' => 'First_Name'),
+      array('data' => 'Last_Name', 'field' => 'Last_Name'),
+      );
+
+    $rows = array(
+                array(
+                    array('field' => 'First_Name', 'data' => 'Donald', 'width' => '350', 'bgcolor' => '#98F453',),
+                    array('field' => 'Last_Name', 'data' => 'Trump', 'width' => '350', 'bgcolor' => '#98F453',),
+                ),
+                array(
+                    array('field' => 'First_Name', 'data' => 'Barrack', 'width' => '350', 'bgcolor' => '#37ADB3',),
+                    array('field' => 'Last_Name', 'data' => 'Obama', 'width' => '350', 'bgcolor' => '#37ADB3',), 
+                ),
+                array(
+                    array('field' => 'First_Name', 'data' => 'George', 'width' => '350', 'bgcolor' => '#0A43D5',),
+                    array('field' => 'Last_Name', 'data' => 'Bush jr', 'width' => '350', 'bgcolor' => '#0A43D5',), 
+                ),
+            );
+
+    $table_data = array(
+      'header'     => $headers,
+      'rows'       => $rows,
+      'sticky'     => FALSE,
+      'empty'      => 'No results found',
+      'attributes' => array(),
+      'caption'    => count($rows) . ' rows',
+      'colgroups'  => array(),
+    );
+
+    $outputtab = theme_table($table_data);    
+   
+return $outputtab;    
+}
+
+function view_blog_nodes(){
+    
+    //Define the query
+    
+    $query = new EntityFieldQuery();
+    $query ->entityCondition('entity_type', 'node')
+           ->propertyCondition('type', 'blog')
+           ->propertyOrderBy('created', 'DESC');
+          // ->range(0, 5); //restrict results
+    
+    $resultaat = $query->execute();
+    
+    //Prepare output
+    
+    $nodes = array();
+    if (isset($resultaat['node'])) {
+        
+      // Fixes Can only flip STRING and INTEGER values! - error  
+      $nids = array_keys($resultaat['node']);
+      // Because titles are fields, something to do to retrieve them
+      $nodes = node_load_multiple($nids);
+    }
+    
+    //Show output on page (in a ugly way)
+    
+    $lijst = '';
+    foreach ($nodes as $node) {
+      $url = url('node/' . $node->nid);
+      $lijst = $lijst  . '<a href='.$url.'>'.$node->title.'</a><br>';
+    }
+    return $lijst;
+      
+}
+
+
+function view_blog_nodes_block(){
+    
+    //Define the query
+
+    global $user;
+    $query = new EntityFieldQuery();
+    $query ->entityCondition('entity_type', 'node')
+           ->propertyCondition('type', 'blog')
+           ->propertyOrderBy('created', 'DESC')
+            ->propertyCondition('uid', $user->uid);;
+          // ->range(0, 5); //restrict results
+    
+    $resultaat = $query->execute();
+    
+    //Prepare output
+    
+    $nodes = array();
+    if (isset($resultaat['node'])) {
+        
+      // Fixes Can only flip STRING and INTEGER values! - error  
+      $nids = array_keys($resultaat['node']);
+      // Because titles are fields, something to do to retrieve them
+      $nodes = node_load_multiple($nids);
+    }
+    
+    //Show output on page
+    
+    $list = array();
+    foreach ($nodes as $node) {
+      $url = url('node/' . $node->nid);
+      $list[] = '<a href='.$url.'>'.$node->title.'</a>';
+    }
+    return $list;   
+}
+
+function flat_test_mvd_block_info(){
+    $blocks = array();
+    $blocks['flat_test_mvd_block'] = array(
+        'info' => t('This is a block on a page'),
+        'status' => TRUE,
+        'region' => 'content',
+        'visibility' => BLOCK_VISIBILITY_LISTED,
+        'pages' => "viewblog2" ,
+    );
+    return $blocks;
+}
+
+function flat_test_mvd_block_view($block_name = '') {
+    if ($block_name == 'flat_test_mvd_block') {
+        $list = view_blog_nodes_block();
+        $theme_args = array('items' => $list, 'type' => 'ul');
+        $content = theme('item_list', $theme_args);
+        $block = array(
+            'subject' => t('Een view van alle blog nodes'),
+            'content' => $content,
+        );
+        return $block;
+    }
+}
+

@@ -506,7 +506,7 @@ function flat_deposit_admin_form_import_validate ($form, &$form_state)
 
 
     /* check fails, apparently FITS gives it another mime type than text/plain
-    module_load_include('php', 'flat_deposit', '/Helpers/CMDI/CmdiHandler');
+    module_load_include('inc', 'flat_deposit', '/Helpers/CMDI/class.CmdiHandler');
     $type = CmdiHandler::fits_mimetype_check($tmp);
 
     if ($type != 'text/plain') {
