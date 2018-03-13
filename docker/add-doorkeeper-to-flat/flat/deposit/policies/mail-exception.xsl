@@ -19,7 +19,7 @@
                 <xsl:text> for user[</xsl:text>
                 <xsl:value-of select="$user"/>
                 <xsl:text>]</xsl:text>
-             </xsl:if> 
+            </xsl:if> 
         </p>
         <p>
             <xsl:if test="normalize-space($exception)!=''">

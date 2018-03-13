@@ -137,6 +137,7 @@
         -->        
     </main>
     <exception>
+	<!--
         <action class="nl.mpi.tla.flat.deposit.action.Mail">
             <parameter name="config" value="{$base}/policies/mail-config.xml"/>
             <parameter name="subject" value="FLAT: failed deposit for SIP[{$sip}]"/>
@@ -144,6 +145,7 @@
             <parameter name="tmpl-bag" value="{$bag}"/>
             <parameter name="tmpl-user" value="{if (sx:fileExists(concat('file:',$work,'/acl/owner.xml') cast as xs:anyURI)) then (doc(concat($work,'/acl/owner.xml'))/user/name) else ('')}"/>
         </action>
+        -->
     </exception>
     <final>
         <action name="status" class="nl.mpi.tla.flat.deposit.action.UpdateSwordStatus">
