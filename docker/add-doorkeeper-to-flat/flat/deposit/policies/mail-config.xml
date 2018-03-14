@@ -5,6 +5,6 @@
   <password></password>
   <from>someone@example.com</from>
   <!-- the following could be defaults, which can be overwritten by parameters to the action -->
-  <subject>mail from FLAT</subject>
+  <repo>Give-Repo-name-to-be-displayed-in-subject-line</repo>
   <to>someoneelse@example.com</to>
 </mailConfig>
