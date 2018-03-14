@@ -2,7 +2,9 @@
 
 function flat_collection_update_form($form, &$form_state, $fedora_object){
 
-    module_load_include('php', 'flat_deposit', 'Helpers/CMDI/CmdiHandler');
+    drupal_set_title(t('Update Collection Metadata'));
+
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
     $ds = islandora_datastream_load("CMD",$fedora_object->id);
     $inheritedData = simplexml_load_string($ds->content,'CmdiHandler');
 
@@ -12,36 +14,18 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
         $profile= null;
     }
 
-    drupal_set_title(t('Update Collection Metadata'));
-
-    // Set selected profile as this is updated on every AJAX request
-    if (isset($form_state['values']['select_profile_name'])) {
-        $form_state['selected'] =  $form_state['values']['select_profile_name'];
-
-    }
-
-    // unset saved 'ajax_select' value if the ajax_select-button is unselected, the saved value of this button is empty and no button has been clicked
-    if (!isset($form_state['values']['select_profile_name']) AND !empty($form_state['selected']) AND !isset($form_state['clicked_button'])) {
-
-        $form_state['selected'] = '';
-    }
-
-
-    // get all available form template files
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
-    $available_profiles = FormBuilder::getAvailableTemplates('flat_collection');
 
     $form['#prefix'] = "<div id='flat_collection_update_form_wrapper'>";
     $form['#suffix'] = "</div>";
 
     global $user;
+
     $form['owner'] = array(
         '#title' => t('Owner of the collection'),
         '#type' => 'textfield',
         '#required' => TRUE,
         '#default_value' => $user->name,
         '#disabled' => TRUE,
-
     );
 
     if (!user_access('admin collection')){$form['owner']['#disabled'] = TRUE; }
@@ -65,8 +49,6 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
         '#required' => FALSE,
     );
 
-
-
     $form['template_container'] = array(
         '#type' => 'container',
         '#tree' => TRUE,
@@ -79,9 +61,13 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
     $form['data'] = array(
         '#type' => 'value',
         '#value' => array(
-            'parentFid' => $fedora_object->id,
+            'fid' => $fedora_object->id,
         ),
     );
+
+    if ($inheritedData) {
+     $form['data']['#value']['handle'] = (string)$inheritedData->Header->children('cmd', TRUE)->MdSelfLink;
+    }
 
     $form['Submit'] = array(
         '#type' => 'submit',
@@ -98,13 +84,11 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
     //********************************************************************
     // Generate profile specific form render array and attach to container
     //********************************************************************
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
+    $availableFormTemplates = FormBuilder::getAvailableTemplates('flat_collection');
 
-    if (!$profile) {
+    if (in_array($profile, $availableFormTemplates)) {
 
-        drupal_set_message('Online editing of the metadata of this collection is not supported');
-        $form['Submit']['#disabled'] = TRUE;
-
-    } else {
         // Load form builder app
         $formBuilder = new FormBuilder();
 
@@ -119,7 +103,7 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
         }
 
         // Generate the form elements
-        $formBuilder->setForm($profile, $inheritedData, $pressedButtonsRoot);
+        $formBuilder->setForm($profile, $inheritedData, $pressedButtonsRoot, $inheritAll = true);
 
         // Attach form elements to base form
         $elements = $formBuilder->getForm();
@@ -129,7 +113,12 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
         if (!is_array($form['template_container']['elements'])) {
             drupal_set_message('Unable to generate cmdi form based on profile', 'warning');
         }
+    } else {
+
+        drupal_set_message('Online editing of the metadata of this collection is not supported');
+        $form['Submit']['#disabled'] = TRUE;
     }
+
 
     return $form;
 
@@ -142,109 +131,149 @@ function flat_collection_update_form_ajax_handler (&$form, &$form_state){
 function flat_collection_update_form_final_validate($form, &$form_state){
 
 
-    if (!empty(form_get_errors())) {
-
-        form_set_error('debug','Other validations have failed');
+    // stop validation if errors have previously occurred
+    if(form_get_errors()){
         return $form;
     }
 
-    module_load_include('php','flat_deposit','Helpers/CMDI/CmdiHandler');
+    // Validate that selected profile is not empty
+    if ($form_state['values']['select_profile_name'] === '-- Select --') {
+        form_set_error('select_profile_name', 'Please choose correct option');
+        return $form;
+    }
 
-    //Validate title
-    // Special characters
+    // Validate if owner exists.
+    $owner = $form_state['values']['owner'];
+    if (!user_load_by_name($owner)) {
+
+        form_set_error('owner', 'Specified owner is unknown to drupal');
+        return $form;
+    };
+
+    // preparation
+    module_load_include('inc','flat_deposit', 'inc/class.FlatTuque');
+
+    $fid = $form_state['values']['data']['fid'];
+    $fidParent = FlatTuque::getIsPartOfCollection($fid);
+
+    //*******************//
+    // Title Validations //
+    //*******************//
     $new_title = $form_state['values']['template_container']['elements']['field_01'][0];
+
+    // 1. Special characters
     if (!preg_match('/^[a-zA-Z0-9\_\s]{2,40}+$/', $new_title)) {
         form_set_error('title', t('Allowed are all letters, numbers and underscores (max length 40)'));
     }
 
+    // 2. Title uniqueness validation.
+    // Gets fedoraObject->id of parent, uses this id to search all children (fObjects with isPartOfCollection attribute
+    // set to parent), extract their fedoraObject->label(s) and checks whether one of these labels is the same as the title
+    // for the current object.
+    // Note. Only do this if title has actually changed.
 
+    $old_title = $form['template_container']['elements']['field_01'][0]['#default_value'];
 
-    // Validate that there is just exactly 1 collection with the same label with isPartOfCollection attribute set to parent
-    module_load_include('inc','flat_deposit', 'inc/class.FlatTuque');
-    $new_title = $form_state['values']['template_container']['elements']['field_01'][0];
+    if ($old_title !== $new_title){
+        $values = FlatTuque::getChildrenLabels($fidParent);
 
+        if ($values === false) {
+            form_set_error('title', 'Unable to validate that collection name is unique at this location');
+            return $form;
+        }
 
-
-
-    $fid = $form_state['extra_data']['fid'];
-
-
-    $parent_fid = FlatTuque::getIsPartOfCollection($fid);
-
-    if ($parent_fid === false){
-        form_set_error('title','Unable to validate collection naming');
-        return $form;
+        if (in_array(strtoupper($new_title), array_unique(array_map('strtoupper', $values)))) {
+            form_set_error('title', 'Another collection or bundle with same name exists at this location. Please use other name');
+            return $form;
+        }
     }
 
-
-    $values = FlatTuque::getChildrenLabels($parent_fid);
-
-    $array_up = array_map('strtoupper',$values);
-    if (count(preg_grep('/^'.strtoupper($new_title).'/',$array_up)) > 1){
-
-        form_set_error('title','Another collection or bundle with same name exists at this location. Please use other name');
-        return $form;
-    }
-
-
-
-
-    // Validate owner.
-    $owner =  $form_state['values']['owner'];
-    if (!user_load_by_name($owner)) {
-
-        form_set_error('owner','Specified owner is unknown to drupal');
-        return $form;
-    };
-
-
-    //validate existence output dir
-    $export_dir = 'metadata://'  . str_replace('@', '_at_' , $owner) . "/.collection/" ;
-    if (!file_exists($export_dir)){
+    // 3. Validate that output directory for new cmdi exists or can be created
+    $export_dir = 'metadata://' . str_replace('@', '_at_', $owner) . "/.collection/";
+    if (!file_exists($export_dir)) {
         drupal_mkdir($export_dir, NULL, TRUE);
     }
 
-    if (!file_exists($export_dir)){
-        form_set_error('error','Cannot create directory to temporarily store cmdi files');
+    if (!file_exists($export_dir)) {
+        form_set_error('error', 'Cannot create directory to temporarily store cmdi files');
         return $form;
     }
 
-    // set cmdi filename
-    $profile = $form_state['extra_data']['profile'];
-    $recordCmdi = $export_dir . '/' . $profile . '_' . uniqid() . '.cmdi';
+    //*******************//
+    // Generate Cmdi file//
+    //*******************//
 
-    // Get cmdi
-    $import = FALSE;
-    $msg = get_cmdi($form_state['values'], $recordCmdi, $import);
+    $profile = $form_state['values']['select_profile_name'];
+    $cmdiFile = $export_dir . '/' . $profile . '_' . uniqid() . '.cmdi';
+    $form_state['values']['cmdiFile'] = $cmdiFile;
 
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
 
-    if ($msg !== TRUE){
-        form_set_error('error', $msg);
+    $templateName = $form_state['values']['select_profile_name'];
+    $form_data = $form_state['values']['template_container']['elements'];
+    $owner = $form_state['values']['owner'];
+
+    $creator = new CmdiCreator();
+
+    try {
+        $creator->setCmdi($templateName, $form_data, $owner);
+        $newlyGeneratedCmdi = $creator->getCmdi();
+    } catch (CmdiCreatorException $e) {
+        form_set_error('error', $e->getMessage());
         return $form;
     }
 
-    // add SelfLink to cmdi
-    $old_cmdi = CmdiHandler::getCmdiFromDatastream($fid);
-    $handle = (string)$old_cmdi->Header->children('cmd',TRUE)->MdSelfLink;
-    #$att = (string)$link->attributes('lat',TRUE)->flatURI;
+// get original cmdi by datastream
+    $ds = islandora_datastream_load('CMD', $fid);
+    $originalCmdi = simplexml_load_string($ds->content,'CmdiHandler');
 
-    $new_cmdi = CmdiHandler::loadXml($recordCmdi);
-    CmdiHandler::setMdSelfLink($new_cmdi, $fid, $handle);
-    $new_cmdi->asXML($recordCmdi);
+    // add resource Section to updated components
+    $newlyGeneratedCmdi->addResourceSectionToComponents($originalCmdi);
 
-    /// do INGEST
-    global $user;
-    $userName = $user->name ;
+    // merge original cmdi and and edited components section
+    $path = '//cmd:Components';
+    $altPath = '//Components';
+    $targetComponentNode = !empty($originalCmdi->xpath($path)[0]) ? $originalCmdi->xpath($path)[0] : $originalCmdi->xpath($altPath)[0]  ;
+    $sourceNode = !empty($newlyGeneratedCmdi->xpath($path)[0]) ? $newlyGeneratedCmdi->xpath($path)[0] : $newlyGeneratedCmdi->xpath($altPath)[0]  ;
+
+    unset($targetComponentNode->{$profile});
+
+    $domTarget = dom_import_simplexml($targetComponentNode);
+    $domSource = dom_import_simplexml($sourceNode->{$profile});
+
+
+    $domSource = $domTarget->ownerDocument->importNode($domSource, TRUE);
+
+    $domTarget->appendChild($domSource);
+
+
+    //save result
+
+    $exported = $originalCmdi->asXML($cmdiFile);
+
+    if (!$exported) {
+        form_set_error('error', 'Unable to save cmdi file');
+        return $form;
+    }
+
+    //********************************//
+    // Do ingest using the Doorkeeper //
+    //********************************//
     $sipType = 'Collection';
-
     $test = FALSE;
 
-
     module_load_include('php','flat_deposit','Helpers/IngestService/IngestClient');
-    $ingest_client = new IngestClient($sipType, $owner, $recordCmdi, $parent_fid, $test);
+
+    try {
+        $ingest_client = new IngestClient($sipType, $owner, $cmdiFile, $fidParent, $test);
+    } catch (IngestServiceException $exception) {
+        form_set_error('debug', $exception->getMessage());
+        return $form;
+    }
 
     $options = [];
     $options ['policy'] = $form_state['values']['select_policy'];
+    $options ['content_type'] = 'flat_collection';
 
     $fid = $ingest_client->requestSipIngest($options);
 
@@ -256,9 +285,9 @@ function flat_collection_update_form_final_validate($form, &$form_state){
     }
 
 
-    #$form_state['values']['data']['fid'] = (string)$fid;
-    #$form_state['values']['data']['label']=  $fObject->label;
-    #$form_state['values']['data']['owner']=  $fObject->owner;
+    $form_state['values']['data']['fid'] = (string)$fid;
+    $form_state['values']['data']['label']=  $fObject->label;
+    $form_state['values']['data']['owner']=  $fObject->owner;
 
     return $form;
 
@@ -271,21 +300,15 @@ function flat_collection_update_form_final_validate($form, &$form_state){
  */
 function flat_collection_update_form_submit($form, &$form_state){
 
-    #$owner = user_load_by_name($form_state['values']['data']['owner']);
-    #$uid = $owner->uid;
-    #$label = $form_state['values']['data']['label'];
     $target = 'islandora/object/' . $form_state['extra_data'][ 'fid'];
-    // Change label of fedora object if Title in cmdi has changed.
-
-    #module_load_include('inc','flat_deposit', 'inc/flat_collection.add_collection');
-    #create_collection_node($label, $uid, $fid);
 
     drupal_set_message('Collection item has been updated');
+
     ctools_include('ajax');
     ctools_add_js('ajax-responder');
     $commands[] = ctools_ajax_command_redirect($target);
     print ajax_render($commands);
     exit;
-    //$form_state['redirect']= 'islandora/object/' . $form_state['extra_data'][ 'fid'];
+
 
 }

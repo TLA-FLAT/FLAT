@@ -33,7 +33,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
     <items>
         <item id="field_01" name="Title" type="Leaf"  minOccurrence="1">
             <type>textfield</type>
-            <title>Bundle title</title>
+            <title>Collection title</title>
         </item>
         <item id="field_02" name="DataType" type="Leaf" multival="true" inherited="true" minOccurrence="1">
             <type>dropdown</type>
@@ -109,11 +109,11 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <title>Collection creation date</title>
             <description>Date at which the collection was created</description>
         </item>
-        <item id="fieldset_01" name="Description" type="Composite"  minOccurrence="1">
+        <item id="fieldset_01" name="Description" type="Composite" minOccurrence="1">
             <type>fieldset</type>
             <title>Description</title>
             <container>Descriptions</container>
-            <item id="field_05" name="Description" type="Leaf" inherited="true" multival="true" minOccurrence="1">
+            <item id="field_05" name="Description" type="Leaf" multival="true" minOccurrence="1">
                 <title>Description</title>
                 <type>textfield</type>
             </item>
@@ -192,15 +192,15 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
                 <title>Project Name</title>
                 <type>textfield</type>
             </item>
-            <item id="field_14" name="ProjectDescription" type="Leaf" multival="true" inherited="true" minOccurrence="1">
+            <item id="field_14" name="ProjectDescription" type="Leaf" inherited="true" minOccurrence="1">
                 <title>Project Description</title>
                 <type>textfield</type>
             </item>
-            <item id="field_15" name="ProjectID" type="Leaf" multival="true" inherited="true" minOccurrence="0">
+            <item id="field_15" name="ProjectID" type="Leaf" inherited="true" minOccurrence="0">
                 <title>Project identifier</title>
                 <type>textfield</type>
             </item>
-            <item id="field_16" name="Url" type="Leaf" multival="true" inherited="true" minOccurrence="0">
+            <item id="field_16" name="Url" type="Leaf" inherited="true" minOccurrence="0">
                 <title>URL</title>
                 <type>textfield</type>
             </item>

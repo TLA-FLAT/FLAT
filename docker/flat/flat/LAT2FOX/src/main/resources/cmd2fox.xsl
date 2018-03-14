@@ -16,6 +16,7 @@
 	<xsl:param name="import-base" select="()"/>
 	<xsl:param name="fox-base" select="'./fox'"/>
 	<xsl:param name="lax-resource-check" select="false()"/>
+	<xsl:param name="overwrite-resource-label" select="false()"/>
 
 	<xsl:param name="repository" select="'http://flat.example.com/'"/>
 
@@ -544,7 +545,7 @@
 					<!-- take the filepart of the localURI as the resource title -->
 					<xsl:variable name="resTitle">
 						<xsl:choose>
-							<xsl:when test="normalize-space(@lat:label)!=''">
+							<xsl:when test="not($overwrite-resource-label) and normalize-space(@lat:label)!=''">
 								<xsl:sequence select="normalize-space(@lat:label)"/>
 							</xsl:when>
 							<xsl:otherwise>
@@ -555,7 +556,7 @@
 					<!--<xsl:message use-when="$debug">DBG: creating FOX[<xsl:value-of select="$resFOX"/>]?[<xsl:value-of select="not(doc-available($resFOX))"/>]</xsl:message>-->
 					<xsl:variable name="resMIME">
 						<xsl:apply-templates select="current()" mode="mime">
-							<xsl:with-param name="resURI" select="$resURI"/>
+							<xsl:with-param name="resURI" select="$resURI" tunnel="yes"/>
 						</xsl:apply-templates>
 					</xsl:variable>
 					<xsl:variable name="createFOX" as="xs:boolean">
@@ -732,8 +733,8 @@
 													</xsl:for-each>
 													<!-- content model -->
 													<xsl:apply-templates select="current()" mode="cmodel">
-														<xsl:with-param name="resURI" select="$resURI"/>
-														<xsl:with-param name="resMIME" select="$resMIME"/>
+														<xsl:with-param name="resURI" select="$resURI"  tunnel="yes"/>
+														<xsl:with-param name="resMIME" select="$resMIME" tunnel="yes"/>
 													</xsl:apply-templates>
 													<!-- add POLICY RELS-EXT statements -->
 													<xsl:for-each select="zero-or-one(cmd:firstFile($policies-dir, (concat(replace($resID, '[^a-zA-Z0-9]', '_'), '.RELS-EXT.xml'), replace(($collections/policy[@type='resource'])[1],'.xml','.RELS-EXT.xml'), 'default-resource-policy.RELS-EXT.xml','default-policy.RELS-EXT.xml'), $base))">
@@ -824,6 +825,11 @@
 										</xsl:message>
 									</xsl:otherwise>
 								</xsl:choose>
+								<!-- RP other -->
+								<xsl:apply-templates select="current()" mode="rp-other">
+									<xsl:with-param name="resURI" select="$resURI"  tunnel="yes"/>
+									<xsl:with-param name="resMIME" select="$resMIME" tunnel="yes"/>
+								</xsl:apply-templates>
 							</foxml:digitalObject>
 						</xsl:result-document>
 					</xsl:if>
@@ -1036,6 +1042,11 @@
 							<xsl:apply-templates select="node()" mode="#current"/>
 						</xsl:when>
 						<xsl:otherwise>
+							<xsl:if test="normalize-space(@lat:flatURI)=''">
+								<xsl:attribute name="lat:flatURI" xmlns:lat="http://lat.mpi.nl/">
+									<xsl:value-of select="cmd:lat('lat:', $hdl)"/>
+								</xsl:attribute>
+							</xsl:if>
 							<xsl:value-of select="replace($hdl,'hdl:','https://hdl.handle.net/')"/>
 						</xsl:otherwise>
 					</xsl:choose>
@@ -1066,16 +1077,23 @@
 		<xsl:comment>[CMD2Other] nothing happening here, please overwrite with your own templates!</xsl:comment>
 	</xsl:template>
 	
+	<!-- RP other -->
+	<xsl:template match="cmd:ResourceProxy" mode="rp-other">
+		<xsl:param name="resURI" tunnel="yes"/>
+		<xsl:param name="resMIME" tunnel="yes"/>
+		<xsl:comment>[RP2Other] nothing happening here, please overwrite with your own templates!</xsl:comment>
+	</xsl:template>
+
 	<!-- mime -->
 	<xsl:template match="cmd:ResourceProxy" mode="mime">
-		<xsl:param name="resURI"/>
+		<xsl:param name="resURI" tunnel="yes"/>
 		<xsl:sequence select="cmd:getMIME(cmd:ResourceType/@mimetype,$resURI)"/>
 	</xsl:template>
 	
 	<!-- cmodel -->
 	<xsl:template match="cmd:ResourceProxy" mode="cmodel" xmlns:fedora-model="info:fedora/fedora-system:def/model#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:islandora="http://islandora.ca/ontology/relsext#">
-		<xsl:param name="resURI"/>
-		<xsl:param name="resMIME"/>
+		<xsl:param name="resURI" tunnel="yes"/>
+		<xsl:param name="resMIME" tunnel="yes"/>
 		<!-- add specific content models for specific MIME types -->
 		<xsl:choose>
 			<xsl:when test="starts-with($resMIME,'audio/')">

@@ -48,6 +48,7 @@ function flat_deposit_cmdi_form($form, &$form_state)
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
     $available_profiles = FormBuilder::getAvailableTemplates('flat_bundle');
 
+    $available_profiles ['Import'] = 'I want to upload a CMDI metadata file';
 
     global $user;
     $form['owner'] = array(
@@ -56,6 +57,11 @@ function flat_deposit_cmdi_form($form, &$form_state)
         '#required' => TRUE,
         '#default_value' => $user->name,
     );
+
+    if (!user_access('admin collection')) {
+        $form['owner']['#disabled'] = TRUE;
+    }
+
 
     $form['trigger']['select_profile_name'] = array(
         '#title' => t('Which profile do you want to use?'),
@@ -75,6 +81,34 @@ function flat_deposit_cmdi_form($form, &$form_state)
         $form['trigger']['select_profile_name']['#default_value'] = $form_state['selected'];
     };
 
+    $form['cmdi_file'] = array(
+        '#type' => 'file',
+        '#title' => t('Choose a file'),
+        '#states' => array(
+            'visible' => array(
+                ':input[name="select_profile_name"]' => array('value' => 'Import'),
+            ),
+            'required' => array(
+                ':input[name="select_profile_name"]' => array('value' => 'Import'),
+            ),
+        ),
+    );
+
+    $form['select_policy'] = array(
+        '#title' => t('Which access policy do you want to apply?'),
+        '#type' => 'select',
+        '#required' => TRUE,
+        '#options' => drupal_map_assoc(array('public','private')),
+        '#default_value' => 'public',
+    );
+
+    $form['hide_metadata'] = array(
+        '#title' => t('Hide metadata of this collection'),
+        '#type' => 'checkbox',
+        '#required' => FALSE,
+    );
+
+
     $form['template_container'] = array(
         '#type' => 'container',
         '#tree' => TRUE,
@@ -83,9 +117,6 @@ function flat_deposit_cmdi_form($form, &$form_state)
         ),
     );
 
-    if (!user_access('admin collection')) {
-        $form['owner']['#disabled'] = TRUE;
-    }
 
     // attach hidden data
     $form['data'] = array(
@@ -105,7 +136,7 @@ function flat_deposit_cmdi_form($form, &$form_state)
     // Generate profile specific form render array and attach to container
     //********************************************************************
 
-    if (isset($form_state['selected']) and $form_state['selected'] == 'MPI_Bundle') {
+    if (isset($form_state['selected']) and $form_state['selected'] != 'Import') {
 
         // Load inherited cmdi metadata from parent node
         $parent = node_load($parent_nid);
@@ -115,7 +146,7 @@ function flat_deposit_cmdi_form($form, &$form_state)
         $ds = islandora_datastream_load('CMD', $pFid);
 
         if ($ds) {
-            module_load_include('php', 'flat_deposit', 'Helpers/CMDI/CmdiHandler');
+            module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
             $inheritedData = simplexml_load_string($ds->content, 'CmdiHandler');
         } else {
             $inheritedData = null;
@@ -156,9 +187,29 @@ function flat_deposit_cmdi_form($form, &$form_state)
 
 function flat_deposit_cmdi_form_final_validate($form, &$form_state)
 {
+    // Form Validation setup
+    $node = menu_get_object();
+    $wrapper = entity_metadata_wrapper('node', $node);
+
+    $title = $node->title;
+    $collection = $wrapper->flat_parent_title->value();
+
+    $owner = $form_state['values']['owner'];
+    $profile = $form_state['values']['select_profile_name'];
+
+    $export_dir = 'metadata://' . '/' . str_replace('@', '_at_' , $owner) . "/$collection/$title";
+    $cmdiFile = $export_dir . '/' . $profile . '_' . uniqid() . '.cmdi';
+
+    $form_state['values']['cmdiFile'] = $cmdiFile;
+
+    $parent_nid = $form_state['values']['data']['parent_nid'];
 
 
-    // stop validation if errors have previously occurred
+    //****************************//
+    // Perform general validation //
+    //****************************//
+
+    // stop validation immediately if errors have previously occurred
     if(form_get_errors()){
         return $form;
     }
@@ -170,23 +221,12 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     }
 
     // Validate if owner exists.
-    $owner = $form_state['values']['owner'];
     if (!user_load_by_name($owner)) {
-
         form_set_error('owner', 'Specified owner is unknown to drupal');
         return $form;
     };
 
-
     // Validate that output directory for new cmdi exists or can be created
-    $node = menu_get_object();
-    $wrapper = entity_metadata_wrapper('node', $node);
-
-    $title = $node->title;
-    $collection = $wrapper->flat_parent_title->value();
-
-
-    $export_dir = 'metadata://' . '/' . str_replace('@', '_at_' , $owner) . "/$collection/$title";
     if (!file_exists($export_dir)) {
         drupal_mkdir($export_dir, NULL, TRUE);
     }
@@ -196,36 +236,116 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
         return $form;
     }
 
-    // set filename for generated cmdi
-    $profile = $form_state['values']['select_profile_name'];
-    $cmdiFile = $export_dir . '/' . $profile . '_' . uniqid() . '.cmdi';
-    $form_state['values']['cmdiFile'] = $cmdiFile;
+
+    //*******************************************//
+    // Perform validation specific chosen option //
+    //*******************************************//
+    $selected = $form_state['values']['select_profile_name'] ;
+    switch (true) {
+
+        case $selected != 'Import':
+
+            //*******************//
+            // Title Validations //
+            //*******************//
+            $title = $form_state['values']['template_container']['elements']['field_01'][0];
+
+            // 1. Validate that title does not contain special characters
+            if (!preg_match('/^[a-zA-Z0-9\_\s]{2,40}+$/', $title)) {
+                form_set_error('title', t('Allowed are all letters, numbers and underscores (max length 40)'));
+            }
+
+            // 2. Validate that no other collection at same collection with very similar name exists
+            module_load_include('inc', 'flat_deposit', 'inc/class.FlatTuque');
+            $parent_node = node_load($parent_nid);
+            $parent_wrapper = entity_metadata_wrapper('node', $parent_node);
+
+            $parent_fid = $parent_wrapper->flat_fid->value();
+            $values = FlatTuque::getChildrenLabels($parent_fid);
+
+            if ($values === false) {
+                form_set_error('title', 'Unable to validate that collection name is unique at this location');
+                return $form;
+            }
+
+            if (in_array(strtoupper($title), array_unique(array_map('strtoupper', $values)))) {
+                form_set_error('title', 'Another collection or bundle with same name exists at this location. Please use other name');
+                return $form;
+            }
 
 
-    //*******************//
-    // Generate Cmdi file//
-    //*******************//
-    module_load_include('inc','flat_deposit','Helpers/CMDI/CmdiCreator/class.CmdiCreator');
 
-    $templateName = $form_state['selected'];
-    $form_data = $form_state['values']['template_container']['elements'];
-    $owner = $form_state['values']['owner'];
+            //*******************//
+            // Generate Cmdi file//
+            //*******************//
+            module_load_include('inc','flat_deposit','Helpers/CMDI/CmdiCreator/class.CmdiCreator');
 
-    $creator = new CmdiCreator();
+            $templateName = $form_state['selected'];
+            $form_data = $form_state['values']['template_container']['elements'];
+            $owner = $form_state['values']['owner'];
 
-    try{
-        $creator->setCmdi($templateName, $form_data, $owner);
-        $cmdi = $creator->getCmdi();
-    } catch (CmdiCreatorException $e){
-        form_set_error('error',$e->getMessage());
+            $creator = new CmdiCreator();
+
+            try{
+                $creator->setCmdi($templateName, $form_data, $owner);
+                $cmdi = $creator->getCmdi();
+            } catch (CmdiCreatorException $e){
+                form_set_error('error',$e->getMessage());
+                return $form;
+            }
+
+            $exported = $cmdi->asXML($cmdiFile);
+
+            if (!$exported){
+                form_set_error('error','Unable to save cmdi file');
+            }
+            break;
+
+        case 'Import':
+            $file = file_save_upload('cmdi_file', array(
+                // Validate extensions.
+                'file_validate_extensions' => array('cmdi'),
+            ));
+            // If the file did not passed validation:
+            if (!$file) {
+                form_set_error('cmdi_file','File was not specified or has not correct extension (.cmdi)');
+                return $form;
+            }
+            // Validate valid xml file
+            if (!@simplexml_load_file($file->uri)) {
+                form_set_error('cmdi_file','File is not a valid xml file');
+                return $form;
+            }
+
+            copy(drupal_realpath($file->uri), $cmdiFile);
+            if (!file_exists($cmdiFile)) {
+                form_set_error('cmdi_file', 'Unable to copy specified file to target location');
+                return $form;
+            }
+            break;
+
+        default:
+            break;
+    }
+
+   //***************//
+    // Validate cmdi //
+    //***************//
+    // Cmdi validation does not make sense as Cmdis will not contain resources at this stage
+
+
+    //***********************//
+    // Validate cmdi profile //
+    //***********************//
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
+    $cmdi = simplexml_load_file($cmdiFile, 'CmdiHandler');
+    try {
+        $cmdi->canBeValidated();
+    } catch (CmdiHandlerException $cmdiHandlerException){
+        form_set_error('cmdi_file',$cmdiHandlerException->getMessage());
         return $form;
     }
 
-    $exported = $cmdi->asXML($cmdiFile);
-
-    if (!$exported){
-        form_set_error('error','Unable to save cmdi file');
-    }
 
     return $form;
 
@@ -264,19 +384,4 @@ function flat_deposit_cmdi_form_submit($form, &$form_state){
     drupal_set_message(t('Metadata for bundle %title has been saved', array('%title' => $node->title)));
 
 }
-
-
-
-
-function add_multival_to_cmdi_form_ajax($form, $form_state) {
-
-
-    return $form['template_container'];
-}
-
-function remove_multival_from_cmdi_form_ajax($form, $form_state) {
-
-    return $form['template_container'];
-}
-
 

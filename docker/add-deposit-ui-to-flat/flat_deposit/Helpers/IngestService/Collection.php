@@ -17,6 +17,8 @@ class Collection extends SIP
      *
      * The array requires following parameters:
      *
+     * 'content_type': as this variant is also used for updating bundle metadata, we need to know the content type.
+     *
      * 'policy': which policy (ACL) to generate; either
      *
      * 'fid': whether the ingest fid is already known
@@ -31,6 +33,7 @@ class Collection extends SIP
 
 
         $required = array(
+            'content_type',
             'fid',
             'policy',
         );
@@ -87,20 +90,23 @@ class Collection extends SIP
     {
 
         $this->logging('Starting addResourcesToCmdi');
-
+        /*
         $file_name = $this->cmdiTarget;
-        module_load_include('php', 'flat_deposit', 'Helpers/CMDI/CmdiHandler');
+        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
         $cmdi = simplexml_load_file($file_name, 'CmdiHandler');
 
-        if (!$cmdi OR !$cmdi->getNameById()){
-            throw new IngestServiceException('Unable to load record.cmdi file');
-        }
 
-        if ($this->info['fid'] AND $cmdi->getNameById() == 'MPI_Bundle') {
-            try {
-                $cmdi->addResourcesFromDatastream($this->info['fid']);
-            } catch (CmdiHandlerException $exception) {
+        if ($this->info['fid'] AND $this->info['content_type'] == 'flat_bundle') {
+
+            try{
+                $fid = $this->info['fid'];
+
+                $cmdi->addResources(null, $fid);
+
+            } catch (CmdiHandlerException $exception){
+
                 throw new IngestServiceException($exception->getMessage());
+
             }
         }
 
@@ -110,6 +116,7 @@ class Collection extends SIP
         }
         #$check = $xml->asXML('/lat/test.xml');
 
+*/
         $this->logging('Finishing addResourcesToCmdi');
         return TRUE;
     }

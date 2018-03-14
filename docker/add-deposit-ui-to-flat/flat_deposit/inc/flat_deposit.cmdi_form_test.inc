@@ -238,7 +238,7 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
 
     // Get cmdi
     $import =  FALSE;
-    module_load_include('php','flat_deposit','Helpers/CMDI/CmdiHandler');
+    module_load_include('inc','flat_deposit','Helpers/CMDI/class.CmdiHandler');
     $msg = get_cmdi($form_state['values'], $recordCmdi, $import);
 
 

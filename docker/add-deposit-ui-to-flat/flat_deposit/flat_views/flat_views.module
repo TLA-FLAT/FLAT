@@ -17,6 +17,43 @@
  *
  */
 
+
+/**
+ * Implements hook_menu().
+ */
+function flat_views_menu()
+{
+    $items = array();
+    $items['dashboard/%user/notifications/delete_all_confirm'] = array(
+        'title' => 'Delete all notifications',
+        'type' => MENU_CALLBACK,
+        'page callback' => 'flat_views_notifications_delete_all',
+        'page arguments' => array(1),
+        'access arguments' => array('use deposit module', 1),
+    );
+
+    return $items;
+}
+
+function flat_views_notifications_delete_all($form, &$form_state, $user){
+
+    $a = 2;
+    return  confirm_form(
+        array(),
+        t('Are you sure you want to delete all notifications?'),
+        'dashboard/'. $user->uid .'notifications',
+        t('This action cannot be undone.'),
+        t('Delete'),
+        t('Cancel')
+    );
+
+}
+
+function flat_views_notifications_delete_all_submit($user){
+
+    drupal_set_message('Dione');
+}
+
 function flat_views_views_api() {
 
   $views_registration = array (
@@ -30,7 +67,59 @@ function flat_views_views_api() {
 
 
 /**
+ * Implements hook_block_info().
+ */
+function flat_views_block_info()
+{
+    $blocks = array();
+
+
+    $blocks['reports_actions'] = array(
+        'info' => t('FLAT deposit reports actions '),
+        'status' => TRUE,
+        'weight' => 999,
+        'region' => 'content',
+        'visibility' => BLOCK_VISIBILITY_LISTED,
+        'pages' => 'dashboard/*/notifications'
+    );
+
+    return $blocks;
+}
+
+
+/**
+ * Implements hook_block_view().
+ */
+function flat_views_block_view($delta = '')
+{
+
+    switch ($delta){
+        case 'reports_actions':
+
+            module_load_include('inc','flat_views','includes/flat_reports.actions_form');
+
+            $form = drupal_get_form('flat_reports_action_form');
+            $rendered_form = drupal_render($form);
+
+            $block = array(
+                'subject' => '',
+                'content' => $rendered_form,
+            );
+            break;
+
+    }
+
+    return $block;
+
+}
+
+
+
+
+/**
  * Implements hook_block_info_alter().
+ *
+ * Alter visibility of in views defined blocks for report, bundles and collections
  */
 function flat_views_block_info_alter(&$blocks, $theme, $code_blocks)
 {
@@ -61,15 +150,7 @@ function flat_views_block_info_alter(&$blocks, $theme, $code_blocks)
                 break;
         }
 
-
-
         }
-
-
-
-
-
-
 
     #var_dump($blocks['views']);
 }

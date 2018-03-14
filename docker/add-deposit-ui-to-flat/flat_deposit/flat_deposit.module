@@ -212,6 +212,10 @@ function flat_deposit_permission()
             'title' => t('Update existing bundle and add to own account'),
             'description' => t('Allows to create personal archive bundle on basis of existing bundle'),
         ),
+        'view node menu' => array(
+            'title' => t('Switch to active node'),
+            'description' => t('Allows to quick switch to dashboard'),
+        ),
         'update bundle metadata menu' => array(
             'title' => t('Update existing bundle metadata'),
         ),
@@ -383,6 +387,18 @@ function flat_deposit_menu()
         'weight' => 99,
     );
 
+
+    $items['islandora/object/%islandora_object/view_node'] = array(
+        'title' => 'Update',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'flat_deposit_update',
+        'page arguments' => array(2),
+        'access callback' => 'islandora_object_access_callback',
+        'access arguments' => array('view node menu', 2),
+        'weight' => 99,
+    );
+
+
 // bundle creation
     $items['islandora/object/%islandora_object/update_bundle_metadata'] = array(
         'title' => 'Update metadata',
@@ -448,7 +464,7 @@ function flat_deposit_menu()
 
 function flat_deposit_dashboard_access(){
     global $user;
-    $roles = array('administrator', 'manager', 'depositor');
+    $roles = array('administrator', 'data manager', 'corpman', 'certified user', 'developer');
     foreach ($roles as $role) {
       if (in_array($role, $user->roles)) {
         return TRUE;
@@ -1460,6 +1476,7 @@ function flat_bundle_view($node, $view_mode) {
 
     if ($view_mode == 'full' && node_is_page($node)) {
         // Breadcrumb navigation.  l() escapes title, so we should not escape !name.
+
         drupal_set_breadcrumb(array(
             l(t('Home'),  NULL),
             l(t('Dashboard'), 'dashboard'),
@@ -1603,16 +1620,6 @@ function flat_deposit_block_info()
     );
 
 
-    $blocks['flat_deposit_menu'] = array(
-        'info' => t('FLAT deposit main menu'),
-        'status' => TRUE,
-        'region' => 'content',
-        'visibility' => BLOCK_VISIBILITY_LISTED,
-        'pages' => "user/*/dashboard\nuser/*/dashboard/*" ,
-        'weight' => -999,
-
-    );
-
     $blocks['flat_deposit_collections'] = array(
         'info' => t('FLAT deposit form with owned collections living in fedora'),
         'status' => TRUE,
@@ -1636,11 +1643,7 @@ function flat_deposit_block_view($delta = '')
     switch ($delta){
         case 'node_actions':
 
-            $node = menu_get_object();
-            $node_wrapper = entity_metadata_wrapper('node', $node);
-
             module_load_include('inc','flat_deposit','inc/flat_bundle.actions_form');
-
 
             $form = drupal_get_form('flat_bundle_action_form');
             $rendered_form = drupal_render($form);
@@ -1719,67 +1722,6 @@ function flat_deposit_block_view($delta = '')
 
             break;
 
-        case 'flat_deposit_menu':
-            global $user;
-            $image_links = array(
-                'link_notifications' => array(
-                    'name' => 'My notification center',
-                    'href' => 'user/' .  $user->uid . '/dashboard',
-                    'image_path' => drupal_get_path('module','flat_deposit') .'/Images/My_notifications.png',
-                ),
-                'link_my_collections' => array(
-                    'name' => 'My collections',
-                    'href' => 'user/' .  $user->uid . '/dashboard/collections',
-                    'image_path' => drupal_get_path('module','flat_deposit') .'/Images/My_collections.png',
-                ),
-                'link_bundles' => array(
-                    'name' => 'My bundles',
-                    'href' => 'user/' .  $user->uid . '/dashboard/bundles',
-                    'image_path' => drupal_get_path('module','flat_deposit') .'/Images/My_bundles.png',
-                ),
-
-            );
-
-            $rendered_image_links = array();
-            // Create complete variables to be sent to theme_image_link
-            foreach ($image_links as $key => $image_link) {
-
-                $variables = array(
-                    'link' => array(
-                        'text' => $image_link ['name'],
-                        'path' => $image_link ['href'],
-                        'options' => array(
-                            'attributes' => array(),
-                            'html' => FALSE,),
-                    ),
-                    'image' => array(
-                        'path' => $image_link['image_path'],
-                        'alt' => $image_link ['name'],
-                        'title' => $image_link ['name'],
-                        'attributes' => array(),
-                    )
-                );
-
-                // Attach render array to array of outputted block items.
-                $rendered_image_links [] = theme('image_link', $variables);
-            }
-
-
-
-            $output = array(
-                'tabled_links' => array(
-                    '#type' => 'markup',
-                    '#markup' => theme('table', ['header' => $rendered_image_links])
-                )
-
-            );
-
-            $block = array (
-                'subject' => t('FLAT Deposit Main Menu'),
-                'content' => array(
-                    'deposit_menus' =>$output )
-            );
-            break;
 
         case 'flat_deposit_collections':
             module_load_include('inc','flat_deposit','/inc/flat_collection.fedora_collections_actions');
@@ -1837,18 +1779,39 @@ function flat_deposit_islandora_object_access($op, $object, $user) {
 
             break;
 
+        case 'view node menu':
+            $fid = $object->id;
+
+            $query = new EntityFieldQuery();
+            $query->entityCondition('entity_type', 'node')
+                ->entityCondition('bundle', 'flat_bundle')
+                ->fieldCondition('flat_fid', 'value', "$fid", '=');
+            $bundle_nodes = $query->execute();
+
+            $has_access = isset($bundle_nodes['node']);
+
+            break;
         case 'update bundle menu':
         case 'update bundle metadata menu':
             // visible objects need the compoundCModel
             $has_compoundCModel = !empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:compoundCModel'));
             $has_cmdi_content_model = !empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:sp_cmdiCModel'));
 
+            // check that archived bundle has no active bundle node (i.e. is being updated)
+            $fid = $object->id;
+
+            $query = new EntityFieldQuery();
+            $query->entityCondition('entity_type', 'node')
+                ->entityCondition('bundle', 'flat_bundle')
+                ->fieldCondition('flat_fid', 'value', "$fid", '=');
+
+            $bundle_nodes = $query->execute();
+
+            $has_no_active_node = empty($bundle_nodes);
 
 
-            $has_access = ($has_compoundCModel AND $has_cmdi_content_model) ? TRUE: false;
-
+            $has_access = ($has_compoundCModel AND $has_cmdi_content_model AND $has_no_active_node) ? TRUE: false;
             break;
-
 
 
         default:
@@ -1894,13 +1857,34 @@ function flat_deposit_islandora_sp_cmdiCModel_islandora_view_object_alter(&$obje
     #krumo($rendered);
 
     if (isset($rendered["Default output"]['#markup'])){
-
         $rendered["Default output"]['#markup'] .= drupal_render($markup);
-
     }
+}
 
 
+function flat_deposit_update($fedora_object){
 
+
+    // check that archived bundle has no active bundle node (i.e. is being updated)
+    $fid = $fedora_object;
+
+    global $user;
+    $user_id = $user->uid;
+
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'flat_bundle')
+        ->propertyCondition('uid', $user_id)
+        ->fieldCondition('flat_fid', 'value', "$fid", '=');
+
+    $bundle_nodes = $query->execute();
+
+    if (isset($bundle_nodes['node'])){
+
+        $nids = array_keys($bundle_nodes['node']);
+
+        drupal_goto('node/' . $nids[0]);
+    }
 
 
 }

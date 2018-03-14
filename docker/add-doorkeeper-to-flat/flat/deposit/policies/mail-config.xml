@@ -1,9 +1,10 @@
 <mailConfig>
-    <server></server>
-    <port></port>
-    <user></user>
-    <password></password>
-    <from></from>
-    <subject>mail from FLAT</subject>
-    <to></to>
+  <server>smtp.example.com</server>
+  <port>465</port>
+  <user>someone@example.com</user>
+  <password></password>
+  <from>someone@example.com</from>
+  <!-- the following could be defaults, which can be overwritten by parameters to the action -->
+  <subject>mail from FLAT</subject>
+  <to>someoneelse@example.com</to>
 </mailConfig>

@@ -26,9 +26,22 @@ class Bundle extends SIP
      */
     public function init($info){
         $this->logging('Starting init');
+
+        if (!$info['nid']){
+            throw new IngestServiceException("Node id is not specified");
+        }
+
+        $this->node = node_load($info['nid']);
+        $this->wrapper = entity_metadata_wrapper('node',$this->node);
+
+        $info['cmdi_handling'] = $this->wrapper->flat_cmdi_option->value();
+        $info['policy'] = $this->wrapper->flat_policies->value();
+
         $required = array(
             'loggedin_user',
             'nid',
+            'policy',
+            'cmdi_handling'
         );
         $diff = array_diff($required,array_keys($info));
         if($diff){
@@ -36,15 +49,10 @@ class Bundle extends SIP
             throw new IngestServiceException('Not all required variables are defined. Following variables are missing: ' . implode(', ', $diff));
 
         };
-        $this->node = node_load($info['nid']);
-
-        $this->wrapper = entity_metadata_wrapper('node',$this->node);
 
         $this->info = $info;
 
-        $this->info['policy'] = $this->wrapper->flat_policies->value();
 
-        $this->info['cmdi_handling'] = $this->wrapper->flat_cmdi_option->value();
 
 
         // set status of bundle
@@ -179,35 +187,22 @@ class Bundle extends SIP
 
         $this->logging('Starting addResourcesToCmdi');
 
-        module_load_include('php','flat_deposit','/Helpers/CMDI/CmdiHandler');
+        module_load_include('inc','flat_deposit','/Helpers/CMDI/class.CmdiHandler');
 
         $file_name = $this->cmdiTarget;
         $cmdi = simplexml_load_file($file_name,'CmdiHandler');
 
-        if (!$cmdi OR !$cmdi->getNameById()){
+        if (!$cmdi OR !$cmdi->canBeValidated()){
             throw new IngestServiceException('Unable to load record.cmdi file');
         }
 
-
-        $resource_handling = $this->info['cmdi_handling'];
         $directory = $this->wrapper->flat_location->value();
-
-
-        switch ($resource_handling) {
-
-            case 'template':
-            case 'import':
-            {
-                //todo 1 function strip lat:localURI
-                $cmdi->striplocalURI();
-                break;
-            }
-
-        }
 
         try{
 
-            $cmdi->addResources($directory);
+            $fid = isset($this->wrapper->flat_fid) ? $this->wrapper->flat_fid->value() : null;
+
+            $cmdi->addResources($directory, $fid);
 
         } catch (CmdiHandlerException $exception){
 
@@ -252,6 +247,11 @@ class Bundle extends SIP
 
             // TODO remove comment when working
 
+            $dir = drupal_realpath($this->wrapper->flat_location->value());
+            if ($dir AND is_readable($dir) AND count(scandir($dir)) == 2){
+                unlink ($dir);
+            };
+
             node_delete_multiple(array($this->info['nid']));
 
 
@@ -274,7 +274,7 @@ class Bundle extends SIP
      *
      * @param null|string $additonal_message possible error messages generated during processing
      */
-    protected function createBlogEntry ($succeeded, $additonal_message = NULL){
+    protected function  createBlogEntry ($succeeded, $additonal_message = NULL){
 
         $this->logging('Starting createBlogEntry');
 

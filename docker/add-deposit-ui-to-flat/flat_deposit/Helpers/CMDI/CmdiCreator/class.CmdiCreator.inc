@@ -14,10 +14,14 @@ class CmdiCreator
 {
 
 
+    const FORM_TEMPLATES_PATH = __DIR__ . '/../FormTemplates/';
+
+
     /**
      * @var $cmdi CmdiHandler object containing the fully generated cmdi
      */
     private $cmdi;
+
 
 
 
@@ -69,9 +73,8 @@ class CmdiCreator
      */
     private function setCmdiComponents($templateName, $data = null){
 
-        module_load_include('php', 'flat_deposit', 'Helpers/CMDI/CmdiHandler');
 
-        $fName = drupal_get_path('module', 'flat_deposit') . CmdiHandler::FORM_TEMPLATES_PATH . $templateName . '.xml';
+        $fName = self::FORM_TEMPLATES_PATH . $templateName . '.xml';
 
         $template = simplexml_load_file($fName);
 
@@ -231,7 +234,7 @@ class CmdiCreator
      */
     private function getTree($form_data, $owner){
 
-        module_load_include('php', 'flat_deposit', 'Helpers/CMDI/CmdiHandler');
+        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
 
         $clarinId = $form_data['data']['clarinProfileId'];
 
@@ -267,7 +270,7 @@ class CmdiCreator
             'Header' => array(
                 'MdCreator' => $owner,
                 'MdCreationDate' => date("Y-m-d"),
-                'MdSelfLink' => '',
+                'cmd:MdSelfLink' => '',
                 'MdProfile' => $clarinId,
             ),
             'Resources' => array(

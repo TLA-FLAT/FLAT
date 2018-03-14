@@ -109,11 +109,11 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
             <title>Collection creation date</title>
             <description>Date at which the collection was created</description>
         </item>
-        <item id="fieldset_01" name="Description" type="Composite"  minOccurrence="1">
+        <item id="fieldset_01" name="Description" type="Composite" minOccurrence="1">
             <type>fieldset</type>
             <title>Description</title>
             <container>Descriptions</container>
-            <item id="field_05" name="Description" type="Leaf" inherited="true" multival="true" minOccurrence="1">
+            <item id="field_05" name="Description" type="Leaf" multival="true" minOccurrence="1">
                 <title>Description</title>
                 <type>textfield</type>
             </item>
@@ -192,15 +192,15 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                 <title>Project Name</title>
                 <type>textfield</type>
             </item>
-            <item id="field_14" name="ProjectDescription" type="Leaf" multival="true" inherited="true" minOccurrence="1">
+            <item id="field_14" name="ProjectDescription" type="Leaf" inherited="true" minOccurrence="1">
                 <title>Project Description</title>
                 <type>textfield</type>
             </item>
-            <item id="field_15" name="ProjectID" type="Leaf" multival="true" inherited="true" minOccurrence="0">
+            <item id="field_15" name="ProjectID" type="Leaf" inherited="true" minOccurrence="0">
                 <title>Project identifier</title>
                 <type>textfield</type>
             </item>
-            <item id="field_16" name="Url" type="Leaf" multival="true" inherited="true" minOccurrence="0">
+            <item id="field_16" name="Url" type="Leaf" inherited="true" minOccurrence="0">
                 <title>URL</title>
                 <type>textfield</type>
             </item>
@@ -279,6 +279,16 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
             </item>
         </item>
     </items>
+    <resources>
+        <root_path>MPI_Bundle</root_path>
+        <subnodes></subnodes>
+        <allowed_tags>
+            <tag id="Resource">
+                <updated_values id="Size"></updated_values>
+                <mime_regex>/^./</mime_regex>
+            </tag>
+        </allowed_tags>
+    </resources>
     <data>
         <clarinProfileId>clarin.eu:cr1:p_1475136016242</clarinProfileId>
     </data>

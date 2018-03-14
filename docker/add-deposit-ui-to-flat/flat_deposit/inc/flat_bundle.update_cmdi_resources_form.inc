@@ -30,14 +30,19 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
     );
 
 
+    module_load_include('inc','flat_deposit','Helpers/CMDI/class.CmdiHandler');
 
 
+    if(!file_exists(drupal_realpath($fName))){
+        drupal_set_message("Unable to read bundle metadata", 'error');
+        return $form;
+    } elseif (($cmd = @simplexml_load_file(drupal_realpath($fName), 'CmdiHandler')) === false){
 
+        drupal_set_message("Record cmdi of this bundle can not be read using Simplexml", 'error');
+        return $form;
 
+    }
 
-    module_load_include('php','flat_deposit','Helpers/CMDI/CmdiHandler');
-
-    $cmd = simplexml_load_file($fName, 'CmdiHandler');
 
     $count = 0;
     $data = [];
@@ -84,7 +89,7 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
             'fedora_id' => $fedora_id,
         )
     );
-
+/*
     $form['buttons']['delete'] = array(
         '#type' => 'submit',
         '#value' => t('Remove selected file(s)'),
@@ -96,7 +101,7 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
         '#value' => 'Reset bundle',
         '#submit' => array('flat_bundle_reset_cmdi_resource_submit'),
     );
-
+*/
     return $form;
 }
 
@@ -104,7 +109,7 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
 function flat_bundle_delete_cmdi_resource_submit($form, &$form_state){
 
     $index = 0;
-    module_load_include('php','flat_deposit','Helpers/CMDI/CmdiHandler');
+    module_load_include('inc','flat_deposit','Helpers/CMDI/class.CmdiHandler');
     $cmd = $form_state['values']['data']['cmdi'];
     $id = $cmd->Header->MdProfile;
     $profile_name = CmdiHandler::getNameById($id);
