@@ -31,20 +31,26 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
         <template_name>lat-session</template_name>
     </header>
     <resources>
-        <root_path>/CMD/Components/MPI_Bundle</root_path>
-        <subnodes></subnodes>
+        <root_path>lat-session</root_path>
+        <subnodes>Resources</subnodes>
         <allowed_tags>
             <tag id="MediaFile">
-                <updated_values id="size"></updated_values>
-                <updated_values id="type">Annotation</updated_values>
-                <updated_values id="format"></updated_values>
-                <mime_regex>/^(video|audio|image)/.*$/</mime_regex>
+                <updated_values id="Type"></updated_values>
+                <updated_values id="Format"></updated_values>
+                <updated_values id="Size"></updated_values>
+                <mime_regex>/^(video|audio|image)\/.*$/</mime_regex>
+                <insert_before>WrittenResource</insert_before>
+                <insert_before>Source</insert_before>
+                <insert_before>Anonyms</insert_before>
             </tag>
             <tag id="WrittenResource">
-                <updated_values id="size"></updated_values>
-                <updated_values id="type">Annotation</updated_values>
-                <updated_values id="format"></updated_values>
-                <mime_regex>/^(?!.*text\/x-cmdi\+xml)(text|application)\/.*$/</mime_regex>
+                <updated_values id="Date">Unspecified</updated_values>
+                <updated_values id="Type">Annotation</updated_values>
+                <updated_values id="Format"></updated_values>
+                <updated_values id="Size"></updated_values>
+                <mime_regex>/^./</mime_regex>
+                <insert_before>Source</insert_before>
+                <insert_before>Anonyms</insert_before>
             </tag>
         </allowed_tags>
     </resources>

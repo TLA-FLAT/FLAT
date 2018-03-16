@@ -51,7 +51,20 @@ class FormBuilder
         return drupal_map_assoc($templates);
     }
 
+    static public function checkTemplateItems($templateName)
+    {
 
+        $filename = self::FORM_TEMPLATES_PATH . $templateName .".xml";
+
+        $xml = simplexml_load_file($filename);
+        $res = $xml->xpath('/profileToDrupal/items/item');
+        if (empty($res)){
+
+            return "Chosen profile has no complete form template";
+        }
+
+        return TRUE;
+    }
 
     /**
      * Template2FormParser constructor.

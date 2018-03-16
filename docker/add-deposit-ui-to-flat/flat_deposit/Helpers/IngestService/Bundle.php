@@ -190,7 +190,7 @@ class Bundle extends SIP
         module_load_include('inc','flat_deposit','/Helpers/CMDI/class.CmdiHandler');
 
         $file_name = $this->cmdiTarget;
-        $cmdi = simplexml_load_file($file_name,'CmdiHandler');
+        $cmdi = simplexml_load_file(drupal_realpath($file_name),'CmdiHandler');
 
         if (!$cmdi OR !$cmdi->canBeValidated()){
             throw new IngestServiceException('Unable to load record.cmdi file');
@@ -201,8 +201,9 @@ class Bundle extends SIP
         try{
 
             $fid = isset($this->wrapper->flat_fid) ? $this->wrapper->flat_fid->value() : null;
-
-            $cmdi->addResources($directory, $fid);
+            $md_type = $this->wrapper->flat_cmdi_option->value();
+            $cmdi->cleanMdSelfLink();
+            $cmdi->addResources($md_type, $directory, $fid);
 
         } catch (CmdiHandlerException $exception){
 

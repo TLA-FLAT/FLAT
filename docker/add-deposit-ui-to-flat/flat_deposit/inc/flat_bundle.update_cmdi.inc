@@ -292,7 +292,7 @@ function flat_bundle_update_form_final_validate($form, &$form_state){
  * Updates flat_collection node and redirects to parent node.
  *
  */
-function flat_collection_update_form_submit($form, &$form_state){
+function flat_bundle_update_cmdi_form_submit($form, &$form_state){
 
     $fid = $form_state['values']['data']['fid'];
     $target = 'islandora/object/' . $fid;

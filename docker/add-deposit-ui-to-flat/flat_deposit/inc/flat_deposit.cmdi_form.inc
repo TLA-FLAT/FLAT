@@ -48,7 +48,7 @@ function flat_deposit_cmdi_form($form, &$form_state)
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
     $available_profiles = FormBuilder::getAvailableTemplates('flat_bundle');
 
-    $available_profiles ['Import'] = 'I want to upload a CMDI metadata file';
+    // $available_profiles ['Import'] = 'I want to upload a CMDI metadata file';
 
     global $user;
     $form['owner'] = array(
@@ -109,6 +109,7 @@ function flat_deposit_cmdi_form($form, &$form_state)
     );
 
 
+
     $form['template_container'] = array(
         '#type' => 'container',
         '#tree' => TRUE,
@@ -136,7 +137,14 @@ function flat_deposit_cmdi_form($form, &$form_state)
     // Generate profile specific form render array and attach to container
     //********************************************************************
 
-    if (isset($form_state['selected']) and $form_state['selected'] != 'Import') {
+    if (isset($form_state['selected']) AND !empty($form_state['selected'])) {
+
+        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
+        $check = FormBuilder::checkTemplateItems($form_state['selected']);
+        if ($check !== TRUE){
+            drupal_set_message($check, 'warning');
+            return $form;
+        }
 
         // Load inherited cmdi metadata from parent node
         $parent = node_load($parent_nid);
@@ -146,7 +154,6 @@ function flat_deposit_cmdi_form($form, &$form_state)
         $ds = islandora_datastream_load('CMD', $pFid);
 
         if ($ds) {
-            module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
             $inheritedData = simplexml_load_string($ds->content, 'CmdiHandler');
         } else {
             $inheritedData = null;
@@ -240,95 +247,65 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     //*******************************************//
     // Perform validation specific chosen option //
     //*******************************************//
-    $selected = $form_state['values']['select_profile_name'] ;
-    switch (true) {
-
-        case $selected != 'Import':
-
-            //*******************//
-            // Title Validations //
-            //*******************//
-            $title = $form_state['values']['template_container']['elements']['field_01'][0];
-
-            // 1. Validate that title does not contain special characters
-            if (!preg_match('/^[a-zA-Z0-9\_\s]{2,40}+$/', $title)) {
-                form_set_error('title', t('Allowed are all letters, numbers and underscores (max length 40)'));
-            }
-
-            // 2. Validate that no other collection at same collection with very similar name exists
-            module_load_include('inc', 'flat_deposit', 'inc/class.FlatTuque');
-            $parent_node = node_load($parent_nid);
-            $parent_wrapper = entity_metadata_wrapper('node', $parent_node);
-
-            $parent_fid = $parent_wrapper->flat_fid->value();
-            $values = FlatTuque::getChildrenLabels($parent_fid);
-
-            if ($values === false) {
-                form_set_error('title', 'Unable to validate that collection name is unique at this location');
-                return $form;
-            }
-
-            if (in_array(strtoupper($title), array_unique(array_map('strtoupper', $values)))) {
-                form_set_error('title', 'Another collection or bundle with same name exists at this location. Please use other name');
-                return $form;
-            }
 
 
+    //*******************//
+    // Title Validations //
+    //*******************//
+    $title = $form_state['values']['template_container']['elements']['field_01'][0];
 
-            //*******************//
-            // Generate Cmdi file//
-            //*******************//
-            module_load_include('inc','flat_deposit','Helpers/CMDI/CmdiCreator/class.CmdiCreator');
-
-            $templateName = $form_state['selected'];
-            $form_data = $form_state['values']['template_container']['elements'];
-            $owner = $form_state['values']['owner'];
-
-            $creator = new CmdiCreator();
-
-            try{
-                $creator->setCmdi($templateName, $form_data, $owner);
-                $cmdi = $creator->getCmdi();
-            } catch (CmdiCreatorException $e){
-                form_set_error('error',$e->getMessage());
-                return $form;
-            }
-
-            $exported = $cmdi->asXML($cmdiFile);
-
-            if (!$exported){
-                form_set_error('error','Unable to save cmdi file');
-            }
-            break;
-
-        case 'Import':
-            $file = file_save_upload('cmdi_file', array(
-                // Validate extensions.
-                'file_validate_extensions' => array('cmdi'),
-            ));
-            // If the file did not passed validation:
-            if (!$file) {
-                form_set_error('cmdi_file','File was not specified or has not correct extension (.cmdi)');
-                return $form;
-            }
-            // Validate valid xml file
-            if (!@simplexml_load_file($file->uri)) {
-                form_set_error('cmdi_file','File is not a valid xml file');
-                return $form;
-            }
-
-            copy(drupal_realpath($file->uri), $cmdiFile);
-            if (!file_exists($cmdiFile)) {
-                form_set_error('cmdi_file', 'Unable to copy specified file to target location');
-                return $form;
-            }
-            break;
-
-        default:
-            break;
+    // 1. Validate that title does not contain special characters
+    if (!preg_match('/^[a-zA-Z0-9\_\s]{2,40}+$/', $title)) {
+        form_set_error('title', t('Allowed are all letters, numbers and underscores (max length 40)'));
     }
 
-   //***************//
+    // 2. Validate that no other collection at same collection with very similar name exists
+    module_load_include('inc', 'flat_deposit', 'inc/class.FlatTuque');
+    $parent_node = node_load($parent_nid);
+    $parent_wrapper = entity_metadata_wrapper('node', $parent_node);
+
+    $parent_fid = $parent_wrapper->flat_fid->value();
+    $values = FlatTuque::getChildrenLabels($parent_fid);
+
+    if ($values === false) {
+        form_set_error('title', 'Unable to validate that collection name is unique at this location');
+        return $form;
+    }
+
+    if (in_array(strtoupper($title), array_unique(array_map('strtoupper', $values)))) {
+        form_set_error('title', 'Another collection or bundle with same name exists at this location. Please use other name');
+        return $form;
+    }
+
+
+
+    //*******************//
+    // Generate Cmdi file//
+    //*******************//
+    module_load_include('inc','flat_deposit','Helpers/CMDI/CmdiCreator/class.CmdiCreator');
+
+    $templateName = $form_state['selected'];
+    $form_data = $form_state['values']['template_container']['elements'];
+    $owner = $form_state['values']['owner'];
+
+    $creator = new CmdiCreator();
+
+    try{
+        $creator->setCmdi($templateName, $form_data, $owner);
+        $cmdi = $creator->getCmdi();
+    } catch (CmdiCreatorException $e){
+        form_set_error('error',$e->getMessage());
+        return $form;
+    }
+
+    $exported = $cmdi->asXML($cmdiFile);
+
+    if (!$exported){
+        form_set_error('error','Unable to save cmdi file');
+    }
+
+
+    //***************//
     // Validate cmdi //
     //***************//
     // Cmdi validation does not make sense as Cmdis will not contain resources at this stage
@@ -338,7 +315,7 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     // Validate cmdi profile //
     //***********************//
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
-    $cmdi = simplexml_load_file($cmdiFile, 'CmdiHandler');
+    $cmdi = simplexml_load_file(drupal_realpath($cmdiFile), 'CmdiHandler');
     try {
         $cmdi->canBeValidated();
     } catch (CmdiHandlerException $cmdiHandlerException){

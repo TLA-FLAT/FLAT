@@ -177,6 +177,59 @@ class CmdiHandler extends SimpleXMLElement
 
     }
 
+    /**
+     * Cleans up MdSelfLink
+     *
+     */
+    public function cleanMdSelfLink()
+    {
+        $res = $this->xpath('/cmd:CMD/cmd:Header/cmd:MdSelfLink');
+        if (empty($res)){
+            return true;
+
+        }
+        $value = $res[0];
+
+        $pattern1 = '/^hdl/';
+        $pattern2 = '/^handle/';
+        $hasHandle = (preg_match($pattern1, $value) OR preg_match($pattern2, $value));
+
+        if (!$hasHandle){
+            unset($res[0][0]);
+        }
+
+        return true;
+
+    }
+
+
+    /**
+     * Checks MdSelfLink
+     *
+     */
+    public function validateMdSelfLink()
+    {
+        $res = $this->xpath('/cmd:CMD/cmd:Header/cmd:MdSelfLink');
+        if (empty($res)){
+            return true;
+
+        }
+        $value = $res[0];
+        $attributes = $value->attributes('lat', TRUE);
+        $flatURI = $attributes['flatURI'];
+
+        $pattern1 = '/^hdl/';
+        $pattern2 = '/^handle/';
+        $hasHandle = (preg_match($pattern1, $value) OR preg_match($pattern2, $value));
+
+        if ($hasHandle AND !$flatURI){
+            return "Invalid combination of MdSelfLink value and attributes. Cmdi files providing a handle at CMD->Header->MdSelfLink " .
+            "also need to provide a flatURI attribute.";
+        }
+
+        return true;
+
+    }
 
     /**
      * Sets MdSelfLink in Cmdi header
@@ -248,17 +301,23 @@ class CmdiHandler extends SimpleXMLElement
      *
      * @throws CmdiHandlerException
      */
-    public function addResources($resource_directory = null, $fid = null)
+    public function addResources($metadata_source = 'new', $resource_directory = null, $fid = null)
     {
-        $result = $this->stripResourceProxyAndResources();
+        switch ($metadata_source){
+            case 'new':
+                $result = $this->stripResourceProxyAndResources();
+                if ($fid){
+                    $this->addResourcesFromDatastream($fid);
+                }
+                if (!$result){
+                    throw new CmdiHandlerException(t("Strip of Resources was not successful"));
+                }
+                break;
+            case 'import':
 
-        if (!$result){
-            throw new CmdiHandlerException(t("Strip of Resources was not successful"));
+                break;
         }
 
-        if ($fid){
-            $this->addResourcesFromDatastream($fid);
-        }
 
         if (is_null($resource_directory)){
             return true;
@@ -278,10 +337,16 @@ class CmdiHandler extends SimpleXMLElement
             throw new CmdiHandlerException(t('One or more files are not accessible. ' . implode(', ', $inaccesible_resources)));
         }
 
+        $result = $this->addNewDirectoryResources($cmdi_resources, $directory_resources);
+        if (!$result){
+            throw new CmdiHandlerException(t("Failed adding new resources to Cmdi"));
+        }
 
-        $this->addNewDirectoryResources($cmdi_resources, $directory_resources);
-        $this->updateExistingResources($cmdi_resources, $directory_resources);
+        $result = $this->updateExistingResources($cmdi_resources, $directory_resources);
 
+        if (!$result){
+            throw new CmdiHandlerException(t("Failed updating cmdi resources"));
+        }
 
     }
 
@@ -476,14 +541,12 @@ class CmdiHandler extends SimpleXMLElement
 
 
             // Create new DOMElements from the two SimpleXMLElements
-            $tag = $this->getSourceResource($xml, $file_mime);
+            $tag = $this->getTag($xml, $file_mime);
 
-            if (!$tag){return false;}
+            if (!$tag){
+                return false;
+            }
 
-            $values = array(
-                'size' => filesize($file_name),
-                'format' => $file_mime,
-            );
 
 
             $id = (String)$tag['id'];
@@ -492,41 +555,105 @@ class CmdiHandler extends SimpleXMLElement
             $sourceResource->addAttribute('ref', $rid);
 
             foreach ($tag->updated_values as $value){
-                $id = (String)$value->attributes();
+                $child_id = (String)$value->attributes();
 
-                if (strtolower($id) == 'type'){
-                    $values['type'] = (String)$value;
+                if ((String)$value[0] != ''){
+                    $sourceResource->addChild($child_id, (String)$value[0]);
+                    continue;
                 }
-                $sourceResource->addChild($id, $values[strtolower($id)]);
+
+                if (strtolower($child_id) == 'size'){
+                    $sourceResource->addChild($child_id, filesize($file_name));
+                    continue;
+                }
+
+                if (strtolower($child_id) == 'format'){
+                    $sourceResource->addChild($child_id, $file_mime);
+                    continue;
+                }
+                if (strtolower($child_id) == 'type'){
+                    $sourceResource->addChild($child_id, explode('/', $file_mime)[0]);
+                    continue;
+                }
             }
 
             if (!$sourceResource){
                 return false;
             }
 
-            $domxml = dom_import_simplexml($targetNode);
-
             $resource = dom_import_simplexml($sourceResource);
-            // Import the <Resource> into the xml document
-            $domDsResource = $domxml->ownerDocument->importNode($resource, TRUE);
-            // Append the <Resource> to <ResourceProxyList>
-            $domxml->appendChild($domDsResource);
+            $insertBefores = $tag->xpath('insert_before');;
+            $existingChildren = $targetNode->xpath('child::node()');
 
+            switch(true) {
+
+                    //Case: Resource section has no children
+                case empty($existingChildren):
+                    //Case: Resource section has no other resources to care about
+                case empty($insertBefores):
+
+                    $parent = $targetNode;
+                    $domxml = dom_import_simplexml($parent);
+                    $domDsResource = $domxml->ownerDocument->importNode($resource, TRUE);
+                    $domxml->appendChild($domDsResource);
+                    break;
+
+                default:
+                    $check = false;
+                    foreach ($insertBefores as $insertBefore) {
+                        $results = $targetNode->xpath($insertBefore);
+                        $results_ns = $targetNode->xpath('cmd:' . $insertBefore);
+                        if (!empty($results) OR !empty($results_ns)) {
+                            $parent = !empty($results) ? $results[0] : $results_ns[0];
+                            $check = TRUE;
+                            break;
+                        }
+                    }
+                    if (!$check){return false;}
+
+                    $domxml = dom_import_simplexml($parent);
+                    $domDsResource = $domxml->ownerDocument->importNode($resource, TRUE);
+                    $domxml->parentNode->insertBefore($domDsResource, $domxml);
+
+                    break;
+
+            }
         }
-
         return true;
     }
 
+    private function getTag($profile, $file_mime){
 
-    private function getSourceResource($profile, $file_mime)
+        $tags = $profile->xpath('/profileToDrupal/resources/allowed_tags/tag');
+        foreach ($tags as $tag){
+
+            $pattern = $tag->mime_regex[0];
+            if (preg_match($pattern, $file_mime)){
+                return $tag[0];
+            }
+
+        }
+        return false;
+    }
+
+    private function getResourceInComponentSection($cmdi, $profile, $resource_id)
     {
+
+
+        $root = $cmdi->getNodeForAddingResources($cmdi);
+
+        if (empty($root)){
+            return false;
+        }
+
         $tags = $profile->xpath('/profileToDrupal/resources/allowed_tags/tag');
 
         foreach ($tags as $tag) {
+            $query = 'cmd:' . (String)$tag[0]['id'] . '[@ref=\'' .$resource_id . '\']';
+            $results = $root[0]->xpath($query);
 
-            $reg_ex = (String)$tag->mime_regex[0];
-            if (preg_match($reg_ex, $file_mime)) {
-                return $tag;
+            if (!empty($results)) {
+                return $results[0];
             }
         }
         return false;
@@ -627,6 +754,15 @@ class CmdiHandler extends SimpleXMLElement
     private function getResourceValue($resource){
 
         $lat_attributes = $resource->ResourceRef->attributes('lat', TRUE);
+
+        if (isset($lat_attributes['localURI'])){
+            return basename($lat_attributes['localURI']);
+        }
+
+        if (isset($resource->ResourceRef[0])){
+            return basename((String)$resource->ResourceRef[0]);
+        }
+
 
         if (isset($lat_attributes->flatURI)){
             $pid = (string)$lat_attributes->flatURI;
@@ -768,39 +904,43 @@ class CmdiHandler extends SimpleXMLElement
                 return false;
             }
 
-            $proxy[0]->ResourceRef->addAttribute('lat:localURI', $file_name, "http://lat.mpi.nl/");
+            // change value of existing attribute or add new one
+            $attributes = $proxy[0]->ResourceRef->attributes('lat', true);
+            if (isset($attributes['localURI'])){
+                $attributes['localURI'] = 'file:' . $file_name;
+            } else {
+                $proxy[0]->ResourceRef->addAttribute('lat:localURI', 'file:' . $file_name, "http://lat.mpi.nl/");
+            }
+
+            $value = (String)$proxy[0]->ResourceRef;
+            if(!empty($value)){
+                $proxy[0]->ResourceRef = '';
+            }
 
             //Update resources in Components section
             $profile = $this->getNameById();
             $xml = simplexml_load_file(CmdiHandler::FORM_TEMPLATES_PATH . "/$profile.xml");
 
-            $tag = $this->getSourceResource($xml, $file_mime);
-            $searchNode = $this->getNodeForAddingResources($this);
+            $resource = $this->getResourceInComponentSection($this, $xml, $rid);
 
-
-            if (!$tag OR !$searchNode){
+            if (!$resource){
                 return false;
             }
 
-            $id = (String)$tag['id'];
+            $values = array(
+                'size' => filesize($file_name),
+                'format' => $file_mime,
+            );
 
-            //for some unknown reason $node = $searchNode->xpath('/'.$id.'[@ref="'. $rid .'"]'); does not work
-            foreach ($searchNode->children()->{$id} as $value) {
-                if ((String)$value['ref'] == $rid) {
-                    $values = array(
-                        'size' => filesize($file_name),
-                        'format' => $file_mime,
-                    );
+            $id = $resource->getName();
+            $tag = $xml->resources->allowed_tags->xpath('tag[@id=\''. $id .'\']');
+            foreach ($tag->updated_values as $value) {
+                $id = (String)$value->attributes();
 
-                    foreach ($tag->updated_values as $value) {
-                        $id = (String)$value->attributes();
-
-                        if ($id == 'type') {
-                            $values['type'] = (String)$value;
-                        }
-                        $value->{$id} = $values[$id];
-                    }
+                if ($id == 'type') {
+                    $values['type'] = (String)$value;
                 }
+                $value->{$id} = $values[$id];
             }
         }
         return true;
@@ -822,13 +962,20 @@ class CmdiHandler extends SimpleXMLElement
             return false;
         }
 
+        // Return subNode if this is set for the specific profile
         $subnodes = (String)$xml->xpath('/profileToDrupal/resources/subnodes')[0];
 
-        if (!empty($subnodes) AND empty($resources_root_node->{$subnodes})){
+        if (!empty($subnodes)){
+            // add subnode if this node does not exist and return false if this is not possible
+            if( empty($resources_root_node[0]->{$subnodes})){
+                $resources_root_node[0]->addChild($subnodes);
+            }
 
-            $resources_root_node->addChild($subnodes);
-            return $resources_root_node->{$subnodes}[0];
+            if( empty($resources_root_node[0]->{$subnodes})){
+                return false;
+            }
 
+            return $resources_root_node[0]->{$subnodes}[0];
         }
 
         return $resources_root_node[0];
