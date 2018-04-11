@@ -190,7 +190,9 @@ class Bundle extends SIP
         module_load_include('inc','flat_deposit','/Helpers/CMDI/class.CmdiHandler');
 
         $file_name = $this->cmdiTarget;
-        $cmdi = simplexml_load_file(drupal_realpath($file_name),'CmdiHandler');
+
+        $cmdi = CmdiHandler::simplexml_load_cmdi_file($file_name);
+
 
         if (!$cmdi OR !$cmdi->canBeValidated()){
             throw new IngestServiceException('Unable to load record.cmdi file');

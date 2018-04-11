@@ -119,18 +119,18 @@ class Workspaces
 
     }
 
-     static function getSubdirectoryNames($directory, $filters=[]){
+     static function listAccessibleFolderContent($directory, $filters=[]){
 
-        $subdirectories = [];
+        $content = [];
         if (!file_exists($directory)){
-            return $subdirectories;
+            return $content;
         }
 
         $results = scandir($directory);
 
         foreach ($results as $result) {
 
-            $full_path = $directory . '/' . $result;
+            $full_path = "$directory/$result";
 
             $check = self::passedAllChecks($full_path, $filters);
 
@@ -140,13 +140,13 @@ class Workspaces
 
             } else {
 
-                $subdirectories[] = $result;
+                $content[] = $result;
 
             }
 
         }
 
-        return $subdirectories;
+        return $content;
 
     }
 
@@ -185,6 +185,23 @@ class Workspaces
         return is_readable($directory);
     }
 
+    static function hasValidDirectoryName($directory){
+
+        $dir_name = basename($directory);
+        if($dir_name == '.' OR $dir_name == '..') {
+            return true;
+        }
+
+        $pattern = '/[\da-zA-Z][\da-zA-Z\._\-]+/';
+        return preg_match($pattern, $dir_name) != 0;
+    }
+
+    static function hasValidFileName($file){
+
+        $pattern = '/[\da-zA-Z][\da-zA-Z\._\-]+\.[\da-zA-Z]{2,3}/';
+        return preg_match($pattern, basename($file)) == false;
+    }
+
     static function isDir($directory){
         return is_dir($directory) ;
     }
@@ -213,6 +230,9 @@ class Workspaces
         module_load_include('inc', 'flat_workspaces','inc/class.AclHandler');
         $acl = new AclHandler(drupal_realpath($directory));
 
+        if (empty($acl->getInfo())){
+            return false;
+        }
         global $user;
         $id = $user->name == 'admin' ? exec('whoami') : $user->name;
         $id = str_replace('@mpi.nl', '', $id);

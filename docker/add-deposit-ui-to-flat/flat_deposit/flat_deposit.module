@@ -1091,7 +1091,8 @@ function flat_bundle_node_form_add_import_validate ($form, &$form_state){
 
         //Validate kind of cmdi
         module_load_include('inc','flat_deposit','Helpers/CMDI/class.CmdiHandler');
-        $cmdi = simplexml_load_file($file->uri, 'CmdiHandler');
+        $cmdi = CmdiHandler::simplexml_load_cmdi_file($file->uri);
+
         $validateMdSelfLink = $cmdi->validateMdSelfLink();
 
         if ($validateMdSelfLink !== TRUE){
@@ -1270,9 +1271,6 @@ function flat_bundle_node_form_add_submit($form, &$form_state){
 
 }
 
-
-
-
 function flat_bundle_node_form_update_validate($form, &$form_state){
 
     //Todo add extra validation
@@ -1350,44 +1348,30 @@ function flat_bundle_node_form_update_submit($form, &$form_state){
  */
 function flat_bundle_node_form_edit_validate($form, &$form_state){
 
-    $node = $form_state['node'];
+    $node = $form['#node'];
     $wrapper = entity_metadata_wrapper('node', $node);
-
     $original_collection_nid = $wrapper->flat_parent_nid->value();
-    $new_collection_nid = (string)$form_state['values']['flat_parent_nid']['und'][0]['value'];
 
-    // If parent nid has changed
-    // get name of collection
-    if ((integer)$new_collection_nid != 0){
+    $new_node = $form_state['node'];
+    $new_wrapper = entity_metadata_wrapper('node', $new_node);
+    $new_collection_nid = $form_state['values']['flat_parent_nid']['und'][0]['value'];
 
-        $collection_node = node_load($new_collection_nid);
-
-    } else {
-
-        $collection_node = new stdClass();
-        $collection_node->title = 'hello';
-    }
+    $collection_node = get_collection_node($new_collection_nid);
 
     // Set parent nid value of this bundle to the name of the new collection
     $form_state['values']['flat_parent_title']['und'][0]['value'] = $collection_node->title;
 
-    // If parent nid has not changed pass validation
-    #if ($original_collection_nid === $new_collection_nid){
-    #    form_set_error('flat_parent_nid', 'collection has not changed');
-    #    return $form;
-    #}
+    $collection_has_changed = $original_collection_nid != $new_collection_nid;
 
     // Validate that no record.cmdi exists with metadata related to a collection and then, the collection changes
     $cmdi_option = $wrapper->flat_cmdi_option->value();
     $cmdi_file = $wrapper->flat_cmdi_file->value();
-    if ($cmdi_option == 'new' AND $collection_node->title == 'unassigned' AND !is_null($cmdi_file)){
+    if ($cmdi_option == 'new' AND !is_null($cmdi_file) and $collection_has_changed){
 
         form_set_error('flat_parent_nid', 'It is not possible to change the collection if new metadata file has been saved. Please remove record.cmdi first');
         return $form;
 
     }
-
-
 
     //Check that bundle name within collection is distinctive from existing bundles, otherwise we get problems with creating new folders.
     $user_id = $node->uid ;
@@ -1399,42 +1383,34 @@ function flat_bundle_node_form_edit_validate($form, &$form_state){
         form_set_error('title', t('Bundle with same or very similar bundle name exists'));
         return $form;
     }
-    /*
-*/
-    // Move files to new location
 
-    $new_location = FlatBundle::moveBundleData($node, 'data', 'unfreeze', $collection_node);
+    if ($form_state['triggering_element']['#type'] == 'select'){
 
-    if (!$new_location){
-
-        form_set_error('flat_parent_title', 'Unable to move files to new location');
         return $form;
     }
 
 
-    $form_state['values']['flat_location']['und'][0]['value'] = $new_location;
 
-    if(!is_null($wrapper->flat_cmdi_file->value())){
-
-        $move = FlatBundle::moveBundleData($node, 'metadata', 'unfreeze', $collection_node);
-
-        if(!$move) {
-
-            form_set_error('flat_parent_title', 'Unable to move metadata to new location');
-            return $form;
-
-        }
-
-    }
 }
 
 
 function flat_bundle_node_form_edit_submit($form, &$form_state) {
 
-    #Wdrupal_set_message('Bundle has been edited');
 }
 
+function get_collection_node($nid){
+    // If parent nid has changed
+    // get name of collection
+    if ((integer)$nid == 0){
+        $collection_node = new stdClass();
+        $collection_node->title = 'unassigned';
 
+    } else {
+        $collection_node = node_load($nid);
+    }
+
+    return $collection_node;
+}
 /**
  * Flat_bundle node validator called every time a flat_bundle node is created or edited (also AJAX!!)
  * @param $node

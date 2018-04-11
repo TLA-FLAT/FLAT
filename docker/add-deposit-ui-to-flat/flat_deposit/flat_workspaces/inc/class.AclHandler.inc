@@ -18,16 +18,17 @@ class AclHandler
      *
      * @param $fName string containing full path to file or folder
      *
-     * @return FALSE or stdClass
+     * @return AclHandler
      */
     public function __construct($fName)
     {
 
         // read out acl info
-        $acl_string = shell_exec("getfacl $fName");
+        $acl_string = shell_exec("getfacl \"$fName\"");
 
         if (empty($acl_string)){
-            return FALSE;
+            return null;
+
         }
 
 
@@ -206,34 +207,25 @@ class AclHandler
     private function _addToInfo($permission_type, $entry_type, $id=NULL ){
 
         if (isset($id)) {
-
             $this->info[$permission_type][$entry_type][] = $id;
 
         } else {
-
             $this->info[$permission_type][$entry_type] = TRUE;
 
         }
-
     }
 
 
     public function checkWriteAccess($id){
 
-
-
         // Check if id is owner
         if (is_numeric(array_search($id, $this->info['write']['owner']))){
-
             return 'ID is owner of file or directory';
-
         }
 
         // Check if id is in list of named users
         if (is_numeric(array_search($id, $this->info['write']['named user'])) AND $this->info['write']['mask'] === TRUE){
-
             return 'ID is named user of file or directory';
-
         }
 
         $groups = shell_exec("id -Gn $id");
@@ -245,9 +237,7 @@ class AclHandler
         $groups_array = explode(' ', trim($groups));
         // Check if owning group has write permissions and is in list of groups with the specified ID
         if (isset($this->info['write']['owning group']) AND isset($this->info['write']['owning group']) === TRUE and array_search($this->info['write']['owning group'], $groups )){
-
             return 'ID is member of owning group of file or directory';
-
         }
 
         // Check for each named group if is in list of groups with the specified ID
@@ -255,16 +245,11 @@ class AclHandler
             foreach ($this->info['write']['named group'] as $group_entry) {
 
                 if (is_numeric(array_search($group_entry, $groups_array))) {
-
                     return 'ID is member of a named group that has writing permissions for file or directory';
                 }
-
             }
         }
-
         return false;
 
-
     }
-
 }

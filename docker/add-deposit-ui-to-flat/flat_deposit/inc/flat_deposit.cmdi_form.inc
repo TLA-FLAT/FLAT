@@ -108,8 +108,76 @@ function flat_deposit_cmdi_form($form, &$form_state)
         '#required' => FALSE,
     );
 
+/*
+    $form['select'] = array(
+        '#prefix' => '<div id="file-import-area">',
+        '#suffix' => '</div>',
+    );
+    $form ['select']['file_trigger'] = array(
+        '#title' => t('Use file to import metadata'),
+        '#type' => 'checkbox',
+        '#required' => FALSE,
+        '#states' => array(
+            'invisible' => array(
+                ':input[name="select_profile_name"]' => array('value' => ''),
+            ),
+        ),
+    );
+*/
+    /*remove when doen
+    $form['im-container'] = array(
+        '#prefix' => '<div id="im-area">',
+        '#suffix' => '</div>',
+    );
 
+    $form['image_file'] = array(
+        '#type' => 'file',
+    );
 
+    $form['upload'] = array(
+        '#type' => 'submit',
+        '#value' => 'upload',
+        '#submit' => array('upload_image'),
+        '#ajax' => array(
+            'callback' => 'upload_image',
+            'wrapper' => 'im-area',
+            'method' => 'replace',
+            'effect' => 'fade',
+        ),
+    );
+*/
+
+/*
+    $form ['select']['cmdi_file'] = array(
+        '#type' => 'file',
+        '#title' => t('Choose a file'),
+        '#states' => array(
+            'visible' => array(
+                ':input[name="file_trigger"]' => array('checked' => TRUE),
+            ),
+            'required' => array(
+                ':input[name="file_trigger"]' => array('checked' => TRUE),
+            ),
+        ),
+    );
+
+    $form ['select']['populate_submit'] = array(
+        '#type' => 'submit',
+        '#value' => 'upload',
+        '#submit' => array('upload_cmdi'),
+        '#ajax' => array(
+            'callback' => 'upload_cmdi',
+            'wrapper' => 'file-import-area',
+            'method' => 'replace',
+            'effect' => 'fade',
+        ),
+        '#states' => array(
+            'visible' => array(
+                ':input[name="file_trigger"]' => array('checked' => TRUE),
+            ),
+        ),
+    );
+*/
     $form['template_container'] = array(
         '#type' => 'container',
         '#tree' => TRUE,
@@ -154,7 +222,7 @@ function flat_deposit_cmdi_form($form, &$form_state)
         $ds = islandora_datastream_load('CMD', $pFid);
 
         if ($ds) {
-            $inheritedData = simplexml_load_string($ds->content, 'CmdiHandler');
+            $inheritedData = CmdiHandler::simplexml_load_cmdi_string($ds->content);
         } else {
             $inheritedData = null;
         }
@@ -189,9 +257,44 @@ function flat_deposit_cmdi_form($form, &$form_state)
     return $form;
 
 }
+/*
+function upload_image($form, $form_state) {
 
+    $file = file_save_upload('image_file', array('file_validate_extensions' => array('png gif jpg jpeg')), "public://", FILE_EXISTS_REPLACE);
+    if ($file) {
+        $file->status = FILE_STATUS_PERMANENT;
+        file_save($file);
+        $form['im-container'] = array(
+                '#title' => t('Preview:'),
+                '#prefix' => '<div id="im-area">',
+                '#markup' => '<img src="sites/default/files/'.$file -> filename.
+            '" height="250" width="250" />',
+            '#suffix' => '</div>',
+        );
+    } else {
+        drupal_set_message('No file uploaded.');
+    }
 
+    return $form['im-container'];
+}
+*/
+/*
+function upload_cmdi($form, $form_state) {
 
+    global $user;
+    $fileName = "$user->uid" . "_record.cmdi";
+    $file = file_save_upload('cmdi_file', array('file_validate_extensions' => array('cmdi')), "temporary://$fileName", FILE_EXISTS_REPLACE);
+    if ($file) {
+        $file->status = FILE_STATUS_PERMANENT;
+        file_save($file);
+
+    } else {
+        drupal_set_message('No file uploaded.');
+    }
+
+    return $form['file-import-area'];
+}
+*/
 function flat_deposit_cmdi_form_final_validate($form, &$form_state)
 {
     // Form Validation setup
@@ -315,7 +418,7 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     // Validate cmdi profile //
     //***********************//
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
-    $cmdi = simplexml_load_file(drupal_realpath($cmdiFile), 'CmdiHandler');
+    $cmdi = CmdiHandler::simplexml_load_cmdi_file(drupal_realpath($cmdiFile));
     try {
         $cmdi->canBeValidated();
     } catch (CmdiHandlerException $cmdiHandlerException){

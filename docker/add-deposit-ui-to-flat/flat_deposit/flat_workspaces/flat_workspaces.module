@@ -99,26 +99,77 @@ function flat_workspaces_form_flat_bundle_node_form_alter(&$form, &$form_state, 
     $form['workspace_navigation'] = Workspaces::get_container();
     form_load_include($form_state, 'inc', 'node', 'node.pages');
 
+    if (isset($form['#node'])){
+        $node = $form['#node'];
+        $wrapper = entity_metadata_wrapper('node', $node);
+    };
+
+
+
+    // add original path to values if node is edited and thus original path is already set.
+    $flat_original_path = $wrapper->flat_original_path->value();
+
+    if (empty($form_state['values']['department']) AND $flat_original_path){
+
+        $form_state['values']['flat_original_path']['und'][0]['value'] = $flat_original_path;
+    }
+
+
+
+
     // set the local departments' project folder
+    if (!empty($form_state['values']['department'])){
+
+        $department =   $form_state['values']['department'] ;
+    // keep info if location for data has been chosen and is unchanged
+    } elseif (empty($form_state['values']['department']) AND $flat_original_path){
+
+
+        $path = str_replace('local://', '', $flat_original_path);
+        $department = explode('/', $path)[0];
+        $form['workspace_navigation']['field']['department']['#default_value'] = $department;
+
+    } else {
+        $department = 'none';
+    }
+
     $config_names = variable_get('flat_workspaces');
-    $department = !empty($form_state['values']['department']) ? $form_state['values']['department'] : 'none';
     $projects_directory = 'local://' . $department . '/' . $config_names['workspace_folder'];
+
+
 
     //Scan project directory; non-existing directories will return false, existing dirs will populate the
     // projects field options
-    // todo filter projects for permissions
+
     //
-    $projects = Workspaces::getSubdirectoryNames($projects_directory, ['isAccessibleDir','userHasAclPermissions', 'isNotCurrentDir']);
+    $projects = Workspaces::listAccessibleFolderContent($projects_directory, ['isAccessibleDir','userHasAclPermissions', 'isNotCurrentDir']);
 
     if (!empty($projects)){
         $form['workspace_navigation']['field']['project']['#options'] = drupal_map_assoc($projects);
         $form['workspace_navigation']['field']['project']['#access'] = TRUE;
+
     } else{
         $form['workspace_navigation']['field']['project']['#access'] = TRUE;
         $form['workspace_navigation']['field']['project']['#disabled'] = TRUE;
     }
 
-    $project = !empty($form_state['values']['project']) ? $form_state['values']['project'] : 'none';
+
+    if (!empty($form_state['values']['project'])){
+        $project =   $form_state['values']['project'] ;
+
+        // keep info if location for data has been chosen and is unchanged
+    } elseif (empty($form_state['values']['project']) AND $flat_original_path){
+
+        $path = str_replace('local://', '', $flat_original_path);
+        $elements = explode('/', $path);
+        $key = array_search('workspaces', $elements);
+        $project = $elements[$key +   1];
+        $form['workspace_navigation']['field']['project']['#default_value'] = $project;
+
+    } else {
+        $project = 'none';
+    }
+
     $project_root = $projects_directory . '/' . $project . '/' . $config_names['archive_folder'];
 
 
@@ -154,24 +205,28 @@ function flat_workspaces_form_flat_bundle_node_form_alter(&$form, &$form_state, 
         str_replace('local://' ,'[Workspaces]/', $current. '</strong>');
 
     // Add dropdown menu with lower level directories to go into
-    $subDirs = Workspaces::getSubdirectoryNames($current, ['isAccessibleDir','userHasAclPermissions', 'isNotCurrentDir', 'isNotProjectParentDir']);
+    $subDirs = Workspaces::listAccessibleFolderContent($current, ['hasValidDirectoryName', 'isAccessibleDir','userHasAclPermissions', 'isNotCurrentDir', 'isNotProjectParentDir']);
     if (!empty($subDirs)){
         $form['workspace_navigation']['field']['next_directories']['#options'] = drupal_map_assoc($subDirs);
         $form['workspace_navigation']['field']['next_directories']['#access'] = TRUE;
         if (count($subDirs) == 1){
-            // Validate that no other bundle is using same folder
-            $query = new EntityFieldQuery();
-            $query->entityCondition('entity_type', 'node')
-                ->entityCondition('bundle', 'flat_bundle')
-                ->fieldCondition('flat_original_path', 'value', $current, '=')
-            ;
 
-            $results = $query->execute();
-            if (empty(!$results)){
+            if($flat_original_path != $current){
 
-                form_set_error('flat_original_path', 'Specified path for resources is already in use');
-            };
+                // Validate that no other bundle is using same folder
+                $query = new EntityFieldQuery();
+                $query->entityCondition('entity_type', 'node')
+                    ->entityCondition('bundle', 'flat_bundle')
+                    ->fieldCondition('flat_original_path', 'value', $current, '=')
+                ;
 
+                $results = $query->execute();
+                if (empty(!$results)){
+
+                    form_set_error('flat_original_path', 'Specified path for resources is already in use');
+                };
+
+            }
 
             $form['workspace_navigation']['field']['next_directories']['#empty_option'] = basename($current);
             $form['workspace_navigation']['field']['next_directories']['#title'] = 'Selection';

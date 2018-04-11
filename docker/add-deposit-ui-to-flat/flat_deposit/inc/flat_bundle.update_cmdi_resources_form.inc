@@ -36,23 +36,30 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
     if(!file_exists(drupal_realpath($fName))){
         drupal_set_message("Unable to read bundle metadata", 'error');
         return $form;
-    } elseif (($cmd = @simplexml_load_file(drupal_realpath($fName), 'CmdiHandler')) === false){
+    } else {
 
-        drupal_set_message("Record cmdi of this bundle can not be read using Simplexml", 'error');
-        return $form;
+        $cmd = @CmdiHandler::simplexml_load_cmdi_file(drupal_realpath($fName));
+        if (!$cmd){
 
+            drupal_set_message("Record cmdi of this bundle can not be read using Simplexml", 'error');
+            return $form;
+
+        }
     }
 
 
     $count = 0;
     $data = [];
-    foreach ($cmd->Resources->ResourceProxyList->ResourceProxy as $resource){
+    foreach ($cmd->children('cmd',true)->Resources->ResourceProxyList->ResourceProxy as $resource){
 
-        //original comment: how to get seconds?
+        $resource_type = (String)$resource->children('cmd',true)->ResourceType;
+        if ($resource_type == 'LandingPage'){
+            continue;
+        }
+
         $resource_id = (string)$resource->attributes()->id;
-        $res_ref_attributes = $resource->ResourceRef->attributes('lat', TRUE);
-
-        $fid    = $res_ref_attributes['flatURI'];
+        $resourceref_attributes = $resource->children('cmd',true)->ResourceRef->attributes('lat', TRUE);
+        $fid    = $resourceref_attributes['flatURI'];
 
         $fObj = islandora_object_load($fid);
         $label = $fObj->label;
