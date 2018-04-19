@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<roles>
+    <!-- order is important here! -->
+    <!-- read rights: the role and any role following -->
+    <!-- write rights: be always explicit -->
+    <role>anonymous user</role>
+    <role>authenticated user</role>
+    <role>administrator</role>
+</roles>

@@ -62,6 +62,7 @@
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.ACL">
             <parameter name="policy" value="{$work}/metadata/policy.n3"/>
+            <parameter name="roles" value="{$base}/policies/roles.xml"/>
             <parameter name="dir" value="{$work}/acl"/>
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.ACLUpdate">
