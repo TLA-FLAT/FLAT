@@ -152,7 +152,7 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject){
 
         // Load form builder app
         $templateName = $form_state['selected'];
-        $formBuilder = new FormBuilder();
+        $formBuilder = new FormBuilder(null);
 
         // count button presses per field
         $formBuilder->aggregatePressedButtons($form_state);
@@ -241,12 +241,7 @@ function flat_collection_add_form_final_validate($form, &$form_state){
             //*******************//
             $title = $form_state['values']['template_container']['elements']['field_01'][0];
 
-            // 1. Validate that title does not contain special characters
-            if (!preg_match('/^[a-zA-Z0-9\_\s]{2,40}+$/', $title)) {
-                form_set_error('title', t('Allowed are all letters, numbers and underscores (max length 40)'));
-            }
-
-            // 2. Validate that no other collection at same collection with very similar name exists
+            // 1. Validate that no other collection at same collection with very similar name exists
             module_load_include('inc', 'flat_deposit', 'inc/class.FlatTuque');
             $values = FlatTuque::getChildrenLabels($fid);
 
@@ -260,7 +255,7 @@ function flat_collection_add_form_final_validate($form, &$form_state){
                 return $form;
             }
 
-            // 3. Validate that output directory for new cmdi exists or can be created
+            // 2. Validate that output directory for new cmdi exists or can be created
             if (!file_exists($export_dir)) {
                 drupal_mkdir($export_dir, NULL, TRUE);
             }

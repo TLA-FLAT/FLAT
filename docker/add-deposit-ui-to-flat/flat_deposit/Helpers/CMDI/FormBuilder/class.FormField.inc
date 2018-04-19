@@ -255,7 +255,10 @@ class FormField
                 $nestedDataNode = isset($existingCmdiNode->{$key}[$index]) ? $existingCmdiNode->{$key}[$index] : null;
 
                 $nestedButtonId = $buttonId . "_" . (int)$index ;
-                $nestedFormComponent->setFormComponent($nestedNode, $nestedDataNode, $pressedButtons[$index], $nestedButtonId, $inheritAll);
+
+                $nestedPressedButton = isset($pressedButtons[$index]) ? $pressedButtons[$index] : null;
+
+                $nestedFormComponent->setFormComponent($nestedNode, $nestedDataNode, $nestedPressedButton, $nestedButtonId, $inheritAll);
 
                 $nestedNodeName = $nestedFormComponent->getFormKeyName($nestedNode);
                 $this->formField[$nestedNodeName] = $nestedFormComponent->getFormComponent();

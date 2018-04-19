@@ -31,7 +31,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
         <template_name>MPI_Bundle</template_name>
     </header>
     <items>
-       <item id="field_01" name="Title" type="Leaf"  minOccurrence="1">
+       <item id="field_01" name="Title" type="Leaf" inherited="true" minOccurrence="1">
             <type>textfield</type>
             <title>Bundle title</title>
         </item>

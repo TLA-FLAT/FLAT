@@ -183,6 +183,46 @@ class Bundle extends SIP
     }
 
 
+    function validateResources(){
+        $this->logging('Starting validateResources');
+        $path = $this->wrapper->flat_location->value();
+
+        $fileNames = scandir($path);
+        if(empty($fileNames)){
+            throw new IngestServiceException('Unable to scan directory with files');
+
+        }
+
+        $pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+\.[\da-zA-Z]{2,8}$/';
+        $violators = [];
+
+        foreach ($fileNames as $fileName){
+            if ($fileName == '.' OR $fileName == '..' ) {
+                continue;
+            }
+
+            if (preg_match($pattern, $fileName) == false){
+             $violators[] = $fileName;
+            }
+
+        }
+
+        if (!empty($violators)){
+            $message = 'Bundle contains files with names violating our file naming policy. ' .
+            'Allowed are names starting with an alphanumeric characters (a-z,A-Z,0-9) followed by more alphanumeric characters '.
+            'or these special characters (.-_). The name of the file needs to have an extension marked by a dot (".") '.
+            'followed by 2 to 8 characters. ';
+
+            $message .= 'Following file(s) have triggered this message: ';
+            $message .= implode(', ', $violators);
+
+            throw new IngestServiceException($message);
+        }
+
+        $this->logging('Finishing validateResources');
+        return TRUE;
+    }
+
     function addResourcesToCmdi(){
 
         $this->logging('Starting addResourcesToCmdi');

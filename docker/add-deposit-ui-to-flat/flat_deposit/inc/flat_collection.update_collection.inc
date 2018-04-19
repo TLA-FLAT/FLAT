@@ -90,7 +90,7 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
     if (in_array($profile, $availableFormTemplates)) {
 
         // Load form builder app
-        $formBuilder = new FormBuilder();
+        $formBuilder = new FormBuilder(null);
 
         // count button presses per field
         $formBuilder->aggregatePressedButtons($form_state);
@@ -161,12 +161,8 @@ function flat_collection_update_form_final_validate($form, &$form_state){
     //*******************//
     $new_title = $form_state['values']['template_container']['elements']['field_01'][0];
 
-    // 1. Special characters
-    if (!preg_match('/^[a-zA-Z0-9\_\s]{2,40}+$/', $new_title)) {
-        form_set_error('title', t('Allowed are all letters, numbers and underscores (max length 40)'));
-    }
 
-    // 2. Title uniqueness validation.
+    // 1. Title uniqueness validation.
     // Gets fedoraObject->id of parent, uses this id to search all children (fObjects with isPartOfCollection attribute
     // set to parent), extract their fedoraObject->label(s) and checks whether one of these labels is the same as the title
     // for the current object.
@@ -188,7 +184,7 @@ function flat_collection_update_form_final_validate($form, &$form_state){
         }
     }
 
-    // 3. Validate that output directory for new cmdi exists or can be created
+    // 2. Validate that output directory for new cmdi exists or can be created
     $export_dir = 'metadata://' . str_replace('@', '_at_', $owner) . "/.collection/";
     if (!file_exists($export_dir)) {
         drupal_mkdir($export_dir, NULL, TRUE);

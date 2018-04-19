@@ -1,0 +1,86 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: danrhe
+ * Date: 07/11/16
+ * Time: 16:22
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function flat_nextcloud_menu()
+{
+
+    $items = array();
+
+    // Admin configuration - Owncloud settings
+    $items['admin/config/flat_deposit/manage_nextcloud'] = array(
+        'title' => 'Administer nextcloud',
+        'description' => 'Administer nextcloud root path and credentials',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array( 'flat_nextcloud_admin_form'),
+        'file' => 'inc/flat_nextcloud.admin_form.inc',
+        'access arguments' => array('admin deposit module'));
+
+    return $items;
+}
+
+
+/**
+ * Show extra field 'activate_nextcloud' in user profile form.
+ * In case user activates nextcloud integration (activate_nextcloud ==TRUE) extra validation and submission handlers are added
+ *
+ */
+function flat_nextcloud_form_user_profile_form_alter(&$form, &$form_state, $form_id)
+{
+
+        $form['#submit'][] = 'flat_nextcloud_user_profile_nextcloud_submit';
+
+
+}
+
+
+
+/**
+ * In case the value of activate_nextcloud has changed, this submission handler ....
+ */
+function flat_nextcloud_user_profile_nextcloud_submit (&$form, &$form_state)
+{
+    $original_value = $form['activate_nextcloud']['und']['#default_value'];
+    $entered_value = $form_state['values']['activate_nextcloud']['und'][0]['value'];
+
+
+    if ($original_value != $entered_value AND $entered_value === "1") {
+        drupal_set_message('Implement here what on the backend should happen if user selects to use nextcloud');
+
+    }  elseif ($original_value != $entered_value AND $entered_value === "0") {
+        drupal_set_message('Implement here what on the backend should happen if user selects to disable nextcloud');
+
+    }
+}
+
+
+function flat_nextcloud_form_flat_bundle_node_form_alter(&$form, &$form_state, $form_id){
+
+
+    $form['flat_source']['und']['#options']['newOption'] ='My new shiny Option';
+
+
+}
+
+/**
+ * Implements hook_node_view_alter
+ *
+ */
+function flat_nextcloud_node_view_alter($node, $view_mode) {
+
+
+        //implement here how the view should change after activation of owncloud
+
+
+
+
+
+
+}

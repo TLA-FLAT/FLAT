@@ -150,31 +150,14 @@ class Workspaces
 
     }
 
-    /**
-     * Checks if a certain directoru
-     * @param $directory
-     * @param array $filters
-     * @return bool
-     */
     static function passedAllChecks($directory, $filters=[]){
 
-        $checkPassed = [];
-
         foreach ($filters as $filter) {
-
-            if (!self::$filter($directory)) {
-
-                $checkPassed[] = FALSE;
-
-            } else {
-
-                $checkPassed[] = TRUE;
-
+            if (!self::$filter($directory)){
+                return false;
             }
         }
-
-        return !in_array(FALSE, $checkPassed, TRUE);
-
+        return TRUE;
     }
 
     static function isAccessibleDir($directory){
@@ -192,14 +175,8 @@ class Workspaces
             return true;
         }
 
-        $pattern = '/[\da-zA-Z][\da-zA-Z\._\-]+/';
+        $pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]{2,}$/';
         return preg_match($pattern, $dir_name) != 0;
-    }
-
-    static function hasValidFileName($file){
-
-        $pattern = '/[\da-zA-Z][\da-zA-Z\._\-]+\.[\da-zA-Z]{2,3}/';
-        return preg_match($pattern, basename($file)) == false;
     }
 
     static function isDir($directory){
@@ -208,23 +185,20 @@ class Workspaces
 
     static function isNotCurrentDir($directory){
 
-
         return basename($directory) != '.';
     }
+
     static function isNotProjectParentDir($directory)
     {
 
         if (basename(dirname($directory)) == variable_get('flat_workspaces')['archive_folder'] AND basename($directory) == '..') {
-
             return false;
 
         } else {
-
             return true;
 
         }
     }
-
 
     static function userHasAclPermissions($directory){
         module_load_include('inc', 'flat_workspaces','inc/class.AclHandler');
@@ -233,15 +207,15 @@ class Workspaces
         if (empty($acl->getInfo())){
             return false;
         }
+
         global $user;
         $id = $user->name == 'admin' ? exec('whoami') : $user->name;
         $id = str_replace('@mpi.nl', '', $id);
 
         return $acl->checkWriteAccess($id) ;
     }
-
-
 }
+
 
 function reload_workspace_navigation_container_ajax_callback ($form, $form_state)
 {

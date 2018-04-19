@@ -1,0 +1,8 @@
+name = FLAT nextcloud
+package = FLAT
+description = Nextcloud integration for FLAT deposit user interface
+core = 7.x
+version = 7.x-0.1-dev
+configure = admin/config/flat_nextcloud/manage
+dependencies[] = flat_deposit
+

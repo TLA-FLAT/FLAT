@@ -84,6 +84,11 @@ class FlatBundle
 
         $title = $node->title;
         $wrapper = entity_metadata_wrapper('node', $node);
+        $fid = @$wrapper->flat_fid->value();
+        if(isset($fid)){
+            return;
+        }
+
         $parent_nid = $wrapper->flat_parent_nid->value();
         $parent_node = node_load($parent_nid);
         $parent_wrapper = entity_metadata_wrapper('node', $parent_node);

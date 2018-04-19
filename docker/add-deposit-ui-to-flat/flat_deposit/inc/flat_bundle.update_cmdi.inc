@@ -35,20 +35,6 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object){
     );
 
 
-    $form['select_policy'] = array(
-        '#title' => t('Which access policy do you want to apply?'),
-        '#type' => 'select',
-        '#required' => TRUE,
-        '#options' => drupal_map_assoc(array('public','private')),
-        '#default_value' => 'public',
-    );
-
-    $form['hide_metadata'] = array(
-        '#title' => t('Hide metadata of this bundle'),
-        '#type' => 'checkbox',
-        '#required' => FALSE,
-    );
-
     $form['template_container'] = array(
         '#type' => 'container',
         '#tree' => TRUE,
@@ -92,7 +78,7 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object){
 
         // Load form builder app
         module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
-        $formBuilder = new FormBuilder();
+        $formBuilder = new FormBuilder($form_state['build_info']['args'][0]);
 
         // count button presses per field
         $formBuilder->aggregatePressedButtons($form_state);
@@ -148,12 +134,8 @@ function flat_bundle_update_form_final_validate($form, &$form_state){
     //*******************//
     $new_title = $form_state['values']['template_container']['elements']['field_01'][0];
 
-    // 1. Special characters
-    if (!preg_match('/^[a-zA-Z0-9\_\s]{2,40}+$/', $new_title)) {
-        form_set_error('title', t('Allowed are all letters, numbers and underscores (max length 40)'));
-    }
 
-    // 2. Title uniqueness validation.
+    // 1. Title uniqueness validation.
     // Gets fedoraObject->id of parent, uses this id to search all children (fObjects with isPartOfCollection attribute
     // set to parent), extract their fedoraObject->label(s) and checks whether one of these labels is the same as the title
     // for the current object.
@@ -179,7 +161,7 @@ function flat_bundle_update_form_final_validate($form, &$form_state){
         }
     }
 
-    // 3. Validate that output directory for new cmdi exists or can be created
+    // 2. Validate that output directory for new cmdi exists or can be created
 
     if (!file_exists($export_dir)) {
         drupal_mkdir($export_dir, NULL, TRUE);
@@ -207,7 +189,7 @@ function flat_bundle_update_form_final_validate($form, &$form_state){
 
     try {
         $creator->setCmdi($templateName, $form_data, $owner);
-        $newlyGeneratedCmdi = $creator->getCmdi();
+        $generatedCmdi = $creator->getCmdi();
     } catch (CmdiCreatorException $e) {
         form_set_error('error', $e->getMessage());
         return $form;
@@ -216,21 +198,22 @@ function flat_bundle_update_form_final_validate($form, &$form_state){
 
     // get original cmdi by datastream
     $ds = islandora_datastream_load('CMD', $fid);
-    $originalCmdi = simplexml_load_string($ds->content,'CmdiHandler');
+    $originalCmdi = CmdiHandler::simplexml_load_cmdi_string($ds->content);
 
     // add resource Section to updated components
+    $newlyGeneratedCmdi = CmdiHandler::simplexml_load_cmdi_string($generatedCmdi->asXML());
     $newlyGeneratedCmdi->addResourceSectionToComponents($originalCmdi);
 
     // merge original cmdi and and edited components section
     $path = '//cmd:Components';
-    $altPath = '//Components';
-    $targetComponentNode = !empty($originalCmdi->xpath($path)[0]) ? $originalCmdi->xpath($path)[0] : $originalCmdi->xpath($altPath)[0]  ;
-    $sourceNode = !empty($newlyGeneratedCmdi->xpath($path)[0]) ? $newlyGeneratedCmdi->xpath($path)[0] : $newlyGeneratedCmdi->xpath($altPath)[0]  ;
 
-    unset($targetComponentNode->{$profile});
+    $targetComponentNode = $originalCmdi->xpath($path)[0] ;
+    $sourceNode = $newlyGeneratedCmdi->xpath($path)[0];
+
+    unset($targetComponentNode->children('cmd',true)->{$profile});
 
     $domTarget = dom_import_simplexml($targetComponentNode);
-    $domSource = dom_import_simplexml($sourceNode->{$profile});
+    $domSource = dom_import_simplexml($sourceNode->children('cmd',true)->{$profile});
 
 
     $domSource = $domTarget->ownerDocument->importNode($domSource, TRUE);
@@ -266,7 +249,7 @@ function flat_bundle_update_form_final_validate($form, &$form_state){
     }
 
     $options = [];
-    $options ['policy'] = $form_state['values']['select_policy'];
+    $options ['policy'] = 'inherited';
     $options ['fid'] = $form_state['values']['data']['fid'];
     $options ['content_type'] = 'flat_bundle';
 

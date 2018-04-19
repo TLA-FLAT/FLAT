@@ -138,7 +138,7 @@ function flat_views_block_info_alter(&$blocks, $theme, $code_blocks)
             case "FLAT my bundles":
                 $view_block['region'] = 'content';
                 $view_block['visibility'] = BLOCK_VISIBILITY_LISTED;
-                $view_block['pages'] = 'dashboard/*/bundles';
+                $view_block['pages'] = "dashboard/*/bundles";
                 $view_block['status'] = TRUE;
                 break;
 

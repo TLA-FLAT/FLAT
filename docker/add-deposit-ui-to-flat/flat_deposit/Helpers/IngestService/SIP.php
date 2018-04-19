@@ -47,6 +47,8 @@ abstract class SIP
 
     abstract function prepareSipData();
 
+    abstract function validateResources();
+
     abstract function addResourcesToCmdi();
 
     abstract function finish();

@@ -16,14 +16,51 @@ define('DRUPAL_ROOT', getcwd()); //the most important line
 require_once './includes/bootstrap.inc';
 drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
+
+/*
+$fields['flat_deleted_resources'] = array(
+    'field_name' => 'flat_deleted_resources',
+    'type' => 'text',
+    'cardinality' => 1,
+    'settings' => array(
+        'max_length' => 5000)
+);
+field_create_field($fields['flat_deleted_resources'] );
+*/
+$instances['flat_deleted_resources'] = array(
+    'field_name' => 'flat_deleted_resources',
+    'bundle' => 'flat_bundle',
+    'label' => 'Deleted Resources',
+    'description' => 'Resources of existing bundle that will be deleted',
+    'widget' => array(
+        'type' => 'text_textfield'
+    ),
+    'required' => FALSE,
+    'settings' => array('text_processing' => 0),
+    'display' => array(
+        'default' => array(
+            'type' => 'hidden',
+            'label' => 'inline',
+        ),
+        'error' => array(
+            'label' => 'inline',
+        ),
+    )
+);
+
+field_create_instance($instances['flat_deleted_resources']);
+
+
+/*
 $id = 'WrittenResource';
 $sourceResource = simplexml_load_string("<cmd:$id xmlns:cmd=\"http://lat.mpi.nl/\"></cmd:$id>");
 echo "hello";
 echo $sourceResource->asXML();
 //exit;
 
-$nid = '525';
+$nid = '774';
 $node = node_load($nid);
+var_dump($node);
 $wrapper = entity_metadata_wrapper('node', $node);
 
 module_load_include('inc','flat_deposit','/Helpers/CMDI/class.CmdiHandler');
@@ -62,5 +99,6 @@ try{
     exit;
 }
 $check = $cmdi->asXML();
+*/
 echo 'well done';
 exit;

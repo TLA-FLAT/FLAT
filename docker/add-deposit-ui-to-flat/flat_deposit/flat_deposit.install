@@ -201,6 +201,13 @@ function flat_deposit_install()
         'locked' => TRUE,
     );
 
+    $fields['flat_deleted_resources'] = array(
+        'field_name' => 'flat_deleted_resources',
+        'type' => 'text',
+        'cardinality' => 1,
+        'settings' => array(
+            'max_length' => 5000)
+    );
 
     $fields['flat_collection_status'] = array(
         'field_name' => 'flat_collection_status',
@@ -378,6 +385,26 @@ function flat_deposit_install()
         )
     );
 
+    $instances['flat_deleted_resources'] = array(
+        'field_name' => 'flat_deleted_resources',
+        'bundle' => 'flat_bundle',
+        'label' => 'Deleted Resources',
+        'description' => 'Resources of existing bundle that will be deleted',
+        'widget' => array(
+            'type' => 'text_textfield'
+        ),
+        'required' => FALSE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'type' => 'hidden',
+                'label' => 'inline',
+            ),
+            'error' => array(
+                'label' => 'inline',
+            ),
+        )
+    );
 
 
 

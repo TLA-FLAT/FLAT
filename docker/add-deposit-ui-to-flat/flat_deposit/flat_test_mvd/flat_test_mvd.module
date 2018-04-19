@@ -13,8 +13,6 @@ function flat_test_mvd_permission()
     return $permissions;
 }
 
-
-
 // Implements hook_menu().
 function flat_test_mvd_menu() {
     $items['blok'] = array(
@@ -28,10 +26,10 @@ function flat_test_mvd_menu() {
     $items['islandora/object/%islandora_object/object_pol'] = array(
         'title' => 'Change object access permissions',
         'type' => MENU_LOCAL_TASK,
-        'weight' => 99,
+        'weight' => 90,
         'page callback' => 'drupal_get_form',
         'page arguments' => array('flat_test_mvd_xacml_editor_form', 2),
-        'file' => 'inc/form_reduced.inc',
+        'file' => 'inc/form_small.inc',
         'access callback' => 'islandora_object_access_callback',
         'access arguments' => array('change fedora object xacml', 2),
     );
@@ -45,7 +43,7 @@ function flat_test_mvd_islandora_object_access($op, $object, $user) {
     module_load_include('inc', 'islandora', 'includes/utilities');
     $has_access = FALSE; 
     switch ($op){
-        case 'change file permissions':
+        case 'change fedora object xacml':
 
             $has_policy = $object['POLICY'];
 
@@ -68,9 +66,6 @@ function flat_test_mvd_islandora_object_access($op, $object, $user) {
 }
 
 
-
-
-
 function show_islandora_object(){
 
 
@@ -88,51 +83,6 @@ function show_islandora_object(){
 
     }
     return $output;
-}
-
-function mvd_blok(){
-    
-  //echo displays just HTML  
-  //echo '<h2>Something</h2>';
-  
-  //return shows content within Drupal  
-   $screenoutput = '<i>Something</i>' ;
-   return $screenoutput;
-   
-}
-
-
-function mvd_tab1(){
-    
-  //echo displays just HTML  
-  //echo '<h2>Something</h2>';
-  
-  //return shows content within Drupal  
-   $screenoutput1 = '<i>Something tab1</i>' ;
-   return $screenoutput1;
-   
-}
-
-function mvd_tab2(){
-    
-  //echo displays just HTML  
-  //echo '<h2>Something</h2>';
-  
-  //return shows content within Drupal  
-   $screenoutput2 = '<i>Something tab2222</i>' ;
-   return $screenoutput2;
-   
-}
-
-function mvd_tab3(){
-    
-  //echo displays just HTML  
-  //echo '<h2>Something</h2>';
-  
-  //return shows content within Drupal  
-   $screenoutput3 = '<i>Something tab3</i>' ;
-   return $screenoutput3;
-   
 }
 
 function flat_test_mvd_block_info()
@@ -154,100 +104,13 @@ function flat_test_mvd_block_info()
  * Implements hook_views_api().
  * register with views api
  * declare the path where to find the view include files
- *
+ * flat_test_mvd.views_default.inc
  */
 
-function hook_views_api() {
+function flat_test_mvd_views_api() {
 
   return array (
     'api' => '3.0',
     'path' => drupal_get_path('module', 'flat_test_mvd') . '/views',
   );
 }
-
-/**
- * Implements hook_views_default_views_alter().
- */
-function hook_views_default_views_alter(&$views) {
-
-  if (array_key_exists('view_blogs', $views)) {
-    $view = new view();
-	$view->name = 'view_blogs';
-	$view->description = 'View my blogs';
-	$view->tag = 'default';
-	$view->base_table = 'node';
-	$view->human_name = 'View my blogs';
-	$view->core = 7;
-	$view->api_version = '3.0';
-	$view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
-
-	/* Display: Master */
-	$handler = $view->new_display('default', 'Master', 'default');
-	$handler->display->display_options['title'] = 'View my blogs';
-	$handler->display->display_options['use_more_always'] = FALSE;
-	$handler->display->display_options['access']['type'] = 'perm';
-	$handler->display->display_options['cache']['type'] = 'none';
-	$handler->display->display_options['query']['type'] = 'views_query';
-	$handler->display->display_options['exposed_form']['type'] = 'basic';
-	$handler->display->display_options['pager']['type'] = 'some';
-	$handler->display->display_options['pager']['options']['items_per_page'] = '5';
-	$handler->display->display_options['style_plugin'] = 'default';
-	$handler->display->display_options['row_plugin'] = 'fields';
-	/* Field: Content: Title */
-	$handler->display->display_options['fields']['title']['id'] = 'title';
-	$handler->display->display_options['fields']['title']['table'] = 'node';
-	$handler->display->display_options['fields']['title']['field'] = 'title';
-	$handler->display->display_options['fields']['title']['label'] = '';
-	$handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
-	$handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
-	/* Sort criterion: Content: Post date */
-	$handler->display->display_options['sorts']['created']['id'] = 'created';
-	$handler->display->display_options['sorts']['created']['table'] = 'node';
-	$handler->display->display_options['sorts']['created']['field'] = 'created';
-	$handler->display->display_options['sorts']['created']['order'] = 'DESC';
-	/* Filter criterion: Content: Published */
-	$handler->display->display_options['filters']['status']['id'] = 'status';
-	$handler->display->display_options['filters']['status']['table'] = 'node';
-	$handler->display->display_options['filters']['status']['field'] = 'status';
-	$handler->display->display_options['filters']['status']['value'] = 1;
-	$handler->display->display_options['filters']['status']['group'] = 1;
-	$handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
-	/* Filter criterion: Content: Type */
-	$handler->display->display_options['filters']['type']['id'] = 'type';
-	$handler->display->display_options['filters']['type']['table'] = 'node';
-	$handler->display->display_options['filters']['type']['field'] = 'type';
-	$handler->display->display_options['filters']['type']['value'] = array(
-	  'blog' => 'blog',
-	);
-	/* Filter criterion: Content: Author uid */
-	$handler->display->display_options['filters']['uid']['id'] = 'uid';
-	$handler->display->display_options['filters']['uid']['table'] = 'node';
-	$handler->display->display_options['filters']['uid']['field'] = 'uid';
-	$handler->display->display_options['filters']['uid']['value'] = array(
-	  0 => '14',
-	);
-
-	/* Display: Block */
-	$handler = $view->new_display('block', 'Block', 'block');
-	$handler->display->display_options['block_description'] = 'block_voor_test';
-	$translatables['view_blogs'] = array(
-	  t('Master'),
-	  t('View my blogs'),
-	  t('more'),
-	  t('Apply'),
-	  t('Reset'),
-	  t('Sort by'),
-	  t('Asc'),
-	  t('Desc'),
-	  t('Block'),
-	  t('block_voor_test'),
-	);
-	
-        $views['view_blogs'] = $view;
-	return  $views;
-  }
-}
-
-
-
-

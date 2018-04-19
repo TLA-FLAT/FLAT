@@ -94,19 +94,6 @@ function flat_deposit_cmdi_form($form, &$form_state)
         ),
     );
 
-    $form['select_policy'] = array(
-        '#title' => t('Which access policy do you want to apply?'),
-        '#type' => 'select',
-        '#required' => TRUE,
-        '#options' => drupal_map_assoc(array('public','private')),
-        '#default_value' => 'public',
-    );
-
-    $form['hide_metadata'] = array(
-        '#title' => t('Hide metadata of this collection'),
-        '#type' => 'checkbox',
-        '#required' => FALSE,
-    );
 
 /*
     $form['select'] = array(
@@ -229,7 +216,8 @@ function flat_deposit_cmdi_form($form, &$form_state)
 
         // Load form builder app
         $templateName = $form_state['selected'];
-        $formBuilder = new FormBuilder();
+        $node = $form_state['build_info']['args'][0];
+        $formBuilder = new FormBuilder($node);
 
         // count button presses per field
         $formBuilder->aggregatePressedButtons($form_state);
@@ -355,14 +343,22 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     //*******************//
     // Title Validations //
     //*******************//
-    $title = $form_state['values']['template_container']['elements']['field_01'][0];
-
-    // 1. Validate that title does not contain special characters
-    if (!preg_match('/^[a-zA-Z0-9\_\s]{2,40}+$/', $title)) {
-        form_set_error('title', t('Allowed are all letters, numbers and underscores (max length 40)'));
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
+    $templateName = $form_state['selected'];
+    $id = FormBuilder::getTitleId($templateName);
+    if (!$id) {
+        form_set_error('error', 'Cannot find title field in form profile');
+        return $form;
     }
 
-    // 2. Validate that no other collection at same collection with very similar name exists
+
+    $title = $form_state['values']['template_container']['elements'][$id][0];
+
+    if (!$title) {
+        form_set_error('error', 'title is not set for this cmdi file');
+        return $form;
+    }
+
     module_load_include('inc', 'flat_deposit', 'inc/class.FlatTuque');
     $parent_node = node_load($parent_nid);
     $parent_wrapper = entity_metadata_wrapper('node', $parent_node);
@@ -381,13 +377,12 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     }
 
 
-
     //*******************//
     // Generate Cmdi file//
     //*******************//
     module_load_include('inc','flat_deposit','Helpers/CMDI/CmdiCreator/class.CmdiCreator');
 
-    $templateName = $form_state['selected'];
+
     $form_data = $form_state['values']['template_container']['elements'];
     $owner = $form_state['values']['owner'];
 

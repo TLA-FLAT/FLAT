@@ -885,6 +885,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
     hide($form['flat_parent_title']);
     hide($form['actions']['preview']);
 
+
     #hide($form['flat_type']);
     $form['flat_type']['und']['#disabled'] = TRUE;
     // Conditionally hide cmdi file field.
@@ -929,9 +930,15 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
         foreach ($entities['node'] as $entity) {
             $nid = $entity->nid;
             $collection_node = node_load($nid);
-            #$wrapper = entity_metadata_wrapper('node', $node);
-            #$fid = $wrapper->flat_fid->value();
-            $options[$nid] = $collection_node->title;
+            $wrapper = entity_metadata_wrapper('node', $collection_node);
+            $fid = $wrapper->flat_fid->value();
+            $fObject = islandora_object_load($fid);
+            if ($fObject){
+
+                $options[$nid] = $fObject->label;
+
+            }
+
         }
     }
 
@@ -1546,7 +1553,6 @@ function flat_deposit_node_view($node, $view_mode, $langcode)
 
     if ($node->type == 'flat_bundle' AND $view_mode == 'full' AND node_is_page($node)) {
 
-        #krumo($node);
         $wrapper = entity_metadata_wrapper('node', $node);
 
         if ($wrapper->flat_source->value() == 'external' and isset($node->content['flat_original_path'])) {
@@ -1575,6 +1581,10 @@ function flat_deposit_node_view($node, $view_mode, $langcode)
         unset ($node->content['flat_type']);
     }
 
+
+
+    $node->content['link_dashboard']['#title'] = 'Return to dashboard';
+    $node->content['link_dashboard']['#markup'] = l('Shortcut to dashboard' , 'dashboard') ;
 }
 
 /**

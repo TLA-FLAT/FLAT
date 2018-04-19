@@ -1,0 +1,63 @@
+<?php
+
+/**
+ * Implements hook_install
+ *
+ * Adds field to user form to be able to use nextcloud
+ * Configure nextcloud
+ */
+function flat_nextcloud_install()
+{
+    $t = get_t();
+
+    //basic settings
+    module_load_include('inc', 'flat_nextcloud', 'inc/config');
+
+    flat_nextcloud_set_nextcloud();
+
+    // Add nextcloud integration field to user entity type
+    $field = array(
+        'field_name' => 'activate_nextcloud',
+        'type' => 'list_boolean',
+        'cardinality' => 1,
+        'settings' => array(
+            'allowed_values'=> array(
+                0 => "Disabled",
+                1 => "Activated"),
+        ),
+
+    );
+    field_create_field($field);
+
+
+    $instance = array(
+        'field_name' => 'activate_nextcloud',
+        'entity_type' => 'user',
+        'bundle' => 'user',
+        'label' => 'Nextcloud integration',
+        'settings' => array('user_register_form' => 1),
+        'widget' => array(
+            'type' => 'options_button', // or whatever widget type you want
+        ),
+        'default_value' => array(
+            0 => array('value'=> 0)),
+        'required' => TRUE,
+    );
+    field_create_instance($instance);
+
+
+
+}
+
+/**
+ * Implements hook_uninstall
+ *
+ * Removes all nextcloud variables and deleted user entity fields
+ *
+ */
+function flat_nextcloud_uninstall()
+{
+    variable_del('flat_nextcloud');
+
+    field_attach_delete_bundle('user', 'user');
+}

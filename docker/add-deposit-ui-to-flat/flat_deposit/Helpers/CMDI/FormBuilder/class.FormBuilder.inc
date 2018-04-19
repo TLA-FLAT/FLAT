@@ -1,7 +1,13 @@
 <?php
-spl_autoload_register(function ($class_name) {
-    include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.' . $class_name . '.inc';
-});
+spl_autoload_register('autoload_formbuilder');
+
+function autoload_formbuilder() {
+    include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormComponent.inc';
+    include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormComposite.inc';
+    include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormLeaf.inc';
+    include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormField.inc';
+
+}
 
 /**
  * Translates an xml form template into a drupal form
@@ -28,6 +34,12 @@ class FormBuilder
      * @var array Nested array containing a render array with #type data
      */
     private $data = array();
+
+    /**
+     * @var either drupal MPI_Bundle node or IslandoraObject
+     */
+
+    private $node = null;
 
     /**
      * Scans the cmdi2Drupal form path for profiles and returns profile names of a certain content type
@@ -66,10 +78,45 @@ class FormBuilder
         return TRUE;
     }
 
+
+    /**
+     * Searches for the xml element id with the name (T|t)itle
+     *
+     * @param $profile the specific profile
+     *
+     * @return String the id of the field
+     */
+    static public function getTitleId($profile){
+
+        $check = FormBuilder::checkTemplateItems($profile);
+        if ($check !== TRUE){
+            return false;
+        }
+
+        $filename = self::FORM_TEMPLATES_PATH . $profile .".xml";
+
+        $xml = simplexml_load_file($filename);
+        $res = $xml->xpath('/profileToDrupal/items/item[@name="Title"]');
+
+        if (empty($res)){
+            return false;
+        }
+
+        $str = (String)$res[0]['id'];
+        return $str;
+
+
+    }
+
     /**
      * Template2FormParser constructor.
      */
-    public function __construct(){}
+    public function __construct($node){
+
+
+        $this->node = $node;
+
+    }
 
 
     /**
@@ -96,6 +143,7 @@ class FormBuilder
         }
 
         $dataNode = $this->getHeadNode($cmdi);
+        $this->overwriteInheritedTitle($dataNode);
 
         $setComponets = $this->setFormComponents($template, $dataNode, $pressedButtons, $index = 0, $inheritAll);
         if (!$setComponets){
@@ -122,6 +170,29 @@ class FormBuilder
         return $this->form;
 
     }
+
+
+private function overwriteInheritedTitle(&$dataNode){
+
+    if ($this->node == null){
+        return;
+    }
+
+    if (get_class($this->node) == "IslandoraFedoraObject"){
+        $node_title = $this->node->label;
+        } else {
+        $node_title = $this->node->title;
+    }
+
+    $title = &$dataNode->children('cmd',TRUE)->Title;
+
+    if (isset($title[0])){
+
+        $title[0] = $node_title;
+    }
+
+}
+
 
     /**
      * Creates nested form render arrays from form template.

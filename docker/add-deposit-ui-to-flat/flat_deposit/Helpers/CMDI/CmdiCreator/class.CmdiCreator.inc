@@ -1,9 +1,13 @@
 <?php
 
-spl_autoload_register(function ($class_name) {
-    include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiCreator/class.' . $class_name . '.inc';
+spl_autoload_register('autoload_cmdicreator');
 
-});
+function autoload_cmdicreator() {
+    include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiCreator/class.CmdiComponent.inc';
+    include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiCreator/class.CmdiComposite.inc';
+    include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiCreator/class.CmdiLeaf.inc';
+
+}
 
 
 class CmdiCreatorException extends Exception {}

@@ -81,6 +81,15 @@ class Collection extends SIP
         return TRUE;
     }
 
+    /**
+     * Do nothing
+     *
+     * @return true
+     */
+    function validateResources(){
+
+        return TRUE;
+    }
 
     /**
      *

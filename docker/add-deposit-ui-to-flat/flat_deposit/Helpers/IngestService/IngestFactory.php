@@ -35,6 +35,7 @@ class IngestFactory
             $this->processLog['ingestInitiated'] = $this->factorySIP->init($info);
             $this->processLog['authenticateUser'] = $this->factorySIP->authenticateUser();
             $this->processLog['prepareSipData'] = $this->factorySIP->prepareSipData();
+            $this->processLog['validateResources'] = $this->factorySIP->validateResources();
             $this->processLog['copyMetadata'] = $this->factorySIP->copyMetadata();
             $this->processLog['addIsPartOfProperty'] = $this->factorySIP->addIsPartOfProperty();
             $this->processLog['addResourcesToCmdi'] = $this->factorySIP->addResourcesToCmdi();

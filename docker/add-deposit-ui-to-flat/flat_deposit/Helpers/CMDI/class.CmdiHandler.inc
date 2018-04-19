@@ -524,7 +524,7 @@ class CmdiHandler extends SimpleXMLElement
 
         $node = $this->getNodeForAddingResources($this);
 
-        if (!$node){
+        if ($node === false){
             return false;
         }
 
@@ -989,11 +989,11 @@ class CmdiHandler extends SimpleXMLElement
 
         if (!empty($subnodes)){
             // add subnode if this node does not exist and return false if this is not possible
-            if ($resources_root_node[0]->xpath('cmd:' .$subnodes) === false){
+            if (empty($resources_root_node[0]->xpath('cmd:' .$subnodes))){
                 $resources_root_node[0]->addChild('cmd:' . $subnodes, '', 'http://www.clarin.eu/cmd/');
             }
 
-            if ($resources_root_node[0]->xpath('cmd:' .$subnodes) === false){
+            if (empty($resources_root_node[0]->xpath('cmd:' .$subnodes))){
                 return false;
             }
 
