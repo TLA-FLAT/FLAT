@@ -51,7 +51,20 @@ class FormBuilder
         return drupal_map_assoc($templates);
     }
 
+    static public function checkTemplateItems($templateName)
+    {
 
+        $filename = self::FORM_TEMPLATES_PATH . $templateName .".xml";
+
+        $xml = simplexml_load_file($filename);
+        $res = $xml->xpath('/profileToDrupal/items/item');
+        if (empty($res)){
+
+            return "Chosen profile has no complete form template";
+        }
+
+        return TRUE;
+    }
 
     /**
      * Template2FormParser constructor.
@@ -83,7 +96,11 @@ class FormBuilder
         }
 
         $dataNode = $this->getHeadNode($cmdi);
-        $this->setFormComponents($template, $dataNode, $pressedButtons, $index = 0, $inheritAll);
+
+        $setComponets = $this->setFormComponents($template, $dataNode, $pressedButtons, $index = 0, $inheritAll);
+        if (!$setComponets){
+            return false;
+        }
         $this->setData($template);
 
         foreach ($this->formComponents as $key => $component) {
@@ -124,6 +141,10 @@ class FormBuilder
      */
     private function setFormComponents($template, $dataNode = null, $pressedButtons = null, $index = 0, $inheritAll = false){
 
+        if (!isset($template->items)){
+            return false;
+        }
+
         foreach ($template->items->item as $component) {
             $className = "Form" . (string)$component['type'];
             $numberElements = isset($component['minOccurrence']) ? (int)$component['minOccurrence'] : 0;
@@ -132,6 +153,8 @@ class FormBuilder
             $nodeName = $formComponent->getFormKeyName($component);
             $this->formComponents[$nodeName] = $formComponent->getFormComponent();
         }
+
+        return true;
 
     }
 
@@ -146,7 +169,7 @@ class FormBuilder
 
         if ($cmdi) {
             $name = $cmdi->getNameById();
-            return $cmdi->Components->{$name};
+            return $cmdi->children('cmd',true)->Components->{$name};
         }
 
         return null;

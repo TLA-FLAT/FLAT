@@ -47,11 +47,9 @@ class FlatBundle
      *
      * @param string $move_direction Direction in which data will be moved. Allowed values are: 'freeze' and 'unfreeze'
      *
-     * @param array $collection_node [optional] drupal collection node pointing to fedora node that will parent the bundle
-     *
      * @return bool|string new location of the bundle data or false
      */
-    static public function moveBundleData($node, $data_type, $move_direction, $collection_node = null)
+    static public function moveBundleData($node, $data_type, $move_direction)
     {
 
         $wrapper = entity_metadata_wrapper('node', $node);
@@ -61,9 +59,9 @@ class FlatBundle
             self::validate_node($node);
             $source_location = self::set_original_location($wrapper, $data_type);
             self::validate_source($wrapper, $source_location, $data_type);
-            $target_location = self::set_target_location($node, $wrapper, $data_type, $move_direction, $collection_node);
+            $target_location = self::set_target_location($node, $wrapper, $data_type, $move_direction);
             self::validate_target($wrapper, $data_type, $source_location, $target_location);
-            self::validate_naming($node, $collection_node);
+            self::validate_naming($node);
             $new_location = self::move_data($wrapper, $data_type, $source_location, $target_location);
 
         } catch (FlatBundleException $exception) {
@@ -82,26 +80,22 @@ class FlatBundle
      *
      * @param $node
      */
-    static public function validate_naming($node, $collection_node){
-        if (!is_null($collection_node) AND $collection_node->title != 'unassigned'){
+    static public function validate_naming($node){
 
-            $title = $node->title;
-            $wrapper = entity_metadata_wrapper('node', $collection_node);
-            $collection_fid = $wrapper->flat_fid->value();
+        $title = $node->title;
+        $wrapper = entity_metadata_wrapper('node', $node);
+        $parent_nid = $wrapper->flat_parent_nid->value();
+        $parent_node = node_load($parent_nid);
+        $parent_wrapper = entity_metadata_wrapper('node', $parent_node);
+        $parent_fid = $parent_wrapper->flat_fid->value();
 
-            module_load_include('inc', 'flat_deposit', '/inc/class.FlatTuque');
-            $values = FlatTuque::getChildrenLabels($collection_fid);
+        module_load_include('inc', 'flat_deposit', '/inc/class.FlatTuque');
+        $values = FlatTuque::getChildrenLabels($parent_fid);
 
-
-
-            if (in_array(strtoupper($title),array_unique(array_map('strtoupper', $values)))){
-                throw new FlatBundleException("A collection or bundle with almost identical name already exists in archive");
-            }
-
-
-
-
+        if (in_array(strtoupper($title),array_unique(array_map('strtoupper', $values)))){
+            throw new FlatBundleException("A collection or bundle with almost identical name already exists in archive");
         }
+
     }
 
     static public function recursiveRmDir($dir)
@@ -146,10 +140,10 @@ class FlatBundle
     }
 
     // generate new target path
-    static public function set_target_location($node, $wrapper, $data_type, $move_direction, $collection_node)
+    static public function set_target_location($node, $wrapper, $data_type, $move_direction)
     {
         $bundle = $node->title;
-        $collection_name = !is_null($collection_node) ? $collection_node->title : $wrapper->flat_parent_title->value();
+        $collection_name = $wrapper->flat_parent_title->value();
 
         $usr = user_load($node->uid);
         $tail = str_replace('@', '_at_' , $usr->name) . "/$collection_name/$bundle";
@@ -158,10 +152,12 @@ class FlatBundle
         if ($data_type == 'metadata') {
 
             $base = ($move_direction == 'freeze') ? 'freeze://metadata' : "metadata://";
-
+/*
             $new_location = "$base/$tail/";
 
             $new_location .= 'record.cmdi';
+*/
+            $new_location = "$base/$node->nid/record.cmdi";
 
             // data handling
         } else {
@@ -170,7 +166,10 @@ class FlatBundle
 
                 // freeze location is standard the same for all
                 $base = 'freeze://data';
+                /*
                 $new_location = "$base/$tail/";
+                */
+                $new_location = "$base/$node->nid";
 
             } else {
 
@@ -184,7 +183,10 @@ class FlatBundle
                 } else {
                     // if unfrozen flat_bundle with local MPI_workspace resources is frozen move to freeze location
                     $base =  'external://';
+                    /*
                     $new_location = "$base/$tail/";
+                    */
+                    $new_location = "$base/$node->nid";
 
                 }
 

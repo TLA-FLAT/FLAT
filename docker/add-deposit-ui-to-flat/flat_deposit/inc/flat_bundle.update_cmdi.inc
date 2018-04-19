@@ -6,7 +6,7 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object){
 
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
     $ds = islandora_datastream_load("CMD",$fedora_object->id);
-    $inheritedData = simplexml_load_string($ds->content,'CmdiHandler');
+    $inheritedData = CmdiHandler::simplexml_load_cmdi_string($ds->content);
 
     if ($inheritedData){
         $profile = $inheritedData->getNameById();
@@ -66,7 +66,7 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object){
     );
 
     if ($inheritedData) {
-        $form['data']['#value']['handle'] = (string)$inheritedData->Header->children('cmd', TRUE)->MdSelfLink;
+        $form['data']['#value']['handle'] = (string)$inheritedData->children('cmd', TRUE)->Header->MdSelfLink;
     }
 
     $form['Submit'] = array(
@@ -292,7 +292,7 @@ function flat_bundle_update_form_final_validate($form, &$form_state){
  * Updates flat_collection node and redirects to parent node.
  *
  */
-function flat_collection_update_form_submit($form, &$form_state){
+function flat_bundle_update_cmdi_form_submit($form, &$form_state){
 
     $fid = $form_state['values']['data']['fid'];
     $target = 'islandora/object/' . $fid;

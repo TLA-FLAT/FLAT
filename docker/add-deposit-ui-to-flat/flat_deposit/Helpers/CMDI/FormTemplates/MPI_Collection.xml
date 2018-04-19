@@ -90,6 +90,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
                 <option>Transcriptome data</option>
                 <option>Video recordings</option>
                 <option>Word list</option>
+                <option>Other</option>
             </options>
         </item>
 
@@ -97,11 +98,27 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <type>dropdown</type>
             <title>Research Discipline</title>
             <options>
-                <option>Language Documentation</option>
-                <option>Language Development</option>
+                <option>Anthropological Linguistics</option>
+                <option>Anthropology</option>
+                <option>Cell Biology</option>
+                <option>Clinical Psychology</option>
+                <option>Cognitive Science</option>
+                <option>Computational Linguistics</option>
+                <option>Developmental Psychology</option>
+                <option>Discourse Analysis</option>
+                <option>General Linguistics</option>
+                <option>Genetics</option>
+                <option>Historical Linguistics</option>
                 <option>Language Acquisition</option>
-                <option>Language &amp; Genetics</option>
-                <option>Neurobiology of Language</option>
+                <option>Language Development</option>
+                <option>Language Documentation</option>
+                <option>Linguistic Typology</option>
+                <option>Neurobiology</option>
+                <option>Psycholinguistics</option>
+                <option>Psychology</option>
+                <option>Social Psychology</option>
+                <option>Sociolinguistics</option>
+                <option>Other</option>
             </options>
         </item>
         <item id="field_04" name="Date" type="Leaf" minOccurrence="1">

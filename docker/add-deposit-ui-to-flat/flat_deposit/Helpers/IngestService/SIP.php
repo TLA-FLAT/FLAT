@@ -158,8 +158,8 @@ abstract class SIP
         $file_name = $this->cmdiTarget;
 
         module_load_include('inc','flat_deposit','/Helpers/CMDI/class.CmdiHandler');
-        $cmdi = simplexml_load_file($file_name, 'CmdiHandler');
-        if (is_string($cmdi)){
+        $cmdi = CmdiHandler::simplexml_load_cmdi_file(drupal_realpath($file_name));
+        if (!$cmdi){
             throw new IngestServiceException($cmdi);
         }
         $cmdi->addIsPartOfProperty($parentFid);

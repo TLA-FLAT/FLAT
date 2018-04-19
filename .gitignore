@@ -1,2 +1,6 @@
+.gitignore
 .DS_Store
-/docker/add-gsearch-to-flat/flat/FindProfiles/target/
+docker/add-gsearch-to-flat/flat/FindProfiles/target/
+docker/add-deposit-ui-to-flat/flat_deposit/flat_test/*
+docker/add-deposit-ui-to-flat/flat_deposit/flat_test_mvd/*
+
