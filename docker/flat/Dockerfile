@@ -9,7 +9,7 @@ ENV FLAT_NAME=flat
 #ENV FLAT_HOST=192.168.99.100
 ENV FLAT_HOST=localhost
 ENV FLAT_ICON_DIR=/app/flat/data/icons
-ENV FLAT_TIMEOUT=120
+ENV FLAT_TIMEOUT=150
 ENV CMD_EXTENSION=cmdi
 
 
@@ -287,21 +287,21 @@ RUN service supervisor start &&\
 	/wait-sergtsop.sh
 
 # security patch for islandora
-RUN	service supervisor start &&\
-	/wait-postgres.sh &&\
-	supervisorctl start tomcat &&\
-	/wait-tomcat.sh &&\
-	cd /tmp/islandora &&\
-	git clone https://github.com/Islandora-Labs/islandora_patches.git &&\
-	cd islandora_patches &&\
-	mv disable_dl_clip /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
-	mv disable_print_endpoint  /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
-	cd /var/www/html/$FLAT_NAME/ &&\
-	/var/www/composer/vendor/drush/drush/drush en disable_dl_clip -y &&\
-	/var/www/composer/vendor/drush/drush/drush en disable_print_endpoint -y &&\
-	supervisorctl stop all &&\
-	service supervisor stop &&\
-	/wait-sergtsop.sh
+#RUN	service supervisor start &&\
+#	/wait-postgres.sh &&\
+#	supervisorctl start tomcat &&\
+#	/wait-tomcat.sh &&\
+#	cd /tmp/islandora &&\
+#	git clone https://github.com/Islandora-Labs/islandora_patches.git &&\
+#	cd islandora_patches &&\
+#	mv disable_dl_clip /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
+#	mv disable_print_endpoint  /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
+#	cd /var/www/html/$FLAT_NAME/ &&\
+#	/var/www/composer/vendor/drush/drush/drush en disable_dl_clip -y &&\
+#	/var/www/composer/vendor/drush/drush/drush en disable_print_endpoint -y &&\
+#	supervisorctl stop all &&\
+#	service supervisor stop &&\
+#	/wait-sergtsop.sh
 
 #
 # Add LAT2FOX

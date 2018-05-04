@@ -803,29 +803,33 @@
 	</xsl:template>
 	<!-- Session.Actors.Actor.Role -->
 	<xsl:template match="cmd:Components/*/cmd:Actors/cmd:Actor/cmd:Name" mode="olac">
-		<xsl:call-template name="create-olac-element">
-			<xsl:with-param name="dc-name">dc:contributor</xsl:with-param>
-			<xsl:with-param name="olac-type">olac:role</xsl:with-param>
-			<xsl:with-param name="olac-code">
-				<xsl:choose>
-					<xsl:when test="../cmd:Role = 'Annotator'">annotator</xsl:when>
-					<xsl:when test="../cmd:Role = 'Author'">author</xsl:when>
-					<xsl:when test="../cmd:Role = 'Consultant'">consultant</xsl:when>
-					<xsl:when test="../cmd:Role = 'Depositor'">depositor</xsl:when>
-					<xsl:when test="../cmd:Role = 'Editor'">editor</xsl:when>
-					<xsl:when test="../cmd:Role = 'Illustrator'">illustrator</xsl:when>
-					<xsl:when test="../cmd:Role = 'Interviewer'">interviewer</xsl:when>
-					<xsl:when test="../cmd:Role = 'Photographer'">photographer</xsl:when>
-					<xsl:when test="../cmd:Role = 'Recorder'">recorder</xsl:when>
-					<xsl:when test="../cmd:Role = 'Researcher'">researcher</xsl:when>
-					<xsl:when test="../cmd:Role = 'Singer'">singer</xsl:when>
-					<xsl:when test="../cmd:Role = 'Speaker/Signer'">speaker</xsl:when>
-					<xsl:when test="../cmd:Role = 'Translator'">translator</xsl:when>
-					<xsl:otherwise/>
-				</xsl:choose>
-			</xsl:with-param>
-			<xsl:with-param name="value-node" select="."/>
-		</xsl:call-template>
+		<xsl:variable name="name" select="."/>
+		<xsl:for-each select="tokenize(../cmd:Role,',')">
+			<xsl:variable name="role" select="normalize-space(.)"/>
+			<xsl:call-template name="create-olac-element">
+				<xsl:with-param name="dc-name">dc:contributor</xsl:with-param>
+				<xsl:with-param name="olac-type">olac:role</xsl:with-param>
+				<xsl:with-param name="olac-code">
+					<xsl:choose>
+						<xsl:when test="$role = 'Annotator'">annotator</xsl:when>
+						<xsl:when test="$role = 'Author'">author</xsl:when>
+						<xsl:when test="$role = 'Consultant'">consultant</xsl:when>
+						<xsl:when test="$role = 'Depositor'">depositor</xsl:when>
+						<xsl:when test="$role = 'Editor'">editor</xsl:when>
+						<xsl:when test="$role = 'Illustrator'">illustrator</xsl:when>
+						<xsl:when test="$role = 'Interviewer'">interviewer</xsl:when>
+						<xsl:when test="$role = 'Photographer'">photographer</xsl:when>
+						<xsl:when test="$role = 'Recorder'">recorder</xsl:when>
+						<xsl:when test="$role = 'Researcher'">researcher</xsl:when>
+						<xsl:when test="$role = 'Singer'">singer</xsl:when>
+						<xsl:when test="$role = 'Speaker/Signer'">speaker</xsl:when>
+						<xsl:when test="$role = 'Translator'">translator</xsl:when>
+						<xsl:otherwise/>
+					</xsl:choose>
+				</xsl:with-param>
+				<xsl:with-param name="value-node" select="."/>
+			</xsl:call-template>
+		</xsl:for-each>
 	</xsl:template>
 	<!-- Session.Resources.MediaFile.Type -->
 	<xsl:template match="cmd:Components/*/cmd:Resources/cmd:MediaFile/cmd:Type" mode="olac">

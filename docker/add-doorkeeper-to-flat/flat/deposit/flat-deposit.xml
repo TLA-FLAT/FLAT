@@ -13,6 +13,7 @@
         <property name="gsearchUser" value="fgsAdmin"/>
         <property name="gsearchPassword" value="fgsAdmin"/>
         <property name="gsearchServer" value="http://localhost:8080/fedoragsearch"/>
+        <property name="dk-rollbackLog" value="{$work}/rollback.log"/>
     </config>
     <init>
         <action name="logSetup" class="nl.mpi.tla.flat.deposit.action.WorkspaceLogSetup">

@@ -9,4 +9,4 @@ IN_PROGRESS=false
 USERNAME=flat
 PASSWORD=sword
 
-curl -H "Content-Type: $CONTENT_TYPE" -H "Slug: $SLUG" -H "Content-Disposition: attachment; filename=$FILENAME" -H "Packaging: http://purl.org/net/sword/package/BagIt" -H "Content-MD5: $MD5"  -H "In-Progress: $IN_PROGRESS" -u $USERNAME:$PASSWORD  --data-binary @"$FILENAME"  $TARGET | xmllint --format -
+curl -s -H "Content-Type: $CONTENT_TYPE" -H "Slug: $SLUG" -H "Content-Disposition: attachment; filename=$FILENAME" -H "Packaging: http://purl.org/net/sword/package/BagIt" -H "Content-MD5: $MD5"  -H "In-Progress: $IN_PROGRESS" -u $USERNAME:$PASSWORD  --data-binary @"$FILENAME"  $TARGET | xmllint --format -
