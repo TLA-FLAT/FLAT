@@ -44,6 +44,7 @@
         	<parameter name="mimetypes" value="{$base}/policies/fits-mimetypes.xml"/>
             <parameter name="dir" value="{$work}/fits"/>
         </action>
+        <!-- ^^^ VALIDATE vvv ARCHIVE -->
         <action name="purge updates" class="nl.mpi.tla.flat.deposit.action.PurgeUpdates">
             <parameter name="dir" value="{$work}/resources"/>
             <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
@@ -149,6 +150,7 @@
         </action>
         -->
     </exception>
+    <rollback/>
     <final>
         <action name="status" class="nl.mpi.tla.flat.deposit.action.UpdateSwordStatus">
             <parameter name="props" value="{$bag}/deposit.properties"/>
