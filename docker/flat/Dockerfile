@@ -286,23 +286,6 @@ RUN service supervisor start &&\
 	service supervisor stop &&\
 	/wait-sergtsop.sh
 
-# security patch for islandora
-#RUN	service supervisor start &&\
-#	/wait-postgres.sh &&\
-#	supervisorctl start tomcat &&\
-#	/wait-tomcat.sh &&\
-#	cd /tmp/islandora &&\
-#	git clone https://github.com/Islandora-Labs/islandora_patches.git &&\
-#	cd islandora_patches &&\
-#	mv disable_dl_clip /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
-#	mv disable_print_endpoint  /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
-#	cd /var/www/html/$FLAT_NAME/ &&\
-#	/var/www/composer/vendor/drush/drush/drush en disable_dl_clip -y &&\
-#	/var/www/composer/vendor/drush/drush/drush en disable_print_endpoint -y &&\
-#	supervisorctl stop all &&\
-#	service supervisor stop &&\
-#	/wait-sergtsop.sh
-
 #
 # Add LAT2FOX
 #
@@ -312,10 +295,8 @@ ENV MAVEN_OPTS -Xss10M
 RUN cd /tmp &&\
     git clone -b develop https://github.com/TheLanguageArchive/SchemAnon.git SchemAnon &&\
     cd /tmp/SchemAnon &&\
-	mvn install:install-file -Dfile=lib/org/eclipse/wst/org.eclipse.wst.xml.xpath2.processor/1.2.0/org.eclipse.wst.xml.xpath2.processor-1.2.0.jar -DgroupId=org.eclipse.wst -DartifactId=org.eclipse.wst.xml.xpath2.processor -Dversion=1.2.0 -Dpackaging=jar &&\
-	mvn install:install-file -Dfile=lib/xerces/xercesImpl/2.12.0-xml-schema-1.1/xercesImpl-2.12.0-xml-schema-1.1.jar -DpomFile=lib/xerces/xercesImpl/2.12.0-xml-schema-1.1/xercesImpl-2.12.0-xml-schema-1.1.pom -DgroupId=xerces -DartifactId=xercesImpl -Dversion=2.12.0-xml-schema-1.1 -Dpackaging=jar &&\
     mvn clean install &&\
-	mv target/SchemAnon.jar /app/flat/lib/SchemAnon.jar
+    mv target/SchemAnon.jar /app/flat/lib/SchemAnon.jar
 
 RUN mkdir -p /tmp/LAT2FOX
 ADD flat/LAT2FOX /tmp/LAT2FOX
@@ -329,7 +310,7 @@ RUN cd /tmp/LAT2FOX &&\
 
 ADD flat/scripts/* /app/flat/bin/
 RUN chmod +x /app/flat/bin/*.sh &&\
-	mv /app/flat/bin/do-*.sh /app/flat/
+    mv /app/flat/bin/do-*.sh /app/flat/
 
 RUN mkdir -p /app/flat/deposit
 ADD flat/policies /app/flat/deposit/policies
