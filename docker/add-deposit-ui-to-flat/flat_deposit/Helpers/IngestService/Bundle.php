@@ -36,6 +36,7 @@ class Bundle extends SIP
 
         $info['cmdi_handling'] = $this->wrapper->flat_cmdi_option->value();
         $info['policy'] = $this->wrapper->flat_policies->value();
+        $info['visibility'] = $this->wrapper->flat_metadata_visibility->value();
 
         $required = array(
             'loggedin_user',

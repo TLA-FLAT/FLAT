@@ -4,6 +4,13 @@
  * Deposit UI installation
  */
 
+/*
+Daniels Comment for Paul
+Changes in hook_install will only be executed when module is newly installed. This might not be desired in the running FLAT installation. Alternatively, you need to use other functions. I had a short look in the doc. 
+'field_read_field'' and 
+'field_update_field' would be my first guess and the candidate functions I would start with.
+*/
+
 /**
  * Implements hook_install().
  */
@@ -93,6 +100,7 @@ function flat_deposit_install()
             'allowed_values' => array(
                 'public' => 'public',
                 'private' => 'private',
+                'inherit' => 'inherit',
             ),
         ),
         'locked' => TRUE,
@@ -166,6 +174,21 @@ function flat_deposit_install()
             'allowed_values'=> array(
                 0 => "no",
                 1 => "yes"),
+        ),
+    );
+
+
+
+
+    $fields['flat_metadata_visibility'] = array(
+        'field_name' => 'flat_metadata_visibility',
+        'type' => 'list_text',
+        'cardinality' => 1,
+        'settings' => array(
+            'allowed_values'=> array(
+                'show' => 'Make metadata visible',
+                'hide' => 'Hide metadata',
+                ),
         ),
     );
 
@@ -275,6 +298,27 @@ function flat_deposit_install()
             ),
         )
     );
+
+    $instances['flat_bundle_metadata_visibility'] = array(
+        'field_name' => 'flat_metadata_visibility',
+        'bundle' => 'flat_bundle',
+        'label' => $t('Control visibility of a archive object'
+        ),
+        'widget' => array(
+            'type' => 'option_buttons',
+        ),
+        'default_value' => array(
+            0 => array('value'=> 'show')),
+        'required' => TRUE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            ),
+        )
+    );
+
+
     $instances['flat_cmdi_option'] = array(
         'field_name' => 'flat_cmdi_option',
         'bundle' => 'flat_bundle',
