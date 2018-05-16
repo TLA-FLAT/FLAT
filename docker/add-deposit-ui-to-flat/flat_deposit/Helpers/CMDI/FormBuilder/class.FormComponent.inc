@@ -1,6 +1,6 @@
 <?php
 spl_autoload_register(function ($class_name) {
-    include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/Formbuilder/class.' . $class_name . '.inc';
+    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/Formbuilder/class.' . $class_name . '.inc';
 
 });
 
@@ -14,28 +14,23 @@ abstract class FormComponent
      */
     protected $formComponent = array();
 
-
     /**
      * @var $numberElements int number of drupal form elements in this component
      */
     private $numberElements = 1;
     private $minNumberElements = 1;
 
-
     /**
      * FormComponent constructor.
      *
      * @param $numberElements
      */
-    public function __construct($numberElements){
+    public function __construct($numberElements)
+    {
 
         $this->numberElements = $numberElements;
         $this->minNumberElements = $numberElements;
     }
-
-
-
-
 
     abstract public function nestComponentElements($templateNode, $componentElements);
 
@@ -48,7 +43,6 @@ abstract class FormComponent
      * @return String key name used to put component in form array
      */
     abstract public function getFormKeyName($templateNode);
-
 
     /**
      * @param SimpleXMLElement $templateNode Node of template
@@ -68,6 +62,27 @@ abstract class FormComponent
 
         $defaultValues = $this->extractValuesFromNode($existingCmdiNode, $componentName);
 
+        // count how many of these nodes are present in the existing CMDI.
+        if ($existingCmdiNode) {
+            $count = count($existingCmdiNode->{$componentName});
+        } else {
+            $count = 0;
+        }
+
+        // in case a node is present once in the existing CMDI but it has no value (empty XML element), we do not want to see it if it's optional.
+        if (($count == 1) && $defaultValues && (strlen($defaultValues[0]) == 0)) {
+            $count = 0;
+        }
+
+        $numberElements = max($count, $this->minNumberElements);
+
+        // in case of an optional composite component which has not children in the existing CMDI, we do not want to see it
+        if (((string) $templateNode['type'] == 'Composite') && empty($existingCmdiNode->{$componentName}[0])) {
+            $numberElements = 0;
+        }
+
+        $this->numberElements = $numberElements;
+
         $componentButtonPresses = $this->getComponentButtonPresses($templateNode, $pressedButtons);
 
         $this->adaptNumberElementsByButtonPresses($componentButtonPresses);
@@ -76,13 +91,13 @@ abstract class FormComponent
 
         $componentElements = array();
 
-        for ($index = 0; $index < $this->numberElements; $index++){
+        for ($index = 0; $index < $this->numberElements; $index++) {
 
             $defaultValue = isset($defaultValues[$index]) ? $defaultValues[$index] : null;
             $element = new FormField($templateNode, $defaultValue, $inheritAll);
             $element->setFormField();
             $element->addNestedComponents($existingCmdiNode, $componentButtonPresses, $index, $buttonId, $inheritAll);
-            $componentElements[]  = $element->getFormField();
+            $componentElements[] = $element->getFormField();
 
         }
 
@@ -94,15 +109,16 @@ abstract class FormComponent
 
     }
 
-    public function getNumberElements(){return $this->numberElements;}
+    public function getNumberElements()
+    {return $this->numberElements;}
 
-    public function getMinNumberElements(){return $this->minNumberElements;}
+    public function getMinNumberElements()
+    {return $this->minNumberElements;}
 
-    public function setNumberElements($numberElements){
+    public function setNumberElements($numberElements)
+    {
         $this->numberElements = $numberElements;
     }
-
-
 
     /**
      * Getter for form component.
@@ -113,21 +129,20 @@ abstract class FormComponent
         return $this->formComponent;
     }
 
+    private function setButtonId(&$buttonId, $nodeId)
+    {
 
-    private function setButtonId(&$buttonId, $nodeId){
-
-        if ($buttonId == null){
+        if ($buttonId == null) {
 
             $buttonId = $nodeId;
 
-        } else{
+        } else {
 
             $buttonId .= "_" . $nodeId;
 
         }
 
     }
-
 
     /**
      * Adds the number of pressed buttons to number of elements. This number needs to be bigger than 0.
@@ -137,21 +152,18 @@ abstract class FormComponent
      * @param int $index determines the branch in which button presses will be searched for
      *
      */
-    private function adaptNumberElementsByButtonPresses($pressedButtons, $index = 0){
+    private function adaptNumberElementsByButtonPresses($pressedButtons, $index = 0)
+    {
 
-
-        if (isset($pressedButtons['base'])){
+        if (isset($pressedButtons['base'])) {
 
             $this->setNumberElements($this->getNumberElements() + $pressedButtons['base']);
         }
 
-
-
-        if ($this->getNumberElements() < $this->getMinNumberElements()){
+        if ($this->getNumberElements() < $this->getMinNumberElements()) {
 
             $this->setNumberElements($this->getMinNumberElements());
         };
-
 
     }
 
@@ -166,21 +178,26 @@ abstract class FormComponent
     {
         $showButtons = false;
 
-        if (isset($templateNode['multival'])){
-            $showButtons = TRUE;
+        if ($templateNode->type == 'hidden'){
+            // do not add buttons to hidden form elements
+            return;
+        }
+
+        if (isset($templateNode['multival'])) {
+            $showButtons = true;
             $nMax = 999;
-        } elseif (isset($templateNode['minOccurrence']) AND $templateNode['minOccurrence'] == 0){
-            $showButtons = TRUE;
+        } elseif (isset($templateNode['minOccurrence']) and $templateNode['minOccurrence'] == 0) {
+            $showButtons = true;
             $nMax = 1;
         }
 
         if ($showButtons) {
 
-            $componentId = (string)$templateNode['id'];
-            $title = (string)$templateNode->title;
+            $componentId = (string) $templateNode['id'];
+            $title = (string) $templateNode->title;
 
             // Add 'add' button
-            $isAccessible = $this->numberElements < $nMax ? TRUE : FALSE;
+            $isAccessible = $this->numberElements < $nMax ? true : false;
 
             $componentElements['add'] = array(
                 '#weight' => 999,
@@ -200,7 +217,7 @@ abstract class FormComponent
             );
 
             // Add 'Remove' button
-            $isAccessible = $this->numberElements > $this->minNumberElements ? TRUE : FALSE;
+            $isAccessible = $this->numberElements > $this->minNumberElements ? true : false;
             $componentElements['remove'] = array(
                 '#weight' => 999,
                 '#name' => $buttonId,
@@ -221,6 +238,4 @@ abstract class FormComponent
 
     }
 
-
 }
-

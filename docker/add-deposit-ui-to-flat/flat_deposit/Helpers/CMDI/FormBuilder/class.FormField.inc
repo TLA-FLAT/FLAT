@@ -1,6 +1,5 @@
 <?php
 
-
 class FormField
 {
     /**
@@ -13,7 +12,6 @@ class FormField
     private $defaultValue;
 
     private $inheritAll = false;
-
 
     /**
      * FormField constructor.
@@ -33,8 +31,6 @@ class FormField
 
         $this->inheritAll = $inheritAll;
     }
-
-
 
     /**
      * @return array
@@ -62,9 +58,6 @@ class FormField
         $this->formField = $formField;
     }
 
-
-
-
     ###################
     //set title of item
     ###################
@@ -88,13 +81,11 @@ class FormField
     private function setFieldDefaultValue(&$formField)
     {
 
-        if (($this->formTemplateNode['inherited'] OR $this->inheritAll) AND $this->defaultValue) {
+        if (($this->formTemplateNode['inherited'] or $this->inheritAll) and $this->defaultValue) {
 
             $formField['#default_value'] = $this->convertValue($this->defaultValue);
         }
     }
-
-
 
     /**
      * Set tree attribute for formfield formFields
@@ -108,14 +99,12 @@ class FormField
     private function setFieldTree(&$formField)
     {
 
-
         if ($this->formTemplateNode->type == 'fieldset') {
 
             $formField['#tree'] = true;
 
         }
     }
-
 
     /**
      * Set form formField type
@@ -129,7 +118,6 @@ class FormField
 
         $type = (string)$this->formTemplateNode->type;
 
-
         switch ($type) {
 
             case 'dropdown':
@@ -137,9 +125,8 @@ class FormField
                 $type = 'select';
                 $options = [];
 
-
                 foreach ($this->formTemplateNode->options->option as $option) {
-                    $options [] = (string)$option;
+                    $options[] = (string)$option;
                 }
 
                 $formField['#options'] = drupal_map_assoc($options);
@@ -150,18 +137,30 @@ class FormField
                 $type = 'date';
 
                 break;
+
             case 'fieldset':
 
                 $type = 'fieldset';
 
                 break;
 
-            default :
+            case 'textarea':
+
+                $type = 'textarea';
+
+                break;
+
+            case 'hidden':
+
+                $type = 'hidden';
+
+                break;
+
+            default:
                 $type = 'textfield';
 
         }
         $formField['#type'] = $type;
-
 
     }
 
@@ -174,13 +173,12 @@ class FormField
     {
         $formField['#required'] = false;
 
-        if (isset($this->formTemplateNode['minOccurrence']) AND (string)$this->formTemplateNode['minOccurrence'] == '1' AND (string)$this->formTemplateNode['type'] == 'Leaf') {
+        if (isset($this->formTemplateNode['minOccurrence']) and (string)$this->formTemplateNode['minOccurrence'] == '1' and (string)$this->formTemplateNode['type'] == 'Leaf') {
 
             $formField['#required'] = true;
         }
 
     }
-
 
     /**
      * Set description property of form formFields
@@ -190,25 +188,25 @@ class FormField
 
     private function setFieldDescription(&$formField)
     {
-        if (isset($this->formTemplateNode->description)) $formField['#description'] = (string)$this->formTemplateNode->description;
+        if (isset($this->formTemplateNode->description)) {
+            $formField['#description'] = (string)$this->formTemplateNode->description;
+        }
+
     }
 
-
-
-    private function convertValue($value){
+    private function convertValue($value)
+    {
 
         $type = (string)$this->formTemplateNode->type;
-
 
         switch ($type) {
             case 'date':
                 $converted_date = array();
-                $keys = ['year','month', 'day'];
+                $keys = ['year', 'month', 'day'];
                 $index = 0;
                 $tmp = explode('-', $value);
 
-                foreach ($tmp as $el){
-
+                foreach ($tmp as $el) {
 
                     $el = (int)$el; // get rid of 0 in front of months and days
                     $converted_date[$keys[$index]] = (string)$el;
@@ -221,12 +219,9 @@ class FormField
                 break;
         }
 
-
-
         return $convertedValue;
 
-        }
-
+    }
 
     /**
      * Loops through nested items to generate nested form components.
@@ -237,11 +232,10 @@ class FormField
      * @param String $buttonId
      *
      */
-    public function addNestedComponents($existingCmdiNode, $pressedButtons, $index = 0, $buttonId, $inheritAll = false){
+    public function addNestedComponents($existingCmdiNode, $pressedButtons, $index = 0, $buttonId, $inheritAll = false)
+    {
 
-
-        if(isset($this->formTemplateNode->item)) {
-
+        if (isset($this->formTemplateNode->item)) {
 
             foreach ($this->formTemplateNode->item as $nestedNode) {
 
@@ -254,7 +248,7 @@ class FormField
                 $key = $this->getFormField()['#title'];
                 $nestedDataNode = isset($existingCmdiNode->{$key}[$index]) ? $existingCmdiNode->{$key}[$index] : null;
 
-                $nestedButtonId = $buttonId . "_" . (int)$index ;
+                $nestedButtonId = $buttonId . "_" . (int)$index;
 
                 $nestedPressedButton = isset($pressedButtons[$index]) ? $pressedButtons[$index] : null;
 
@@ -262,6 +256,30 @@ class FormField
 
                 $nestedNodeName = $nestedFormComponent->getFormKeyName($nestedNode);
                 $this->formField[$nestedNodeName] = $nestedFormComponent->getFormComponent();
+
+                foreach ($nestedNode->attribute as $attribute) {
+
+                    $className = "Form" . (string)$attribute['type'];
+
+                    $numberElements = isset($attribute['minOccurrence']) ? (int)$attribute['minOccurrence'] : 0;
+
+                    $attributeFormComponent = new $className($numberElements);
+
+                    //$attributeDataNode = (null !== ($existingCmdiNode->{$key}[$index])) ? $existingCmdiNode->{$key}[$index] : null;
+
+                    $attributeDataNode = null; // additional work needed to get existing attribute values
+
+                    $attributeButtonId = $buttonId . "_" . (int)$index;
+
+                    $attributePressedButton = isset($pressedButtons[$index]) ? $pressedButtons[$index] : null;
+
+                    $attributeFormComponent->setFormComponent($attribute, $attributeDataNode, $attributePressedButton, $attributeButtonId, $inheritAll);
+
+                    $attributeNodeName = $attributeFormComponent->getFormKeyName($attribute);
+
+                    $this->formField[$attributeNodeName] = $attributeFormComponent->getFormComponent();
+
+                }
 
             }
 

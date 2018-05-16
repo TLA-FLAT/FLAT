@@ -37,7 +37,16 @@ class CmdiLeaf extends CmdiComponent{
 
                 if ($value != null AND $value != ""){
                     $converted = $this->convertValue((string)$component->type, $value);
-                    $rootNewComponents->addChild($name, utf8_encode(htmlspecialchars($converted)));
+                    //$rootNewComponents->addChild($name, utf8_encode(htmlspecialchars($converted)));
+                    $child = $rootNewComponents->addChild($name, $converted);
+                    foreach ($component->attribute as $attribute) {
+                        $attributeId = (string) $attribute['id'];
+                        $attributeName = (string) $attribute['name'];
+                        $attributeData = (string) $data[$attributeId][0];
+                        if ($attributeData != null and $attributeData != "") {
+                            $child->addAttribute($attributeName, $attributeData);
+                        }
+                    }
 
                 }
             }

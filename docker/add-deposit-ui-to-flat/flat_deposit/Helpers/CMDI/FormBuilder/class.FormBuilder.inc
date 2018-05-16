@@ -2,10 +2,10 @@
 spl_autoload_register('autoload_formbuilder');
 
 function autoload_formbuilder() {
-    include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormComponent.inc';
-    include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormComposite.inc';
-    include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormLeaf.inc';
-    include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormField.inc';
+    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormComponent.inc';
+    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormComposite.inc';
+    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormLeaf.inc';
+    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormField.inc';
 
 }
 
@@ -124,7 +124,7 @@ class FormBuilder
      *
      * @param $templateName String Name of the template used to create the drupal form.
      *
-     * @param $cmdi SimpleXMLElement An existing cmdi file with data to fill form fields with default values.
+     * @param $cmdi SimpleXMLElement An existing cmdi file with data to fill form fields with "default" values.
      *
      * @param $pressedButtons array associative array with aggregated button presses
      *
@@ -201,7 +201,7 @@ private function overwriteInheritedTitle(&$dataNode){
      *
      * @param $template SimpleXMLElement A Drupal form template describing the layout of the form.
      *
-     * @param $dataNode SimpleXMLElement Node of an existing Cmdi file with data to fill form fields with default values.
+     * @param $dataNode SimpleXMLElement Node of an existing Cmdi file with data to fill form fields with "default" values.
      *
      * @param $pressedButtons array Counts of button presses per component.
      *
@@ -223,6 +223,17 @@ private function overwriteInheritedTitle(&$dataNode){
             $formComponent->setFormComponent($component, $dataNode, $pressedButtons, $index, $inheritAll);
             $nodeName = $formComponent->getFormKeyName($component);
             $this->formComponents[$nodeName] = $formComponent->getFormComponent();
+            /*
+            // attribute support at the component (not leaf) level. Needs more work.
+            foreach ($component->attribute as $attribute) {
+            $className = "Form" . (string)$attribute['type'];
+            $numberElements = isset($attribute['minOccurrence']) ? (int)$attribute['minOccurrence'] : 0;
+            $formAttribute = new $className($numberElements);
+            $formAttribute->setFormComponent($attribute, $dataNode, $pressedButtons, $index, $inheritAll);
+            $nodeName = $formAttribute->getFormKeyName($attribute);
+            $this->formComponents[$nodeName] = $formAttribute->getFormComponent();
+            }
+	        */	
         }
 
         return true;
