@@ -1,5 +1,6 @@
 @prefix acl: <http://www.w3.org/ns/auth/acl#> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix lat: <http://lat.mpi.nl/ns/auth/acl#> .
 
 # make a specific resource (identified by the ID of the ResourceProxy) in the SIP public
 [acl:accessTo <sip#h1>; acl:mode acl:Read; acl:agentClass foaf:Agent].
