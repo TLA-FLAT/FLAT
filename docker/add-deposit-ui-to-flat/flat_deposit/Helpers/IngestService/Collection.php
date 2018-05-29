@@ -36,6 +36,7 @@ class Collection extends SIP
             'content_type',
             'fid',
             'policy',
+            'visibility',
         );
 
         if (!isset($info['fid'])){$info['fid'] ='';}

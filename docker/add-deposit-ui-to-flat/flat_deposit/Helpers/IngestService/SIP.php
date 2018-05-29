@@ -179,12 +179,19 @@ abstract class SIP
     {
         $this->logging('Starting generatePolicy');
         $policy = $this->info['policy'];
+        $visibility = $this->info['visibility'];
         if ($policy != "inherited"){
 
             $fname = drupal_get_path('module','flat_deposit') . '/Helpers/IngestService/Policies/' . $policy . '.n3';
 
             $string = file_get_contents($fname);
             $new_string = preg_replace('/ACCOUNT_NAME/', $this->owner , $string);
+
+            if ($visibility == 'hide'){
+                $new_string .= "\t";
+                $new_string .= "# hide the whole SIP\t";
+                $new_string .= "[acl:accessTo <sip>; acl:mode lat:Hide; acl:agentClass foaf:Agent].\t"
+            }
 
             $cmdi_dir = dirname($this->cmdiTarget);
             $write = file_put_contents( $cmdi_dir . '/policy.n3', $new_string);
