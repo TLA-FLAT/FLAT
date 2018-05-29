@@ -4,13 +4,6 @@
  * Deposit UI installation
  */
 
-/*
-Daniels Comment for Paul
-Changes in hook_install will only be executed when module is newly installed. This might not be desired in the running FLAT installation. Alternatively, you need to use other functions. I had a short look in the doc. 
-'field_read_field'' and 
-'field_update_field' would be my first guess and the candidate functions I would start with.
-*/
-
 /**
  * Implements hook_install().
  */
