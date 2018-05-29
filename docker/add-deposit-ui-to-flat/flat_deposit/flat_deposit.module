@@ -180,13 +180,12 @@ class ExternalStreamWrapper extends DrupalPrivateStreamWrapper {
 }
 
 
-
 /**
  * Implements hook_permission().
  */
 function flat_deposit_permission()
 {
-    // setting up the right to use the deposit and to administer
+    // defining the permissions related to the usage and administration of the deposit UI
     return array(
         'admin deposit module' => array(
             'title' => t('Administration of the deposit module'),
@@ -195,6 +194,21 @@ function flat_deposit_permission()
         'use deposit module' => array(
             'title' => t('Usage of the deposit module'),
             'description' => t('Make use of the FLAT deposit')),
+        'create flat_bundle content' => array(
+            'title' => t('Create bundles'),
+            'description' => t('Create new FLAT bundles')),
+        'edit own flat_bundle content' => array(
+            'title' => t('Edit own bundles'),
+            'description' => t('Edit own FLAT bundles')),
+        'delete own flat_bundle content' => array(
+            'title' => t('Delete own bundles'),
+            'description' => t('Create new FLAT bundles')),
+        'edit any flat_bundle content' => array(
+            'title' => t('Edit any bundles'),
+            'description' => t('Edit any FLAT bundles')),
+        'delete any flat_bundle content' => array(
+            'title' => t('Delete any bundles'),
+            'description' => t('Delete any FLAT bundles')),
         'validate bundles' => array(
             'title' => t('Validate bundles'),
             'description' => t('Allow to validate new bundles')),
@@ -204,6 +218,9 @@ function flat_deposit_permission()
         'view collection' => array(
             'title' => t('View collections'),
             'description' => t('See overview collections')),
+        'admin collection' => array(
+                'title' => t('Administer collections'),
+                'description' => t('Administer collections')),
         'add bundle menu' => array(
             'title' => t('Add bundles to own account'),
             'description' => t('Allows to create personal archive bundles'),
