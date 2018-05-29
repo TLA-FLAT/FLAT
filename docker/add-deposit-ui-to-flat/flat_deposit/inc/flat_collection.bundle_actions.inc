@@ -150,10 +150,11 @@ function flat_collection_bundle_action_form_validate_validate($form, &$form_stat
         $parent_is_known = parent_is_known($nid);
         $has_cmdi = has_cmdi($nid);
         $valid_xml = is_valid_xml($nid, $has_cmdi);
-        $good_name = has_correct_filename($nid);
+        //$good_name = has_correct_filename($nid); filename here not relevant, only in SIP that is offered to doorkeeper
         $file_exists = bundle_file_exists($nid);
         $user_has_permissions = user_has_permissions($nid);
-        $tests = array($complete, $parent_is_known, $has_cmdi, $valid_xml, $good_name, $file_exists, $user_has_permissions);
+        //$tests = array($complete, $parent_is_known, $has_cmdi, $valid_xml, $good_name, $file_exists, $user_has_permissions);
+        $tests = array($complete, $parent_is_known, $has_cmdi, $valid_xml, $file_exists, $user_has_permissions);
 
         if (!in_array(false, $tests)) {
 

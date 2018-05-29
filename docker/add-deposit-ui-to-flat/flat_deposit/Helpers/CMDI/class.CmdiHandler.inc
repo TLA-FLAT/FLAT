@@ -22,7 +22,6 @@ class CmdiHandler extends SimpleXMLElement
     static public function simplexml_load_cmdi_file($file_name){
         $xml = new DOMDocument;
         $xml->load($file_name);
-
         $xsl = new DOMDocument;
         $xsl->load(CmdiHandler::CMDI_XSLTS . '/ApplyCmdiPrefix.xsl');
 
@@ -31,7 +30,6 @@ class CmdiHandler extends SimpleXMLElement
         $proc->importStyleSheet($xsl);
 
         $result = $proc->transformToXML($xml);
-
         return simplexml_load_string($result, 'CmdiHandler');
     }
 
@@ -39,7 +37,6 @@ class CmdiHandler extends SimpleXMLElement
     static public function simplexml_load_cmdi_string(String $string){
         $xml = new DOMDocument;
         $xml->loadXML($string);
-
         $xsl = new DOMDocument;
         $xsl->load(CmdiHandler::CMDI_XSLTS . '/ApplyCmdiPrefix.xsl');
 
@@ -48,7 +45,6 @@ class CmdiHandler extends SimpleXMLElement
         $proc->importStyleSheet($xsl);
 
         $result = $proc->transformToXML($xml);
-
         return simplexml_load_string($result, 'CmdiHandler');
     }
 
@@ -108,13 +104,13 @@ class CmdiHandler extends SimpleXMLElement
      *
      * @return bool|string Either name associated with ID or false.
      */
-    public function getNameById()
-    {
-        $node = $this->xpath('cmd:Header/cmd:MdProfile')[0];
+    public function getNameById() {
+
+	    $node = $this->xpath('cmd:Header/cmd:MdProfile')[0];
 
         if(!isset($node) OR empty((string)$node)){
             return false;
-        }
+            }
 
         $id = (string)$node;
 
@@ -129,6 +125,10 @@ class CmdiHandler extends SimpleXMLElement
 
             case 'clarin.eu:cr1:p_1407745712035' :
                 $name = 'lat-session';
+                break;
+
+            case 'clarin.eu:cr1:p_1407745712064' :
+                $name = 'lat-corpus';
                 break;
 
             default :
@@ -163,9 +163,8 @@ class CmdiHandler extends SimpleXMLElement
      */
      static public function getCmdiProfileFromDatastream($fid){
 
-         $cmdi_str = CmdiHandler::getCmdiFromDatastream($fid);
-         $cmdi = CmdiHandler::loadCleanedCmdi($cmdi_str);
-
+        $cmdi_str = CmdiHandler::getCmdiFromDatastream($fid);
+        $cmdi = CmdiHandler::loadCleanedCmdi($cmdi_str);
         if (!$cmdi AND isset ($cmdi->Header->MdProfile)) {
             return (string)$cmdi->Header->MdProfile;
         }
@@ -229,7 +228,8 @@ class CmdiHandler extends SimpleXMLElement
 
         $pattern1 = '/^hdl/';
         $pattern2 = '/^handle/';
-        $hasHandle = (preg_match($pattern1, $value) OR preg_match($pattern2, $value));
+        $pattern3 = '/^https\:\/\/hdl\.handle\.net/';
+        $hasHandle = (preg_match($pattern1, $value) OR preg_match($pattern2, $value) OR preg_match($pattern3, $value));
 
         if (!$hasHandle){
             unset($res[0][0]);
@@ -258,7 +258,8 @@ class CmdiHandler extends SimpleXMLElement
 
         $pattern1 = '/^hdl/';
         $pattern2 = '/^handle/';
-        $hasHandle = (preg_match($pattern1, $value) OR preg_match($pattern2, $value));
+        $pattern3 = '/^https\:\/\/hdl\.handle\.net/';
+        $hasHandle = (preg_match($pattern1, $value) OR preg_match($pattern2, $value) OR preg_match($pattern3, $value));
 
         if ($hasHandle AND !$flatURI){
             return "Invalid combination of MdSelfLink value and attributes. Cmdi files providing a handle at CMD->Header->MdSelfLink " .
@@ -704,7 +705,6 @@ class CmdiHandler extends SimpleXMLElement
      */
     private function addResourcesFromDatastream($fid)
     {
-
         $cmdi_str = CmdiHandler::getCmdiFromDatastream($fid);
         $fObjectCmdi = CmdiHandler::loadCleanedCmdi($cmdi_str);
         $resourceProxyList = $fObjectCmdi->Resources->ResourceProxyList;
@@ -743,7 +743,6 @@ class CmdiHandler extends SimpleXMLElement
      * @param $sourceCmdi CmdiHandler a second cmdi file with resources to be added to the Components section
      */
     public function addResourceSectionToComponents($sourceCmdi){
-
         $this->addResourcesToComponents($sourceCmdi);
     }
 
@@ -752,10 +751,9 @@ class CmdiHandler extends SimpleXMLElement
      * @param $sourceCmdi
      */
     private function addResourcesToComponents($sourceCmdi){
-
         //Copy resources to Components
         $searchNode = $this->getNodeForAddingResources($sourceCmdi);
-        $profile = $this->getNameById();
+        $profile = $sourceCmdi->getNameById();
         $xml = simplexml_load_file(CmdiHandler::FORM_TEMPLATES_PATH . "/$profile.xml");
         $tags = $xml->xpath('/profileToDrupal/resources/allowed_tags/tag');
 

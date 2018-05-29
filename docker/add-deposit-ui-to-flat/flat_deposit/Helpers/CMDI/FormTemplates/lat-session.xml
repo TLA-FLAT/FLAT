@@ -27,7 +27,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
             <type>hidden</type>
             <title>History</title>
         </item>
-        <item id="field_02" name="Name" type="Leaf" minOccurrence="1">
+        <item id="title_field" name="Name" type="Leaf" minOccurrence="1">
             <type>textfield</type>
             <title>Name</title>
         </item>
@@ -42,7 +42,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
         </item>
         <item id="fieldset_01" name="descriptions" type="Composite" minOccurrence="0">
             <type>fieldset</type>
-            <title>description</title>
+            <title>descriptions</title>
             <item id="field_05" name="Description" type="Leaf" multival="true" minOccurrence="1">
                 <title>Description</title>
                 <type>textarea</type>
@@ -357,6 +357,15 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
             <item id="fieldset_15" name="Keys" type="Composite" minOccurrence="0">
                 <type>fieldset</type>
                 <title>Key</title>
+                <item id="field_43" name="Key" type="Leaf" multival="true" minOccurrence="1">
+                    <title>Key</title>
+                    <type>textfield</type>
+                    <description>This element is designed to ensure backwards compatibility to IMDI metadata. Please only use it for this purpose.</description>
+                </item>
+            </item>
+            <item id="fieldset_15" name="Keys" type="Composite" minOccurrence="0">
+                <type>fieldset</type>
+                <title>Key</title>
                 <item id="fieldset_35" name="Key" type="Composite" multival="true" minOccurrence="1">
                     <type>fieldset</type>
                     <title>Key</title>
@@ -399,7 +408,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
             <title>Actors</title>
             <item id="fieldset_18" name="descriptions" type="Composite" minOccurrence="0">
                 <type>fieldset</type>
-                <title>description</title>
+                <title>descriptions</title>
                 <item id="field_45" name="Description" type="Leaf" multival="true" minOccurrence="1">
                     <title>Description</title>
                     <type>textarea</type>
@@ -576,7 +585,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                 </item>
                 <item id="fieldset_27" name="descriptions" type="Composite" minOccurrence="0">
                     <type>fieldset</type>
-                    <title>description</title>
+                    <title>descriptions</title>
                     <item id="field_71" name="Description" type="Leaf" multival="true" minOccurrence="1">
                         <title>Description</title>
                         <type>textarea</type>
@@ -678,3 +687,4 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
         <clarinProfileId>clarin.eu:cr1:p_1407745712035</clarinProfileId>
     </data>
 </profileToDrupal>
+

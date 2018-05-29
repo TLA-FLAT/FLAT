@@ -96,6 +96,7 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
             'fedora_id' => $fedora_id,
         )
     );
+    $form['data']['#value']['handle'] = (string)$cmd->children('cmd', TRUE)->Header->MdSelfLink;
 /*
     $form['buttons']['delete'] = array(
         '#type' => 'submit',

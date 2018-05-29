@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Specifies which form items will be generate in drupal
+see https://api.drupal.org/api/drupal/developer%21topics%21forms_api_reference.html/7.x for info about drupal form render api.
+In the items section you can specify items. items need to have attributes:
+- id: unique id which will become the form item id in drupal
+- name: name of the item in the original  cmdi-profile
+and children:
+- type: formatting of the item; implemented values are
+* textitem
+* date
+* dropdown
+* (empty) missing values will be rendered as textitem
+- title: The title which will appear on top of the item
+- description (optional): a info button which will show the value this item when hovered onto
+- component (optional): specifies whether a item is located in a component.
+Additional fied is data. data items are hidden in drupal. Required info is the clarin profile ID, to which this transform refers
+ -->
+
+<profileToDrupal>
+    <header>
+        <template_name>lat-corpus</template_name>
+        <content_type>flat_collection</content_type>
+    </header>
+    <items>
+        <item id="field_01" name="History" type="Leaf" minOccurrence="0">
+            <type>hidden</type>
+            <title>History</title>
+        </item>
+        <item id="title_field" name="Name" type="Leaf" minOccurrence="1">
+            <type>textfield</type>
+            <title>Name</title>
+        </item>
+        <item id="field_03" name="Title" type="Leaf" minOccurrence="1">
+            <type>textfield</type>
+            <title>Title</title>
+        </item>
+        <item id="fieldset_01" name="descriptions" type="Composite" minOccurrence="0">
+            <type>fieldset</type>
+            <title>descriptions</title>
+            <item id="field_04" name="Description" type="Leaf" multival="true" minOccurrence="1">
+                <title>Description</title>
+                <type>textarea</type>
+            </item>
+        </item>
+        <item id="fieldset_02" name="InfoLink" type="Composite" multival="true" minOccurrence="0">
+            <type>fieldset</type>
+            <title>InfoLink</title>
+            <item id="field_05" name="Description" type="Leaf" multival="true" minOccurrence="0">
+                <title>Description</title>
+                <type>textarea</type>
+            </item>
+        </item>
+        <item id="fieldset_03" name="Catalogue" type="Composite"  minOccurrence="0">
+            <type>fieldset</type>
+            <title>Catalogue</title>
+            <item id="field_06" name="ContentType" type="Leaf" multival="true" minOccurrence="0">
+                <title>Description</title>
+                <type>textarea</type>
+            </item>
+            <item id="field_07" name="SmallestAnnotationUnit" type="Leaf" multival="true" minOccurrence="0">
+                <title>SmallestAnnotationUnit</title>
+                <type>dropdown</type>
+                <options>
+                    <option>Unknown</option>
+                    <option>Unspecified</option>
+                    <option>paragraph</option>
+                    <option>utterance</option>
+                    <option>word</option>
+                    <option>phoneme</option>
+                </options>
+            </item>
+            <item id="field_08" name="Date" type="Leaf" minOccurrence="0">
+                <type>textfield</type>
+                <title>Date</title>
+                <description>CreationDate notation options: yyyy | yyyy-mm | yyyy-mm-dd | Unknown | Unspecified</description>
+            </item>
+            <item id="field_09" name="Publisher" type="Leaf" multival="true" minOccurrence="0">
+                <title>Publisher</title>
+                <type>textfield</type>
+            </item>
+            <item id="field_10" name="Author" type="Leaf" multival="true" minOccurrence="0">
+                <title>Author</title>
+                <type>textfield</type>
+            </item>
+            <item id="field_11" name="Size" type="Leaf" minOccurrence="0">
+                <title>Size</title>
+                <type>textfield</type>
+            </item>
+            <item id="field_11" name="DistributionForm" type="Leaf" minOccurrence="0">
+                <title>DistributionForm</title>
+                <type>textfield</type>
+            </item>
+            <item id="field_12" name="Pricing" type="Leaf" minOccurrence="0">
+                <title>Pricing</title>
+                <type>textfield</type>
+            </item>
+            <item id="field_13" name="ContactPerson" type="Leaf" minOccurrence="0">
+                <title>ContactPerson</title>
+                <type>textfield</type>
+            </item>
+            <item id="field_11" name="Publications" type="Leaf" minOccurrence="0">
+                <title>Publications</title>
+                <type>textfield</type>
+            </item>
+            <item id="fieldset_04" name="descriptions" type="Composite" minOccurrence="0">
+                <type>fieldset</type>
+                <title>descriptions</title>
+                <item id="field_12" name="Description" type="Leaf" multival="true" minOccurrence="1">
+                    <title>Description</title>
+                    <type>textarea</type>
+                </item>
+            </item>
+            <item id="fieldset_05" name="Document_Languages" type="Composite" minOccurrence="0">
+                <type>fieldset</type>
+                <title>Document Languages</title>
+                <item id="fieldset_06" name="Document_Language" type="Composite" multival="true" minOccurrence="1">
+                    <type>fieldset</type>
+                    <title>Document Language</title>
+                    <item id="field_13" name="Id" type="Leaf" minOccurrence="1">
+                        <title>Id</title>
+                        <type>textfield</type>
+                        <description>Valid entries are: ISO639-3 language code | Unknown | Unspecified</description>
+                    </item>
+                    <item id="field_14" name="Name" type="Leaf" minOccurrence="1">
+                        <title>Name</title>
+                        <type>textfield</type>
+                    </item>
+                </item>
+            </item>
+            <item id="fieldset_07" name="Subject_Languages" type="Composite" minOccurrence="0">
+                <type>fieldset</type>
+                <title>Document Languages</title>
+                <item id="fieldset_08" name="Subject_Language" type="Composite" multival="true" minOccurrence="1">
+                    <type>fieldset</type>
+                    <title>Subject Language</title>
+                    <item id="field_13" name="Id" type="Leaf" minOccurrence="1">
+                        <title>Id</title>
+                        <type>textfield</type>
+                        <description>Valid entries are: ISO639-3 language code | Unknown | Unspecified</description>
+                    </item>
+                    <item id="field_14" name="Name" type="Leaf" minOccurrence="1">
+                        <title>Name</title>
+                        <type>textfield</type>
+                    </item>
+                    <item id="field_15" name="Dominant" type="Leaf" minOccurrence="0">
+                        <title>Dominant</title>
+                        <type>dropdown</type>
+                        <options>
+                            <option>Unspecified</option>
+                            <option>Unknown</option>
+                            <option>true</option>
+                            <option>false</option>
+                        </options>
+                    </item>
+                    <item id="field_16" name="SourceLanguage" type="Leaf" minOccurrence="0">
+                        <title>SourceLanguage</title>
+                        <type>dropdown</type>
+                        <options>
+                            <option>Unspecified</option>
+                            <option>Unknown</option>
+                            <option>true</option>
+                            <option>false</option>
+                        </options>
+                    </item>
+                    <item id="field_16" name="TargetLanguage" type="Leaf" minOccurrence="0">
+                        <title>TargetLanguage</title>
+                        <type>dropdown</type>
+                        <options>
+                            <option>Unspecified</option>
+                            <option>Unknown</option>
+                            <option>true</option>
+                            <option>false</option>
+                        </options>
+                    </item>
+                    <item id="fieldset_09" name="descriptions" type="Composite" minOccurrence="0">
+                        <type>fieldset</type>
+                        <title>descriptions</title>
+                        <item id="field_17" name="Description" type="Leaf" multival="true" minOccurrence="1">
+                            <title>Description</title>
+                            <type>textarea</type>
+                        </item>
+                    </item>
+                </item>
+            </item>
+            <item id="fieldset_10" name="Location" type="Composite" multival="true" minOccurrence="0">
+                <type>fieldset</type>
+                <title>Location</title>
+                <item id="field_18" name="Continent" type="Leaf" minOccurrence="1">
+                    <title>Continent</title>
+                    <type>dropdown</type>
+                    <options>
+                        <option>Unknown</option>
+                        <option>Unspecified</option>
+                        <option>Africa</option>
+                        <option>Asia</option>
+                        <option>Europe</option>
+                        <option>Australia</option>
+                        <option>Oceania</option>
+                        <option>North-America</option>
+                        <option>Middle-America</option>
+                        <option>South-America</option>
+                    </options>
+                </item>
+                <item id="field_19" name="Country" type="Leaf" minOccurrence="1">
+                    <title>Country</title>
+                    <type>textfield</type>
+                </item>
+                <item id="field_20" name="Region" type="Leaf" multival="true" minOccurrence="0">
+                    <title>Region</title>
+                    <type>textfield</type>
+                </item>
+                <item id="field_21" name="Address" type="Leaf" minOccurrence="0">
+                    <title>Address</title>
+                    <type>textfield</type>
+                </item>
+            </item>
+            <item id="fieldset_11" name="Format" type="Composite" minOccurrence="0">
+                <type>fieldset</type>
+                <title>Format</title>
+                <item id="field_22" name="Text" type="Leaf" multival="true" minOccurrence="0">
+                    <title>Text</title>
+                    <type>textfield</type>
+                </item>
+                <item id="field_23" name="Audio" type="Leaf" multival="true" minOccurrence="0">
+                    <title>Audio</title>
+                    <type>textfield</type>
+                </item>
+                <item id="field_24" name="Video" type="Leaf" multival="true" minOccurrence="0">
+                    <title>Video</title>
+                    <type>textfield</type>
+                </item>
+                <item id="field_25" name="Image" type="Leaf" multival="true" minOccurrence="0">
+                    <title>Image</title>
+                    <type>textfield</type>
+                </item>
+            </item>
+            <item id="fieldset_12" name="Quality" type="Composite" minOccurrence="0">
+                <type>fieldset</type>
+                <title>Quality</title>
+                <item id="field_26" name="Text" type="Leaf" multival="true" minOccurrence="0">
+                    <title>Text</title>
+                    <type>dropdown</type>
+                    <options>
+                        <option>Unknown</option>
+                        <option>Unspecified</option>
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                    </options>
+                </item>
+                <item id="field_27" name="Audio" type="Leaf" multival="true" minOccurrence="0">
+                    <title>Audio</title>
+                    <type>dropdown</type>
+                    <options>
+                        <option>Unknown</option>
+                        <option>Unspecified</option>
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                    </options>
+                </item>
+                <item id="field_28" name="Video" type="Leaf" multival="true" minOccurrence="0">
+                    <title>Video</title>
+                    <type>dropdown</type>
+                    <options>
+                        <option>Unknown</option>
+                        <option>Unspecified</option>
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                    </options>
+                </item>
+                <item id="field_29" name="Image" type="Leaf" multival="true" minOccurrence="0">
+                    <title>Image</title>
+                    <type>dropdown</type>
+                    <options>
+                        <option>Unknown</option>
+                        <option>Unspecified</option>
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                    </options>
+                </item>
+            </item>
+            <item id="fieldset_13" type="Composite" name="Project" multival="true"  minOccurrence="0">
+                <title>Project</title>
+                <type>fieldset</type>
+                <item id="field_30" name="Name" type="Leaf"  minOccurrence="1">
+                    <title>Project Name</title>
+                    <type>textfield</type>
+                </item>
+                <item id="field_31" name="Title" type="Leaf" minOccurrence="0">
+                    <title>Project Title</title>
+                    <type>textfield</type>
+                </item>
+                <item id="field_32" name="Id" type="Leaf" minOccurrence="0">
+                    <title>Project identifier</title>
+                    <type>textfield</type>
+                </item>
+                <item id="fieldset_14" type="Composite" name="Contact" multival="true" minOccurrence="1">
+                    <title>Contact</title>
+                    <type>fieldset</type>
+                    <item id="field_33" name="Name" type="Leaf" minOccurrence="0">
+                        <title>Name</title>
+                        <type>textfield</type>
+                    </item>
+                    <item id="field_34" name="Address" type="Leaf" minOccurrence="0">
+                        <title>Address</title>
+                        <type>textfield</type>
+                    </item>
+                    <item id="field_35" name="Email" type="Leaf" minOccurrence="0">
+                        <title>Email</title>
+                        <type>textfield</type>
+                    </item>
+                    <item id="field_36" name="Organisation" type="Leaf" minOccurrence="0">
+                        <title>Organisation</title>
+                        <type>textfield</type>
+                    </item>
+                </item>
+                <item id="fieldset_15" name="descriptions" type="Composite" minOccurrence="0">
+                    <type>fieldset</type>
+                    <title>descriptions</title>
+                    <item id="field_37" name="Description" type="Leaf" multival="true" minOccurrence="1">
+                        <title>Description</title>
+                        <type>textarea</type>
+                    </item>
+                </item>
+            </item>
+            <item id="fieldset_16" name="Access" type="Composite" minOccurrence="0">
+                <type>fieldset</type>
+                <title>Access</title>
+                <item id="field_38" name="Availability" type="Leaf" minOccurrence="1">
+                    <title>Description</title>
+                    <type>textarea</type>
+                </item>
+                <item id="field_39" name="Date" type="Leaf" minOccurrence="1">
+                    <type>textfield</type>
+                    <title>Date</title>
+                    <description>CreationDate notation options: yyyy | yyyy-mm | yyyy-mm-dd | Unknown | Unspecified</description>
+                </item>
+                <item id="field_40" name="Owner" type="Leaf" minOccurrence="1">
+                    <title>Owner</title>
+                    <type>textfield</type>
+                </item>
+                <item id="field_40" name="Publisher" type="Leaf" minOccurrence="1">
+                    <title>Publisher</title>
+                    <type>textfield</type>
+                </item>
+                <item id="fieldset_17" type="Composite" name="Contact" minOccurrence="1">
+                    <title>Contact</title>
+                    <type>fieldset</type>
+                    <item id="field_41" name="Name" type="Leaf" minOccurrence="0">
+                        <title>Name</title>
+                        <type>textfield</type>
+                    </item>
+                    <item id="field_42" name="Address" type="Leaf" minOccurrence="0">
+                        <title>Address</title>
+                        <type>textfield</type>
+                    </item>
+                    <item id="field_43" name="Email" type="Leaf" minOccurrence="0">
+                        <title>Email</title>
+                        <type>textfield</type>
+                    </item>
+                    <item id="field_44" name="Organisation" type="Leaf" minOccurrence="0">
+                        <title>Organisation</title>
+                        <type>textfield</type>
+                    </item>
+                </item>
+                <item id="fieldset_18" name="descriptions" type="Composite" minOccurrence="0">
+                    <type>fieldset</type>
+                    <title>descriptions</title>
+                    <item id="field_45" name="Description" type="Leaf" multival="true" minOccurrence="1">
+                        <title>Description</title>
+                        <type>textarea</type>
+                    </item>
+                </item>
+            </item>
+            <item id="fieldset_19" name="Keys" type="Composite" minOccurrence="0">
+                <type>fieldset</type>
+                <title>Key</title>
+                <item id="field_46" name="Key" type="Leaf" multival="true" minOccurrence="1">
+                    <title>Key</title>
+                    <type>textfield</type>
+                    <description>This element is designed to ensure backwards compatibility to IMDI metadata. Please only use it for this purpose.</description>
+                </item>
+            </item>
+        </item>
+    </items>
+    <data>
+        <clarinProfileId>clarin.eu:cr1:p_1407745712064</clarinProfileId>
+    </data>
+</profileToDrupal>

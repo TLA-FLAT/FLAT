@@ -239,7 +239,7 @@ function flat_collection_add_form_final_validate($form, &$form_state){
             //*******************//
             // Title Validations //
             //*******************//
-            $title = $form_state['values']['template_container']['elements']['field_01'][0];
+            $title = $form_state['values']['template_container']['elements']['title_field'][0];
 
             // 1. Validate that no other collection at same collection with very similar name exists
             module_load_include('inc', 'flat_deposit', 'inc/class.FlatTuque');

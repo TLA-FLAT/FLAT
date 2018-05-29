@@ -89,7 +89,6 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object){
         } else {
             $pressedButtonsRoot = null;
         }
-
         // Generate the form elements
         $formBuilder->setForm($profile, $inheritedData, $pressedButtonsRoot, $inheritAll = true);
 
@@ -107,12 +106,10 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object){
         drupal_set_message('Online editing of the metadata of this bundle is not supported');
         $form['Submit']['#disabled'] = TRUE;
     }
-
     return $form;
 
 
 }
-
 
 function flat_bundle_update_form_final_validate($form, &$form_state){
     module_load_include('inc','flat_deposit', 'inc/class.FlatTuque');
@@ -132,7 +129,7 @@ function flat_bundle_update_form_final_validate($form, &$form_state){
     //*******************//
     // Title Validations //
     //*******************//
-    $new_title = $form_state['values']['template_container']['elements']['field_01'][0];
+    $new_title = $form_state['values']['template_container']['elements']['title_field'][0];
 
 
     // 1. Title uniqueness validation.
@@ -141,7 +138,7 @@ function flat_bundle_update_form_final_validate($form, &$form_state){
     // for the current object.
     // Note. Only do this if title has actually changed.
 
-    $old_title = $form['template_container']['elements']['field_01'][0]['#default_value'];
+    $old_title = $form['template_container']['elements']['title_field'][0]['#default_value'];
 
     if ($old_title !== $new_title){
 

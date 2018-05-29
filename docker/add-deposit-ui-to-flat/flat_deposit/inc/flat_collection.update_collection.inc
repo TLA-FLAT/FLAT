@@ -6,7 +6,8 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
 
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
     $ds = islandora_datastream_load("CMD",$fedora_object->id);
-    $inheritedData = simplexml_load_string($ds->content,'CmdiHandler');
+    
+    $inheritedData = CmdiHandler::simplexml_load_cmdi_string($ds->content);
 
     if ($inheritedData){
         $profile = $inheritedData->getNameById();
@@ -30,8 +31,8 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
 
     if (!user_access('admin collection')){$form['owner']['#disabled'] = TRUE; }
 
-    $form['trigger']['select_profile_name'] = array(
-        '#type' => 'value',
+    $form['select_profile_name'] = array(
+        '#type' => 'hidden',
         '#value' => $profile,
     );
 
@@ -64,9 +65,9 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
             'fid' => $fedora_object->id,
         ),
     );
-
+    
     if ($inheritedData) {
-     $form['data']['#value']['handle'] = (string)$inheritedData->Header->children('cmd', TRUE)->MdSelfLink;
+        $form['data']['#value']['handle'] = (string)$inheritedData->Header->MdSelfLink;
     }
 
     $form['Submit'] = array(
@@ -159,7 +160,7 @@ function flat_collection_update_form_final_validate($form, &$form_state){
     //*******************//
     // Title Validations //
     //*******************//
-    $new_title = $form_state['values']['template_container']['elements']['field_01'][0];
+    $new_title = $form_state['values']['template_container']['elements']['title_field'][0];
 
 
     // 1. Title uniqueness validation.
@@ -168,7 +169,7 @@ function flat_collection_update_form_final_validate($form, &$form_state){
     // for the current object.
     // Note. Only do this if title has actually changed.
 
-    $old_title = $form['template_container']['elements']['field_01'][0]['#default_value'];
+    $old_title = $form['template_container']['elements']['title_field'][0]['#default_value'];
 
     if ($old_title !== $new_title){
         $values = FlatTuque::getChildrenLabels($fidParent);
@@ -213,35 +214,36 @@ function flat_collection_update_form_final_validate($form, &$form_state){
 
     try {
         $creator->setCmdi($templateName, $form_data, $owner);
-        $newlyGeneratedCmdi = $creator->getCmdi();
+        $generatedCmdi = $creator->getCmdi();
     } catch (CmdiCreatorException $e) {
         form_set_error('error', $e->getMessage());
         return $form;
     }
 
+
 // get original cmdi by datastream
     $ds = islandora_datastream_load('CMD', $fid);
-    $originalCmdi = simplexml_load_string($ds->content,'CmdiHandler');
-
+    $originalCmdi = CmdiHandler::simplexml_load_cmdi_string($ds->content);
     // add resource Section to updated components
+    $newlyGeneratedCmdi = CmdiHandler::simplexml_load_cmdi_string($generatedCmdi->asXML());
     $newlyGeneratedCmdi->addResourceSectionToComponents($originalCmdi);
 
     // merge original cmdi and and edited components section
     $path = '//cmd:Components';
-    $altPath = '//Components';
-    $targetComponentNode = !empty($originalCmdi->xpath($path)[0]) ? $originalCmdi->xpath($path)[0] : $originalCmdi->xpath($altPath)[0]  ;
-    $sourceNode = !empty($newlyGeneratedCmdi->xpath($path)[0]) ? $newlyGeneratedCmdi->xpath($path)[0] : $newlyGeneratedCmdi->xpath($altPath)[0]  ;
 
-    unset($targetComponentNode->{$profile});
+    $targetComponentNode = $originalCmdi->xpath($path)[0];
+    $sourceNode = $newlyGeneratedCmdi->xpath($path)[0]; 
+
+    unset($targetComponentNode->children('cmd',true)->{$profile});
+
 
     $domTarget = dom_import_simplexml($targetComponentNode);
-    $domSource = dom_import_simplexml($sourceNode->{$profile});
-
+    
+    $domSource = dom_import_simplexml($sourceNode->children('cmd',true)->{$profile});
 
     $domSource = $domTarget->ownerDocument->importNode($domSource, TRUE);
 
     $domTarget->appendChild($domSource);
-
 
     //save result
 

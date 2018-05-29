@@ -223,8 +223,8 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
     $parent_is_known = parent_is_known($nid);
     $has_cmdi = has_cmdi($nid);
     $valid_xml = is_valid_xml($nid, $has_cmdi);
-    $good_name = has_correct_filename($nid);
-    $file_exists = bundle_file_exists($nid);
+    //$good_name = has_correct_filename($nid); filename here not relevant, only in SIP that is offered to doorkeeper
+    $file_exists = bundle_file_exists($nid);  
     $user_has_permissions = user_has_permissions($nid);
 
 
@@ -246,11 +246,12 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
         return $form;
     }
 
-    // In case of wrong naming
+    /* In case of wrong naming
     if ($good_name === false){
         form_set_error('validate_bundle', t("Metadata file has wrong file name (record.cmdi expected)"));
         return $form;
     }
+    */
 
     // Check existence external location
     if ($file_exists === false){
