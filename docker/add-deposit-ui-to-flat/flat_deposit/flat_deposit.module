@@ -186,7 +186,7 @@ class ExternalStreamWrapper extends DrupalPrivateStreamWrapper {
  */
 function flat_deposit_permission()
 {
-    // setting up the right to use the deposit and to administer
+    // setting up permissions to use and administer the deposit module
     return array(
         'admin deposit module' => array(
             'title' => t('Administration of the deposit module'),
@@ -1024,7 +1024,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
 	    drupal_set_title(t('Add Bundle'));	
 
             // Assign value to flat_original_path field
-            $fom['flat_original_path']['und'][0]['value']['#default_value'] = 'external://USER/COLLECTION/BUNDLE';
+            $form['flat_original_path']['und'][0]['value']['#default_value'] = 'external://USER/COLLECTION/BUNDLE';
 
             // Create selection of collections.
             // This is dependent from extra parameters. In case the name of a collection is provided only that specific collection can be used

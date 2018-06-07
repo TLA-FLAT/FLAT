@@ -71,7 +71,7 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject){
         '#type' => 'select',
 	'#description' => t('Select which access policy should be applied as the default for bundles within this collection. "Public" materials can be accessed by anyone without having to log in. "Authenticated Users" means any user with a valid account for the archive. "Academic Users" are users that logs in with an academic account or whose academic status has been verified. "Private" means that the materials are only accessible to the depositor. Access policies can be refined later.'),
         '#required' => TRUE,
-        '#options' => drupal_map_assoc(array('public' => t('public'), 'authenticated' => t('authenticated users'), 'academic' => t('academic users'), 'private' => t('private'))),
+        '#options' => array('public' => t('public'), 'authenticated' => t('authenticated users'), 'academic' => t('academic users'), 'private' => t('private')),
         '#default_value' => 'public',
     );
 

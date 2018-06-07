@@ -70,7 +70,7 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
 /*
         $form['table_container'][$count]['resource_id'] = array(
             '#markup' => t('!resource_id', array('!resource_id' => $resource_id)),
-	    '#type' => 'hidden',
+            '#type' => 'hidden',
         );
 */
         $form['table_container'][$count]['label'] = array(
