@@ -541,6 +541,29 @@ class CmdiHandler extends SimpleXMLElement
 
 
     /**
+     * Removes specified resources
+     *
+     * Note!! Removes all elements that have a "ref" attribute with the particular resourceID value. 
+     *
+     * This may be inappropriate for some CMDI profiles (e.g. in case of obligatory elements)
+     *
+     * @param $resourceIDs array of resource IDs of the resources to be removed
+     */
+    public function stripResources($resourceIDs)
+    {
+	foreach ($resourceIDs as $rid) {
+		$proxy = $this->xpath("cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy[@id='$rid']");
+		unset($proxy[0][0]);
+		if(null !== ($this->xpath("//cmd:*[@ref='$rid']"))) {
+			$component = $this->xpath("//cmd:*[@ref='$rid']");
+			unset($component[0][0]);
+			}
+		}
+
+    }
+
+
+    /**
      * Copies resources from an existing fedora object cmdi datastream to a the cmdi object.
      *
      * @param $fid String Fedora PID of a fedora object

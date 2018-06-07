@@ -180,12 +180,13 @@ class ExternalStreamWrapper extends DrupalPrivateStreamWrapper {
 }
 
 
+
 /**
  * Implements hook_permission().
  */
 function flat_deposit_permission()
 {
-    // defining the permissions related to the usage and administration of the deposit UI
+    // setting up the right to use the deposit and to administer
     return array(
         'admin deposit module' => array(
             'title' => t('Administration of the deposit module'),
@@ -219,8 +220,8 @@ function flat_deposit_permission()
             'title' => t('View collections'),
             'description' => t('See overview collections')),
         'admin collection' => array(
-                'title' => t('Administer collections'),
-                'description' => t('Administer collections')),
+            'title' => t('Administer collections'),
+            'description' => t('Administer collections')),
         'add bundle menu' => array(
             'title' => t('Add bundles to own account'),
             'description' => t('Allows to create personal archive bundles'),
@@ -385,7 +386,7 @@ function flat_deposit_menu()
 //FLAT_BUNDLE
     // bundle creation
     $items['islandora/object/%islandora_object/add_bundle'] = array(
-        'title' => 'Add bundle',
+        'title' => 'Add Bundle',
         'type' => MENU_LOCAL_TASK,
         'page callback' => 'flat_bundle_add_bundle',
         'page arguments' => array(2),
@@ -396,7 +397,7 @@ function flat_deposit_menu()
 
     // bundle update
     $items['islandora/object/%islandora_object/update_bundle'] = array(
-        'title' => 'Update bundle',
+        'title' => 'Update Bundle',
         'type' => MENU_LOCAL_TASK,
         'page callback' => 'flat_bundle_update_bundle',
         'page arguments' => array(2),
@@ -419,7 +420,7 @@ function flat_deposit_menu()
 
     // bundle update metadata
     $items['islandora/object/%islandora_object/update_bundle_metadata'] = array(
-        'title' => 'Update metadata',
+        'title' => 'Update Metadata',
         'type' => MENU_LOCAL_TASK,
         'page callback' => 'drupal_get_form',
         'file' =>'inc/flat_bundle.update_cmdi.inc',
@@ -431,7 +432,7 @@ function flat_deposit_menu()
 
     // flat bundle cmdi file creator form
     $items['node/%node/cmdi'] = array(
-        'title' => 'Create bundle metadata',
+        'title' => 'Create Bundle Metadata',
         'type' => MENU_CALLBACK,
         'page callback' => 'drupal_get_form',
         'page arguments' => array('flat_deposit_cmdi_form', 1),
@@ -441,7 +442,7 @@ function flat_deposit_menu()
 
 // FLAT_Collection
     $items['islandora/object/%islandora_object/add_collection'] = array(
-        'title' => 'Add collection',
+        'title' => 'Add Collection',
         'type' => MENU_LOCAL_TASK,
         'page callback' => 'drupal_get_form',
         'file' =>'inc/flat_collection.add_collection.inc',
@@ -452,7 +453,7 @@ function flat_deposit_menu()
     );
 
     $items['islandora/object/%islandora_object/update_collection'] = array(
-        'title' => 'Update collection',
+        'title' => 'Update Collection',
         'type' => MENU_LOCAL_TASK,
         'page callback' => 'drupal_get_form',
         'file' =>'inc/flat_collection.update_collection.inc',
@@ -690,16 +691,19 @@ function theme_flat_bundle_cmdi_resource_table($variables)
     $form = $variables['form'];
 
     // Define our $header and $rows variables
-    $header = array(t('Resource ID'), t('File name'), t('Select'));
+    //$header = array(t('Resource ID'), t('File name'), t('Select'));
+    $header = array(array('data' => t('Select'), 'class' => 'resource-table-select'),
+                    array('data' => t('File name'), 'class' => 'resource-table-filename'));
     $rows = array();
 
     foreach(element_children($form) as $index) {
 
         $row = array();
 
-        $row[] = drupal_render($form[$index]['resource_id']);
-        $row[] = drupal_render($form[$index]['label']);
+        //$row[] = drupal_render($form[$index]['resource_id']);
+        //$row[] = drupal_render($form[$index]['label']);
         $row[] = drupal_render($form[$index]['checked']);
+        $row[] = drupal_render($form[$index]['label']);
 
         $rows[] = $row;
     }
@@ -896,9 +900,19 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
 
     $form['flat_parent_nid']['und']['#required'] = false; //remove after next install
 
+    $form['flat_policies']['und']['#description'] = t('Select which access policy should be applied to the files within this bundle. "Public" materials can be accessed by anyone without having to log in. "Authenticated Users" means any user with a valid account for the archive. "Academic Users" are users that log in with an academic account or whose academic status has been verified. "Private" means that the materials are only accessible to the depositor. Access policies can be refined later.');
+
+    $form['flat_metadata_visibility']['und']['#description'] = t('Hidden bundles are not visible to anyone but the depositor and the archive managers. This is to be used only in rare cases in which the name or other metadata fields reveal too much information about work in progresss. Only materials with a private access policy can be hidden.');
+
+    $form['flat_metadata_visibility']['und']['#states'] = array(
+                				'visible' => array(
+                        				':input[name="flat_policies[und]"]' => array('value' => 'private'),
+                				),
+					);
+
     global $user;
 
-    // Hide unwanted buttons anf fields
+    // Hide unwanted buttons and fields
     hide($form['flat_bundle_status']);
     hide($form['flat_exception']);
     hide($form['flat_create_cmdi']);
@@ -907,12 +921,12 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
     hide($form['flat_fid']);
     hide($form['flat_original_path']);
     hide($form['flat_parent_title']);
+    hide($form['flat_deleted_resources']);
     hide($form['actions']['preview']);
 
 
-    #hide($form['flat_type']);
-    $form['flat_type']['und']['#disabled'] = TRUE;
-    // Conditionally hide cmdi file field.
+    hide($form['flat_type']);
+    #$form['flat_type']['und']['#disabled'] = TRUE;
     $form['flat_type']['#weight'] = -2;
 
     // prevent deletion of a node to run through validation
@@ -1007,8 +1021,10 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
 
         case 'create':{
 
+	    drupal_set_title(t('Add Bundle'));	
+
             // Assign value to flat_original_path field
-            $form['flat_original_path']['und'][0]['value']['#default_value'] = 'external://USER/COLLECTION/BUNDLE';
+            $fom['flat_original_path']['und'][0]['value']['#default_value'] = 'external://USER/COLLECTION/BUNDLE';
 
             // Create selection of collections.
             // This is dependent from extra parameters. In case the name of a collection is provided only that specific collection can be used
@@ -1044,7 +1060,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
 
             // prevent altering bundle name (title), policy
             $form['title']['#disabled'] = TRUE;
-            $form['flat_policies']['und']['#disabled'] = TRUE;
+            #$form['flat_policies']['und']['#disabled'] = TRUE;
             $form['flat_cmdi_option']['und']['#disabled'] = TRUE;
             $form['flat_source']['und']['#disabled'] = TRUE;
 
@@ -1428,6 +1444,16 @@ function flat_bundle_node_form_edit_validate($form, &$form_state){
 function flat_bundle_node_form_edit_submit($form, &$form_state) {
 
 }
+
+/*
+// remove entries that the user has selected for removal from the resources table 
+function flat_bundle_update_cmdi_resources_form_alter($form, &$form_state, &$rids) {
+	if ($rids) {
+		foreach ($rids as $rid) {
+			$form['subject']['#access']=FALSE;
+	
+*/
+
 
 function get_collection_node($nid){
     // If parent nid has changed
@@ -1982,3 +2008,14 @@ function flat_deposit_islandora_collectionCModel_islandora_view_object_alter(&$o
     }
 
 }
+
+/**
+ * Implements hook_admin_paths_alter
+ *
+ * Preventing node edit to use the admin overlay 
+ *
+ */
+function flat_deposit_admin_paths_alter(&$paths) {
+      //return FALSE to the path where you don't want to show in OVERLAY
+      $paths['node/*/edit'] = FALSE;
+    }

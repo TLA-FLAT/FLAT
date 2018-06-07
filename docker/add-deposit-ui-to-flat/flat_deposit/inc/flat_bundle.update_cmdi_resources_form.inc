@@ -67,10 +67,12 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
         $data[$count]['resource_id'] = $resource_id;
         $data[$count]['label'] = $label;
 
+/*
         $form['table_container'][$count]['resource_id'] = array(
             '#markup' => t('!resource_id', array('!resource_id' => $resource_id)),
+	    '#type' => 'hidden',
         );
-
+*/
         $form['table_container'][$count]['label'] = array(
             '#markup' => t('!label', array('!label' => $label)),
         );
@@ -97,7 +99,7 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
         )
     );
     $form['data']['#value']['handle'] = (string)$cmd->children('cmd', TRUE)->Header->MdSelfLink;
-/*
+
     $form['buttons']['delete'] = array(
         '#type' => 'submit',
         '#value' => t('Remove selected file(s)'),
@@ -109,7 +111,13 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
         '#value' => 'Reset bundle',
         '#submit' => array('flat_bundle_reset_cmdi_resource_submit'),
     );
-*/
+
+    $form['note'] = array(
+	'#prefix' => '<div id="update-resources-note">',
+	'#markup' => t('Note: files selected for removal will be removed from the bundle and will not be visible when browsing and searching the archive. They will however not be deleted from the archive and can still be resolved via their persistent identifier.'),
+	'#suffix' => '</div>',
+	);  
+
     return $form;
 }
 
@@ -117,28 +125,25 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
 function flat_bundle_delete_cmdi_resource_submit($form, &$form_state){
 
     $index = 0;
+    $count = 0;
+    $resourceIDs = [];
+    
     module_load_include('inc','flat_deposit','Helpers/CMDI/class.CmdiHandler');
+    
     $cmd = $form_state['values']['data']['cmdi'];
-    $id = $cmd->Header->MdProfile;
-    $profile_name = CmdiHandler::getNameById($id);
-
-
-    foreach ($form_state['input']['table_container'] as $row){
-
-
-        if ($row['checked']){
-
-
-            $rid = $form_state['values']['table_container']['data'][$index]['resource_id'];
-
-            @CmdiHandler::stripSingleResource($cmd, $profile_name, $rid);
-             $index++;
+    foreach (array_slice($form_state['values']['table_container'], 0, -1) as $row){
+        if ($row['checked'] == 1){
+            $rid = (string)$form_state['values']['table_container']['data'][$index]['resource_id'];
+            array_push($resourceIDs, $rid);
+        $count++;
         }
 
+	$index++;
 
     }
 
-    if ($index > 0){
+    if ($count > 0){
+        $cmd->stripResources($resourceIDs);
         $fid = $form_state['values']['data']['file_id'];
         $file = file_load($fid);
         $export = $cmd->asXML($file->uri);
@@ -147,7 +152,7 @@ function flat_bundle_delete_cmdi_resource_submit($form, &$form_state){
         }
     }
 
-            drupal_set_message(t('!number resource(s) have been removed from bundle', array('!number' => (string)$index)));
+            drupal_set_message(t('!number file(s) have been removed from the bundle', array('!number' => (string)$count)));
 }
 
 
@@ -168,7 +173,7 @@ function flat_bundle_reset_cmdi_resource_submit($form, &$form_state){
     if ($cmdi_file) {
         file_save($file);
 
-        drupal_set_message(t('Original metadata restored'));
+        drupal_set_message(t('Original bundle has been restored'));
 
     }
 }

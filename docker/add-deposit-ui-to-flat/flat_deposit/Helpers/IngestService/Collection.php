@@ -9,6 +9,11 @@ include_once('SIP.php');
 class Collection extends SIP
 {
 
+    // the node containing most of the important information
+    protected $node;
+
+    // the drupal entity_metadata_wrapper of this node
+    protected $wrapper;
 
     /**
      * Set up function for collection ingest; also validates provided input.
@@ -30,7 +35,6 @@ class Collection extends SIP
     public function init($info){
 
         $this->logging('Starting init');
-
 
         $required = array(
             'content_type',

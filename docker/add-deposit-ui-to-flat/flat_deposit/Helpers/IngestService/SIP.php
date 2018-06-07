@@ -187,10 +187,10 @@ abstract class SIP
             $string = file_get_contents($fname);
             $new_string = preg_replace('/ACCOUNT_NAME/', $this->owner , $string);
 
-            if ($visibility == 'hide'){
-                $new_string .= "\t";
-                $new_string .= "# hide the whole SIP\t";
-                $new_string .= "[acl:accessTo <sip>; acl:mode lat:Hide; acl:agentClass foaf:Agent].\t"
+            if (($visibility == 'hide') && ($policy == 'private')){
+                $new_string .= "\n";
+                $new_string .= "# hide the whole SIP\n";
+                $new_string .= "[acl:accessTo <sip>; acl:mode lat:Hide; acl:agentClass foaf:Agent].\n";
             }
 
             $cmdi_dir = dirname($this->cmdiTarget);

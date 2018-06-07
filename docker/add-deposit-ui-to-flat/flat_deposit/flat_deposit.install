@@ -92,6 +92,8 @@ function flat_deposit_install()
             'max_length' => 255,
             'allowed_values' => array(
                 'public' => 'public',
+                'authenticated' => 'authenticated users',
+                'academic' => 'academic users',
                 'private' => 'private',
                 'inherit' => 'inherit',
             ),
@@ -170,17 +172,14 @@ function flat_deposit_install()
         ),
     );
 
-
-
-
     $fields['flat_metadata_visibility'] = array(
         'field_name' => 'flat_metadata_visibility',
         'type' => 'list_text',
         'cardinality' => 1,
         'settings' => array(
             'allowed_values'=> array(
-                'show' => 'Make metadata visible',
-                'hide' => 'Hide metadata',
+                'show' => 'visible',
+                'hide' => 'hidden',
                 ),
         ),
     );
@@ -276,13 +275,13 @@ function flat_deposit_install()
     $instances['flat_policies'] = array(
         'field_name' => 'flat_policies',
         'bundle' => 'flat_bundle',
-        'label' => $t('Access policies for files within the bundle'
+        'label' => $t('Which access policy do you want to apply?'
         ),
         'widget' => array(
             'type' => 'option_buttons',
         ),
         'default_value' => array(
-            0 => array('value'=> 'private')),
+            0 => array('value'=> 'public')),
         'required' => TRUE,
         'settings' => array('text_processing' => 0),
         'display' => array(
@@ -295,8 +294,7 @@ function flat_deposit_install()
     $instances['flat_bundle_metadata_visibility'] = array(
         'field_name' => 'flat_metadata_visibility',
         'bundle' => 'flat_bundle',
-        'label' => $t('Control visibility of a archive object'
-        ),
+        'label' => $t('Visibility'),
         'widget' => array(
             'type' => 'option_buttons',
         ),
@@ -608,6 +606,25 @@ function flat_deposit_install()
         )
     );
 
+    $instances['flat_collection_metadata_visibility'] = array(
+        'field_name' => 'flat_metadata_visibility',
+        'bundle' => 'flat_collection',
+        'label' => $t('Control visibility of a archive object'
+        ),
+        'widget' => array(
+            'type' => 'option_buttons',
+        ),
+        'default_value' => array(
+            0 => array('value'=> 'show')),
+        'required' => TRUE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            ),
+        )
+    );
+
     $instances['flat_collection_exception'] = array(
         'field_name' => 'flat_exception',
         'bundle' => 'flat_collection',
@@ -696,6 +713,7 @@ function flat_deposit_install()
     //SET DEFAULTS
     module_load_include('inc', 'flat_deposit', 'inc/config');
     flat_deposit_set_general();
+    flat_deposit_set_cmdi_profiles();
     flat_deposit_set_fits();
     flat_deposit_set_ingest_service();
     flat_deposit_set_sword();

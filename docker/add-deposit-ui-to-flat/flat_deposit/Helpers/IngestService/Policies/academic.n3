@@ -1,0 +1,17 @@
+@prefix acl: <http://www.w3.org/ns/auth/acl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix lat: <http://lat.mpi.nl/ns/auth/acl#> .
+
+# make the whole SIP available to academics
+[acl:accessTo <sip>; acl:mode acl:Read; acl:agentClass <#academic>].
+
+# give the owner read and write access
+[acl:accessTo <sip>; acl:mode acl:Read, acl:Write;  acl:agent <#owner>].
+
+# academics (= the custom drupal role 'academic user')
+<#academic> a foaf:Group;
+   foaf:account [foaf:accountServiceHomepage <#flat>; foaf:accountName "academic user"].
+
+# the owner
+<#owner> a foaf:Person ;
+   foaf:account [foaf:accountServiceHomepage <#flat>; foaf:accountName "ACCOUNT_NAME"].

@@ -170,11 +170,12 @@ class AclHandler
                 break;
 
             case 'other':
+	/*
             case 'mask':
 
                 $id = NULL;
                 break;
-
+	*/
             default:
                 $read = FALSE;
                 $write = FALSE;
@@ -205,7 +206,6 @@ class AclHandler
      *
      */
     private function _addToInfo($permission_type, $entry_type, $id=NULL ){
-
         if (isset($id)) {
             $this->info[$permission_type][$entry_type][] = $id;
 
@@ -224,7 +224,7 @@ class AclHandler
         }
 
         // Check if id is in list of named users
-        if (is_numeric(array_search($id, $this->info['write']['named user'])) AND $this->info['write']['mask'] === TRUE){
+        if (is_numeric(array_search($id, $this->info['write']['named user']))){
             return 'ID is named user of file or directory';
         }
 
@@ -236,7 +236,7 @@ class AclHandler
 
         $groups_array = explode(' ', trim($groups));
         // Check if owning group has write permissions and is in list of groups with the specified ID
-        if (isset($this->info['write']['owning group']) AND isset($this->info['write']['owning group']) === TRUE and array_search($this->info['write']['owning group'], $groups )){
+        if (isset($this->info['write']['owning group']) AND in_array((string)$this->info['write']['owning group'][0], $groups_array)){
             return 'ID is member of owning group of file or directory';
         }
 
@@ -246,6 +246,41 @@ class AclHandler
 
                 if (is_numeric(array_search($group_entry, $groups_array))) {
                     return 'ID is member of a named group that has writing permissions for file or directory';
+                }
+            }
+        }
+        return false;
+
+    }
+
+public function checkReadAccess($id){
+
+        // Check if id is owner
+        if (is_numeric(array_search($id, $this->info['read']['owner']))){
+            return 'ID is owner of file or directory';
+        }
+
+        // Check if id is in list of named users
+        if (is_numeric(array_search($id, $this->info['read']['named user']))){
+            return 'ID is named user of file or directory';
+        }
+
+        $groups = shell_exec("id -Gn $id");
+        if (empty($groups)){
+            return false;
+        }
+        $groups_array = explode(' ', trim($groups));
+        // Check if owning group has write permissions and is in list of groups with the specified ID
+        if (isset($this->info['read']['owning group'][0]) AND in_array((string)$this->info['read']['owning group'][0], $groups_array)){
+            return 'ID is member of owning group of file or directory';
+        }
+
+        // Check for each named group if is in list of groups with the specified ID
+        if (isset($this->info['read']['named group'] )) {
+            foreach ($this->info['read']['named group'] as $group_entry) {
+
+                if (is_numeric(array_search($group_entry, $groups_array))) {
+                    return 'ID is member of a named group that has read permissions for file or directory';
                 }
             }
         }

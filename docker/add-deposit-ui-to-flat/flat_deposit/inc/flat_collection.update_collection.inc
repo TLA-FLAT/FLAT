@@ -39,15 +39,27 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
     $form['select_policy'] = array(
         '#title' => t('Which access policy do you want to apply?'),
         '#type' => 'select',
+        '#description' => t('Select which access policy should be applied as the default for bundles within this collection. "Public" materials can be accessed by anyone without having to log in. "Authenticated Users" means any user with a valid account for the archive. "Academic Users" are users that logs in with an academic account or whose academic status has been verified. "Private" means that the materials are only accessible to the depositor. Access policies can be refined later.'),
         '#required' => TRUE,
-        '#options' => drupal_map_assoc(array('public','private')),
+        '#options' => drupal_map_assoc(array('public' => t('public'), 'authenticated' => t('authenticated users'), 'academic' => t('academic users'), 'private' => t('private'))),
         '#default_value' => 'public',
     );
 
-    $form['hide_metadata'] = array(
-        '#title' => t('Hide metadata of this collection'),
-        '#type' => 'checkbox',
-        '#required' => FALSE,
+    $form['visibility'] = array(
+        '#title' => t('Visibility'),
+        '#type' => 'select',
+        '#description' => t('Hidden collections are not visible to anyone but the depositor and the archive managers. This is to be used only in rare cases in which the name or other metadata fields reveal too much information about work in progresss. The visibility will be applied to this collection and will be the default value for any sub-collections or bundles within this collection. Only materials with a private access policy can be hidden.'),
+        '#required' => TRUE,
+        '#options'=> array(
+                'show' => 'visible',
+                'hide' => 'hidden',
+                ),
+        '#default_value' => 'visible',
+        '#states' => array(
+                'visible' => array(
+                        ':input[name="select_policy"]' => array('value' => 'private'),
+                ),
+        ),
     );
 
     $form['template_container'] = array(
@@ -272,6 +284,8 @@ function flat_collection_update_form_final_validate($form, &$form_state){
     $options = [];
     $options ['policy'] = $form_state['values']['select_policy'];
     $options ['content_type'] = 'flat_collection';
+    $options ['visibility'] = $form_state['values']['visibility'];
+
 
     $fid = $ingest_client->requestSipIngest($options);
 

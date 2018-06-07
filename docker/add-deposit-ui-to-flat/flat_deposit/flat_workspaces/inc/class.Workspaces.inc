@@ -21,7 +21,7 @@ class Workspaces
             ),
             'field' => array(
                 '#type' => 'fieldset',
-                '#description' => 'Select the workspace folder within the departments\' project folder containing the data for this bundle',
+                '#description' => 'Select the folder that contains the file(s) for this bundle',
                 '#states' => array(
                     // Hide this select menu if source of resources in not local.
                     'visible' => array(
@@ -50,11 +50,11 @@ class Workspaces
                     ),
                 ),
 
-                'project' => array(
-                    '#title' => 'Project',
+                'workspace' => array(
+                    '#title' => 'Workspace',
                     '#type' => 'select',
                     '#options' => array(),
-                    '#empty_option' => '-- Select Project --',
+                    '#empty_option' => '-- Select Workspace --',
                     '#empty_value' => 'none',
                     '#access' => FALSE,
                     '#ajax' => array(
@@ -188,10 +188,18 @@ class Workspaces
         return basename($directory) != '.';
     }
 
-    static function isNotProjectParentDir($directory)
+    static function isNotParentDir($directory)
     {
 
-        if (basename(dirname($directory)) == variable_get('flat_workspaces')['archive_folder'] AND basename($directory) == '..') {
+        return basename($directory) != '..';
+
+    }
+
+   static function isNotArchiveFolder($directory)
+    {
+	drupal_set_message('dirname: ' . basename(dirname($directory)), 'error');
+	drupal_set_message('archive_folder: ' . variable_get('flat_workspaces')['archive_folder'], 'error');
+        if (basename(dirname($directory)) == variable_get('flat_workspaces')['archive_folder']) {
             return false;
 
         } else {
@@ -200,7 +208,34 @@ class Workspaces
         }
     }
 
-    static function userHasAclPermissions($directory){
+    static function userHasReadPermissions($directory){
+        module_load_include('inc', 'flat_workspaces','inc/class.AclHandler');
+        $acl = new AclHandler(drupal_realpath($directory));
+        if (empty($acl->getInfo())){
+            return false;
+        }
+
+        global $user;
+        $id = $user->name == 'admin' ? exec('whoami') : $user->name;
+        $id = str_replace('@mpi.nl', '', $id);
+
+        return $acl->checkReadAccess($id) ;
+    }
+
+    static function webUserHasReadPermissions($directory){
+        module_load_include('inc', 'flat_workspaces','inc/class.AclHandler');
+        $acl = new AclHandler(drupal_realpath($directory));
+
+        if (empty($acl->getInfo())){
+            return false;
+        }
+
+        $id = exec('whoami');
+
+        return $acl->checkReadAccess($id) ;
+    }
+
+    static function userHasWritePermissions($directory){
         module_load_include('inc', 'flat_workspaces','inc/class.AclHandler');
         $acl = new AclHandler(drupal_realpath($directory));
 
@@ -214,6 +249,20 @@ class Workspaces
 
         return $acl->checkWriteAccess($id) ;
     }
+
+    static function webUserHasWritePermissions($directory){
+        module_load_include('inc', 'flat_workspaces','inc/class.AclHandler');
+        $acl = new AclHandler(drupal_realpath($directory));
+
+        if (empty($acl->getInfo())){
+            return false;
+        }
+
+        $id = exec('whoami');
+
+        return $acl->checkWriteAccess($id) ;
+    }
+
 }
 
 

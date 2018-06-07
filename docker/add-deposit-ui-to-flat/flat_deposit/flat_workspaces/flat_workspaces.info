@@ -1,6 +1,6 @@
 name = FLAT workspaces
 package = FLAT
-description = Integration of MPI workspaces
+description = Integration of network share workspaces
 core = 7.x
 version = 7.x-0.1-dev
 configure = admin/config/flat_deposit/workspaces

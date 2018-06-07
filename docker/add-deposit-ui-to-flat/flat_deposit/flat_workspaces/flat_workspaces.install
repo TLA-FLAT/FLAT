@@ -20,7 +20,7 @@ function flat_workspaces_install()
     $values = &$field['settings']['allowed_values'];
 
     if (!isset($values['local'])){
-        $values['local'] = 'Select a folder in an MPI Workspace on the server';
+        $values['local'] = 'Select a folder in a workspace on the server';
         field_update_field($field);
 
     }
