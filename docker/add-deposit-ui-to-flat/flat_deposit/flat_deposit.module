@@ -1765,11 +1765,10 @@ function flat_deposit_block_view($delta = '')
                 $rows [] = array($value);
             }
 
-            $header = array('Files to be added to this bundle');
-            $content = theme('table', array('header' => $header, 'rows' => $rows));
+            $content = theme('table', array('rows' => $rows));
 
             $block = array(
-                'subject' => '',
+                'subject' => t('Files to be added to this bundle'),
                 'content' => $content,
             );
             break;
