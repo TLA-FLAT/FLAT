@@ -13,12 +13,13 @@
         <property name="gsearchUser" value="fgsAdmin"/>
         <property name="gsearchPassword" value="fgsAdmin"/>
         <property name="gsearchServer" value="http://localhost:8080/fedoragsearch"/>
+        <property name="dk-rollbackLog" value="{$work}/rollback.log"/>
     </config>
     <init>
         <action name="logSetup" class="nl.mpi.tla.flat.deposit.action.WorkspaceLogSetup">
             <parameter name="dir" value="{$work}/logs"/>
         </action>
-		        <!-- vvvv new Owner action -->
+        <!-- vvvv new Owner action -->
         <action class="nl.mpi.tla.flat.deposit.action.Owner">
             <parameter name="policy" value="{$work}/metadata/policy.n3"/>
             <parameter name="dir" value="{$work}/acl"/>
@@ -44,10 +45,11 @@
             <parameter name="rules" value="{$base}/policies/rules.sch"/>
         </action>
         <action name="validate resources" class="nl.mpi.tla.flat.deposit.action.FITS">
-        	<parameter name="fitsService" value="{$fitsService}"/>
-        	<parameter name="mimetypes" value="{$base}/policies/fits-mimetypes.xml"/>
+            <parameter name="fitsService" value="{$fitsService}"/>
+            <parameter name="mimetypes" value="{$base}/policies/fits-mimetypes.xml"/>
             <parameter name="dir" value="{$work}/fits"/>
         </action>
+        <!-- ^^^ VALIDATE vvv ARCHIVE -->
         <action name="purge updates" class="nl.mpi.tla.flat.deposit.action.PurgeUpdates">
             <parameter name="dir" value="{$work}/resources"/>
             <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
@@ -67,6 +69,7 @@
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.ACL">
             <parameter name="policy" value="{$work}/metadata/policy.n3"/>
+            <parameter name="roles" value="{$base}/policies/roles.xml"/>
             <parameter name="dir" value="{$work}/acl"/>
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.ACLUpdate">
@@ -144,8 +147,9 @@
     <exception>
 
     </exception>
+    <rollback/>
     <final>
-	    <action class="nl.mpi.tla.flat.deposit.action.Mail">
+        <action class="nl.mpi.tla.flat.deposit.action.Mail">
             <parameter name="config" value="{$base}/policies/mail-config.xml"/>
             <parameter name="subject" value=": deposit for user "/>
             <parameter name="template" value="{$base}/policies/mail-exception.xsl"/>
