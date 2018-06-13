@@ -1,4 +1,5 @@
 <mailConfig>
+  <sendWhenSuccess>false</sendWhenSuccess> <!-- On successful ingest: true- email sent , false- No email sent -->
   <server>smtp.example.com</server>
   <port>465</port>
   <user>someone@example.com</user>
