@@ -13,11 +13,15 @@
         <property name="gsearchUser" value="fgsAdmin"/>
         <property name="gsearchPassword" value="fgsAdmin"/>
         <property name="gsearchServer" value="http://localhost:8080/fedoragsearch"/>
-        <property name="dk-rollbackLog" value="{$work}/rollback.log"/>
     </config>
     <init>
         <action name="logSetup" class="nl.mpi.tla.flat.deposit.action.WorkspaceLogSetup">
             <parameter name="dir" value="{$work}/logs"/>
+        </action>
+		        <!-- vvvv new Owner action -->
+        <action class="nl.mpi.tla.flat.deposit.action.Owner">
+            <parameter name="policy" value="{$work}/metadata/policy.n3"/>
+            <parameter name="dir" value="{$work}/acl"/>
         </action>
         <action name="check workspace" class="nl.mpi.tla.flat.deposit.action.SIPLoad">
             <parameter name="sip" value="{$work}/metadata/record.cmdi"/>
@@ -44,7 +48,6 @@
         	<parameter name="mimetypes" value="{$base}/policies/fits-mimetypes.xml"/>
             <parameter name="dir" value="{$work}/fits"/>
         </action>
-        <!-- ^^^ VALIDATE vvv ARCHIVE -->
         <action name="purge updates" class="nl.mpi.tla.flat.deposit.action.PurgeUpdates">
             <parameter name="dir" value="{$work}/resources"/>
             <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
@@ -64,7 +67,6 @@
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.ACL">
             <parameter name="policy" value="{$work}/metadata/policy.n3"/>
-            <parameter name="roles" value="{$base}/policies/roles.xml"/>
             <parameter name="dir" value="{$work}/acl"/>
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.ACLUpdate">
@@ -140,18 +142,16 @@
         -->        
     </main>
     <exception>
-	<!--
-        <action class="nl.mpi.tla.flat.deposit.action.Mail">
+
+    </exception>
+    <final>
+	    <action class="nl.mpi.tla.flat.deposit.action.Mail">
             <parameter name="config" value="{$base}/policies/mail-config.xml"/>
-            <parameter name="subject" value=" failed deposit for SIP[{$sip}]"/>
+            <parameter name="subject" value=": deposit for user "/>
             <parameter name="template" value="{$base}/policies/mail-exception.xsl"/>
             <parameter name="tmpl-bag" value="{$bag}"/>
             <parameter name="tmpl-user" value="{if (sx:fileExists(concat('file:',$work,'/acl/owner.xml') cast as xs:anyURI)) then (doc(concat($work,'/acl/owner.xml'))/user/name) else ('')}"/>
         </action>
-        -->
-    </exception>
-    <rollback/>
-    <final>
         <action name="status" class="nl.mpi.tla.flat.deposit.action.UpdateSwordStatus">
             <parameter name="props" value="{$bag}/deposit.properties"/>
         </action>
