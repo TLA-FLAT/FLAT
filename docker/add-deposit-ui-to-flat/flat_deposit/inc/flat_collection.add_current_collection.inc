@@ -47,7 +47,7 @@ function flat_collection_add_current_collection_form_validate($form, &$form_stat
     module_load_include('inc', 'flat_deposit', 'inc/class.FlatCollection');
     $collection_nodes = FlatCollection::getUserCollectionNodes($user->uid, $fid);
     if (!empty($collection_nodes)){
-        form_set_error('submit','Link to current collection already exists');
+        form_set_error('submit','Current collection is already active');
         return $form;
 
 
@@ -86,7 +86,7 @@ function flat_collection_add_current_collection_form_submit($form, &$form_state)
     module_load_include('inc','flat_deposit', 'inc/flat_collection.add_collection');
     create_collection_node($label, $uid, $fid);
 
-    drupal_set_message('Link to current collection has been created');
+    drupal_set_message('Collection has been added to your active collections');
     $form_state['redirect'] = 'islandora/object/' . $fid;
 
 }

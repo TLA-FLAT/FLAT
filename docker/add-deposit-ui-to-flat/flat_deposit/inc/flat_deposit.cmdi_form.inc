@@ -345,14 +345,15 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     //*******************//
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
     $templateName = $form_state['selected'];
+    /*
     $id = FormBuilder::getTitleId($templateName);
     if (!$id) {
         form_set_error('error', 'Cannot find title field in form profile');
         return $form;
     }
+    */
 
-
-    $title = $form_state['values']['template_container']['elements'][$id][0];
+    $title = $form_state['values']['template_container']['elements']['title_field'][0];
 
     if (!$title) {
         form_set_error('error', 'title is not set for this cmdi file');

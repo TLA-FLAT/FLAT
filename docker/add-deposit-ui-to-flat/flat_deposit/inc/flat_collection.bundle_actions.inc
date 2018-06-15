@@ -63,6 +63,7 @@ function flat_collection_bundle_action_form($form, &$form_state, $var)
 
             $data[$count] = array(
                 'nid' => $nid,
+		'title' => $bundle->title,
                 'metadata' => $metadata,
                 'status' => $status,
             );
@@ -127,13 +128,22 @@ function flat_collection_bundle_action_form_reopen_validate($form, &$form_state)
 
         }
 
+        foreach ($form_state['values']['data'] as $bundle) {
+                if ($bundle['nid'] == $nid) {
+                        $title = $bundle['title'];
+                        }
+                }
+
         if (!empty($error)) {
 
             $form_state['values']['reopen_error'][] = $nid;
+	    $form_state['values']['reopen_error_titles'][] = $title;
 
         } else {
 
             $form_state['values']['reopen_bundles'][] = $nid;
+	    $form_state['values']['reopen_bundle_titles'][] = $title;
+	    
         }
 
     }
@@ -155,14 +165,21 @@ function flat_collection_bundle_action_form_validate_validate($form, &$form_stat
         $user_has_permissions = user_has_permissions($nid);
         //$tests = array($complete, $parent_is_known, $has_cmdi, $valid_xml, $good_name, $file_exists, $user_has_permissions);
         $tests = array($complete, $parent_is_known, $has_cmdi, $valid_xml, $file_exists, $user_has_permissions);
-
+        foreach ($form_state['values']['data'] as $bundle) {
+                if ($bundle['nid'] == $nid) {
+                        $title = $bundle['title'];
+                        }
+                }
         if (!in_array(false, $tests)) {
 
             $form_state['values']['validate_bundles'][] = $nid;
+	    $form_state['values']['validate_bundle_titles'][] = $title;
 
         } else {
 
             $form_state['values']['reject_bundles'][] = $nid;
+	    $form_state['values']['reject_bundle_titles'][] = $title;
+
         }
 
     }
@@ -175,15 +192,22 @@ function flat_collection_bundle_action_form_archive_validate($form, &$form_state
     $nids = get_nids($form_state);
     foreach ($nids as $index => $nid) {
         $check = check_completeness('archive', $nid, $index, $form_state);
-
+	foreach ($form_state['values']['data'] as $bundle) {
+		if ($bundle['nid'] == $nid) {
+			$title = $bundle['title'];
+			}
+		}
 
         if ($check) {
 
             $form_state['values']['archive_bundles'][] = $nid;
+	    $form_state['values']['archive_bundle_titles'][] = $title;
 
         } else {
 
             $form_state['values']['archive_reject'][] = $nid;
+	    $form_state['values']['archive_reject_titles'][] = $title;
+
         }
 
     }
@@ -208,13 +232,13 @@ function flat_collection_bundle_action_form_submit($form, &$form_state)
                     $wrapper->save();
 
                 }
-                drupal_set_message('Reopen submission succeeded for bundle(s) ' . implode(' and ', $form_state['values']['reopen_bundles']));
-                $form_state['redirect'] = 'dashboard';
+                drupal_set_message('Re-open succeeded for bundle(s): ' . implode(' and ', $form_state['values']['reopen_bundle_titles']));
+                //$form_state['redirect'] = 'dashboard';
             }
 
             if (!empty($form_state['values']['reopen_error'])){
 
-                    drupal_set_message(t('Unable to reopen bundle(s) !what', array('!what' => implode(' AND ', $form_state['values']['reopen_error']))));
+                drupal_set_message('Unable to re-open bundle(s): ' .  implode(' and ', $form_state['values']['reopen_error_titles']) . '. Only valid or failed bundles can be re-opened.');
 
             }
             break;
@@ -231,13 +255,13 @@ function flat_collection_bundle_action_form_submit($form, &$form_state)
                     send_request($bundle, $action, false);
                 }
 
-                drupal_set_message('Validation submission succeeded for bundle(s) ' . implode(' and ', $form_state['values']['validate_bundles']));
-                $form_state['redirect'] = 'dashboard';
+                drupal_set_message('Validation submission succeeded for bundle(s) ' . implode(' and ', $form_state['values']['validate_bundle_titles']));
+                //$form_state['redirect'] = 'dashboard';
             }
 
             if (!empty($form_state['values']['reject_bundles'])) {
 
-                drupal_set_message('Unable to ' . $action . ' ' . implode(' and ', $form_state['values']['reject_bundles']));
+                drupal_set_message('Unable to validate bundle(s): ' . implode(' and ', $form_state['values']['reject_bundle_titles']) . '. Only open bundles with available metadata can be validated.');
             }
             break;
 
@@ -253,14 +277,14 @@ function flat_collection_bundle_action_form_submit($form, &$form_state)
 
                 }
 
-                drupal_set_message('Submission succeeded ' . implode(' and ', $form_state['values']['archive_bundles']));
-                $form_state['redirect'] = 'dashboard';
+                drupal_set_message('Bundle(s) submitted for archiving:  ' . implode(' and ', $form_state['values']['archive_bundle_titles']));
+                //$form_state['redirect'] = 'dashboard';
 
             }
 
             if (!empty($form_state['values']['archive_reject'])) {
 
-                drupal_set_message('Archive submission failed for bundle(s) ' . implode(' and ', $form_state['values']['archive_reject']));
+                drupal_set_message('Failed submitting bundle(s) for archiving: ' . implode(' and ', $form_state['values']['archive_reject_titles']) . '. Only valid bundles can be archived.');
 
             }
 

@@ -25,13 +25,13 @@ function flat_bundle_action_form($form, &$form_state)
         #'#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
         '#description' => t('Bundles are obliged to be accompanied by metadata'),
         '#validate' => array('flat_bundle_action_form_describe_validate'),
-        '#disabled' => TRUE,
+        '#access' => FALSE,
     );
 
     $form['actions']['upload_data'] = array(
         '#type' => 'submit',
         '#value' => t('Upload data'),
-        '#disabled' => TRUE,
+        '#access' => FALSE,
     );
 
 
@@ -68,17 +68,23 @@ function flat_bundle_action_form($form, &$form_state)
 
     $form['actions']['edit_bundle'] = array(
         '#type' => 'submit',
-        '#value' => t('Edit bundle'),
+        '#value' => t('Edit bundle properties'),
         #    '#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
         #'#submit' => array('flat_bundle_action_form_bundle_edit_submit'),
-        '#prefix' => '<div><br></div>',
+        '#prefix' => '<div><br/></div>',
     );
 
     $form['actions']['delete_bundle'] = array(
         '#type' => 'submit',
         '#value' => t('Delete bundle'),
         #    '#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
-        '#suffix' => '<div><br></div>',
+        '#suffix' => '<div><br/></div>',
+    );
+
+    $form['actions']['note'] = array(
+	'#prefix' => '<div id="form-actions-note">',
+	'#markup' => t('Note: Deleting a bundle will only delete it from your active bundles. In case you are modifying an existing bundle in the archive, clicking "Delete bundle" will leave the original in the archive untouched.'),
+	'#suffix' => '</div><div><br/></div>',
     );
 
     $node = menu_get_object();
@@ -119,13 +125,13 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
 
     # deactivate link to file browser for local bundles
     $source = $wrapper->flat_source->value();
-    $disable_file_browser = $source == 'local' ? TRUE : FALSE;
+    $enable_file_browser = $source == 'local' ? FALSE : TRUE;
 
 
     switch ($status) {
         case 'open': {
-            $form['actions']['upload_data']['#disabled'] = $disable_file_browser;
-            $form['actions']['bundle_image']['#disabled'] = $disable_file_browser;
+            $form['actions']['upload_data']['#access'] = $enable_file_browser;
+            $form['actions']['bundle_image']['#disabled'] = !$enable_file_browser;
             $form['actions']['validate_bundle']['#disabled'] = FALSE;
             $form['actions']['edit_bundle']['#disabled'] = FALSE;
             $name = 'open_bundle';
@@ -139,8 +145,8 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
         }
 
         case 'failed': {
-            $form['actions']['upload_data']['#disabled'] = $disable_file_browser;
-            $form['actions']['bundle_image']['#disabled'] = $disable_file_browser;
+            $form['actions']['upload_data']['#access'] = $enable_file_browser;
+            $form['actions']['bundle_image']['#disabled'] = !$enable_file_browser;
             $form['actions']['validate_bundle']['#disabled'] = FALSE;
             $form['actions']['edit_bundle']['#disabled'] = FALSE;
             $name = 'closed_bundle_failed';
@@ -166,7 +172,7 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
     // Activate metadata creation button only if 1) cmdi option is 'new' 2) status is either open or failed and 3) no cmdi has been created
     if ($wrapper->flat_cmdi_option->value() == 'new' AND ($status == 'open' OR $status == 'failed') AND (empty($node->flat_cmdi_file))) {
 
-        $form['actions']['describe_bundle']['#disabled'] = FALSE;
+        $form['actions']['describe_bundle']['#access'] = TRUE;
     }
 
 }
@@ -337,7 +343,7 @@ function flat_bundle_action_form_submit($form, &$form_state)
             break;
 
 
-        case 'Edit bundle':
+        case 'Edit bundle properties':
             $url = array('node/' . $node->nid . '/edit');
             $form_state['redirect'] = $url;
             break;

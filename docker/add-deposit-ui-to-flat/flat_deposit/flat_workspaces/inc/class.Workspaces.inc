@@ -67,7 +67,7 @@ class Workspaces
                 'next_directories' => array(
                     '#title' => 'Navigate to',
                     '#type' => 'select',
-                    '#empty_option' => '-- nothing selected --',
+                    '#empty_option' => '-- Select Subfolder --',
                     '#empty_value' => '',
                     '#access' => FALSE,
                     '#options' => array(),

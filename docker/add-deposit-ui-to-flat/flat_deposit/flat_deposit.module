@@ -526,7 +526,7 @@ function flat_deposit_menu_local_tasks_alter(&$data, $router_item, $root_path)
         $tabs = $data['tabs'][0]['output'];
         foreach ($tabs as $index => $tab) {
 
-            // Remove edit- menu from node view
+            // Remove "edit" tab from node view
             if ($tab['#link']['path'] == 'node/%/edit') {
 
                 $data['tabs'][0]['output'][$index]['#link']['access'] = FALSE;
@@ -535,7 +535,26 @@ function flat_deposit_menu_local_tasks_alter(&$data, $router_item, $root_path)
             }
         }
     }
+	// Remove "view" tab from node view for flat_bundles
+	$type = null;
+	foreach ($router_item["map"] as $map) {
+		if (!isset($map->type)) continue;
+		if ($map->type == "flat_bundle") {
+			$type = $map->type;
+			break;
+		}
+	}
+	
+	if ($type == null) return;
+        if ($data['tabs']) {	
+		foreach ($data['tabs'][0]['output'] as $key => $value) {
+			if ($value['#link']['path'] == 'node/%/view') {
+				unset($data['tabs'][0]['output'][$key]);
+			}
+		}
+	}
 
+/*
     // Add icons
     if (isset($data['tabs'][1]['output'])) {
         $tabs = &$data['tabs'][1]['output'];
@@ -551,6 +570,9 @@ function flat_deposit_menu_local_tasks_alter(&$data, $router_item, $root_path)
 
         #krumo($data);
     }
+
+*/
+
 }
 
 
@@ -663,7 +685,7 @@ function theme_flat_bundle_action_table($variables)
     $form = $variables['form'];
 
     // Define our $header and $rows variables
-    $header = array(t('Bundle Name'), t('Data Location'), t('Status'),t('Metadata'), t('Select'));
+    $header = array(t('Bundle Name'), t('Status'),t('Metadata'), t('Select'));
     $rows = array();
 
     foreach(element_children($form) as $index) {
@@ -671,7 +693,6 @@ function theme_flat_bundle_action_table($variables)
         $row = array();
 
         $row[] = drupal_render($form[$index]['title']);
-        $row[] = drupal_render($form[$index]['location']);
         $row[] = drupal_render($form[$index]['status']);
         $row[] = drupal_render($form[$index]['metadata']);
         $row[] = drupal_render($form[$index]['checked']);
@@ -1445,14 +1466,6 @@ function flat_bundle_node_form_edit_submit($form, &$form_state) {
 
 }
 
-/*
-// remove entries that the user has selected for removal from the resources table 
-function flat_bundle_update_cmdi_resources_form_alter($form, &$form_state, &$rids) {
-	if ($rids) {
-		foreach ($rids as $rid) {
-			$form['subject']['#access']=FALSE;
-	
-*/
 
 
 function get_collection_node($nid){
@@ -1506,6 +1519,7 @@ function flat_collection_view($node, $view_mode) {
         $wrapper = entity_metadata_wrapper('node', $node);
         $val = $wrapper->flat_fid->value();
 
+	/*
         $node->content['flat_fid'] = array(
             '#weight' => 10,
             '#theme' => 'link',
@@ -1518,6 +1532,7 @@ function flat_collection_view($node, $view_mode) {
                 'html' => FALSE,
             ),
         );
+	*/	
 
         $node->content['add_bundle'] = array(
             '#weight' => 10,
@@ -1620,21 +1635,23 @@ function flat_deposit_node_view($node, $view_mode, $langcode)
         unset ($node->content['flat_external']);
         unset ($node->content['flat_location']);
 
-        if (isset($node->content['flat_fid'])){
-            $node->content['flat_fid']['#title'] = 'Link to archived bundle ';
-            $node->content['flat_fid'][0]['#markup'] = l('link archive' , 'islandora/object/' . rawurlencode($node->content['flat_fid'][0]['#markup'])) ;
-        } else {
+        //if (isset($node->content['flat_fid'])){
+        //    $node->content['flat_fid']['#title'] = 'Link to archived bundle ';
+        //    $node->content['flat_fid'][0]['#markup'] = l('link archive' , 'islandora/object/' . rawurlencode($node->content['flat_fid'][0]['#markup'])) ;
+        //} else {
 
             unset ($node->content['flat_fid']);
 
-        }
+        //}
         unset ($node->content['flat_type']);
     }
 
 
-
+/*
     $node->content['link_dashboard']['#title'] = 'Return to dashboard';
     $node->content['link_dashboard']['#markup'] = l('Shortcut to dashboard' , 'dashboard') ;
+*/
+
 }
 
 /**
@@ -1650,16 +1667,19 @@ function flat_bundle_delete($node){
 
     $tail = str_replace('@' ,'_at_' , $user->name) . "/$collection/$bundle";
 
-    $bundle_resources_directory = drupal_realpath('external://') . "/$tail";
+    //$bundle_resources_directory = drupal_realpath('external://') . "/$tail";
     $bundle_metadata_directory = drupal_realpath('metadata://') . "/$tail";
 
-    $bundle_resources_freeze_directory = drupal_realpath('freeze://data') . "/$tail";
+    //$bundle_resources_freeze_directory = drupal_realpath('freeze://data') . "/$tail";
     $bundle_metadata_freeze_directory = drupal_realpath('freeze://metadata') . "/$tail";
 
 
-    $dirs = [$bundle_resources_directory, $bundle_metadata_directory, $bundle_resources_freeze_directory, $bundle_metadata_freeze_directory];
+    //$dirs = [$bundle_resources_directory, $bundle_metadata_directory, $bundle_resources_freeze_directory, $bundle_metadata_freeze_directory];
+    $dirs = [$bundle_metadata_directory, $bundle_metadata_freeze_directory];
 
     module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
+
+    $move = FlatBundle::moveBundleData($node, 'data', 'unfreeze');
 
     foreach ($dirs as $dir){
         if (file_exists($dir)){
@@ -1683,7 +1703,7 @@ function flat_deposit_block_info()
     $blocks['node_actions'] = array(
         'info' => t('FLAT deposit upload bundle actions '),
         'status' => TRUE,
-        #'weight' => 999,
+        'weight' => 500,
         'region' => 'content',
         'visibility' => BLOCK_VISIBILITY_PHP,
         'pages' => '<?php $val = (is_numeric(arg(1)) AND arg(2) == FALSE ) ? TRUE :  FALSE; return $val; ?>'
@@ -1692,7 +1712,7 @@ function flat_deposit_block_info()
     $blocks['node_file_listing'] = array(
         'info' => t('FLAT deposit listing of uploaded files'),
         'status' => TRUE,
-        #'weight' => 999,
+        'weight' => 100,
         'region' => 'content',
         'visibility' => BLOCK_VISIBILITY_PHP,
         'pages' => '<?php if (arg(0) == "node" AND is_numeric(arg(1)) AND arg(2) == FALSE ) {$node = node_load(arg(1)); return ($node->type == "flat_bundle");} else {return FALSE;}  ?>'
@@ -1702,7 +1722,7 @@ function flat_deposit_block_info()
     $blocks['cmdi_resource_actions'] = array(
         'info' => t('FLAT deposit bundle cmdi resource actions '),
         'status' => TRUE,
-        #'weight' => -999,
+        'weight' => 300,
         'region' => 'content',
         'visibility' => BLOCK_VISIBILITY_PHP,
         'pages' => "<?php if (arg(0) == 'node' AND is_numeric(arg(1)) AND arg(2) == FALSE ) {return TRUE ;} else {return FALSE;}  ?>"
@@ -2017,4 +2037,5 @@ function flat_deposit_islandora_collectionCModel_islandora_view_object_alter(&$o
 function flat_deposit_admin_paths_alter(&$paths) {
       //return FALSE to the path where you don't want to show in OVERLAY
       $paths['node/*/edit'] = FALSE;
+      $paths['node/*/delete'] = FALSE;
     }
