@@ -1687,9 +1687,36 @@ function flat_bundle_delete($node){
             rmdir ($dir);
         }
     }
+}
 
+/**
+ * Implements hook_form_alter().
+ *
+ * prevent deletion of flat_collection in case there are active flat_bundle children
+ * 
+ */
+function flat_deposit_form_alter (&$form, &$form_state) {
+    if ((isset($form['operation']['#value']) && $form['operation']['#value'] == 'delete') || $form['#id'] == 'node-delete-confirm') {
+        global $user;
+        $node = menu_get_object();
+        $nid = $node->nid;
+        if ($node->type == 'flat_collection') {
+            $query = new EntityFieldQuery();
+            $query->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', 'flat_bundle')
+            ->fieldCondition('flat_parent_nid', 'value', "$nid", '=')
+            ->propertyCondition('uid', $user->uid);
 
-
+            $user_bundle_nodes = $query->execute();
+            if (!empty($user_bundle_nodes['node'])) {
+                drupal_set_title('Cannot delete collection "' . $node->title . '".');
+                drupal_set_message('This collection cannot be removed from your active collections because it has active bundles associated with it', 'error');
+                unset($form['actions']['submit']);
+                unset($form['description']);
+                $form['actions']['cancel']['#title'] = t('Back to previous page');
+            }
+        }
+    }
 }
 
 /**
@@ -1852,6 +1879,10 @@ function flat_deposit_menu_access($op, $object) {
 
     $has_access = FALSE;
 
+    $has_permissions = TRUE;
+
+    drupal_alter('flat_has_permissions', $has_permissions, $object);
+
     if (user_access('use deposit module')) {
 
     module_load_include('inc', 'islandora', 'includes/utilities');
@@ -1869,25 +1900,25 @@ function flat_deposit_menu_access($op, $object) {
      switch ($op){
         case 'add current collection menu':
 
-            $has_access = ($has_collectionCModel AND $has_cmdi_content_model AND !$has_node_in_my_collections) ? TRUE : FALSE;
+            $has_access = ($has_permissions AND $has_collectionCModel AND $has_cmdi_content_model AND !$has_node_in_my_collections) ? TRUE : FALSE;
 
             break;
 
         case 'add bundle menu':
 
-            $has_access = ($has_collectionCModel AND $has_cmdi_content_model AND $has_node_in_my_collections) ? TRUE : FALSE;
+            $has_access = ($has_permissions AND $has_collectionCModel AND $has_cmdi_content_model AND $has_node_in_my_collections) ? TRUE : FALSE;
 
             break;
 
         case 'add collection menu':
 
-	        $has_access = ($has_collectionCModel AND $has_node_in_my_collections) ? TRUE : FALSE;
-                 
+            $has_access = ($has_permissions AND $has_collectionCModel AND $has_node_in_my_collections) ? TRUE : FALSE;
+
             break;
 
         case 'update collection menu':
 
-            $has_access = ($has_collectionCModel AND $has_cmdi_content_model AND $has_node_in_my_collections) ? TRUE : FALSE;
+            $has_access = ($has_permissions AND $has_collectionCModel AND $has_cmdi_content_model AND $has_node_in_my_collections) ? TRUE : FALSE;
 
             break;
 
@@ -1896,8 +1927,8 @@ function flat_deposit_menu_access($op, $object) {
 
             $query = new EntityFieldQuery();
             $query->entityCondition('entity_type', 'node')
-                ->entityCondition('bundle', 'flat_bundle')
-                ->fieldCondition('flat_fid', 'value', "$fid", '=');
+            ->entityCondition('bundle', 'flat_bundle')
+            ->fieldCondition('flat_fid', 'value', "$fid", '=');
             $bundle_nodes = $query->execute();
 
             $has_access = isset($bundle_nodes['node']);
@@ -1907,21 +1938,21 @@ function flat_deposit_menu_access($op, $object) {
         case 'update bundle menu':
         case 'update bundle metadata menu':
 
-			//Bundles should in principle have compoundCModel and not collectioCModel, however empty imported bundles do not seem to have compoundCModel...
+            //Bundles should in principle have compoundCModel and not collectioCModel, however empty imported bundles do not seem to have compoundCModel...
             //$has_compoundCModel = !empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:compoundCModel')); 
 
             // check that archived bundle has no active bundle node (i.e. is being updated)
 
             $query = new EntityFieldQuery();
             $query->entityCondition('entity_type', 'node')
-                ->entityCondition('bundle', 'flat_bundle')
-                ->fieldCondition('flat_fid', 'value', "$fid", '=');
+            ->entityCondition('bundle', 'flat_bundle')
+            ->fieldCondition('flat_fid', 'value', "$fid", '=');
 
             $bundle_nodes = $query->execute();
 
             $has_no_active_node = empty($bundle_nodes);
 
-            $has_access = (!$has_collectionCModel AND $has_cmdi_content_model AND $has_no_active_node) ? TRUE: false;
+            $has_access = ($has_permissions AND !$has_collectionCModel AND $has_cmdi_content_model AND $has_no_active_node) ? TRUE: false;
 
             break;
 
@@ -1931,9 +1962,9 @@ function flat_deposit_menu_access($op, $object) {
 
             break;
 
-    	}
+        }
 
-	}
+    }
 
     return $has_access;
 
