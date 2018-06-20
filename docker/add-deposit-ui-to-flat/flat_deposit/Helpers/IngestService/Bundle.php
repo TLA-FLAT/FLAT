@@ -42,7 +42,8 @@ class Bundle extends SIP
             'loggedin_user',
             'nid',
             'policy',
-            'cmdi_handling'
+            'cmdi_handling',
+            'visibility'
         );
         $diff = array_diff($required,array_keys($info));
         if($diff){

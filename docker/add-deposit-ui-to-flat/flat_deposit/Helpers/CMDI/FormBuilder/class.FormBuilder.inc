@@ -143,7 +143,10 @@ class FormBuilder
         }
 
         $dataNode = $this->getHeadNode($cmdi);
-        $this->clearInheritedTitle($dataNode);
+        
+        if ((get_class($this->node)) !== 'IslandoraFedoraObject') {
+            $this->clearInheritedTitle($dataNode);
+        }
 
         $setComponets = $this->setFormComponents($template, $dataNode, $pressedButtons, $index = 0, $inheritAll);
         if (!$setComponets){
@@ -159,7 +162,12 @@ class FormBuilder
 
 	if ($this->node) {
 
-		$this->form['title_field'][0]['#default_value'] = $this->node->title;
+        if ((get_class($this->node)) == 'IslandoraFedoraObject') {
+            $this->form['title_field'][0]['#default_value'] = $this->node->label;
+        }
+        else {
+            $this->form['title_field'][0]['#default_value'] = $this->node->title;
+        }
 
 	}
 

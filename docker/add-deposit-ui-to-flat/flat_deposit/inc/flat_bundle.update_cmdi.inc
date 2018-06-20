@@ -249,6 +249,7 @@ function flat_bundle_update_form_final_validate($form, &$form_state){
     $options ['policy'] = 'inherited';
     $options ['fid'] = $form_state['values']['data']['fid'];
     $options ['content_type'] = 'flat_bundle';
+    $options ['visibility'] = NULL; // policy/visibility should stay as they are
 
     $fid = $ingest_client->requestSipIngest($options);
 

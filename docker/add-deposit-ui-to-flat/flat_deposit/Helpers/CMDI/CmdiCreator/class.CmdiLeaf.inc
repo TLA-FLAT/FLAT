@@ -23,12 +23,14 @@ class CmdiLeaf extends CmdiComponent{
 
         $name = (string)$component['name'];
 
-        $componentData = $data[$id];
+        if (isset($data[$id])) {
+            $componentData = $data[$id];
 
-        foreach (array_keys($componentData) as $key){
-            if (!is_numeric($key))
-                unset($componentData[$key]);
+            foreach (array_keys($componentData) as $key){
+                if (!is_numeric($key))
+                    unset($componentData[$key]);
 
+            }
         }
 
 

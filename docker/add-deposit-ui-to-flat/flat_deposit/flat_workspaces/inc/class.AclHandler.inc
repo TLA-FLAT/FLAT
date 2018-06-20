@@ -61,7 +61,12 @@ class AclHandler
         unset($acl_array[1]);
         unset($acl_array[2]);
 
-
+	    foreach ($acl_array as $key => $string) {
+ 		    if (strpos($string, '# flags: ') === 0) {
+    			$this->header ['flags'] = str_replace('# flags: ', '', $acl_array[$key]);
+			unset($acl_array[$key]);
+  		    }
+	    }
     }
 
     public function getInfo(){
@@ -135,7 +140,6 @@ class AclHandler
      *
      */
     private function _setAccess($class, $permissions){
-
         $read = strpos($permissions[2],'r') !== FALSE;
         $write = strpos($permissions[2],'w') ? TRUE : FALSE;
         $execute = strpos($permissions[2],'x') ? TRUE : FALSE;
@@ -156,8 +160,6 @@ class AclHandler
 
             case 'owning group':
             case 'named group':
-
-
 
                 if ($class== 'owning group'){
                     $id = $this->getHeader()['group'];
@@ -190,9 +192,6 @@ class AclHandler
 
         if ($execute === TRUE) $this->_addToInfo('execute', $class, $id);
 
-
-
-
     }
 
     /**
@@ -224,9 +223,11 @@ class AclHandler
         }
 
         // Check if id is in list of named users
-        if (is_numeric(array_search($id, $this->info['write']['named user']))){
-            return 'ID is named user of file or directory';
-        }
+	    if (isset($this->info['write']['named user'] )) {
+        	if (is_numeric(array_search($id, $this->info['write']['named user']))){
+            		return 'ID is named user of file or directory';
+        	}
+	    }
 
         $groups = shell_exec("id -Gn $id");
 
@@ -261,9 +262,11 @@ public function checkReadAccess($id){
         }
 
         // Check if id is in list of named users
-        if (is_numeric(array_search($id, $this->info['read']['named user']))){
-            return 'ID is named user of file or directory';
-        }
+	if (isset($this->info['read']['named user'] )) {
+        	if (is_numeric(array_search($id, $this->info['read']['named user']))){
+            		return 'ID is named user of file or directory';
+        	}
+	}
 
         $groups = shell_exec("id -Gn $id");
         if (empty($groups)){
