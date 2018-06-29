@@ -683,7 +683,6 @@ function theme_flat_bundle_action_table($variables)
     // form definition, as that is the element that #theme was
     // applied to.
     $form = $variables['form'];
-
     // Define our $header and $rows variables
     $header = array(t('Bundle Name'), t('Status'),t('Metadata'), t('Select'));
     $rows = array();
@@ -945,14 +944,11 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
     hide($form['flat_deleted_resources']);
     hide($form['actions']['preview']);
 
-
-    hide($form['flat_type']);
-    #$form['flat_type']['und']['#disabled'] = TRUE;
-    $form['flat_type']['#weight'] = -2;
+    $form['flat_type']['und']['#disabled'] = TRUE;
+    //$form['flat_type']['#weight'] = -2;
 
     // prevent deletion of a node to run through validation
     $form['actions']['delete']['#limit_validation_errors'] = array();
-
 
     // Conditionally hide cmdi file field.
     $form['flat_cmdi_file']['und'][0]['#states'] = array(
@@ -1511,7 +1507,7 @@ function flat_collection_view($node, $view_mode) {
         global $user;
         drupal_set_breadcrumb(array(
             l(t('Home'),  NULL),
-            l(t('Dashboard'), 'dashboard/'. $user->uid . '/collections'),
+            l(t('My Dashboard'), 'dashboard/'. $user->uid . '/collections'),
         ));
 
         $output = field_view_field('node', $node, 'flat_fid');
@@ -1579,7 +1575,7 @@ function flat_bundle_view($node, $view_mode) {
 
         drupal_set_breadcrumb(array(
             l(t('Home'),  NULL),
-            l(t('Dashboard'), 'dashboard'),
+            l(t('My Dashboard'), 'dashboard'),
             l(t('!name', array ('!name'=> $wrapper->flat_parent_title->value())),'node/' . $wrapper->flat_parent_nid->value()),
         ));
 
@@ -1592,8 +1588,6 @@ function flat_bundle_view($node, $view_mode) {
 
     return $node;
 }
-
-
 
 /**
  *
@@ -1640,10 +1634,19 @@ function flat_deposit_node_view($node, $view_mode, $langcode)
         //    $node->content['flat_fid'][0]['#markup'] = l('link archive' , 'islandora/object/' . rawurlencode($node->content['flat_fid'][0]['#markup'])) ;
         //} else {
 
-            unset ($node->content['flat_fid']);
+        unset ($node->content['flat_fid']);
 
         //}
         unset ($node->content['flat_type']);
+    }
+
+    if ($node->type == 'blog' AND $view_mode == 'full' AND node_is_page($node)) {
+        // modify breadcrumb for blog nodes (reports)
+        global $user;
+        drupal_set_breadcrumb(array(
+            l(t('Home'),  NULL),
+            l(t('My Dashboard'), 'dashboard/'. $user->uid . '/notifications'),
+        ));
     }
 
 
@@ -1652,6 +1655,28 @@ function flat_deposit_node_view($node, $view_mode, $langcode)
     $node->content['link_dashboard']['#markup'] = l('Shortcut to dashboard' , 'dashboard') ;
 */
 
+}
+
+/**
+ * Implements hook_node_view_alter().
+ *
+ * Remove "user's blog" link from blog posts (reports)
+ *
+ */
+function flat_deposit_node_view_alter(&$build) {
+    unset($build['links']['blog']['#links']['blog_usernames_blog']);
+}
+
+/**
+ * Implements hook_preprocess_HOOK().
+ *
+ * Remove "submitted by" from any node
+ *
+ */
+function flat_deposit_preprocess_node(&$variables) {
+    $variables ['display_submitted'] = FALSE;     
+    $variables ['submitted'] = '';     
+    $variables ['user_picture'] = '';   
 }
 
 /**
@@ -1791,8 +1816,7 @@ function flat_deposit_block_view($delta = '')
             break;
 
         case 'node_file_listing':
-/*
-*/
+
             $node = menu_get_object();
             $node_wrapper = entity_metadata_wrapper('node', $node);
 
@@ -2070,3 +2094,44 @@ function flat_deposit_admin_paths_alter(&$paths) {
       $paths['node/*/edit'] = FALSE;
       $paths['node/*/delete'] = FALSE;
     }
+
+/**
+ * Implements hook_node_access().
+ *
+ * Restrict access to FLAT node types and blog (reports) to node owner and manager users
+ *
+ */
+function flat_deposit_node_access($node, $op, $account) {
+
+    $types = array('flat_bundle', 'flat_collection', 'blog');
+    if (is_string($node)) {
+        $type = $node;
+    }
+    else {
+        $type = $node->type;
+    }
+    if ($op == 'view' && (in_array($type, $types)) && $node->status) {
+        if (($account->uid == $node->uid) || (in_array('manager', $account->roles))) {
+            // Grant access to user
+            return NODE_ACCESS_ALLOW;
+        }
+        else {
+            // Deny access to user
+            return NODE_ACCESS_DENY;
+        }
+    }
+    return NODE_ACCESS_IGNORE;
+}
+
+/**
+ * Implements hook_menu_alter().
+ *
+ * Get rid of blog listings
+ *
+ */
+function flat_deposit_menu_alter(&$items) {
+    unset($items['blog']);
+    unset($items['blog/%user_uid_optional']);
+    unset($items['blog/%user/feed']);
+    unset($items['blog/feed']);
+}

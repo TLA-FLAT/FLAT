@@ -22,8 +22,7 @@ function flat_bundle_action_form($form, &$form_state)
     $form['actions']['describe_bundle'] = array(
         '#type' => 'submit',
         '#value' => t('Fill in metadata for bundle'),
-        #'#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
-        '#description' => t('Bundles are obliged to be accompanied by metadata'),
+        '#description' => t('Enter metadata for this bundle (required)'),
         '#validate' => array('flat_bundle_action_form_describe_validate'),
         '#access' => FALSE,
     );
@@ -44,8 +43,7 @@ function flat_bundle_action_form($form, &$form_state)
         '#type' => 'submit',
         '#value' => t('Validate bundle'),
         '#validate' => array('flat_bundle_action_form_validate_validate'),
-        #'#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
-        '#description' => t('Validated bundles will be transferred to different location and can not be altered'),
+        '#description' => t('Validate the bundle. Valid bundles cannot be altered, unless they are re-opened again.'),
         '#disabled' => TRUE,
     );
 
@@ -53,31 +51,26 @@ function flat_bundle_action_form($form, &$form_state)
         '#type' => 'submit',
         '#value' => t('Re-open bundle'),
         '#validate' => array('flat_bundle_action_form_reopen_validate'),
-        #'#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
-        '#description' => t('Click to allow modifications of your bundle'),
+        '#description' => t('Re-open the bundle to allow modifications of its metadata or included files'),
         '#disabled' => TRUE,
     );
 
     $form['actions']['archive_bundle'] = array(
         '#type' => 'submit',
         '#value' => t('Archive bundle'),
-        #'#validate' => array('flat_bundle_action_form_archive_validate'),
-        #    '#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
+	    '#description' => t('Submit the bundle to be stored in the archive.'),
         '#disabled' => TRUE,
     );
 
     $form['actions']['edit_bundle'] = array(
         '#type' => 'submit',
         '#value' => t('Edit bundle properties'),
-        #    '#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
-        #'#submit' => array('flat_bundle_action_form_bundle_edit_submit'),
         '#prefix' => '<div><br/></div>',
     );
 
     $form['actions']['delete_bundle'] = array(
         '#type' => 'submit',
         '#value' => t('Delete bundle'),
-        #    '#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
         '#suffix' => '<div><br/></div>',
     );
 
@@ -132,7 +125,13 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
         case 'open': {
             $form['actions']['upload_data']['#access'] = $enable_file_browser;
             $form['actions']['bundle_image']['#disabled'] = !$enable_file_browser;
-            $form['actions']['validate_bundle']['#disabled'] = FALSE;
+            if (empty($node->flat_cmdi_file)) {
+                $form['actions']['validate_bundle']['#disabled'] = TRUE;
+            }
+            else {
+                $form['actions']['validate_bundle']['#disabled'] = FALSE;
+                $form['actions']['validate_bundle']['#attributes']['class'][] = 'btn-success';
+            }
             $form['actions']['edit_bundle']['#disabled'] = FALSE;
             $name = 'open_bundle';
             break;
@@ -156,6 +155,7 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
         case 'valid': {
             $form['actions']['archive_bundle']['#disabled'] = FALSE;
             $form['actions']['reopen_bundle']['#disabled'] = FALSE;
+            $form['actions']['archive_bundle']['#attributes']['class'][] = 'btn-success';
             $name = 'closed_bundle';
             break;
         }
@@ -173,6 +173,7 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
     if ($wrapper->flat_cmdi_option->value() == 'new' AND ($status == 'open' OR $status == 'failed') AND (empty($node->flat_cmdi_file))) {
 
         $form['actions']['describe_bundle']['#access'] = TRUE;
+        $form['actions']['describe_bundle']['#attributes']['class'][] = 'btn-success';
     }
 
 }

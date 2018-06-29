@@ -312,9 +312,9 @@ function flat_collection_update_form_final_validate($form, &$form_state){
  */
 function flat_collection_update_form_submit($form, &$form_state){
 
-    $target = 'islandora/object/' . $form_state['extra_data'][ 'fid'];
+    $target = 'islandora/object/' . $form_state['values']['data']['fid'];
 
-    drupal_set_message('Collection item has been updated');
+    drupal_set_message('Collection has been updated');
 
     ctools_include('ajax');
     ctools_add_js('ajax-responder');
