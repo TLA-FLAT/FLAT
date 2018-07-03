@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:shibmd="urn:mace:shibboleth:metadata:1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" entityID="https://idp.example.org:9443/idp/shibboleth">
+
+    <IDPSSODescriptor protocolSupportEnumeration="urn:mace:shibboleth:1.0 urn:oasis:names:tc:SAML:1.1:protocol urn:oasis:names:tc:SAML:2.0:protocol">
+
+        <Extensions>
+            <shibmd:Scope regexp="false">example.org</shibmd:Scope>
+        </Extensions>
+
+        <KeyDescriptor use="signing">
+            <ds:KeyInfo>
+                <ds:X509Data>
+                    <ds:X509Certificate>
+MIIDJzCCAg+gAwIBAgIUX/gBpXYTdvD85UPJOBQZo5ad6q8wDQYJKoZIhvcNAQEF
+BQAwGjEYMBYGA1UEAwwPaWRwLmV4YW1wbGUub3JnMB4XDTE1MDIxMjIzMzY1MVoX
+DTM1MDIxMjIzMzY1MVowGjEYMBYGA1UEAwwPaWRwLmV4YW1wbGUub3JnMIIBIjAN
+BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAio6dLcU21JZw8glOnVAi9ThCgiwC
+BB9fT9xYHBkefxt1U700N3t5BOb5ByM1UfCiSnkeMy2C180v5tEKUJra4NkTLp/u
+LyD4kVc11uOi11jpQFgGsU12vStNZIE4HVEPKVpq0Qwf3Wwu1GZLVe+s6wdIrxXZ
+XjEhDUZE4GVd8g7SYWjFMsHa/RwYIcKMxL2RZrGxTQta18KWXRpivq8nhncqEW22
+4jBerB4G3WJVeuI/7rSEPAE9Jwa3adE2yObTmInYnmM4zqkgThDh69M5zIXM/K2x
+gUc7mJx9IWwCvi+WazWVTqmr8mm5Xgp3G8cU0rmo28Plw2t3um8ZEu7IzwIDAQAB
+o2UwYzAdBgNVHQ4EFgQU/iLcYSb7ZVXxGsv239Rmu0P2EBEwQgYDVR0RBDswOYIP
+aWRwLmV4YW1wbGUub3JnhiZodHRwczovL2lkcC5leGFtcGxlLm9yZy9pZHAvc2hp
+YmJvbGV0aDANBgkqhkiG9w0BAQUFAAOCAQEAdpF1Cfv9RuEhb1S9Ys/qhkQ526aV
+U4lEHyJyPAkmaa/MT6vcHkeX4yaFNBUio53AF+VRJ3YByDdRVkzPGrmJYW0WBtcI
+b4F2+FlHCiTZJjeq2NRKz70ASO1/0xDBrxggd6rRF4455gPGOX10AMHbNMTemS5+
+KQ/23dgqFxETHvinMQdkwrWDKit7IN1z8F2VZx0+xsXL08ztygtk0wKdtAIbaoFP
+OfPBoEoxNgyPDoxe6J7pIqW5BcLV6n4K0rlZZLJwewD25kyu94rs4RlPSYzae/Nx
+UEdUmexGFHaWuKOpXZKFZfrhjo4b1n2QdmBheZflFr0eXfrR6T87uPLCSQ==
+
+                    </ds:X509Certificate>
+                </ds:X509Data>
+            </ds:KeyInfo>
+        </KeyDescriptor>
+        
+        <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.example.org:9443/idp/profile/SAML1/SOAP/ArtifactResolution" index="1"/>
+
+        <ArtifactResolutionService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.example.org:9443/idp/profile/SAML2/SOAP/ArtifactResolution" index="2"/>
+        
+        <SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://idp.example.org:9443/idp/profile/SAML2/Redirect/SLO" />
+        
+        <SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://idp.example.org:9443/idp/profile/SAML2/POST/SLO" />
+        
+        <SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.example.org:9443/idp/profile/SAML2/SOAP/SLO" />
+                                   
+        <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
+        <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
+
+        <SingleSignOnService Binding="urn:mace:shibboleth:1.0:profiles:AuthnRequest" Location="https://idp.example.org:9443/idp/profile/Shibboleth/SSO"/>
+        
+        <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://idp.example.org:9443/idp/profile/SAML2/POST/SSO"/>
+
+        <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST-SimpleSign" Location="https://idp.example.org:9443/idp/profile/SAML2/POST-SimpleSign/SSO"/>
+        
+        <SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://idp.example.org:9443/idp/profile/SAML2/Redirect/SSO"/>
+    </IDPSSODescriptor>
+
+    <AttributeAuthorityDescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:1.1:protocol urn:oasis:names:tc:SAML:2.0:protocol">
+
+        <Extensions>
+            <shibmd:Scope regexp="false">example.org</shibmd:Scope>
+        </Extensions>
+
+        <KeyDescriptor use="signing">
+            <ds:KeyInfo>
+                <ds:X509Data>
+                    <ds:X509Certificate>
+MIIDJzCCAg+gAwIBAgIUX/gBpXYTdvD85UPJOBQZo5ad6q8wDQYJKoZIhvcNAQEF
+BQAwGjEYMBYGA1UEAwwPaWRwLmV4YW1wbGUub3JnMB4XDTE1MDIxMjIzMzY1MVoX
+DTM1MDIxMjIzMzY1MVowGjEYMBYGA1UEAwwPaWRwLmV4YW1wbGUub3JnMIIBIjAN
+BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAio6dLcU21JZw8glOnVAi9ThCgiwC
+BB9fT9xYHBkefxt1U700N3t5BOb5ByM1UfCiSnkeMy2C180v5tEKUJra4NkTLp/u
+LyD4kVc11uOi11jpQFgGsU12vStNZIE4HVEPKVpq0Qwf3Wwu1GZLVe+s6wdIrxXZ
+XjEhDUZE4GVd8g7SYWjFMsHa/RwYIcKMxL2RZrGxTQta18KWXRpivq8nhncqEW22
+4jBerB4G3WJVeuI/7rSEPAE9Jwa3adE2yObTmInYnmM4zqkgThDh69M5zIXM/K2x
+gUc7mJx9IWwCvi+WazWVTqmr8mm5Xgp3G8cU0rmo28Plw2t3um8ZEu7IzwIDAQAB
+o2UwYzAdBgNVHQ4EFgQU/iLcYSb7ZVXxGsv239Rmu0P2EBEwQgYDVR0RBDswOYIP
+aWRwLmV4YW1wbGUub3JnhiZodHRwczovL2lkcC5leGFtcGxlLm9yZy9pZHAvc2hp
+YmJvbGV0aDANBgkqhkiG9w0BAQUFAAOCAQEAdpF1Cfv9RuEhb1S9Ys/qhkQ526aV
+U4lEHyJyPAkmaa/MT6vcHkeX4yaFNBUio53AF+VRJ3YByDdRVkzPGrmJYW0WBtcI
+b4F2+FlHCiTZJjeq2NRKz70ASO1/0xDBrxggd6rRF4455gPGOX10AMHbNMTemS5+
+KQ/23dgqFxETHvinMQdkwrWDKit7IN1z8F2VZx0+xsXL08ztygtk0wKdtAIbaoFP
+OfPBoEoxNgyPDoxe6J7pIqW5BcLV6n4K0rlZZLJwewD25kyu94rs4RlPSYzae/Nx
+UEdUmexGFHaWuKOpXZKFZfrhjo4b1n2QdmBheZflFr0eXfrR6T87uPLCSQ==
+
+                    </ds:X509Certificate>
+                </ds:X509Data>
+            </ds:KeyInfo>
+        </KeyDescriptor>
+
+        <AttributeService Binding="urn:oasis:names:tc:SAML:1.0:bindings:SOAP-binding" Location="https://idp.example.org:9443/idp/profile/SAML1/SOAP/AttributeQuery"/>
+        
+        <AttributeService Binding="urn:oasis:names:tc:SAML:2.0:bindings:SOAP" Location="https://idp.example.org:9443/idp/profile/SAML2/SOAP/AttributeQuery"/>
+        
+        <NameIDFormat>urn:mace:shibboleth:1.0:nameIdentifier</NameIDFormat>
+        <NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</NameIDFormat>
+        
+    </AttributeAuthorityDescriptor>
+    
+</EntityDescriptor>
