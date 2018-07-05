@@ -15,6 +15,7 @@ and children:
 - title: The title which will appear as the label above the element
 - description (optional): an info box with this value will appear when hovering above the element
 - component (optional): specifies whether a item is located within a component.
+- default (optional): specifies a default value for the field. Will be overridden by existing values when editing existing metadata.
 Additional fied is data. data items are hidden in drupal. Required info is the clarin profile ID, to which this transform refers
  -->
 <profileToDrupal>
@@ -437,15 +438,18 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                 <item id="field_50" name="FamilySocialRole" type="Leaf" minOccurrence="1">
                     <title>FamilySocialRole</title>
                     <type>textfield</type>
+                    <default>Unspecified</default>
                 </item>
                 <item id="field_51" name="EthnicGroup" type="Leaf" minOccurrence="1">
                     <title>EthnicGroup</title>
                     <type>textfield</type>
+                    <default>Unspecified</default>
                 </item>
                 <item id="field_52" name="BirthDate" type="Leaf" minOccurrence="1">
                     <title>BirthDate</title>
                     <type>textfield</type>
                     <description>BirthDate notation options: yyyy | yyyy-mm | yyyy-mm-dd | Unknown | Unspecified</description>
+                    <default>Unspecified</default>
                 </item>
                 <item id="field_53" name="Sex" type="Leaf" minOccurrence="1">
                     <title>Sex</title>
@@ -461,6 +465,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                 <item id="field_54" name="Education" type="Leaf" minOccurrence="1">
                     <title>Education</title>
                     <type>textfield</type>
+                    <default>Unspecified</default>
                 </item>
                 <item id="field_55" name="Anonymized" type="Leaf" minOccurrence="0">
                     <title>Anonymized</title>

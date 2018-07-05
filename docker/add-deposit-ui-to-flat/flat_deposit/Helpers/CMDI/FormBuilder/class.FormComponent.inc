@@ -76,7 +76,7 @@ abstract class FormComponent
 
         $numberElements = max($count, $this->minNumberElements);
 
-        // in case of an optional composite component which has not children in the existing CMDI, we do not want to see it
+        // in case of an optional composite component which has no children in the existing CMDI, we do not want to see it
         if (((string) $templateNode['type'] == 'Composite') && empty($existingCmdiNode->{$componentName}[0])) {
             $numberElements = 0;
         }
@@ -94,6 +94,10 @@ abstract class FormComponent
         for ($index = 0; $index < $this->numberElements; $index++) {
 
             $defaultValue = isset($defaultValues[$index]) ? $defaultValues[$index] : null;
+            if (!$defaultValue AND isset($templateNode->default)) {
+                // see if there's a default value in the template and use that
+                $defaultValue = (string)$templateNode->default;
+            } 
             $element = new FormField($templateNode, $defaultValue, $inheritAll);
             $element->setFormField();
             $element->addNestedComponents($existingCmdiNode, $componentButtonPresses, $index, $buttonId, $inheritAll);

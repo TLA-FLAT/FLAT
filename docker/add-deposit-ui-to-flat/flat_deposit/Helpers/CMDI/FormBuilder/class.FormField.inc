@@ -85,6 +85,13 @@ class FormField
 
             $formField['#default_value'] = $this->convertValue($this->defaultValue);
         }
+        else {
+            // see if there's a default value in the template and use that
+            if (isset($this->formTemplateNode->default)) {
+                $formField['#default_value'] = (string)$this->formTemplateNode->default;
+            }
+        }
+
     }
 
     /**
