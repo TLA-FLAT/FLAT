@@ -253,6 +253,7 @@ class FormField
                 $nestedFormComponent = new $className($numberElements);
 
                 $key = $this->getFormField()['#title'];
+
                 $nestedDataNode = isset($existingCmdiNode->{$key}[$index]) ? $existingCmdiNode->{$key}[$index] : null;
 
                 $nestedButtonId = $buttonId . "_" . (int)$index;
@@ -272,10 +273,10 @@ class FormField
 
                     $attributeFormComponent = new $className($numberElements);
 
-                    //$attributeDataNode = (null !== ($existingCmdiNode->{$key}[$index])) ? $existingCmdiNode->{$key}[$index] : null;
+                    $attributeKey = (string)$attribute->attributes()['name'];
 
-                    $attributeDataNode = null; // additional work needed to get existing attribute values
-
+                    $attributeDataNode = $existingCmdiNode->{$key}[$index];
+		    
                     $attributeButtonId = $buttonId . "_" . (int)$index;
 
                     $attributePressedButton = isset($pressedButtons[$index]) ? $pressedButtons[$index] : null;

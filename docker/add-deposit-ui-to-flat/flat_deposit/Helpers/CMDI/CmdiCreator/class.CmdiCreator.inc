@@ -132,7 +132,6 @@ class CmdiCreator
             if (isset($values)) {
                 foreach ($values as $value) {
 
-
                     if (!is_null($value)) {
                         $converted = $this->convertValue($item->type, $value);
                         $newNode->addChild($name, utf8_encode(htmlspecialchars($converted)));
@@ -158,7 +157,6 @@ class CmdiCreator
                 #$name = (string)$item['name'];
                 if (isset($fieldset_data['add'])) unset($fieldset_data['add']);
                 if (isset($fieldset_data['remove'])) unset($fieldset_data['remove']);
-
 
                 foreach ($item->item as $newItem) {
 

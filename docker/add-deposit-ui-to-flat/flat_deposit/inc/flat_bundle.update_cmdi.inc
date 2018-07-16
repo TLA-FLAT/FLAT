@@ -7,7 +7,6 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object){
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
     $ds = islandora_datastream_load("CMD",$fedora_object->id);
     $inheritedData = CmdiHandler::simplexml_load_cmdi_string($ds->content);
-
     if ($inheritedData){
         $profile = $inheritedData->getNameById();
     } else {
@@ -180,6 +179,7 @@ function flat_bundle_update_form_final_validate($form, &$form_state){
 
     $templateName = $form_state['values']['select_profile_name'];
     $form_data = $form_state['values']['template_container']['elements'];
+
     $owner = $form_state['values']['owner'];
 
     $creator = new CmdiCreator();

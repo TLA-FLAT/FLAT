@@ -49,7 +49,6 @@ class FormLeaf extends FormComponent {
         }
 
         if (!$node->{$componentName} OR get_class($node->{$componentName}) != 'CmdiHandler') {
-
             return null;
 
         }
@@ -68,9 +67,7 @@ class FormLeaf extends FormComponent {
 
         return $values;
 
-
     }
-
 
 
     public function getComponentButtonPresses($templateNode, $pressedButtons){

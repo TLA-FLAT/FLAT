@@ -74,6 +74,22 @@ abstract class FormComponent
             $count = 0;
         }
 
+
+        // in case node is not present in the existing CMDI, check whether an attribute with the name is present
+        $is_attribute = false;
+            if ($existingCmdiNode && ($count == 0)) {
+            $data = isset($existingCmdiNode->attributes(){$componentName}) ? $existingCmdiNode->attributes(){$componentName} : null;
+            if ($data) {
+                $count = 1; // there can be only one attribute with the same name
+                $is_attribute = true;	
+            }
+        }
+
+        // in case of a template node with a skipParentInCMDI attribute, the default value is the value of the existing CMDI node itself 
+        if (isset($templateNode->attributes()['skipParentInCMDI'])) {
+            $defaultValues[] = (string)$existingCmdiNode;
+        }
+
         $numberElements = max($count, $this->minNumberElements);
 
         // in case of an optional composite component which has no children in the existing CMDI, we do not want to see it
@@ -97,7 +113,12 @@ abstract class FormComponent
             if (!$defaultValue AND isset($templateNode->default)) {
                 // see if there's a default value in the template and use that
                 $defaultValue = (string)$templateNode->default;
-            } 
+            }
+            
+            if ($is_attribute) {
+            $defaultValue = isset($existingCmdiNode->attributes(){$componentName}) ? (string)$existingCmdiNode->attributes(){$componentName} : null;
+            }
+
             $element = new FormField($templateNode, $defaultValue, $inheritAll);
             $element->setFormField();
             $element->addNestedComponents($existingCmdiNode, $componentButtonPresses, $index, $buttonId, $inheritAll);

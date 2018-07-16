@@ -6,17 +6,20 @@ In the items section you can specify items. items need to have attributes:
 - id: unique id which will become the form item id in drupal
 - name: name of the item in the original  cmdi-profile
 and children:
-- type: formatting of the item; implemented values are
+- type: type of form field for the item; implemented values are
 * textitem
+* textarea
 * date
 * dropdown
+* hidden
 * (empty) missing values will be rendered as textitem
-- title: The title which will appear on top of the item
-- description (optional): a info button which will show the value this item when hovered onto
-- component (optional): specifies whether a item is located in a component.
+- title: The title which will appear as the label above the element
+- description (optional): an info box with this value will appear when hovering above the element
+- component (optional): specifies whether a item is located within a component.
+- default (optional): specifies a default value for the field. Will be overridden by existing values when editing existing metadata.
+- skipParentInCMDI (optional): Can be used to have a fieldset wrapper that will only be used for the web form and will be skipped in the CMDI generation. Useful for fields that have attributes. Set this attribute to "true" on the first child item of the fieldset.
 Additional fied is data. data items are hidden in drupal. Required info is the clarin profile ID, to which this transform refers
  -->
-
 <profileToDrupal>
     <header>
         <template_name>lat-corpus</template_name>
@@ -386,11 +389,34 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
             </item>
             <item id="fieldset_19" name="Keys" type="Composite" minOccurrence="0">
                 <type>fieldset</type>
-                <title>Key</title>
-                <item id="field_46" name="Key" type="Leaf" multival="true" minOccurrence="1">
+                <title>Keys</title>
+                <item id="fieldset_20" name="Key" type="Composite" multival="true" minOccurrence="1">
+                    <type>fieldset</type>
                     <title>Key</title>
-                    <type>textfield</type>
-                    <description>This element is designed to ensure backwards compatibility to IMDI metadata. Please only use it for this purpose.</description>
+                    <item id="field_46" name="Key" type="Leaf" minOccurrence="1" skipParentInCMDI="true">
+                        <title>Key</title>
+                        <type>textfield</type>
+                        <description>Enter the value of the key in this field. Key-Value fields are provided for backwards compatibility with IMDI metadata. Please only use them in case they are already present in existing metadata.</description>
+                        <attribute id="attribute_01" name="Name" type="Leaf" minOccurrence="1">
+                            <title>Name</title>
+                            <type>textfield</type>
+                            <description>Enter the name of the key in this field.</description>
+                        </attribute>
+                        <attribute id="attribute_02" name="Link" type="Leaf" minOccurrence="0">
+                            <title>Link</title>
+                            <type>textfield</type>
+                        </attribute>
+                        <attribute id="attribute_03" name="Type" type="Leaf" minOccurrence="0">
+                            <title>Type</title>
+                            <type>dropdown</type>
+                            <options>
+                                <option>ClosedVocabulary</option>
+                                <option>ClosedVocabularyList</option>
+                                <option>OpenVocabulary</option>
+                                <option>OpenVocabularyList</option>
+                            </options>
+                        </attribute>
+                    </item>
                 </item>
             </item>
         </item>

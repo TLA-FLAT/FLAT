@@ -385,6 +385,7 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
 
 
     $form_data = $form_state['values']['template_container']['elements'];
+
     $owner = $form_state['values']['owner'];
 
     $creator = new CmdiCreator();
