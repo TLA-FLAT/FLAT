@@ -4,6 +4,8 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject){
 
     drupal_set_title(t('Add Collection'));
 
+    ctools_add_js('ajax-responder');
+
     // Set selected profile as this is updated on every AJAX request
     if (isset($form_state['values']['select_profile_name'])) {
         $form_state['selected'] =  $form_state['values']['select_profile_name'];

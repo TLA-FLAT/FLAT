@@ -310,8 +310,8 @@ function flat_deposit_menu()
 
     // Admin configuration group
     $items['admin/config/flat_deposit'] = array(
-        'title' => 'FLAT deposit user interface',
-        'description' => 'Administer FLAT deposit user interface',
+        'title' => 'FLAT Deposit user interface',
+        'description' => 'FLAT Deposit user interface settings',
         'access arguments' => array('admin deposit module'),
         'weight' => 999,
         );
@@ -319,7 +319,8 @@ function flat_deposit_menu()
 
     // Admin configuration - Upload settings
     $items['admin/config/flat_deposit/customize'] = array(
-        'title' => 'Configure deposit settings',
+        'title' => 'Deposit UI settings',
+        'description' => 'FLAT Deposit user interface settings',
         'page callback' => 'drupal_get_form',
         'page arguments' => array( 'flat_deposit_admin_form'),
         'file' => 'inc/flat_deposit.admin.inc',
@@ -1139,7 +1140,6 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
     }
 }
 
-
 function flat_bundle_node_form_add_import_validate ($form, &$form_state){
 
     $file_id = $form_state['values']['flat_cmdi_file']['und'][0]['fid'];
@@ -1290,9 +1290,9 @@ function flat_bundle_node_form_add_submit($form, &$form_state){
     $meta_dir = 'metadata://' . str_replace('@' ,'_at_' , $user->name) . "/$collection/$bundle";
 
 
-    // Resources might be locally found or external
+    // Set resources location depending on defined source
     $source = $form_state['values']['flat_source']['und'][0]['value'];
-    if ($source == 'local') {
+    if (in_array($source, array('local', 'cloud'))) {
 
         $resource_dir = $form_state['values']['flat_original_path']['und'][0]['value'];
 
@@ -1721,7 +1721,7 @@ function flat_bundle_delete($node){
  * 
  */
 function flat_deposit_form_alter (&$form, &$form_state) {
-    if ((isset($form['operation']['#value']) && $form['operation']['#value'] == 'delete') || $form['#id'] == 'node-delete-confirm') {
+    if ((isset($form['operation']['#value']) && $form['operation']['#value'] == 'delete') || (isset($form['#id']) && ($form['#id'] == 'node-delete-confirm'))) {
         global $user;
         $node = menu_get_object();
         $nid = $node->nid;
@@ -1822,6 +1822,10 @@ function flat_deposit_block_view($delta = '')
 
             $location = $node_wrapper->flat_location->value();
 
+            $dirname = basename($location);
+
+            //dsm($location);
+
             $file_found = [];
             if (file_exists($location)){
                 $file_found = array_diff(scandir($location), array('..', '.'));
@@ -1839,7 +1843,7 @@ function flat_deposit_block_view($delta = '')
             $content = theme('table', array('rows' => $rows));
 
             $block = array(
-                'subject' => t('Files to be added to this bundle'),
+                'subject' => t("Files in folder \"@dirname\" to be added to this bundle:", array('@dirname' => $dirname)),
                 'content' => $content,
             );
             break;
@@ -2135,3 +2139,16 @@ function flat_deposit_menu_alter(&$items) {
     unset($items['blog/%user/feed']);
     unset($items['blog/feed']);
 }
+/*
+/**
+ * Implements hook_data_move_actions().
+ *
+ * Additional actions after performing data move
+ *
+ *
+ *
+ // probably not needed
+function flat_deposit_data_move_actions($source_location, $target_location) {
+    return true;
+}
+*/

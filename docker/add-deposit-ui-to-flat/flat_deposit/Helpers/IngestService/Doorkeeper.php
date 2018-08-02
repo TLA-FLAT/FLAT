@@ -90,7 +90,7 @@ class Doorkeeper
      *
      * todo check return value of doorkeeper
      */
-    public function checkStatus(String $sipId, int $maxWait = 60){
+    public function checkStatus(String $sipId, int $maxWait = 1800){
 
         #initial check request
         $httpcode = $this->doGetRequest($sipId, TRUE);

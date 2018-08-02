@@ -44,10 +44,13 @@ class CmdiLeaf extends CmdiComponent{
                     foreach ($component->attribute as $attribute) {
                         $attributeId = (string) $attribute['id'];
                         $attributeName = (string) $attribute['name'];
-                        $attributeData = (string) $data[$attributeId][0];
-                        if ($attributeData != null and $attributeData != "") {
-                            $child->addAttribute($attributeName, $attributeData);
+                        if (isset($data[$attributeId][0])) {
+                            $attributeData = (string) $data[$attributeId][0];
+                            if ($attributeData != null and $attributeData != "") {
+                                $child->addAttribute($attributeName, $attributeData);
+                            }
                         }
+                    
                     }
 
                 }

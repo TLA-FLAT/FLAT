@@ -13,6 +13,44 @@ function flat_workspaces_install()
 
     $t = get_t();
 
+    $field = array(
+        'field_name' => 'flat_ws_path',
+        'type' => 'text',
+        'cardinality' => 1,
+        'settings' => array(
+            'max_length' => 5000)
+    );
+
+    if (!field_info_field($field['field_name'])) {
+        field_create_field($field);
+    }
+
+    $instance = array(
+        'field_name' => 'flat_ws_path',
+        'entity_type' => 'node',
+        'bundle' => 'flat_bundle',
+        'label' => $t('Path of local workspace stored data'),
+        'widget' => array(
+            'type' => 'text_textfield',
+        ),
+        'required' => FALSE,
+        'disabled' => TRUE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'hidden',
+                'type' => 'hidden',
+            ),
+        ),
+    );
+
+    if (!field_info_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
+        field_create_instance($instance);
+    }
+
+    else {
+        field_update_instance($instance);
+    }
 
     // Get rid of flat_source field option to select a local resource
     $field = field_info_field('flat_source');
@@ -38,7 +76,7 @@ function flat_workspaces_uninstall()
     $t = get_t();
 
 
-
+    /*
     // Get rid of flat_source field option to select a local resource
     $field = field_info_field('flat_source');
 
@@ -50,6 +88,7 @@ function flat_workspaces_uninstall()
         field_update_field($field);
 
     }
+    */
 
 
 }

@@ -13,7 +13,7 @@ function flat_nextcloud_admin_form($form, &$form_state)
     $form = array();
 
     $form['overview'] = array(
-        '#markup' => t('Administrators can configure here nextcloud settings. It is required that nextcloud runs on the same server as this drupal installation'),
+        '#markup' => t('Configure local Nextcloud instance settings for user data upload. Nextcloud needs to run on the same server as this Drupal installation'),
         '#prefix' => '<p>',
         '#suffix' => '</p>',);
 
@@ -25,8 +25,8 @@ function flat_nextcloud_admin_form($form, &$form_state)
 
 
     $form['nextcloud']['activated'] = array (
-        '#title' => t('Use nextcloud'),
-        '#description' => t('Allow incorporation of nextcloud in module'),
+        '#title' => t('Use Nextcloud'),
+        '#description' => t('Use Nextcloud for data upload '),
         '#type' => 'checkbox',
         '#default_value' => $config['activated'],
         '#required' => FALSE);
@@ -34,15 +34,15 @@ function flat_nextcloud_admin_form($form, &$form_state)
 
     $form['nextcloud']['admin_name'] = array (
         '#type' => 'textfield',
-        '#title' => 'Owncloud admin name',
-        '#description' => t('The nextcloud admin user name'),
+        '#title' => 'Nextcloud admin name',
+        '#description' => t('Nextcloud admin user name'),
         '#default_value' => $config['admin_name'],
         '#required' => TRUE,);
 
     $form['nextcloud']['admin_pass'] = array (
         '#type' => 'password',
-        '#title' => 'Owncloud admin password',
-        '#description' => t('The nextcloud admin user password'),
+        '#title' => 'Nextcloud admin password',
+        '#description' => t('Nextcloud admin user password'),
         '#default_value' => $config['admin_pass'],
         '#required' => FALSE,);
 
@@ -63,15 +63,15 @@ function flat_nextcloud_admin_form($form, &$form_state)
     $form['nextcloud']['root_dir'] = array (
         '#type' => 'textfield',
         '#title' => 'Nextcloud root directory',
-        '#description' => t('The nextcloud installation path'),
+        '#description' => t('Nextcloud installation path'),
         '#default_value' => $config['root_dir'],
         '#required' => TRUE,);
 
-    $form['nextcloud']['temp_dir'] = array (
+    $form['nextcloud']['data_dir'] = array (
         '#type' => 'textfield',
-        '#title' => 'Nextcloud temp directory',
-        '#description' => t('Directory where nextcloud can read/write temporary files (e.g. mount_user.json)'),
-        '#default_value' => $config['temp_dir'],
+        '#title' => 'Nextcloud data directory',
+        '#description' => t('Directory where Nextcloud stores uploaded user data'),
+        '#default_value' => $config['data_dir'],
         '#required' => TRUE,);
 
     $form['button']['submit'] = array (
@@ -190,11 +190,6 @@ function flat_nextcloud_admin_form_validate ($form, &$form_state)
 
     switch ($button) {
         case 'Save': {
-            $status = check_nextcloud_status();
-
-            if (!$status) {
-                form_set_error('activated', 'Nextcloud status failed');
-            }
 
             break;
         }
@@ -207,7 +202,7 @@ function flat_nextcloud_admin_form_validate ($form, &$form_state)
             $status = check_nextcloud_status();
 
             if (!$status) {
-                form_set_error('activated', 'Owncloud status failed');
+                form_set_error('activated', 'Nextcloud status check failed');
 
             } else {
                 $form_state['values']['status'] = $status;

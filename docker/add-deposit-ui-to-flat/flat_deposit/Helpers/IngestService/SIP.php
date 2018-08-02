@@ -282,7 +282,7 @@ abstract class SIP
         module_load_include('php', 'flat_deposit', '/Helpers/IngestService/Doorkeeper');
         $dk = new Doorkeeper();
         $dk->triggerServlet($this->sipId, $query);
-        $fid = $dk->checkStatus($this->sipId, 120);
+        $fid = $dk->checkStatus($this->sipId, 1800);
 
         $this->fid =$fid ;
 

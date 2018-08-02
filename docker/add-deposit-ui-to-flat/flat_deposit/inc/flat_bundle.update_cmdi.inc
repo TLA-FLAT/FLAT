@@ -4,6 +4,8 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object){
 
     drupal_set_title(t('Update Bundle Metadata'));
 
+    ctools_add_js('ajax-responder');
+
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
     $ds = islandora_datastream_load("CMD",$fedora_object->id);
     $inheritedData = CmdiHandler::simplexml_load_cmdi_string($ds->content);
@@ -273,24 +275,26 @@ function flat_bundle_update_form_final_validate($form, &$form_state){
  * Updates flat_collection node and redirects to parent node.
  *
  */
+
 function flat_bundle_update_cmdi_form_submit($form, &$form_state){
 
     $fid = $form_state['values']['data']['fid'];
     $target = 'islandora/object/' . $fid;
 
-    drupal_set_message('Bundle has been updated');
-
+    drupal_set_message('Bundle metadata has been updated');
+    
     ctools_include('ajax');
     ctools_add_js('ajax-responder');
     $commands[] = ctools_ajax_command_redirect($target);
     print ajax_render($commands);
     exit;
 
-
 }
 
 
 
 function flat_bundle_update_form_ajax_handler (&$form, &$form_state){
+
     return $form;
+    
 }

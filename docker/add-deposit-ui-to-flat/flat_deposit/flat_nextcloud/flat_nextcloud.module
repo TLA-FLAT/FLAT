@@ -1,10 +1,89 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: danrhe
- * Date: 07/11/16
- * Time: 16:22
+ * Module for using Nexcloud alongside FLAT for uploading data
+ * 
  */
+
+/**
+ * Implements hook_stream_wrappers().
+ */
+function flat_nextcloud_stream_wrappers()
+{
+    return array(
+        'nextcloud' => array(
+            'name' => t('Nextcloud Data Stream'),
+            'class' => 'NextcloudStreamWrapper',
+            'description' => t('Stream wrapper for Nextcloud stored data'),
+            'type' => STREAM_WRAPPERS_LOCAL_NORMAL,
+        ),
+
+    );
+}
+
+class NextcloudStreamWrapper extends DrupalPrivateStreamWrapper
+{
+    public function getDirectoryPath()
+    {
+
+        return variable_get('flat_nextcloud')['data_dir'];
+    }
+
+    /**
+     * Overrides getExternalUrl().
+     *
+     * Return the HTML URI of a private file.
+     */
+    public function getExternalUrl()
+    {
+        $path = str_replace('\\', '/', $this->getTarget());
+        return url('system/files/' . $path, array('absolute' => true));
+    }
+
+    /**
+     * Overrides StreamWrapperInterface::rename
+     */
+    public function rename($from_uri, $to_uri)
+    {
+        return rename($this->getLocalPath($from_uri), $this->getLocalPath($to_uri));
+    }
+
+    /**
+     * Overrides StreamWrapperInterface::getLocalPath
+     */
+    protected function getLocalPath($uri = null)
+    {
+        if (!isset($uri)) {
+            $uri = $this->uri;
+        }
+        $path = $this->getDirectoryPath() . '/' . $this->getTarget($uri);
+        $realpath = realpath($path);
+        if (!$realpath) {
+            // This file does not yet exist.
+            $realpath = realpath(dirname($path)) . '/' . drupal_basename($path);
+        }
+        $directory = realpath($this->getDirectoryPath());
+        if (!$realpath || !$directory || strpos($realpath, $directory) !== 0) {
+            return false;
+        }
+        return $realpath;
+    }
+
+}
+
+/**
+ * Implements hook_permission().
+ *
+ * setting up permission to use the Nextcloud module
+ * 
+ */
+function flat_nextcloud_permission()
+{
+    return array(
+        'use nextcloud' => array(
+            'title' => t('Use Nextcloud'),
+            'description' => t('Permission to use Nextcloud folders for adding resources to bundles')),
+    );
+}
 
 /**
  * Implements hook_menu().
@@ -14,73 +93,315 @@ function flat_nextcloud_menu()
 
     $items = array();
 
-    // Admin configuration - Owncloud settings
+    // Admin configuration - Nextcloud settings
     $items['admin/config/flat_deposit/manage_nextcloud'] = array(
-        'title' => 'Administer nextcloud',
-        'description' => 'Administer nextcloud root path and credentials',
+        'title' => 'Nextcloud settings',
+        'description' => 'Configure local Nextcloud instance settings for user data upload',
         'page callback' => 'drupal_get_form',
-        'page arguments' => array( 'flat_nextcloud_admin_form'),
+        'page arguments' => array('flat_nextcloud_admin_form'),
         'file' => 'inc/flat_nextcloud.admin_form.inc',
         'access arguments' => array('admin deposit module'));
 
     return $items;
 }
 
-
 /**
- * Show extra field 'activate_nextcloud' in user profile form.
- * In case user activates nextcloud integration (activate_nextcloud ==TRUE) extra validation and submission handlers are added
+ * Implements hook_user_profile_form_alter
+ *
+ * additional handler in case Nextcloud integration is enabled
+ *
+ * limits access to Nextcloud-related user profile fields to administrator and manager roles only
  *
  */
 function flat_nextcloud_form_user_profile_form_alter(&$form, &$form_state, $form_id)
 {
 
-        $form['#submit'][] = 'flat_nextcloud_user_profile_nextcloud_submit';
+    $form['#submit'][] = 'flat_nextcloud_user_profile_nextcloud_submit';
 
+    global $user;
+
+    $user_roles = $user->roles;
+
+    $manager = in_array('administrator', $user_roles) || in_array('manager', $user_roles);
+
+    if (!$manager) {
+
+        unset($form['nextcloud_integration']);
+        unset($form['nextcloud_uid']);
+
+    }
 
 }
-
-
 
 /**
  * In case the value of activate_nextcloud has changed, this submission handler ....
  */
-function flat_nextcloud_user_profile_nextcloud_submit (&$form, &$form_state)
+/*
+function flat_nextcloud_user_profile_nextcloud_submit(&$form, &$form_state)
 {
-    $original_value = $form['activate_nextcloud']['und']['#default_value'];
-    $entered_value = $form_state['values']['activate_nextcloud']['und'][0]['value'];
+    $original_value = $form['nextcloud_integration']['und']['#default_value'];
+    $entered_value = $form_state['values']['nextcloud_integration']['und'][0]['value'];
 
-
-    if ($original_value != $entered_value AND $entered_value === "1") {
+    if ($original_value != $entered_value and $entered_value === "1") {
         drupal_set_message('Implement here what on the backend should happen if user selects to use nextcloud');
 
-    }  elseif ($original_value != $entered_value AND $entered_value === "0") {
+    } elseif ($original_value != $entered_value and $entered_value === "0") {
         drupal_set_message('Implement here what on the backend should happen if user selects to disable nextcloud');
 
     }
 }
-
-
-function flat_nextcloud_form_flat_bundle_node_form_alter(&$form, &$form_state, $form_id){
-
-
-    $form['flat_source']['und']['#options']['newOption'] ='My new shiny Option';
-
-
-}
+*/
 
 /**
  * Implements hook_node_view_alter
  *
  */
-function flat_nextcloud_node_view_alter($node, $view_mode) {
+function flat_nextcloud_node_view_alter($node, $view_mode)
+{
 
+    //implement here how the view should change after activation of owncloud
 
-        //implement here how the view should change after activation of owncloud
+}
 
+/**
+ * Implements hook_node_form_alter
+ * 
+ * create form elements for selecting a nextcloud folder as the source of the files to be added to the bundle
+ *
+ */
+function flat_nextcloud_form_flat_bundle_node_form_alter(&$form, &$form_state, $form_id)
+{
 
+    hide($form['flat_nc_path']);
+    // also hide flat_ws_path, in case the workspaces module was installed but is not active
+    if(isset($form['flat_ws_path'])) {
+        hide($form['flat_ws_path']); 
+    }
 
+    $form['#validate'][] = 'flat_nextcloud_flat_bundle_node_form_validate';
 
+    // Add nextcloud directory selection form container element
+    // #state attribute makes it only visible if flat_source field is set to 'cloud'
+    ///////////
 
+    form_load_include($form_state, 'inc', 'flat_nextcloud', 'inc/class.Nextcloud');
+    module_load_include('inc', 'node', 'node.pages');
 
+    $form['nextcloud_navigation'] = Nextcloud::get_container();
+
+    // permission checks    
+    global $user;
+    $user_full = user_load($user->uid);
+    $nextcloudActivated = variable_get('flat_nextcloud')['activated'];
+    $nextcloudAllowed = user_access('use nextcloud');
+    $nextcloudEnabledForUser = isset($user_full->nextcloud_integration['und'][0]['value']) ? $user_full->nextcloud_integration['und'][0]['value'] : false;
+    $nextcloudUid = isset($user_full->nextcloud_uid['und'][0]['value']) ? $user_full->nextcloud_uid['und'][0]['value'] : false;
+
+    if (!$nextcloudActivated || !$nextcloudAllowed || !$nextcloudEnabledForUser) {
+        unset($form['flat_source']['und']['#options']['cloud']);
+        unset($form['nextcloud_navigation']);
+        return;
+    }
+
+    if (!$nextcloudUid) {
+        drupal_set_message(t('No Nextcloud User ID found. Please contact the archive manager.'), 'error');
+        unset($form['flat_source']['und']['#options']['cloud']);
+        unset($form['nextcloud_navigation']);
+        return;
+    }
+
+    $nextcloud_root = 'nextcloud://' . $nextcloudUid . '/files';
+
+    // check whether nextcloud root for user exists
+    if (!file_exists($nextcloud_root)) {
+        if (!isset($form_state['values'])) {
+            drupal_set_message(t('No Nextcloud directory found for your account. In case you have never logged in to Nextcloud, please do that first. If this error persists, please contact the archive manager.'), 'error');
+        }
+        unset($form['flat_source']['und']['#options']['cloud']);
+        unset($form['nextcloud_navigation']);
+        return;
+    }
+
+    if (isset($form['nextcloud_navigation'])) {
+        form_load_include($form_state, 'inc', 'node', 'node.pages');
+
+        if (isset($form['#node'])) {
+            $node = $form['#node'];
+            $wrapper = entity_metadata_wrapper('node', $node);
+        }
+
+        // add original path to values if node is edited and thus original path is already set.
+        $flat_original_path = $wrapper->flat_original_path->value();
+
+        if (empty($form_state['values']['next_nc_directories']) and $flat_original_path) {
+
+            $form_state['values']['flat_nc_path']['und'][0]['value'] = $flat_original_path;
+
+        }
+
+        // Get original directory value.
+        $current = Nextcloud::get_flat_nc_path($form_state, $nextcloud_root);
+
+        // (if chosen) extend 'current' directory value with value of next_directories
+        if (!empty($form_state['values']['next_nc_directories'])) {
+
+            if ($form_state['values']['next_nc_directories'] == '..') {
+
+                $current = dirname($current);
+
+            } else {
+
+                $current .= "/" . $form_state['values']['next_nc_directories'];
+            }
+
+            unset($form_state['values']['next_nc_directories']);
+            $form['nextcloud_navigation']['field']['next_nc_directories']['#options'] = array();
+            $form['nextcloud_navigation']['field']['next_nc_directories']['#access'] = false;
+
+            $form['nextcloud_navigation']['field']['next_nc_directories']['#default_value'] = '';
+            $form_state['input']['next_nc_directories'] = '';
+
+        }
+
+        // alter value of the flat_nc_path field to current dir value
+
+        $form['flat_nc_path']['und'][0]['value']['#value'] = $current;
+        
+        // print result to screen
+        $form['nextcloud_navigation']['field']['current_directory']['#markup'] = '</br>Currently selected folder: <strong><br>' .
+        str_replace('nextcloud://' . $nextcloudUid . '/files', '[Nextcloud]', $current . '</strong>');
+
+        // populate dropdown with subdirectories
+        $NcSubDirs = Nextcloud::listAccessibleFolderContent($current, $nextcloud_root, ['hasValidDirectoryName', 'isDir', 'webUserHasWritePermissions', 'isNotCurrentDir']);
+
+        if (!empty($NcSubDirs)) {
+            $form['nextcloud_navigation']['field']['next_nc_directories']['#options'] = array_combine($NcSubDirs, $NcSubDirs);
+            $form['nextcloud_navigation']['field']['next_nc_directories']['#access'] = true;
+            if (count($NcSubDirs) == 1) {
+
+                if ($flat_original_path != $current) {
+
+                    // Validate that no other bundle is using same folder
+                    $query = new EntityFieldQuery();
+                    $query->entityCondition('entity_type', 'node')
+                        ->entityCondition('bundle', 'flat_bundle')
+                        ->fieldCondition('flat_original_path', 'value', $current, '=');
+
+                    $results = $query->execute();
+                    if (empty(!$results)) {
+
+                        form_set_error('flat_original_path', 'The selected Nextcloud folder is already in use for a different bundle');
+
+                    }
+
+                }
+
+                $form['nextcloud_navigation']['field']['next_nc_directories']['#title'] = 'Subfolder';
+            }
+
+        }
+
+    }
+
+}
+
+function flat_nextcloud_flat_bundle_node_form_validate($form, &$form_state)
+{
+    // Validate that currently selected folder has no subfolders and contains no more than configured maximum files
+    if ($form_state['values']['flat_source']['und'][0]['value'] == 'cloud') {
+        $dir = isset($form_state['values']['flat_nc_path']['und'][0]['value']) ? $form_state['values']['flat_nc_path']['und'][0]['value'] : FALSE;
+        if ($dir) {
+            $files = file_scan_directory($dir, '/.*/', array('min_depth' => 0));
+            $max_files = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
+            if (file_exists(drupal_realpath($dir)) AND !empty(glob(drupal_realpath($dir).'/*', GLOB_ONLYDIR))){
+                form_set_error('next_nc_directories', 'The selected Nextcloud folder contains subfolders');
+                return $form;
+            }
+            elseif (count($files) > $max_files) {
+                form_set_error('next_nc_directories', t('The selected Nextcloud folder contains more than !max_files files', ['!max_files' => $max_files]));
+                return $form;
+            }
+        }
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', 'flat_bundle')
+            ->fieldCondition('flat_original_path', 'value', $dir, '=')
+        ;
+
+        $results = $query->execute();
+        if (empty(!$results)) {
+
+            form_set_error('next_nc_directories', 'The selected Nextcloud folder is already in use for a different bundle');
+        }
+    }
+}
+
+function flat_nextcloud_node_view($node, $view_mode, $langcode)
+{
+
+    if ($node->type == 'flat_bundle' and $view_mode == 'full' and node_is_page($node)) {
+
+        $wrapper = entity_metadata_wrapper('node', $node);
+
+        if ($wrapper->flat_source->value() == 'cloud') {
+            $path = $node->content['flat_original_path'][0]['#markup'];
+            $path = str_replace('nextcloud://', '', $path);
+            $path = str_replace('external://', '', $path);
+            $path = str_replace('freeze://', '[protected folder on server]', $path);
+            $node->content['flat_original_path'][0]['#markup'] = $path;
+        }
+
+    }
+}
+
+/**
+ * Implements hook_data_move_actions().
+ *
+ * Call Nextcloud occ to re-scan parent directory of source or target after performing data move
+ *
+ */
+function flat_nextcloud_data_move_actions($source_location, $target_location)
+{
+
+    $config = variable_get('flat_nextcloud');
+    $stream_wrapper = 'nextcloud://';
+
+    if (strpos($source_location, $stream_wrapper) === 0) {
+        $path = str_replace($stream_wrapper, '', $source_location);
+    } elseif (strpos($target_location, $stream_wrapper) === 0) {
+        $path = str_replace($stream_wrapper, '', $target_location);
+    }
+    if (isset($path)) {
+        $path = dirname($path);
+        $cmd = $config['root_dir'] . 'occ files:scan --path="' . $path . '"';
+        exec($cmd, $output, $return_val);
+    }
+
+    return true;
+
+}
+
+/**
+ * Implements hook_node_presave()
+ * 
+ * get value from flat_nc_path and set flat_original_path and flat_location to that value
+ * 
+ * note! also gets called during node delete and metadata save, hence the extra checks
+ * 
+ */
+function flat_nextcloud_node_presave($node) {
+
+    if (isset($node->form_id)) {
+        if ($node->form_id == 'flat_bundle_node_form') {
+            if (isset($node->flat_source)) {
+                if ($node->flat_source['und'][0]['value'] == 'cloud') {
+                    if (isset($node->flat_nc_path['und'])) {
+                        $value = $node->flat_nc_path['und'][0]['value'];
+                        $node->flat_original_path['und'][0]['value'] = $value;
+                        $node->flat_location['und'][0]['value'] = $value;
+                    }
+                }
+            }
+        }
+    }
 }

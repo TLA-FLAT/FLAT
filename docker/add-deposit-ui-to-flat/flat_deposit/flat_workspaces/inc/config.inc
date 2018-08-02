@@ -4,10 +4,19 @@
 function flat_workspaces_set_variables($updated_values=NULL){
 
     $defaults =  array(
-        #root path for locally stored data
+        'activated' => FALSE,
         'mount_folder' => '/app/flat/deposit/local/',
         'workspace_folder' => 'workspaces',
         'archive_folder' => 'archive_deposit',
+        'department_mapping' => array(
+            'lac' => 'Language and Cognition',
+            'ladd' => 'Language Development',
+            'lag' => 'Language and Genetics',
+            'nbl' => 'Neurobiology of Language',
+            'nvc' => 'Neurogenetics of Vocal Communication',
+            'pol' => 'Psychology of Language',
+            'tg' => 'Technical group',
+        ),
         );
 
     //clean up stored values

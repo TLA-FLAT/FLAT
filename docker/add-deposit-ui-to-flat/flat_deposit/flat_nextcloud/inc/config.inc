@@ -10,7 +10,7 @@ function flat_nextcloud_set_nextcloud($updated_values=NULL){
         'schema' => 'https',
         'host' => $_SERVER['HTTP_HOST'],
         'root_dir'=> '/var/www/nextcloud/',
-        'temp_dir'=> '/tmp/',
+        'data_dir'=> '/var/www/nextcloud/data/',
         );
 
     //clean up stored values

@@ -4,6 +4,8 @@ function flat_collection_update_form($form, &$form_state, $fedora_object){
 
     drupal_set_title(t('Update Collection Metadata'));
 
+    ctools_add_js('ajax-responder');
+
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
     $ds = islandora_datastream_load("CMD",$fedora_object->id);
     

@@ -118,7 +118,7 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
 
     # deactivate link to file browser for local bundles
     $source = $wrapper->flat_source->value();
-    $enable_file_browser = $source == 'local' ? FALSE : TRUE;
+    $enable_file_browser = in_array($source, array('local', 'cloud')) ? FALSE : TRUE;
 
 
     switch ($status) {
@@ -170,10 +170,13 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
 
 
     // Activate metadata creation button only if 1) cmdi option is 'new' 2) status is either open or failed and 3) no cmdi has been created
+    // If metadata creation button is active (.e.g. if metadata file has been removed), validate button should be disabled.
     if ($wrapper->flat_cmdi_option->value() == 'new' AND ($status == 'open' OR $status == 'failed') AND (empty($node->flat_cmdi_file))) {
 
         $form['actions']['describe_bundle']['#access'] = TRUE;
         $form['actions']['describe_bundle']['#attributes']['class'][] = 'btn-success';
+        $form['actions']['validate_bundle']['#disabled'] = TRUE;
+
     }
 
 }

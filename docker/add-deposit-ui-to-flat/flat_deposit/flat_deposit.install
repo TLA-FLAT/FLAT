@@ -95,7 +95,7 @@ function flat_deposit_install()
                 'authenticated' => 'authenticated users',
                 'academic' => 'academic users',
                 'private' => 'private',
-                'inherit' => 'inherit',
+                //'inherit' => 'inherit',
             ),
         ),
         'locked' => TRUE,
@@ -103,6 +103,14 @@ function flat_deposit_install()
 
     $fields['flat_original_path'] = array(
         'field_name' => 'flat_original_path',
+        'type' => 'text',
+        'cardinality' => 1,
+        'settings' => array(
+            'max_length' => 5000)
+    );
+
+    $fields['flat_new_path'] = array(
+        'field_name' => 'flat_new_path',
         'type' => 'text',
         'cardinality' => 1,
         'settings' => array(
@@ -486,6 +494,23 @@ function flat_deposit_install()
         'field_name' => 'flat_original_path',
         'bundle' => 'flat_bundle',
         'label' => $t('Original Path of locally stored data'),
+        'widget' => array(
+            'type' => 'text_textfield',
+        ),
+        'required' => FALSE,
+        'disabled' => TRUE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            )
+        )
+    );
+
+    $instances['flat_new_path'] = array(
+        'field_name' => 'flat_new_path',
+        'bundle' => 'flat_bundle',
+        'label' => $t('New Path of locally stored data'),
         'widget' => array(
             'type' => 'text_textfield',
         ),

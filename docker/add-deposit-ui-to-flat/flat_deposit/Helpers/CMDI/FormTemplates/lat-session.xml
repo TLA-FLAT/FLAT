@@ -377,7 +377,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                             <title>Link</title>
                             <type>textfield</type>
                         </attribute>
-                        <attribute id="attribute_06" name="Link" type="Leaf" minOccurrence="0">
+                        <attribute id="attribute_06" name="Type" type="Leaf" minOccurrence="0">
                             <title>Type</title>
                             <type>dropdown</type>
                             <options>
@@ -571,7 +571,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                                 <title>Link</title>
                                 <type>textfield</type>
                             </attribute>
-                            <attribute id="attribute_09" name="Link" type="Leaf" minOccurrence="0">
+                            <attribute id="attribute_09" name="Type" type="Leaf" minOccurrence="0">
                                 <title>Type</title>
                                 <type>dropdown</type>
                                 <options>
