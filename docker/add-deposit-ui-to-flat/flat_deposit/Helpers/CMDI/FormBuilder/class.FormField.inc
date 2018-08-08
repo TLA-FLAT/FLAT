@@ -106,7 +106,7 @@ class FormField
     private function setFieldTree(&$formField)
     {
 
-        if ($this->formTemplateNode->type == 'fieldset') {
+        if (($this->formTemplateNode->type == 'fieldset') OR ($this->formTemplateNode->type == 'container')) {
 
             $formField['#tree'] = true;
 
@@ -149,6 +149,12 @@ class FormField
 
                 $type = 'fieldset';
 
+                break;
+
+            case 'container':
+
+                 $type = 'container';
+                 
                 break;
 
             case 'textarea':
@@ -265,6 +271,8 @@ class FormField
                 $nestedNodeName = $nestedFormComponent->getFormKeyName($nestedNode);
                 $this->formField[$nestedNodeName] = $nestedFormComponent->getFormComponent();
 
+                // attributes of the nested items
+
                 foreach ($nestedNode->attribute as $attribute) {
 
                     $className = "Form" . (string)$attribute['type'];
@@ -292,6 +300,37 @@ class FormField
             }
 
         }
+
+        // attributes of the composite items
+
+        if (isset($this->formTemplateNode->attribute)) {
+
+            foreach ($this->formTemplateNode->attribute as $attribute) {
+
+                $className = "Form" . (string)$attribute['type'];
+
+                $numberElements = isset($attribute['minOccurrence']) ? (int)$attribute['minOccurrence'] : 0;
+
+                $attributeFormComponent = new $className($numberElements);
+
+                $attributeKey = (string)$attribute->attributes()['name'];
+
+                $attributeDataNode = $existingCmdiNode->{$key}[$index];
+        
+                $attributeButtonId = $buttonId . "_" . (int)$index;
+
+                $attributePressedButton = isset($pressedButtons[$index]) ? $pressedButtons[$index] : null;
+
+                $attributeFormComponent->setFormComponent($attribute, $attributeDataNode, $attributePressedButton, $attributeButtonId, $inheritAll);
+
+                $attributeNodeName = $attributeFormComponent->getFormKeyName($attribute);
+
+                $this->formField[$attributeNodeName] = $attributeFormComponent->getFormComponent();
+
+            }
+
+        }
+
     }
 
 }

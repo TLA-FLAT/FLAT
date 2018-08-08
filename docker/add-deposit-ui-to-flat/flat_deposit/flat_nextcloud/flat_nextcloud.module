@@ -116,7 +116,7 @@ function flat_nextcloud_menu()
 function flat_nextcloud_form_user_profile_form_alter(&$form, &$form_state, $form_id)
 {
 
-    $form['#submit'][] = 'flat_nextcloud_user_profile_nextcloud_submit';
+    //$form['#submit'][] = 'flat_nextcloud_user_profile_nextcloud_submit';
 
     global $user;
 

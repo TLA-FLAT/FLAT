@@ -232,17 +232,7 @@ private function clearInheritedTitle(&$dataNode){
             $formComponent->setFormComponent($component, $dataNode, $pressedButtons, $index, $inheritAll);
             $nodeName = $formComponent->getFormKeyName($component);
             $this->formComponents[$nodeName] = $formComponent->getFormComponent();
-            /*
-            // attribute support at the component (not leaf) level. Needs more work.
-            foreach ($component->attribute as $attribute) {
-            $className = "Form" . (string)$attribute['type'];
-            $numberElements = isset($attribute['minOccurrence']) ? (int)$attribute['minOccurrence'] : 0;
-            $formAttribute = new $className($numberElements);
-            $formAttribute->setFormComponent($attribute, $dataNode, $pressedButtons, $index, $inheritAll);
-            $nodeName = $formAttribute->getFormKeyName($attribute);
-            $this->formComponents[$nodeName] = $formAttribute->getFormComponent();
-            }
-	        */	
+	        
         }
 
         return true;

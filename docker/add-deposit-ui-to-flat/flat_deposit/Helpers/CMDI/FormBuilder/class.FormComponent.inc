@@ -203,8 +203,8 @@ abstract class FormComponent
     {
         $showButtons = false;
 
-        if ($templateNode->type == 'hidden'){
-            // do not add buttons to hidden form elements
+        if (($templateNode->type == 'hidden') OR ($templateNode->type == 'container')) {
+            // do not add buttons to hidden form elements or containers
             return;
         }
 

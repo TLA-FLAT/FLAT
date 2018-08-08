@@ -108,13 +108,13 @@ function flat_bundle_action_form($form, &$form_state)
 
 function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $form_id){
 
+
     $node = menu_get_object();
     $wrapper = entity_metadata_wrapper('node', $node);
 
     // Specify which handlers to become active and which bundle_image to display
     $form['actions']['edit_bundle']['#disabled'] = TRUE;
     $status = $wrapper->flat_bundle_status->value();
-
 
     # deactivate link to file browser for local bundles
     $source = $wrapper->flat_source->value();
@@ -229,6 +229,8 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
 
     $node = $form_state['values']['node'];
     $nid = $node->nid;
+    $wrapper = entity_metadata_wrapper('node', $node);
+    $path = $wrapper->flat_location->value();
 
     $parent_is_known = parent_is_known($nid);
     $has_cmdi = has_cmdi($nid);
@@ -240,7 +242,7 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
 
     // validate that a collection has been selected
     if ($parent_is_known === false){
-        form_set_error('error', "Bundle has not been assigned to a collection");
+        form_set_error('error', "The bundle has not been assigned to a collection");
         return $form;
     }
 
@@ -252,7 +254,7 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
 
     // Quick and dirty Check cmdi valid xml
     if ($valid_xml === false){
-        form_set_error('validate_bundle', t("Attached file is no valid xml file"));
+        form_set_error('validate_bundle', t("The CMDI metadata file is not a valid xml file"));
         return $form;
     }
 
@@ -266,39 +268,43 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
     // Check existence external location
     if ($file_exists === false){
 
-        $wrapper = entity_metadata_wrapper('node', $node);
-        $path = $wrapper->flat_location->value();
-        form_set_error('validate_bundle',t('File location does not exist (:path) ' , array(':path' => $path)));
+        form_set_error('validate_bundle',t('Location does not exist (:path) ' , array(':path' => $path)));
         return $form;
 
     }
 
     // Check user permissions
     if ($user_has_permissions === false){
-        form_set_error('validate_bundle', t('User has not enough privileges to perform requested action'));
+        form_set_error('validate_bundle', t('You do not have the permission to perform this action. Please contact the archive manager.'));
         return $form;
     }
 
-    // Validate path and number of files in bundle
-    $wrapper = entity_metadata_wrapper('node', $node);
-    $path = $wrapper->flat_location->value();
-
+    // Validate path, number of files in bundle and whether there are deleted files
 
     if (!file_exists($path)){
-        form_set_error('validate_bundle', t('Bundle directory does not exist or is not accessible'));
+        form_set_error('validate_bundle', t('The selected folder does not exist or is not accessible.'));
         return $form;
     }
 
     $nFiles = count(array_diff(scandir(drupal_realpath($path)), ['.','..']));
+    $deletedFiles = isset($wrapper->flat_deleted_resources) ? $wrapper->flat_deleted_resources->value() : NULL;
+
     $max = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
 
     if ($nFiles == 0){
-        form_set_error('validate_bundle', t('Bundle contains no files. Please upload files first'));
+        if (isset($deletedFiles)) {
+            if ($deletedFiles == '') {
+                form_set_error('validate_bundle', t('No new files specified and no exising files selected for removal.'));
+            }
+        }
+        else {
+            form_set_error('validate_bundle', t('The selected folder contains no files.'));
+        }
         return $form;
     }
 
     if ($nFiles > $max){
-        form_set_error('validate_bundle', t('Bundle contains too many files. Please reduce amount of file to !limit', array('!limit'=> $max)));
+        form_set_error('validate_bundle', t('The selected folder contains too many files, the maximum is !limit', array('!limit'=> $max)));
         return $form;
     }
 

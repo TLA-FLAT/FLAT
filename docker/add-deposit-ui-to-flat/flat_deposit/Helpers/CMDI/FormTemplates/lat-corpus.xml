@@ -12,6 +12,8 @@ and children:
 * date
 * dropdown
 * hidden
+* fieldset
+* container (to be used on a "Composite" item that only contains hidden children, instead of using fieldset, which will show an empty fieldset in such cases).
 * (empty) missing values will be rendered as textitem
 - title: The title which will appear as the label above the element
 - description (optional): an info box with this value will appear when hovering above the element
@@ -54,14 +56,26 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                 <type>textarea</type>
             </item>
         </item>
-        <item id="fieldset_03" name="Catalogue" type="Composite"  minOccurrence="0">
+        <item id="fieldset_03" name="CorpusLink" type="Composite" multival="true" minOccurrence="0">
+            <title>CorpusLink</title>
+            <type>container</type>    
+            <item id="field_06" name="Name" type="Leaf" minOccurrence="0">
+                <title>Name</title>
+                <type>hidden</type>
+            </item>
+            <attribute id="attribute_04" name="ref" type="Leaf" minOccurrence="0">
+                <title>ref</title>
+                <type>hidden</type>
+            </attribute>
+        </item>
+        <item id="fieldset_04" name="Catalogue" type="Composite"  minOccurrence="0">
             <type>fieldset</type>
             <title>Catalogue</title>
-            <item id="field_06" name="ContentType" type="Leaf" multival="true" minOccurrence="0">
+            <item id="field_07" name="ContentType" type="Leaf" multival="true" minOccurrence="0">
                 <title>Description</title>
                 <type>textarea</type>
             </item>
-            <item id="field_07" name="SmallestAnnotationUnit" type="Leaf" multival="true" minOccurrence="0">
+            <item id="field_08" name="SmallestAnnotationUnit" type="Leaf" multival="true" minOccurrence="0">
                 <title>SmallestAnnotationUnit</title>
                 <type>dropdown</type>
                 <options>
@@ -73,80 +87,80 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                     <option>phoneme</option>
                 </options>
             </item>
-            <item id="field_08" name="Date" type="Leaf" minOccurrence="0">
+            <item id="field_09" name="Date" type="Leaf" minOccurrence="0">
                 <type>textfield</type>
                 <title>Date</title>
                 <description>CreationDate notation options: yyyy | yyyy-mm | yyyy-mm-dd | Unknown | Unspecified</description>
             </item>
-            <item id="field_09" name="Publisher" type="Leaf" multival="true" minOccurrence="0">
+            <item id="field_10" name="Publisher" type="Leaf" multival="true" minOccurrence="0">
                 <title>Publisher</title>
                 <type>textfield</type>
             </item>
-            <item id="field_10" name="Author" type="Leaf" multival="true" minOccurrence="0">
+            <item id="field_11" name="Author" type="Leaf" multival="true" minOccurrence="0">
                 <title>Author</title>
                 <type>textfield</type>
             </item>
-            <item id="field_11" name="Size" type="Leaf" minOccurrence="0">
+            <item id="field_12" name="Size" type="Leaf" minOccurrence="0">
                 <title>Size</title>
                 <type>textfield</type>
             </item>
-            <item id="field_11" name="DistributionForm" type="Leaf" minOccurrence="0">
+            <item id="field_13" name="DistributionForm" type="Leaf" minOccurrence="0">
                 <title>DistributionForm</title>
                 <type>textfield</type>
             </item>
-            <item id="field_12" name="Pricing" type="Leaf" minOccurrence="0">
+            <item id="field_14" name="Pricing" type="Leaf" minOccurrence="0">
                 <title>Pricing</title>
                 <type>textfield</type>
             </item>
-            <item id="field_13" name="ContactPerson" type="Leaf" minOccurrence="0">
+            <item id="field_15" name="ContactPerson" type="Leaf" minOccurrence="0">
                 <title>ContactPerson</title>
                 <type>textfield</type>
             </item>
-            <item id="field_11" name="Publications" type="Leaf" minOccurrence="0">
+            <item id="field_16" name="Publications" type="Leaf" minOccurrence="0">
                 <title>Publications</title>
                 <type>textfield</type>
             </item>
-            <item id="fieldset_04" name="descriptions" type="Composite" minOccurrence="0">
+            <item id="fieldset_05" name="descriptions" type="Composite" minOccurrence="0">
                 <type>fieldset</type>
                 <title>descriptions</title>
-                <item id="field_12" name="Description" type="Leaf" multival="true" minOccurrence="1">
+                <item id="field_17" name="Description" type="Leaf" multival="true" minOccurrence="1">
                     <title>Description</title>
                     <type>textarea</type>
                 </item>
             </item>
-            <item id="fieldset_05" name="Document_Languages" type="Composite" minOccurrence="0">
+            <item id="fieldset_06" name="Document_Languages" type="Composite" minOccurrence="0">
                 <type>fieldset</type>
                 <title>Document Languages</title>
-                <item id="fieldset_06" name="Document_Language" type="Composite" multival="true" minOccurrence="1">
+                <item id="fieldset_07" name="Document_Language" type="Composite" multival="true" minOccurrence="1">
                     <type>fieldset</type>
                     <title>Document Language</title>
-                    <item id="field_13" name="Id" type="Leaf" minOccurrence="1">
+                    <item id="field_18" name="Id" type="Leaf" minOccurrence="1">
                         <title>Id</title>
                         <type>textfield</type>
                         <description>Valid entries are: ISO639-3 language code | Unknown | Unspecified</description>
                     </item>
-                    <item id="field_14" name="Name" type="Leaf" minOccurrence="1">
+                    <item id="field_19" name="Name" type="Leaf" minOccurrence="1">
                         <title>Name</title>
                         <type>textfield</type>
                     </item>
                 </item>
             </item>
-            <item id="fieldset_07" name="Subject_Languages" type="Composite" minOccurrence="0">
+            <item id="fieldset_08" name="Subject_Languages" type="Composite" minOccurrence="0">
                 <type>fieldset</type>
                 <title>Document Languages</title>
-                <item id="fieldset_08" name="Subject_Language" type="Composite" multival="true" minOccurrence="1">
+                <item id="fieldset_09" name="Subject_Language" type="Composite" multival="true" minOccurrence="1">
                     <type>fieldset</type>
                     <title>Subject Language</title>
-                    <item id="field_13" name="Id" type="Leaf" minOccurrence="1">
+                    <item id="field_20" name="Id" type="Leaf" minOccurrence="1">
                         <title>Id</title>
                         <type>textfield</type>
                         <description>Valid entries are: ISO639-3 language code | Unknown | Unspecified</description>
                     </item>
-                    <item id="field_14" name="Name" type="Leaf" minOccurrence="1">
+                    <item id="field_21" name="Name" type="Leaf" minOccurrence="1">
                         <title>Name</title>
                         <type>textfield</type>
                     </item>
-                    <item id="field_15" name="Dominant" type="Leaf" minOccurrence="0">
+                    <item id="field_22" name="Dominant" type="Leaf" minOccurrence="0">
                         <title>Dominant</title>
                         <type>dropdown</type>
                         <options>
@@ -156,7 +170,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                             <option>false</option>
                         </options>
                     </item>
-                    <item id="field_16" name="SourceLanguage" type="Leaf" minOccurrence="0">
+                    <item id="field_23" name="SourceLanguage" type="Leaf" minOccurrence="0">
                         <title>SourceLanguage</title>
                         <type>dropdown</type>
                         <options>
@@ -166,7 +180,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                             <option>false</option>
                         </options>
                     </item>
-                    <item id="field_16" name="TargetLanguage" type="Leaf" minOccurrence="0">
+                    <item id="field_24" name="TargetLanguage" type="Leaf" minOccurrence="0">
                         <title>TargetLanguage</title>
                         <type>dropdown</type>
                         <options>
@@ -176,20 +190,20 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                             <option>false</option>
                         </options>
                     </item>
-                    <item id="fieldset_09" name="descriptions" type="Composite" minOccurrence="0">
+                    <item id="fieldset_10" name="descriptions" type="Composite" minOccurrence="0">
                         <type>fieldset</type>
                         <title>descriptions</title>
-                        <item id="field_17" name="Description" type="Leaf" multival="true" minOccurrence="1">
+                        <item id="field_25" name="Description" type="Leaf" multival="true" minOccurrence="1">
                             <title>Description</title>
                             <type>textarea</type>
                         </item>
                     </item>
                 </item>
             </item>
-            <item id="fieldset_10" name="Location" type="Composite" multival="true" minOccurrence="0">
+            <item id="fieldset_11" name="Location" type="Composite" multival="true" minOccurrence="0">
                 <type>fieldset</type>
                 <title>Location</title>
-                <item id="field_18" name="Continent" type="Leaf" minOccurrence="1">
+                <item id="field_26" name="Continent" type="Leaf" minOccurrence="1">
                     <title>Continent</title>
                     <type>dropdown</type>
                     <options>
@@ -205,43 +219,43 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                         <option>South-America</option>
                     </options>
                 </item>
-                <item id="field_19" name="Country" type="Leaf" minOccurrence="1">
+                <item id="field_27" name="Country" type="Leaf" minOccurrence="1">
                     <title>Country</title>
                     <type>textfield</type>
                 </item>
-                <item id="field_20" name="Region" type="Leaf" multival="true" minOccurrence="0">
+                <item id="field_28" name="Region" type="Leaf" multival="true" minOccurrence="0">
                     <title>Region</title>
                     <type>textfield</type>
                 </item>
-                <item id="field_21" name="Address" type="Leaf" minOccurrence="0">
+                <item id="field_29" name="Address" type="Leaf" minOccurrence="0">
                     <title>Address</title>
                     <type>textfield</type>
                 </item>
             </item>
-            <item id="fieldset_11" name="Format" type="Composite" minOccurrence="0">
+            <item id="fieldset_12" name="Format" type="Composite" minOccurrence="0">
                 <type>fieldset</type>
                 <title>Format</title>
-                <item id="field_22" name="Text" type="Leaf" multival="true" minOccurrence="0">
+                <item id="field_30" name="Text" type="Leaf" multival="true" minOccurrence="0">
                     <title>Text</title>
                     <type>textfield</type>
                 </item>
-                <item id="field_23" name="Audio" type="Leaf" multival="true" minOccurrence="0">
+                <item id="field_31" name="Audio" type="Leaf" multival="true" minOccurrence="0">
                     <title>Audio</title>
                     <type>textfield</type>
                 </item>
-                <item id="field_24" name="Video" type="Leaf" multival="true" minOccurrence="0">
+                <item id="field_32" name="Video" type="Leaf" multival="true" minOccurrence="0">
                     <title>Video</title>
                     <type>textfield</type>
                 </item>
-                <item id="field_25" name="Image" type="Leaf" multival="true" minOccurrence="0">
+                <item id="field_33" name="Image" type="Leaf" multival="true" minOccurrence="0">
                     <title>Image</title>
                     <type>textfield</type>
                 </item>
             </item>
-            <item id="fieldset_12" name="Quality" type="Composite" minOccurrence="0">
+            <item id="fieldset_13" name="Quality" type="Composite" minOccurrence="0">
                 <type>fieldset</type>
                 <title>Quality</title>
-                <item id="field_26" name="Text" type="Leaf" multival="true" minOccurrence="0">
+                <item id="field_34" name="Text" type="Leaf" multival="true" minOccurrence="0">
                     <title>Text</title>
                     <type>dropdown</type>
                     <options>
@@ -254,7 +268,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                         <option>5</option>
                     </options>
                 </item>
-                <item id="field_27" name="Audio" type="Leaf" multival="true" minOccurrence="0">
+                <item id="field_35" name="Audio" type="Leaf" multival="true" minOccurrence="0">
                     <title>Audio</title>
                     <type>dropdown</type>
                     <options>
@@ -267,7 +281,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                         <option>5</option>
                     </options>
                 </item>
-                <item id="field_28" name="Video" type="Leaf" multival="true" minOccurrence="0">
+                <item id="field_36" name="Video" type="Leaf" multival="true" minOccurrence="0">
                     <title>Video</title>
                     <type>dropdown</type>
                     <options>
@@ -280,7 +294,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                         <option>5</option>
                     </options>
                 </item>
-                <item id="field_29" name="Image" type="Leaf" multival="true" minOccurrence="0">
+                <item id="field_37" name="Image" type="Leaf" multival="true" minOccurrence="0">
                     <title>Image</title>
                     <type>dropdown</type>
                     <options>
@@ -294,71 +308,22 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                     </options>
                 </item>
             </item>
-            <item id="fieldset_13" type="Composite" name="Project" multival="true"  minOccurrence="0">
+            <item id="fieldset_14" name="Project" type="Composite" multival="true"  minOccurrence="0">
                 <title>Project</title>
                 <type>fieldset</type>
-                <item id="field_30" name="Name" type="Leaf"  minOccurrence="1">
+                <item id="field_38" name="Name" type="Leaf"  minOccurrence="1">
                     <title>Project Name</title>
                     <type>textfield</type>
                 </item>
-                <item id="field_31" name="Title" type="Leaf" minOccurrence="0">
+                <item id="field_39" name="Title" type="Leaf" minOccurrence="0">
                     <title>Project Title</title>
                     <type>textfield</type>
                 </item>
-                <item id="field_32" name="Id" type="Leaf" minOccurrence="0">
+                <item id="field_40" name="Id" type="Leaf" minOccurrence="0">
                     <title>Project identifier</title>
                     <type>textfield</type>
                 </item>
-                <item id="fieldset_14" type="Composite" name="Contact" multival="true" minOccurrence="1">
-                    <title>Contact</title>
-                    <type>fieldset</type>
-                    <item id="field_33" name="Name" type="Leaf" minOccurrence="0">
-                        <title>Name</title>
-                        <type>textfield</type>
-                    </item>
-                    <item id="field_34" name="Address" type="Leaf" minOccurrence="0">
-                        <title>Address</title>
-                        <type>textfield</type>
-                    </item>
-                    <item id="field_35" name="Email" type="Leaf" minOccurrence="0">
-                        <title>Email</title>
-                        <type>textfield</type>
-                    </item>
-                    <item id="field_36" name="Organisation" type="Leaf" minOccurrence="0">
-                        <title>Organisation</title>
-                        <type>textfield</type>
-                    </item>
-                </item>
-                <item id="fieldset_15" name="descriptions" type="Composite" minOccurrence="0">
-                    <type>fieldset</type>
-                    <title>descriptions</title>
-                    <item id="field_37" name="Description" type="Leaf" multival="true" minOccurrence="1">
-                        <title>Description</title>
-                        <type>textarea</type>
-                    </item>
-                </item>
-            </item>
-            <item id="fieldset_16" name="Access" type="Composite" minOccurrence="0">
-                <type>fieldset</type>
-                <title>Access</title>
-                <item id="field_38" name="Availability" type="Leaf" minOccurrence="1">
-                    <title>Description</title>
-                    <type>textarea</type>
-                </item>
-                <item id="field_39" name="Date" type="Leaf" minOccurrence="1">
-                    <type>textfield</type>
-                    <title>Date</title>
-                    <description>CreationDate notation options: yyyy | yyyy-mm | yyyy-mm-dd | Unknown | Unspecified</description>
-                </item>
-                <item id="field_40" name="Owner" type="Leaf" minOccurrence="1">
-                    <title>Owner</title>
-                    <type>textfield</type>
-                </item>
-                <item id="field_40" name="Publisher" type="Leaf" minOccurrence="1">
-                    <title>Publisher</title>
-                    <type>textfield</type>
-                </item>
-                <item id="fieldset_17" type="Composite" name="Contact" minOccurrence="1">
+                <item id="fieldset_15" name="Contact" type="Composite" multival="true" minOccurrence="1">
                     <title>Contact</title>
                     <type>fieldset</type>
                     <item id="field_41" name="Name" type="Leaf" minOccurrence="0">
@@ -378,7 +343,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                         <type>textfield</type>
                     </item>
                 </item>
-                <item id="fieldset_18" name="descriptions" type="Composite" minOccurrence="0">
+                <item id="fieldset_16" name="descriptions" type="Composite" minOccurrence="0">
                     <type>fieldset</type>
                     <title>descriptions</title>
                     <item id="field_45" name="Description" type="Leaf" multival="true" minOccurrence="1">
@@ -387,13 +352,62 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                     </item>
                 </item>
             </item>
-            <item id="fieldset_19" name="Keys" type="Composite" minOccurrence="0">
+            <item id="fieldset_17" name="Access" type="Composite" minOccurrence="0">
+                <type>fieldset</type>
+                <title>Access</title>
+                <item id="field_46" name="Availability" type="Leaf" minOccurrence="1">
+                    <title>Description</title>
+                    <type>textarea</type>
+                </item>
+                <item id="field_47" name="Date" type="Leaf" minOccurrence="1">
+                    <type>textfield</type>
+                    <title>Date</title>
+                    <description>CreationDate notation options: yyyy | yyyy-mm | yyyy-mm-dd | Unknown | Unspecified</description>
+                </item>
+                <item id="field_48" name="Owner" type="Leaf" minOccurrence="1">
+                    <title>Owner</title>
+                    <type>textfield</type>
+                </item>
+                <item id="field_49" name="Publisher" type="Leaf" minOccurrence="1">
+                    <title>Publisher</title>
+                    <type>textfield</type>
+                </item>
+                <item id="fieldset_18" name="Contact" type="Composite" minOccurrence="1">
+                    <title>Contact</title>
+                    <type>fieldset</type>
+                    <item id="field_50" name="Name" type="Leaf" minOccurrence="0">
+                        <title>Name</title>
+                        <type>textfield</type>
+                    </item>
+                    <item id="field_51" name="Address" type="Leaf" minOccurrence="0">
+                        <title>Address</title>
+                        <type>textfield</type>
+                    </item>
+                    <item id="field_52" name="Email" type="Leaf" minOccurrence="0">
+                        <title>Email</title>
+                        <type>textfield</type>
+                    </item>
+                    <item id="field_53" name="Organisation" type="Leaf" minOccurrence="0">
+                        <title>Organisation</title>
+                        <type>textfield</type>
+                    </item>
+                </item>
+                <item id="fieldset_19" name="descriptions" type="Composite" minOccurrence="0">
+                    <type>fieldset</type>
+                    <title>descriptions</title>
+                    <item id="field_54" name="Description" type="Leaf" multival="true" minOccurrence="1">
+                        <title>Description</title>
+                        <type>textarea</type>
+                    </item>
+                </item>
+            </item>
+            <item id="fieldset_20" name="Keys" type="Composite" minOccurrence="0">
                 <type>fieldset</type>
                 <title>Keys</title>
-                <item id="fieldset_20" name="Key" type="Composite" multival="true" minOccurrence="1">
+                <item id="fieldset_21" name="Key" type="Composite" multival="true" minOccurrence="1">
                     <type>fieldset</type>
                     <title>Key</title>
-                    <item id="field_46" name="Key" type="Leaf" minOccurrence="1" skipParentInCMDI="true">
+                    <item id="field_55" name="Key" type="Leaf" minOccurrence="1" skipParentInCMDI="true">
                         <title>Key</title>
                         <type>textfield</type>
                         <description>Enter the value of the key in this field. Key-Value fields are provided for backwards compatibility with IMDI metadata. Please only use them in case they are already present in existing metadata.</description>
