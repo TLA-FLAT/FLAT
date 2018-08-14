@@ -281,6 +281,10 @@ function flat_workspaces_flat_bundle_node_form_validate($form, &$form_state)
     // Validate that currently selected folder has no subfolders and contains no more than configured maximum files
     if ($form_state['values']['flat_source']['und'][0]['value'] == 'local') {
         $dir = isset($form_state['values']['flat_ws_path']['und'][0]['value']) ? $form_state['values']['flat_ws_path']['und'][0]['value'] : FALSE;
+        if (!$dir OR !file_exists(drupal_realpath($dir))) {
+            form_set_error('next_directories', 'Please select a valid workspace folder');
+            return $form;
+        }
         if ($dir) {
             $files = file_scan_directory($dir, '/.*/', array('min_depth' => 0));
             $max_files = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
@@ -299,11 +303,21 @@ function flat_workspaces_flat_bundle_node_form_validate($form, &$form_state)
             ->fieldCondition('flat_original_path', 'value', $dir, '=')
         ;
 
-        $results = $query->execute();
-        if (empty(!$results)) {
+        $result = $query->execute();
+
+        if (empty(!$result)) {
+            // if result is current node itself (when modifying it), that is fine
+            $nid = array_keys($result['node']);
+            $nid = (string)$nid[0];
+
+            if ($nid !== $form_state['values']['nid']) {
 
             form_set_error('next_directories', 'The selected workspace folder is already in use for a different bundle');
+
+            }
+
         }
+
     }
     
 }

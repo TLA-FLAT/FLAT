@@ -246,7 +246,17 @@ class Bundle extends SIP
 
             $fid = isset($this->wrapper->flat_fid) ? $this->wrapper->flat_fid->value() : null;
             $md_type = $this->wrapper->flat_cmdi_option->value();
-            $cmdi->cleanMdSelfLink();
+
+            switch ($md_type) {
+                case 'new':
+                    $cmdi->cleanMdSelfLink();
+                    break;
+                case 'import':
+                case 'template': 
+                    $cmdi->removeMdSelfLink();
+                    break;
+            }
+            
             $cmdi->addResources($md_type, $directory, $fid);
 
         } catch (CmdiHandlerException $exception){

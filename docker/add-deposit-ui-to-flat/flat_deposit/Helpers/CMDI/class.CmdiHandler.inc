@@ -292,13 +292,17 @@ class CmdiHandler extends SimpleXMLElement
     public function removeMdSelfLink()
     {
 
-        $header = $this->xpath('cmd:Header');
-        $children = $header->children('cmd', TRUE);
+        $mdSelfLink = $this->xpath('//cmd:MdSelfLink');
 
-        if (isset($children->MdSelfLink)) {
+        if (empty($mdSelfLink)){
+            return TRUE;
 
-            unset($children->MdSelfLink);
         }
+
+        unset($mdSelfLink[0][0]);
+
+        return TRUE;
+
     }
 
     /**
@@ -349,6 +353,7 @@ class CmdiHandler extends SimpleXMLElement
     {
         switch ($metadata_source){
             case 'new':
+            case 'template':
                 $result = $this->stripResourceProxyAndResources();
                 if ($fid){
                     $this->addResourcesFromDatastream($fid);

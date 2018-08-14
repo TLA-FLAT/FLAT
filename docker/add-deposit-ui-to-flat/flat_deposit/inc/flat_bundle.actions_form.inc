@@ -123,6 +123,7 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
 
     switch ($status) {
         case 'open': {
+
             $form['actions']['upload_data']['#access'] = $enable_file_browser;
             $form['actions']['bundle_image']['#disabled'] = !$enable_file_browser;
             if (empty($node->flat_cmdi_file)) {
@@ -166,7 +167,7 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
         }
     }
 
-    $form['actions']['bundle_image']['#src'] = drupal_get_path('module', 'flat_deposit') . '/Images/' . $name . '.jpg';
+    $form['actions']['bundle_image']['#src'] = drupal_get_path('module', 'flat_deposit') . '/Images/' . $name . '.png';
 
 
     // Activate metadata creation button only if 1) cmdi option is 'new' 2) status is either open or failed and 3) no cmdi has been created
@@ -294,11 +295,11 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
     if ($nFiles == 0){
         if (isset($deletedFiles)) {
             if ($deletedFiles == '') {
-                form_set_error('validate_bundle', t('No new files specified and no exising files selected for removal.'));
+                form_set_error('validate_bundle', t('No new files added and no exising files selected for removal.'));
             }
         }
         else {
-            form_set_error('validate_bundle', t('The selected folder contains no files.'));
+            form_set_error('validate_bundle', t('The selected folder does not contain any (accessible) files.'));
         }
         return $form;
     }

@@ -32,7 +32,6 @@ function flat_collection_bundle_action_form($form, &$form_state, $var)
             $nid = $entity->nid;
             $bundle =node_load($nid);
             $bundle_wrapper = entity_metadata_wrapper('node', $bundle);
-
             $metadata = !is_null($bundle_wrapper->flat_cmdi_file->value()) ? 'available' : 'not available';
             $status = $bundle_wrapper->flat_bundle_status->value();
 
@@ -63,7 +62,7 @@ function flat_collection_bundle_action_form($form, &$form_state, $var)
 
             $data[$count] = array(
                 'nid' => $nid,
-		'title' => $bundle->title,
+                'title' => $bundle->title,
                 'metadata' => $metadata,
                 'status' => $status,
             );
@@ -137,12 +136,12 @@ function flat_collection_bundle_action_form_reopen_validate($form, &$form_state)
         if (!empty($error)) {
 
             $form_state['values']['reopen_error'][] = $nid;
-	    $form_state['values']['reopen_error_titles'][] = $title;
+            $form_state['values']['reopen_error_titles'][] = $title;
 
         } else {
 
             $form_state['values']['reopen_bundles'][] = $nid;
-	    $form_state['values']['reopen_bundle_titles'][] = $title;
+            $form_state['values']['reopen_bundle_titles'][] = $title;
 	    
         }
 
@@ -163,28 +162,41 @@ function flat_collection_bundle_action_form_validate_validate($form, &$form_stat
         //$good_name = has_correct_filename($nid); filename here not relevant, only in SIP that is offered to doorkeeper
         $file_exists = bundle_file_exists($nid);
         $user_has_permissions = user_has_permissions($nid);
+        $has_new_or_deleted_files = (bundle_new_files($nid) OR bundle_deleted_files($nid));
+        $max_files_not_exceeded = !bundle_max_files_exceeded($nid);
         //$tests = array($complete, $parent_is_known, $has_cmdi, $valid_xml, $good_name, $file_exists, $user_has_permissions);
-        $tests = array($complete, $parent_is_known, $has_cmdi, $valid_xml, $file_exists, $user_has_permissions);
+        $tests = array('complete' => $complete, 'parent_is_known' => $parent_is_known, 'has_cmdi' => $has_cmdi, 'valid_xml' => $valid_xml, 'file_exists' => $file_exists, 'user_has_permissions' => $user_has_permissions, 'has_new_or_deleted_files' => $has_new_or_deleted_files, 'max_files_not_exceeded' => $max_files_not_exceeded);
         foreach ($form_state['values']['data'] as $bundle) {
                 if ($bundle['nid'] == $nid) {
                         $title = $bundle['title'];
                         }
                 }
-        if (!in_array(false, $tests)) {
+
+        $test_values = array();
+        foreach ($tests as $test => $value) {
+            $test_values[] = $value;
+        }
+        if (!in_array(false, $test_values)) {
 
             $form_state['values']['validate_bundles'][] = $nid;
-	    $form_state['values']['validate_bundle_titles'][] = $title;
-
+            $form_state['values']['validate_bundle_titles'][] = $title;
+            
         } else {
 
             $form_state['values']['reject_bundles'][] = $nid;
-	    $form_state['values']['reject_bundle_titles'][] = $title;
+            $form_state['values']['reject_bundle_titles'][] = $title;
+            foreach ($tests as $test => $value) {
+                if ($value === false) {
+                    $form_state['values']['reject_bundle_failed_tests'][][] = $test;
+                }
+
+            }
 
         }
 
-    }
+    }    
+    
 }
-
 
 function flat_collection_bundle_action_form_archive_validate($form, &$form_state){
 
@@ -238,7 +250,7 @@ function flat_collection_bundle_action_form_submit($form, &$form_state)
 
             if (!empty($form_state['values']['reopen_error'])){
 
-                drupal_set_message('Unable to re-open bundle(s): ' .  implode(' and ', $form_state['values']['reopen_error_titles']) . '. Only valid or failed bundles can be re-opened.');
+                drupal_set_message('Unable to re-open bundle(s): ' .  implode(' and ', $form_state['values']['reopen_error_titles']) . '. Only valid or failed bundles can be re-opened.', 'error');
 
             }
             break;
@@ -261,7 +273,51 @@ function flat_collection_bundle_action_form_submit($form, &$form_state)
 
             if (!empty($form_state['values']['reject_bundles'])) {
 
-                drupal_set_message('Unable to validate bundle(s): ' . implode(' and ', $form_state['values']['reject_bundle_titles']) . '. Only open bundles with available metadata can be validated.');
+                drupal_set_message('Unable to validate bundle(s): ' . implode(' and ', $form_state['values']['reject_bundle_titles']) . '.', 'error');
+
+
+                foreach ($form_state['values']['reject_bundles'] as $index => $rejected_bundle) {
+
+                    foreach ($form_state['values']['reject_bundle_failed_tests'][$index] as $failed_test) {
+
+                        $rejected_title =  $form_state['values']['reject_bundle_titles'][$index];
+                        $max_files = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
+                        switch($failed_test) {
+                            case 'complete': {
+                                drupal_set_message('Bundle ' . $rejected_title . ' is not complete.', 'error');
+                                break;
+                            }
+                            case 'parent_is_known': {
+                                drupal_set_message('The parent of bundle ' . $rejected_title . ' is not known.', 'error');
+                                break;
+                            }
+                            case 'has_cmdi': {
+                                drupal_set_message('Bundle ' . $rejected_title . ' does not have a CMDI metadata file.', 'error');
+                                break;
+                            }
+                            case 'file_exists': {
+                                drupal_set_message('The specified file location for Bundle ' . $rejected_title . ' does not exist.', 'error');
+                                break;
+                            }
+                            case 'user_has_permissions': {
+                                drupal_set_message('You do not have enough permissions for Bundle ' . $rejected_title . '.', 'error');
+                                break;
+                            }
+                            case 'has_new_or_deleted_files': {
+                                drupal_set_message('Bundle ' . $rejected_title . ' has no new or deleted files.', 'error');
+                                break;
+                            }
+                            case 'max_files_not_exceeded': {
+                                drupal_set_message('Bundle ' . $rejected_title . ' contains more than the maximum of ' . $max_files . ' files.', 'error');
+                                break;
+                            }
+
+                        }
+
+                    }
+
+                }
+
             }
             break;
 
@@ -284,7 +340,7 @@ function flat_collection_bundle_action_form_submit($form, &$form_state)
 
             if (!empty($form_state['values']['archive_reject'])) {
 
-                drupal_set_message('Failed submitting bundle(s) for archiving: ' . implode(' and ', $form_state['values']['archive_reject_titles']) . '. Only valid bundles can be archived.');
+                drupal_set_message('Failed submitting bundle(s) for archiving: ' . implode(' and ', $form_state['values']['archive_reject_titles']) . '. Only valid bundles can be archived.', 'error');
 
             }
 
