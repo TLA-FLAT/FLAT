@@ -103,10 +103,11 @@ $handler->display->display_options['header']['view_1']['table'] = 'views';
 $handler->display->display_options['header']['view_1']['field'] = 'view';
 $handler->display->display_options['header']['view_1']['label'] = 'Upload bundle view area';
 $handler->display->display_options['header']['view_1']['empty'] = TRUE;
-/* Header: Broken/missing handler */
+/* Header: Global: Autorefresh */
 $handler->display->display_options['header']['autorefresh']['id'] = 'autorefresh';
 $handler->display->display_options['header']['autorefresh']['table'] = 'views';
 $handler->display->display_options['header']['autorefresh']['field'] = 'autorefresh';
+$handler->display->display_options['header']['autorefresh']['interval'] = '5000';
 /* Footer: Global: View area */
 $handler->display->display_options['footer']['view']['id'] = 'view';
 $handler->display->display_options['footer']['view']['table'] = 'views';

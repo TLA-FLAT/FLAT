@@ -118,7 +118,7 @@ class Collection extends SIP
 
         try{
 
-            $md_type = $this->wrapper->flat_cmdi_option->value();
+            $md_type = isset($this->wrapper->flat_cmdi_option) ? $this->wrapper->flat_cmdi_option->value() : NULL;
             switch ($md_type) {
                 case 'new':
                     $cmdi->cleanMdSelfLink();

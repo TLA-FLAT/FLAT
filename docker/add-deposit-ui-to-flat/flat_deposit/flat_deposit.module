@@ -351,7 +351,7 @@ function flat_deposit_menu()
         'type' => MENU_LOCAL_TASK,
         'page callback' => 'flat_deposit_dashboard_collections',
         'page arguments' => array(1),
-        'access callback' => true,
+        'access arguments' => array('use deposit module'),
     );
 
     $items['dashboard/%user/bundles'] = array(
@@ -359,7 +359,7 @@ function flat_deposit_menu()
         'title' => 'My bundles',
         'page callback' => 'flat_deposit_dashboard_bundles',
         'page arguments' => array(1),
-        'access callback' => true,
+        'access arguments' => array('use deposit module'),
 
     );
 
@@ -368,7 +368,7 @@ function flat_deposit_menu()
         'type' => MENU_LOCAL_TASK,
         'page callback' => 'flat_deposit_dashboard_notifications',
         'page arguments' => array(1),
-        'access callback' => true,
+        'access arguments' => array('use deposit module'),
     );
 
 /*
@@ -1943,7 +1943,7 @@ function flat_deposit_menu_access($op, $object)
         switch ($op) {
             case 'add current collection menu':
 
-                $has_access = ($has_permissions and $has_collectionCModel and $has_cmdi_content_model and !$has_node_in_my_collections) ? true : false;
+                $has_access = ($has_permissions and $has_collectionCModel and !$has_node_in_my_collections) ? true : false;
 
                 break;
 

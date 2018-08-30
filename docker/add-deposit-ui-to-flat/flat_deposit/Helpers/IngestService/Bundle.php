@@ -245,7 +245,8 @@ class Bundle extends SIP
         try{
 
             $fid = isset($this->wrapper->flat_fid) ? $this->wrapper->flat_fid->value() : null;
-            $md_type = $this->wrapper->flat_cmdi_option->value();
+            $md_type = isset($this->wrapper->flat_cmdi_option) ? $this->wrapper->flat_cmdi_option->value() : NULL;
+            $flat_type = isset($this->wrapper->flat_type) ? $this->wrapper->flat_type->value() : NULL;
 
             switch ($md_type) {
                 case 'new':
@@ -253,7 +254,12 @@ class Bundle extends SIP
                     break;
                 case 'import':
                 case 'template': 
-                    $cmdi->removeMdSelfLink();
+                    if ($flat_type !== 'update') {
+                        $cmdi->removeMdSelfLink();
+                    }
+                    else {
+                        $cmdi->cleanMdSelfLink();
+                    }
                     break;
             }
             

@@ -96,6 +96,8 @@ function flat_views_block_view($delta = '')
     switch ($delta){
         case 'reports_actions':
 
+        if (user_access('use deposit module')) {
+
             module_load_include('inc','flat_views','includes/flat_reports.actions_form');
 
             $form = drupal_get_form('flat_reports_action_form');
@@ -106,6 +108,8 @@ function flat_views_block_view($delta = '')
                 'content' => $rendered_form,
             );
             break;
+
+        }
 
     }
 

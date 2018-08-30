@@ -149,7 +149,7 @@ class Nextcloud
             return true;
         }
 
-        $pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]{2,}$/';
+        $pattern = '/^(?!\\.)[\w .-]+$/';
         return preg_match($pattern, $dir_name) != 0;
     }
 

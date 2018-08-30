@@ -15,17 +15,10 @@ function flat_views_views_data() {
         '#global' => array(),
     );
 
-    $data['flat_views']['Edit bundle'] = array(
-        'title' => t('Edit bundle'),
-        'help' => t('Redirects to node view.'),
-        'field' => array(
-            'handler' => 'views_handler_my_custom_field',
-        ),
-    );
-
     return $data;
 }
 
+/*
 function flat_views_views_data_alter(&$data){
 
  #   var_dump($data['field_data_flat_cmdi_file']['flat_cmdi_file']);
@@ -33,6 +26,7 @@ function flat_views_views_data_alter(&$data){
 
     return $data;
 }
+*/
 
 
 function flat_views_views_pre_render(&$view) {

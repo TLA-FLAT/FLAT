@@ -91,6 +91,7 @@ function flat_deposit_install()
         'settings' => array(
             'max_length' => 255,
             'allowed_values' => array(
+                '_none' => '-- Select a policy --',
                 'public' => 'public',
                 'authenticated' => 'authenticated users',
                 'academic' => 'academic users',
@@ -288,8 +289,6 @@ function flat_deposit_install()
         'widget' => array(
             'type' => 'option_buttons',
         ),
-        'default_value' => array(
-            0 => array('value'=> 'public')),
         'required' => TRUE,
         'settings' => array('text_processing' => 0),
         'display' => array(
