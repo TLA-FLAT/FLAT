@@ -63,7 +63,8 @@
 					<xsl:when test="matches($xp, '^/')">
 						<xslx:when test="{normalize-space(replace($xp,'/cmd:CMD','cmd:CMD'))}[normalize-space()!='']">
 							<xslx:for-each select="{normalize-space(replace($xp,'/cmd:CMD','cmd:CMD'))}[normalize-space()!='']">
-								<xslx:if test="generate-id(current()) = generate-id(key('cmd-key-{$name}-{position()}', string())[1])">
+								<!-- process only the last instance, as FOXML stores them in order, so the last is within the current (last) version -->
+								<xslx:if test="generate-id(current()) = generate-id(key('cmd-key-{$name}-{position()}', string())[last()])">
 									<field name="cmd.{$name}">
 										<xsl:choose>
 											<xsl:when test="normalize-space(@val) != ''">
