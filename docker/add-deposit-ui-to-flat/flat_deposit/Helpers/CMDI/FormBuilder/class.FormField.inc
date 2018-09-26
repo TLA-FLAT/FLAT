@@ -85,6 +85,13 @@ class FormField
 
             $formField['#default_value'] = $this->convertValue($this->defaultValue);
         }
+        else {
+            // see if there's a default value in the template and use that
+            if (isset($this->formTemplateNode->default)) {
+                $formField['#default_value'] = (string)$this->formTemplateNode->default;
+            }
+        }
+
     }
 
     /**
@@ -99,7 +106,7 @@ class FormField
     private function setFieldTree(&$formField)
     {
 
-        if ($this->formTemplateNode->type == 'fieldset') {
+        if (($this->formTemplateNode->type == 'fieldset') OR ($this->formTemplateNode->type == 'container')) {
 
             $formField['#tree'] = true;
 
@@ -142,6 +149,12 @@ class FormField
 
                 $type = 'fieldset';
 
+                break;
+
+            case 'container':
+
+                 $type = 'container';
+                 
                 break;
 
             case 'textarea':
@@ -246,6 +259,7 @@ class FormField
                 $nestedFormComponent = new $className($numberElements);
 
                 $key = $this->getFormField()['#title'];
+
                 $nestedDataNode = isset($existingCmdiNode->{$key}[$index]) ? $existingCmdiNode->{$key}[$index] : null;
 
                 $nestedButtonId = $buttonId . "_" . (int)$index;
@@ -257,6 +271,8 @@ class FormField
                 $nestedNodeName = $nestedFormComponent->getFormKeyName($nestedNode);
                 $this->formField[$nestedNodeName] = $nestedFormComponent->getFormComponent();
 
+                // attributes of the nested items
+
                 foreach ($nestedNode->attribute as $attribute) {
 
                     $className = "Form" . (string)$attribute['type'];
@@ -265,10 +281,10 @@ class FormField
 
                     $attributeFormComponent = new $className($numberElements);
 
-                    //$attributeDataNode = (null !== ($existingCmdiNode->{$key}[$index])) ? $existingCmdiNode->{$key}[$index] : null;
+                    $attributeKey = (string)$attribute->attributes()['name'];
 
-                    $attributeDataNode = null; // additional work needed to get existing attribute values
-
+                    $attributeDataNode = $existingCmdiNode->{$key}[$index];
+		    
                     $attributeButtonId = $buttonId . "_" . (int)$index;
 
                     $attributePressedButton = isset($pressedButtons[$index]) ? $pressedButtons[$index] : null;
@@ -284,6 +300,37 @@ class FormField
             }
 
         }
+
+        // attributes of the composite items
+
+        if (isset($this->formTemplateNode->attribute)) {
+
+            foreach ($this->formTemplateNode->attribute as $attribute) {
+
+                $className = "Form" . (string)$attribute['type'];
+
+                $numberElements = isset($attribute['minOccurrence']) ? (int)$attribute['minOccurrence'] : 0;
+
+                $attributeFormComponent = new $className($numberElements);
+
+                $attributeKey = (string)$attribute->attributes()['name'];
+
+                $attributeDataNode = $existingCmdiNode->{$key}[$index];
+        
+                $attributeButtonId = $buttonId . "_" . (int)$index;
+
+                $attributePressedButton = isset($pressedButtons[$index]) ? $pressedButtons[$index] : null;
+
+                $attributeFormComponent->setFormComponent($attribute, $attributeDataNode, $attributePressedButton, $attributeButtonId, $inheritAll);
+
+                $attributeNodeName = $attributeFormComponent->getFormKeyName($attribute);
+
+                $this->formField[$attributeNodeName] = $attributeFormComponent->getFormComponent();
+
+            }
+
+        }
+
     }
 
 }

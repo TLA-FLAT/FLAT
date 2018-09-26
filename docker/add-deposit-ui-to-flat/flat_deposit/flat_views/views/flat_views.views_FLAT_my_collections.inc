@@ -10,10 +10,10 @@
  */
 $view = new view();
 $view->name = 'FLAT My Collections View';
-$view->description = 'View of an individuals collections';
+$view->description = 'View of a user\'s active collections';
 $view->tag = 'default';
 $view->base_table = 'node';
-$view->human_name = 'My active collections';
+$view->human_name = 'FLAT My collections';
 $view->core = 7;
 $view->api_version = '3.0';
 $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
@@ -79,7 +79,7 @@ $handler->display->display_options['footer']['area']['id'] = 'area';
 $handler->display->display_options['footer']['area']['table'] = 'views';
 $handler->display->display_options['footer']['area']['field'] = 'area';
 $handler->display->display_options['footer']['area']['empty'] = TRUE;
-$handler->display->display_options['footer']['area']['content'] = '<?php
+$handler->display->display_options['footer']['area']['content'] = '<?php 
 global $user;
 ?>
 <br/>
@@ -172,7 +172,7 @@ $translatables['FLAT My Collections View'] = array(
   t('‹ previous'),
   t('next ›'),
   t('last »'),
-  t('<?php
+  t('<?php 
 global $user;
 ?>
 <br/>

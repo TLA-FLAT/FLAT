@@ -92,6 +92,73 @@ function bundle_file_exists($nid)
 
 }
 
+function bundle_new_files($nid) {
+
+    $node = node_load($nid);
+    $wrapper = entity_metadata_wrapper('node', $node);
+    $location = $wrapper->flat_location->value();
+
+    $nFiles = count(array_diff(scandir(drupal_realpath($location)), ['.','..']));
+
+    if ($nFiles == 0) {
+
+        return FALSE;
+
+    }
+
+    else {
+
+        return TRUE;
+
+    }
+
+}
+
+function bundle_deleted_files($nid) {
+
+    $node = node_load($nid);
+    $wrapper = entity_metadata_wrapper('node', $node);
+
+    $deletedFiles = isset($wrapper->flat_deleted_resources) ? $wrapper->flat_deleted_resources->value() : NULL;
+
+    if (!isset($deletedFiles) OR ($deletedFiles == '')) {
+
+        return FALSE;
+
+    }
+
+    else {
+
+        return TRUE;
+
+    }
+
+}
+
+function bundle_max_files_exceeded($nid) {
+
+    $node = node_load($nid);
+    $wrapper = entity_metadata_wrapper('node', $node);
+    $location = $wrapper->flat_location->value();
+
+    $nFiles = count(array_diff(scandir(drupal_realpath($location)), ['.','..']));
+
+    $max = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
+
+    if ($nFiles > $max) {
+
+        return TRUE;
+
+    }
+
+    else {
+
+        return FALSE;
+
+    }
+
+}
+
 
 function user_has_permissions($nid)
 {

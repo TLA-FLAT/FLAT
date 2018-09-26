@@ -40,7 +40,7 @@ function flat_views_notifications_delete_all($form, &$form_state, $user){
     $a = 2;
     return  confirm_form(
         array(),
-        t('Are you sure you want to delete all notifications?'),
+        t('Are you sure you want to delete all reports?'),
         'dashboard/'. $user->uid .'notifications',
         t('This action cannot be undone.'),
         t('Delete'),
@@ -51,7 +51,7 @@ function flat_views_notifications_delete_all($form, &$form_state, $user){
 
 function flat_views_notifications_delete_all_submit($user){
 
-    drupal_set_message('Dione');
+    drupal_set_message('Done');
 }
 
 function flat_views_views_api() {
@@ -96,6 +96,8 @@ function flat_views_block_view($delta = '')
     switch ($delta){
         case 'reports_actions':
 
+        if (user_access('use deposit module')) {
+
             module_load_include('inc','flat_views','includes/flat_reports.actions_form');
 
             $form = drupal_get_form('flat_reports_action_form');
@@ -106,6 +108,8 @@ function flat_views_block_view($delta = '')
                 'content' => $rendered_form,
             );
             break;
+
+        }
 
     }
 

@@ -11,30 +11,23 @@
 			<AnyAction/>
 		</Actions>
 	</Target>
-	<Rule RuleId="deny-access-functions" Effect="Deny">
+	<Rule RuleId="deny-dsid-mime" Effect="Deny">
 		<Target>
 			<Subjects>
 				<AnySubject/>
 			</Subjects>
 			<Resources>
-				<AnyResource/>
+				<Resource>
+					<ResourceMatch MatchId="urn:oasis:names:tc:xacml:1.0:function:string-equal">
+						<AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">OBJ</AttributeValue>
+						<ResourceAttributeDesignator DataType="http://www.w3.org/2001/XMLSchema#string" AttributeId="urn:fedora:names:fedora:2.1:resource:datastream:id"/>
+					</ResourceMatch>
+				</Resource>
 			</Resources>
 			<Actions>
 				<Action>
 					<ActionMatch MatchId="urn:oasis:names:tc:xacml:1.0:function:string-equal">
-						<AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">urn:fedora:names:fedora:2.1:action:api-a</AttributeValue>
-						<ActionAttributeDesignator AttributeId="urn:fedora:names:fedora:2.1:action:id" DataType="http://www.w3.org/2001/XMLSchema#string"/>
-					</ActionMatch>
-				</Action>
-				<Action>
-					<ActionMatch MatchId="urn:oasis:names:tc:xacml:1.0:function:string-equal">
-						<AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">urn:fedora:names:fedora:2.1:action:id-getDatastreamHistory</AttributeValue>
-						<ActionAttributeDesignator AttributeId="urn:fedora:names:fedora:2.1:action:id" DataType="http://www.w3.org/2001/XMLSchema#string"/>
-					</ActionMatch>
-				</Action>
-				<Action>
-					<ActionMatch MatchId="urn:oasis:names:tc:xacml:1.0:function:string-equal">
-						<AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">urn:fedora:names:fedora:2.1:action:id-listObjectInResourceIndexResults</AttributeValue>
+						<AttributeValue DataType="http://www.w3.org/2001/XMLSchema#string">urn:fedora:names:fedora:2.1:action:id-getDatastreamDissemination</AttributeValue>
 						<ActionAttributeDesignator AttributeId="urn:fedora:names:fedora:2.1:action:id" DataType="http://www.w3.org/2001/XMLSchema#string"/>
 					</ActionMatch>
 				</Action>

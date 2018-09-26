@@ -936,40 +936,50 @@
 					</cmd:ResourceProxy>
 				</xsl:for-each>
 			</xsl:variable>
-			<xsl:variable name="children" select="$rels-doc/key('rels-from', ($pid,cmd:hdl($base)))[type = 'Metadata']"/>
-			<!-- legitimate children -->
-			<xsl:message use-when="$debug">DBG: - legitimate children</xsl:message>
-			<xsl:comment>legitimate metadata children</xsl:comment>
-			<xsl:for-each select="$children">
-				<xsl:variable name="ref" select="resolve-uri(cmd:ResourceRef,$base)"/>
-				<xsl:variable name="lcl" select="cmd:ResourceRef/resolve-uri(@lat:localURI,$base)"/>
-				<xsl:variable name="rp" select="key('rp',(to,dst),$md)"/>
-				<cmd:ResourceProxy>
-					<xsl:choose>
-						<xsl:when test="exists($rp[normalize-space(@id)!=''])">
-							<xsl:attribute name="id" select="$rp/@id"/>
-						</xsl:when>
-						<xsl:otherwise>
-							<xsl:attribute name="id" select="generate-id()"/>
-						</xsl:otherwise>
-					</xsl:choose>
-					<cmd:ResourceType mimetype="application/x-cmdi+xml">Metadata</cmd:ResourceType>
-					<xsl:variable name="ref">
-						<cmd:ResourceRef lat:localURI="{dst}">
-							<xsl:value-of select="replace(to,'hdl:','https://hdl.handle.net/')"/>
-						</cmd:ResourceRef>
-					</xsl:variable>
-					<xsl:apply-templates select="$ref" mode="#current"/>
-				</cmd:ResourceProxy>
-			</xsl:for-each>
-			<!-- illegitimate children (could be dead links) -->
-			<xsl:message use-when="$debug">DBG: - illegitimate children</xsl:message>
-			<xsl:comment>illegitimate metadata children (could be dead links)</xsl:comment>
-			<xsl:for-each select="$md">
-				<xsl:if test="empty((cmd:ResourceRef,cmd:ResourceRef/@lat:localURI)=($children/to,$children/dst))">
-					<xsl:apply-templates select="." mode="#current"/>
-				</xsl:if>
-			</xsl:for-each>
+			<xsl:message use-when="$debug">DBG: - metadata [<xsl:value-of select="count($md/cmd:ResourceProxy)"/>][<xsl:value-of select="count($metadata)"/> / <xsl:value-of select="count(cmd:ResourceProxy)"/>]</xsl:message>
+			<xsl:choose>
+				<xsl:when test="exists($rels-doc//relation)">
+					<xsl:variable name="children" select="$rels-doc/key('rels-from', ($pid,cmd:hdl($base)))[type = 'Metadata']"/>
+					<!-- legitimate children -->
+					<xsl:message use-when="$debug">DBG: - legitimate children [<xsl:value-of select="count($children)"/>]</xsl:message>
+					<xsl:comment>legitimate metadata children</xsl:comment>
+					<xsl:for-each select="$children">
+						<xsl:variable name="ref" select="resolve-uri(cmd:ResourceRef,$base)"/>
+						<xsl:variable name="lcl" select="cmd:ResourceRef/resolve-uri(@lat:localURI,$base)"/>
+						<xsl:variable name="rp" select="key('rp',(to,dst),$md)"/>
+						<cmd:ResourceProxy>
+							<xsl:choose>
+								<xsl:when test="exists($rp[normalize-space(@id)!=''])">
+									<xsl:attribute name="id" select="$rp/@id"/>
+								</xsl:when>
+								<xsl:otherwise>
+									<xsl:attribute name="id" select="generate-id()"/>
+								</xsl:otherwise>
+							</xsl:choose>
+							<cmd:ResourceType mimetype="application/x-cmdi+xml">Metadata</cmd:ResourceType>
+							<xsl:variable name="ref">
+								<cmd:ResourceRef lat:localURI="{dst}">
+									<xsl:value-of select="replace(to,'hdl:','https://hdl.handle.net/')"/>
+								</cmd:ResourceRef>
+							</xsl:variable>
+							<xsl:apply-templates select="$ref" mode="#current"/>
+						</cmd:ResourceProxy>
+					</xsl:for-each>
+					<!-- illegitimate children (could be dead links) -->
+					<xsl:message use-when="$debug">DBG: - illegitimate children [<xsl:value-of select="count($md)"/> - <xsl:value-of select="count($children)"/>]</xsl:message>
+					<xsl:comment>illegitimate metadata children (could be dead links)</xsl:comment>
+					<xsl:for-each select="$md/cmd:ResourceProxy">
+						<xsl:if test="empty($children) or empty((cmd:ResourceRef,cmd:ResourceRef/@lat:localURI)=($children/to,$children/dst))">
+							<xsl:apply-templates select="." mode="#current"/>
+						</xsl:if>
+					</xsl:for-each>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:for-each select="$md/cmd:ResourceProxy">
+						<xsl:apply-templates select="." mode="#current"/>
+					</xsl:for-each>
+				</xsl:otherwise>
+			</xsl:choose>
 		</xsl:copy>
 	</xsl:template>
 

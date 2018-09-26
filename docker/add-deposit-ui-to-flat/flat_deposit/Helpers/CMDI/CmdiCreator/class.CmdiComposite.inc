@@ -63,39 +63,62 @@ class CmdiComposite extends CmdiComponent {
                 // todo check components attribute minOccurrence and if subcomponents have values
                 $isRequired = ((int)$component->attributes()['minOccurrence'] > 0 );
                 $hasValue = ($entry != null AND $entry != "" and is_numeric($index) and !is_array($entry));
-
+		        $skip = isset($component->item->attributes()['skipParentInCMDI']);
+		        $childValues = $this->hasNotSearchElement($componentData[$index], '');
                 if ($hasValue){
 
                     $converted = $this->convertValue((string)$component->type, $entry);
-                    $rootNewComponents->addChild($name, utf8_encode(htmlspecialchars($converted)));
+                    $child = $rootNewComponents->addChild($name, htmlspecialchars($converted));
+                }
+                    
+                elseif ($isRequired & !$skip){
 
-                } elseif ($isRequired){
-
-                    $rootNewComponents->addChild($name);
-
+                    $child = $rootNewComponents->addChild($name);
                     // only add root if children with values exist.
-                } elseif ($this->hasNotSearchElement($componentData[$index], '')) {
 
-                    $rootNewComponents->addChild($name);
-
-
-                } else{
-
-                    continue;
                 }
 
+                elseif ($childValues && !$skip) {
+
+                    $child = $rootNewComponents->addChild($name);
+                
+                }
 
                 // Add nested components
-                foreach ($component->item as $nestedTemplateNode) {
+		        if ($childValues && !$skip) {
+                    foreach ($component->item as $nestedTemplateNode) {
 
-                    $className = "Cmdi" . (string)$nestedTemplateNode['type'];
-                    $nestedCmdiComponent = new $className();
+                        $className = "Cmdi" . (string)$nestedTemplateNode['type'];
+                        $nestedCmdiComponent = new $className();
+                        $name = (string)$component['name'];
+                        $nestedCmdiComponent->setCmdiComponent($rootNewComponents->{$name}[$index], $nestedTemplateNode, $componentData[$index]);
+                        
+                        }
+                    }
+                    
+		        elseif ($childValues) {
+                    foreach ($component->item as $nestedTemplateNode) {
 
-                    $name = (string)$component['name'];
+                        $className = "Cmdi" . (string)$nestedTemplateNode['type'];
+                        $nestedCmdiComponent = new $className();
+                        $name = (string)$component['name'];
+                        $nestedCmdiComponent->setCmdiComponent($rootNewComponents, $nestedTemplateNode, $componentData[$index]);
+                    
+                        }
+                }
+                
+                // Add attributes
+                foreach ($component->attribute as $attribute) {
 
-                    $nestedCmdiComponent->setCmdiComponent($rootNewComponents->{$name}[$index], $nestedTemplateNode, $componentData[$index]);
-
-
+                    $attributeId = (string) $attribute['id'];
+                    $attributeName = (string) $attribute['name'];
+                    if (isset($componentData[$index][$attributeId][0])) {
+                        $attributeData = (string) $componentData[$index][$attributeId][0];
+                        if ($attributeData != null and $attributeData != "") {
+                            $child->addAttribute($attributeName, $attributeData);
+                        }
+                    }
+                
                 }
 
             }

@@ -15,38 +15,123 @@ function flat_nextcloud_install()
 
     flat_nextcloud_set_nextcloud();
 
+    $fields = array();
+
     // Add nextcloud integration field to user entity type
-    $field = array(
-        'field_name' => 'activate_nextcloud',
+    $fields['nextcloud_integration'] = array(
+        'field_name' => 'nextcloud_integration',
         'type' => 'list_boolean',
+        'settings' => array(
+            'allowed_values' => array(
+                '',
+                '',
+            ),
+        ),
+    );
+
+    $fields['nextcloud_uid'] = array(
+        'field_name' => 'nextcloud_uid',
+        'type' => 'text',
+    );
+
+    $fields['flat_nc_path'] = array(
+        'field_name' => 'flat_nc_path',
+        'type' => 'text',
         'cardinality' => 1,
         'settings' => array(
-            'allowed_values'=> array(
-                0 => "Disabled",
-                1 => "Activated"),
-        ),
-
+            'max_length' => 5000)
     );
-    field_create_field($field);
 
+    foreach ($fields as $field) {
+        if (!field_info_field($field['field_name'])) {
+            field_create_field($field);
+        }
+    }
 
-    $instance = array(
-        'field_name' => 'activate_nextcloud',
+    $instances = array();
+
+    $instances['nextcloud_integration'] = array(
+        'field_name' => 'nextcloud_integration',
         'entity_type' => 'user',
         'bundle' => 'user',
-        'label' => 'Nextcloud integration',
+        'label' => 'Enable Nextcloud integration',
         'settings' => array('user_register_form' => 1),
         'widget' => array(
-            'type' => 'options_button', // or whatever widget type you want
+            'type' => 'options_onoff',
+            'settings' => array(
+                'display_label' => true,
+            ),
         ),
-        'default_value' => array(
-            0 => array('value'=> 0)),
-        'required' => TRUE,
+        'display' => array(
+            'default' => array(
+                'label' => 'hidden',
+                'type' => 'hidden',
+            ),
+        ),
     );
-    field_create_instance($instance);
+
+    $instances['nextcloud_uid'] = array(
+        'field_name' => 'nextcloud_uid',
+        'entity_type' => 'user',
+        'bundle' => 'user',
+        'label' => t('Nextcloud UserID'),
+        'description' => t(''),
+        'widget' => array(
+            'type' => 'text_textfield',
+        ),
+        'formatter' => array(
+            'label' => t('field formatter label'),
+            'format' => 'text_default',
+        ),
+        'settings' => array(
+        ),
+    );
+
+    $instances['flat_nc_path'] = array(
+        'field_name' => 'flat_nc_path',
+        'entity_type' => 'node',
+        'bundle' => 'flat_bundle',
+        'label' => $t('Path of nextcloud stored data'),
+        'widget' => array(
+            'type' => 'text_textfield',
+        ),
+        'required' => FALSE,
+        'disabled' => TRUE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'hidden',
+                'type' => 'hidden',
+            ),
+        ),
+    );
 
 
+    foreach ($instances as $instance) {
+        if (!field_info_instance($instance['entity_type'], $instance['field_name'], $instance['bundle'])) {
+            field_create_instance($instance);
+        }
+        else {
+            field_update_instance($instance);
+        }
+    }
 
+    // Modify flat_source field options in Bundle form to add Nextcloud option and to remove "external/IMCE" option
+    $field = field_info_field('flat_source');
+
+    $values = &$field['settings']['allowed_values'];
+
+    if (!isset($values['cloud'])) {
+        $values['cloud'] = 'Select a Nextcloud folder';
+        field_update_field($field);
+
+    }
+
+    if (isset($values['external'])) {
+        unset($values['external']);
+        field_update_field($field);
+
+    }
 }
 
 /**
@@ -58,6 +143,20 @@ function flat_nextcloud_install()
 function flat_nextcloud_uninstall()
 {
     variable_del('flat_nextcloud');
+/*
+//field_attach_delete_bundle('user', 'user');
 
-    field_attach_delete_bundle('user', 'user');
+// Remove flat_source field option to select a Nextcloud directory in Bundle form
+$field = field_info_field('flat_source');
+
+$values = &$field['settings']['allowed_values'];
+
+if (isset($values['cloud'])) {
+
+unset($values['cloud']);
+field_update_field($field);
+
+}
+ */
+
 }

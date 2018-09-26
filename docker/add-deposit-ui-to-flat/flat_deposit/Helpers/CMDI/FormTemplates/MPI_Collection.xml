@@ -1,30 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 
-Specifies which form fields will be generate in drupal 
-see https://api.drupal.org/api/drupal/developer%21topics%21forms_api_reference.html/7.x for info about drupal form render api. 
-
-In the fields section you can specify fields. Fields need to have attributes:
-- id: unique id which will become the form field id in drupal
-- name: name of the field in the original cmdi-profile
-
+<!--
+Specifies which form items will be generate in drupal
+see https://api.drupal.org/api/drupal/developer%21topics%21forms_api_reference.html/7.x for info about drupal form render api.
+In the items section you can specify items. items need to have attributes:
+- id: unique id which will become the form item id in drupal
+- name: name of the item in the original  cmdi-profile
 and children:
-- type: formatting of the field; implemented values are
-    * textfield
-    * date
-    * dropdown 
-    * (empty) missing values will be rendered as textfield
-
-- title: The title which will appear on top of the field
-
-
-
-- description (optional): a info button which will show the value this field when hovered onto
-- component (optional): specifies whether a field is located in a component.
-
-Additional fied is data. data fields are hidden in drupal. Required info is the clarin profile ID, to which this transform refers 
-  
+- type: type of form field for the item; implemented values are
+* textitem
+* textarea
+* date
+* dropdown
+* hidden
+* (empty) missing values will be rendered as textitem
+- title: The title which will appear as the label above the element
+- description (optional): an info box with this value will appear when hovering above the element
+- component (optional): specifies whether a item is located within a component.
+- default (optional): specifies a default value for the field. Will be overridden by existing values when editing existing metadata.
+- skipParentInCMDI (optional): Can be used to have a fieldset wrapper that will only be used for the web form and will be skipped in the CMDI generation. Useful for fields that have attributes. Set this attribute to "true" on the first child item of the fieldset.
+Additional fied is data. data items are hidden in drupal. Required info is the clarin profile ID, to which this transform refers
  -->
-
 <profileToDrupal>
     <header>
         <template_name>MPI_Collection</template_name>
@@ -132,7 +127,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <container>Descriptions</container>
             <item id="field_05" name="Description" type="Leaf" multival="true" minOccurrence="1">
                 <title>Description</title>
-                <type>textfield</type>
+                <type>textarea</type>
             </item>
         </item>
         <item id="fieldset_02" type="Composite" name="Contributor" multival="true" inherited="true" minOccurrence="1">
@@ -211,7 +206,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             </item>
             <item id="field_14" name="ProjectDescription" type="Leaf" inherited="true" minOccurrence="1">
                 <title>Project Description</title>
-                <type>textfield</type>
+                <type>textarea</type>
             </item>
             <item id="field_15" name="ProjectID" type="Leaf" inherited="true" minOccurrence="0">
                 <title>Project identifier</title>
@@ -275,7 +270,7 @@ Additional fied is data. data fields are hidden in drupal. Required info is the 
             <container>Publications</container>
             <item id="field_25" name="Reference" type="Leaf" inherited="true" minOccurrence="1">
                 <title>Reference</title>
-                <type>textfield</type>
+                <type>textarea</type>
             </item>
             <item id="field_26" name="Url" type="Leaf" inherited="true" minOccurrence="0">
                 <title>URL</title>

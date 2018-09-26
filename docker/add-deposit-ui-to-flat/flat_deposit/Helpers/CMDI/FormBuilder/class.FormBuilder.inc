@@ -143,7 +143,10 @@ class FormBuilder
         }
 
         $dataNode = $this->getHeadNode($cmdi);
-        $this->overwriteInheritedTitle($dataNode);
+        
+        if ((get_class($this->node)) !== 'IslandoraFedoraObject') {
+            $this->clearInheritedTitle($dataNode);
+        }
 
         $setComponets = $this->setFormComponents($template, $dataNode, $pressedButtons, $index = 0, $inheritAll);
         if (!$setComponets){
@@ -155,7 +158,18 @@ class FormBuilder
             $this->form[$key]= $component;
         }
 
-        $this->form['data']= $this->data;
+        $this->form['data'] = $this->data;
+
+	if ($this->node) {
+
+        if ((get_class($this->node)) == 'IslandoraFedoraObject') {
+            $this->form['title_field'][0]['#default_value'] = $this->node->label;
+        }
+        else {
+            $this->form['title_field'][0]['#default_value'] = $this->node->title;
+        }
+
+	}
 
         return true;
     }
@@ -172,23 +186,18 @@ class FormBuilder
     }
 
 
-private function overwriteInheritedTitle(&$dataNode){
+private function clearInheritedTitle(&$dataNode){
 
     if ($this->node == null){
         return;
-    }
-
-    if (get_class($this->node) == "IslandoraFedoraObject"){
-        $node_title = $this->node->label;
-        } else {
-        $node_title = $this->node->title;
     }
 
     $title = &$dataNode->children('cmd',TRUE)->Title;
 
     if (isset($title[0])){
 
-        $title[0] = $node_title;
+        $title[0] = '';
+
     }
 
 }
@@ -223,17 +232,7 @@ private function overwriteInheritedTitle(&$dataNode){
             $formComponent->setFormComponent($component, $dataNode, $pressedButtons, $index, $inheritAll);
             $nodeName = $formComponent->getFormKeyName($component);
             $this->formComponents[$nodeName] = $formComponent->getFormComponent();
-            /*
-            // attribute support at the component (not leaf) level. Needs more work.
-            foreach ($component->attribute as $attribute) {
-            $className = "Form" . (string)$attribute['type'];
-            $numberElements = isset($attribute['minOccurrence']) ? (int)$attribute['minOccurrence'] : 0;
-            $formAttribute = new $className($numberElements);
-            $formAttribute->setFormComponent($attribute, $dataNode, $pressedButtons, $index, $inheritAll);
-            $nodeName = $formAttribute->getFormKeyName($attribute);
-            $this->formComponents[$nodeName] = $formAttribute->getFormComponent();
-            }
-	        */	
+	        
         }
 
         return true;

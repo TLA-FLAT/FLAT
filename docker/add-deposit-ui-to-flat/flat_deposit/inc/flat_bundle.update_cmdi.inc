@@ -4,10 +4,11 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object){
 
     drupal_set_title(t('Update Bundle Metadata'));
 
+    ctools_add_js('ajax-responder');
+
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
     $ds = islandora_datastream_load("CMD",$fedora_object->id);
     $inheritedData = CmdiHandler::simplexml_load_cmdi_string($ds->content);
-
     if ($inheritedData){
         $profile = $inheritedData->getNameById();
     } else {
@@ -180,6 +181,7 @@ function flat_bundle_update_form_final_validate($form, &$form_state){
 
     $templateName = $form_state['values']['select_profile_name'];
     $form_data = $form_state['values']['template_container']['elements'];
+
     $owner = $form_state['values']['owner'];
 
     $creator = new CmdiCreator();
@@ -249,6 +251,7 @@ function flat_bundle_update_form_final_validate($form, &$form_state){
     $options ['policy'] = 'inherited';
     $options ['fid'] = $form_state['values']['data']['fid'];
     $options ['content_type'] = 'flat_bundle';
+    $options ['visibility'] = NULL; // policy/visibility should stay as they are
 
     $fid = $ingest_client->requestSipIngest($options);
 
@@ -272,24 +275,26 @@ function flat_bundle_update_form_final_validate($form, &$form_state){
  * Updates flat_collection node and redirects to parent node.
  *
  */
+
 function flat_bundle_update_cmdi_form_submit($form, &$form_state){
 
     $fid = $form_state['values']['data']['fid'];
     $target = 'islandora/object/' . $fid;
 
-    drupal_set_message('Bundle has been updated');
-
+    drupal_set_message('Bundle metadata has been updated');
+    
     ctools_include('ajax');
     ctools_add_js('ajax-responder');
     $commands[] = ctools_ajax_command_redirect($target);
     print ajax_render($commands);
     exit;
 
-
 }
 
 
 
 function flat_bundle_update_form_ajax_handler (&$form, &$form_state){
+
     return $form;
+    
 }

@@ -22,16 +22,15 @@ function flat_bundle_action_form($form, &$form_state)
     $form['actions']['describe_bundle'] = array(
         '#type' => 'submit',
         '#value' => t('Fill in metadata for bundle'),
-        #'#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
-        '#description' => t('Bundles are obliged to be accompanied by metadata'),
+        '#description' => t('Enter metadata for this bundle (required)'),
         '#validate' => array('flat_bundle_action_form_describe_validate'),
-        '#disabled' => TRUE,
+        '#access' => FALSE,
     );
 
     $form['actions']['upload_data'] = array(
         '#type' => 'submit',
         '#value' => t('Upload data'),
-        '#disabled' => TRUE,
+        '#access' => FALSE,
     );
 
 
@@ -44,8 +43,7 @@ function flat_bundle_action_form($form, &$form_state)
         '#type' => 'submit',
         '#value' => t('Validate bundle'),
         '#validate' => array('flat_bundle_action_form_validate_validate'),
-        #'#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
-        '#description' => t('Validated bundles will be transferred to different location and can not be altered'),
+        '#description' => t('Validate the bundle. Valid bundles cannot be altered, unless they are re-opened again.'),
         '#disabled' => TRUE,
     );
 
@@ -53,32 +51,33 @@ function flat_bundle_action_form($form, &$form_state)
         '#type' => 'submit',
         '#value' => t('Re-open bundle'),
         '#validate' => array('flat_bundle_action_form_reopen_validate'),
-        #'#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
-        '#description' => t('Click to allow modifications of your bundle'),
+        '#description' => t('Re-open the bundle to allow modifications of its metadata or included files'),
         '#disabled' => TRUE,
     );
 
     $form['actions']['archive_bundle'] = array(
         '#type' => 'submit',
         '#value' => t('Archive bundle'),
-        #'#validate' => array('flat_bundle_action_form_archive_validate'),
-        #    '#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
+	    '#description' => t('Submit the bundle to be stored in the archive.'),
         '#disabled' => TRUE,
     );
 
     $form['actions']['edit_bundle'] = array(
         '#type' => 'submit',
-        '#value' => t('Edit bundle'),
-        #    '#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
-        #'#submit' => array('flat_bundle_action_form_bundle_edit_submit'),
-        '#prefix' => '<div><br></div>',
+        '#value' => t('Edit bundle properties'),
+        '#prefix' => '<div><br/></div>',
     );
 
     $form['actions']['delete_bundle'] = array(
         '#type' => 'submit',
         '#value' => t('Delete bundle'),
-        #    '#src' => drupal_get_path('module','flat_deposit').'/Images/arrow_right.png',
-        '#suffix' => '<div><br></div>',
+        '#suffix' => '<div><br/></div>',
+    );
+
+    $form['actions']['note'] = array(
+	'#prefix' => '<div id="form-actions-note">',
+	'#markup' => t('Note: Deleting a bundle will only delete it from your active bundles. In case you are modifying an existing bundle in the archive, clicking "Delete bundle" will leave the original in the archive untouched.'),
+	'#suffix' => '</div><div><br/></div>',
     );
 
     $node = menu_get_object();
@@ -109,6 +108,7 @@ function flat_bundle_action_form($form, &$form_state)
 
 function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $form_id){
 
+
     $node = menu_get_object();
     $wrapper = entity_metadata_wrapper('node', $node);
 
@@ -116,17 +116,23 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
     $form['actions']['edit_bundle']['#disabled'] = TRUE;
     $status = $wrapper->flat_bundle_status->value();
 
-
     # deactivate link to file browser for local bundles
     $source = $wrapper->flat_source->value();
-    $disable_file_browser = $source == 'local' ? TRUE : FALSE;
+    $enable_file_browser = in_array($source, array('local', 'cloud')) ? FALSE : TRUE;
 
 
     switch ($status) {
         case 'open': {
-            $form['actions']['upload_data']['#disabled'] = $disable_file_browser;
-            $form['actions']['bundle_image']['#disabled'] = $disable_file_browser;
-            $form['actions']['validate_bundle']['#disabled'] = FALSE;
+
+            $form['actions']['upload_data']['#access'] = $enable_file_browser;
+            $form['actions']['bundle_image']['#disabled'] = !$enable_file_browser;
+            if (empty($node->flat_cmdi_file)) {
+                $form['actions']['validate_bundle']['#disabled'] = TRUE;
+            }
+            else {
+                $form['actions']['validate_bundle']['#disabled'] = FALSE;
+                $form['actions']['validate_bundle']['#attributes']['class'][] = 'btn-success';
+            }
             $form['actions']['edit_bundle']['#disabled'] = FALSE;
             $name = 'open_bundle';
             break;
@@ -139,8 +145,8 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
         }
 
         case 'failed': {
-            $form['actions']['upload_data']['#disabled'] = $disable_file_browser;
-            $form['actions']['bundle_image']['#disabled'] = $disable_file_browser;
+            $form['actions']['upload_data']['#access'] = $enable_file_browser;
+            $form['actions']['bundle_image']['#disabled'] = !$enable_file_browser;
             $form['actions']['validate_bundle']['#disabled'] = FALSE;
             $form['actions']['edit_bundle']['#disabled'] = FALSE;
             $name = 'closed_bundle_failed';
@@ -150,6 +156,7 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
         case 'valid': {
             $form['actions']['archive_bundle']['#disabled'] = FALSE;
             $form['actions']['reopen_bundle']['#disabled'] = FALSE;
+            $form['actions']['archive_bundle']['#attributes']['class'][] = 'btn-success';
             $name = 'closed_bundle';
             break;
         }
@@ -160,13 +167,17 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
         }
     }
 
-    $form['actions']['bundle_image']['#src'] = drupal_get_path('module', 'flat_deposit') . '/Images/' . $name . '.jpg';
+    $form['actions']['bundle_image']['#src'] = drupal_get_path('module', 'flat_deposit') . '/Images/' . $name . '.png';
 
 
     // Activate metadata creation button only if 1) cmdi option is 'new' 2) status is either open or failed and 3) no cmdi has been created
+    // If metadata creation button is active (.e.g. if metadata file has been removed), validate button should be disabled.
     if ($wrapper->flat_cmdi_option->value() == 'new' AND ($status == 'open' OR $status == 'failed') AND (empty($node->flat_cmdi_file))) {
 
-        $form['actions']['describe_bundle']['#disabled'] = FALSE;
+        $form['actions']['describe_bundle']['#access'] = TRUE;
+        $form['actions']['describe_bundle']['#attributes']['class'][] = 'btn-success';
+        $form['actions']['validate_bundle']['#disabled'] = TRUE;
+
     }
 
 }
@@ -219,6 +230,8 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
 
     $node = $form_state['values']['node'];
     $nid = $node->nid;
+    $wrapper = entity_metadata_wrapper('node', $node);
+    $path = $wrapper->flat_location->value();
 
     $parent_is_known = parent_is_known($nid);
     $has_cmdi = has_cmdi($nid);
@@ -230,7 +243,7 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
 
     // validate that a collection has been selected
     if ($parent_is_known === false){
-        form_set_error('error', "Bundle has not been assigned to a collection");
+        form_set_error('error', "The bundle has not been assigned to a collection");
         return $form;
     }
 
@@ -242,7 +255,7 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
 
     // Quick and dirty Check cmdi valid xml
     if ($valid_xml === false){
-        form_set_error('validate_bundle', t("Attached file is no valid xml file"));
+        form_set_error('validate_bundle', t("The CMDI metadata file is not a valid xml file"));
         return $form;
     }
 
@@ -256,39 +269,43 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
     // Check existence external location
     if ($file_exists === false){
 
-        $wrapper = entity_metadata_wrapper('node', $node);
-        $path = $wrapper->flat_location->value();
-        form_set_error('validate_bundle',t('File location does not exist (:path) ' , array(':path' => $path)));
+        form_set_error('validate_bundle',t('Location does not exist (:path) ' , array(':path' => $path)));
         return $form;
 
     }
 
     // Check user permissions
     if ($user_has_permissions === false){
-        form_set_error('validate_bundle', t('User has not enough privileges to perform requested action'));
+        form_set_error('validate_bundle', t('You do not have the permission to perform this action. Please contact the archive manager.'));
         return $form;
     }
 
-    // Validate path and number of files in bundle
-    $wrapper = entity_metadata_wrapper('node', $node);
-    $path = $wrapper->flat_location->value();
-
+    // Validate path, number of files in bundle and whether there are deleted files
 
     if (!file_exists($path)){
-        form_set_error('validate_bundle', t('Bundle directory does not exist or is not accessible'));
+        form_set_error('validate_bundle', t('The selected folder does not exist or is not accessible.'));
         return $form;
     }
 
     $nFiles = count(array_diff(scandir(drupal_realpath($path)), ['.','..']));
+    $deletedFiles = isset($wrapper->flat_deleted_resources) ? $wrapper->flat_deleted_resources->value() : NULL;
+
     $max = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
 
     if ($nFiles == 0){
-        form_set_error('validate_bundle', t('Bundle contains no files. Please upload files first'));
+        if (isset($deletedFiles)) {
+            if ($deletedFiles == '') {
+                form_set_error('validate_bundle', t('No new files added and no exising files selected for removal.'));
+            }
+        }
+        else {
+            form_set_error('validate_bundle', t('The selected folder does not contain any (accessible) files.'));
+        }
         return $form;
     }
 
     if ($nFiles > $max){
-        form_set_error('validate_bundle', t('Bundle contains too many files. Please reduce amount of file to !limit', array('!limit'=> $max)));
+        form_set_error('validate_bundle', t('The selected folder contains too many files, the maximum is !limit', array('!limit'=> $max)));
         return $form;
     }
 
@@ -337,7 +354,7 @@ function flat_bundle_action_form_submit($form, &$form_state)
             break;
 
 
-        case 'Edit bundle':
+        case 'Edit bundle properties':
             $url = array('node/' . $node->nid . '/edit');
             $form_state['redirect'] = $url;
             break;

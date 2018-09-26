@@ -7,7 +7,7 @@ function flat_deposit_admin_form($form, &$form_state)
     $form = array();
 
     $form['overview'] = array(
-        '#markup' => t('Settings for deposit UI'),
+        '#markup' => t('Settings for the FLAT Deposit module'),
         '#prefix' => '<p>',
         '#suffix' => '</p>',
     );
@@ -25,8 +25,8 @@ function flat_deposit_admin_form($form, &$form_state)
 
     $form['general']['external'] = array (
         '#type' => 'textfield',
-        '#title' => t('External data folder'),
-        '#description' => t('Directory for uploading external data'),
+        '#title' => t('Upload folder for external data'),
+        '#description' => t('Directory where uploaded data will be stored'),
         '#default_value' => $paths ['external'],
         '#required' => TRUE,
     );
@@ -42,7 +42,7 @@ function flat_deposit_admin_form($form, &$form_state)
     $form['general']['freeze'] = array (
         '#type' => 'textfield',
         '#title' => t('Freeze folder'),
-        '#description' => t('Directory where user bundles ready to be validated will be moved to'),
+        '#description' => t('Directory where user bundles will be placed upon validation'),
         '#default_value' => $paths ['freeze'],
         '#required' => TRUE,
     );
@@ -478,13 +478,12 @@ function flat_deposit_admin_form_export_submit()
         'solr' => variable_get('flat_deposit_solr'),
     );
 
+    $URI = "temporary://flat_deposit_settings.json";
 
-    $URI = "temporary://flat_deposit_settings.php";
+    file_unmanaged_save_data(json_encode($config), $URI, FILE_EXISTS_REPLACE);
 
-    file_unmanaged_save_data(serialize($config), $URI, FILE_EXISTS_REPLACE);
-
-    $header =  array('Content-type' => 'application/x-php',
-        'Content-Disposition' => 'attachment; filename=flat_deposit_settings.php');
+    $header =  array('Content-type' => 'application/json',
+        'Content-Disposition' => 'attachment; filename=flat_deposit_settings.json');
 
     file_transfer($URI, $header);
 
@@ -505,13 +504,13 @@ function flat_deposit_admin_form_import_validate ($form, &$form_state)
     $tmp = $_FILES['File_selector']['tmp_name'];
 
 
-    /* check fails, apparently FITS gives it another mime type than text/plain
+    /* check fails, apparently FITS gives it another mime type than application/json
     module_load_include('inc', 'flat_deposit', '/Helpers/CMDI/class.CmdiHandler');
     $type = CmdiHandler::fits_mimetype_check($tmp);
 
-    if ($type != 'text/plain') {
+    if ($type != 'application/json') {
 
-        form_set_error('import', t('File needs to be a plain text file '));
+        form_set_error('import', t('Settings file needs to be a json file '));
     }
     */
 
@@ -520,30 +519,30 @@ function flat_deposit_admin_form_import_validate ($form, &$form_state)
 
     if ($content === FALSE) {
 
-        form_set_error('import', t('File can not be processed'));
+        form_set_error('import', t('Settings file cannot be processed'));
         return $form;
     }
 
 
     // Check allowed characters
-    if (preg_match('/[^a-zA-Z0-9_.;:"\s\-\{\}\/]/', $content) !== 0) {
+    if (preg_match('/[^a-zA-Z0-9_.,;:"\s\-\{\}\/\\\\]/', $content) !== 0) {
 
-        form_set_error('import', t('File contains forbidden strings. Only allowed strings are numbers, letters, underscores (semi-)colons curly brackets.'));
+        form_set_error('import', t('Settings file contains forbidden characters. Only allowed characters are numbers, letters, underscores, hyphens, (semi-)colons, curly brackets, dot, comma, slash, backslash.'));
         return $form;
     }
 
     // Check if string can be unserialized
-    $imported_values = @unserialize($content);
+    $imported_values = json_decode($content, true);
 
     if ($imported_values === false) {
 
-        form_set_error('import', t('Unable to unserialize the string'));
+        form_set_error('import', t('Unable to decode the settings file'));
         return $form;
 
     }
 
     // validate that unserialization of imported string results in arrays corresponding to the drupal 'flat_deposit'-variables
-    $checks = array('paths', 'fits', 'ingest_service', 'sword', 'doorkeeper', 'fedora', 'solr');
+    $checks = array('general', 'fits', 'ingest_service', 'sword', 'doorkeeper', 'fedora', 'solr');
 
     foreach ($checks as $check) {
         if (!empty(array_diff_key($imported_values[$check], $form_state['values'][$check]))) {

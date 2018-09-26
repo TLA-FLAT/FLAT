@@ -64,7 +64,7 @@ class CmdiHandler extends SimpleXMLElement
             return $ds->content;
         }
 
-        return false;
+        return FALSE;
     }
 
     static public function loadCleanedCmdi($string){
@@ -102,14 +102,14 @@ class CmdiHandler extends SimpleXMLElement
      * Maps name on clarin id. In case of unspecified case, a get request is done to the clarin catalogue.
      *
      *
-     * @return bool|string Either name associated with ID or false.
+     * @return bool|string Either name associated with ID or FALSE.
      */
     public function getNameById() {
 
 	    $node = $this->xpath('cmd:Header/cmd:MdProfile')[0];
 
         if(!isset($node) OR empty((string)$node)){
-            return false;
+            return FALSE;
             }
 
         $id = (string)$node;
@@ -139,13 +139,13 @@ class CmdiHandler extends SimpleXMLElement
 
                     CURLOPT_RETURNTRANSFER => 1,
                     CURLOPT_CONNECTTIMEOUT => 5,
-                    CURLOPT_TIMEOUT => 5,
+                    CURLOPT_TIMEOUT => 60,
                     CURLOPT_URL => $url));
 
                 $result = curl_exec($ch);
                 $xml = simplexml_load_string($result);
                 if (!isset($xml->Header->Name)) {
-                    return false;
+                    return FALSE;
                 }
 
                 $name = (string)$xml->Header->Name;
@@ -169,7 +169,7 @@ class CmdiHandler extends SimpleXMLElement
             return (string)$cmdi->Header->MdProfile;
         }
 
-        return false;
+        return FALSE;
 
     }
 
@@ -188,7 +188,7 @@ class CmdiHandler extends SimpleXMLElement
         return "bundle";
       }
       else {
-        return false;
+        return FALSE;
       }
     }
 
@@ -221,7 +221,7 @@ class CmdiHandler extends SimpleXMLElement
     {
         $res = $this->xpath('/cmd:CMD/cmd:Header/cmd:MdSelfLink');
         if (empty($res)){
-            return true;
+            return TRUE;
 
         }
         $value = $res[0];
@@ -235,7 +235,7 @@ class CmdiHandler extends SimpleXMLElement
             unset($res[0][0]);
         }
 
-        return true;
+        return TRUE;
 
     }
 
@@ -248,7 +248,7 @@ class CmdiHandler extends SimpleXMLElement
     {
         $res = $this->xpath('//cmd:MdSelfLink');
         if (empty($res)){
-            return true;
+            return TRUE;
 
         }
 
@@ -266,7 +266,7 @@ class CmdiHandler extends SimpleXMLElement
             "also need to provide a flatURI attribute.";
         }
 
-        return true;
+        return TRUE;
 
     }
 
@@ -292,13 +292,17 @@ class CmdiHandler extends SimpleXMLElement
     public function removeMdSelfLink()
     {
 
-        $header = $this->xpath('cmd:Header');
-        $children = $header->children('cmd', true);
+        $mdSelfLink = $this->xpath('//cmd:MdSelfLink');
 
-        if (isset($children->MdSelfLink)) {
+        if (empty($mdSelfLink)){
+            return TRUE;
 
-            unset($children->MdSelfLink);
         }
+
+        unset($mdSelfLink[0][0]);
+
+        return TRUE;
+
     }
 
     /**
@@ -349,6 +353,7 @@ class CmdiHandler extends SimpleXMLElement
     {
         switch ($metadata_source){
             case 'new':
+            case 'template':
                 $result = $this->stripResourceProxyAndResources();
                 if ($fid){
                     $this->addResourcesFromDatastream($fid);
@@ -364,7 +369,7 @@ class CmdiHandler extends SimpleXMLElement
 
 
         if (is_null($resource_directory)){
-            return true;
+            return TRUE;
         }
 
         if (!is_dir($resource_directory)){
@@ -385,8 +390,8 @@ class CmdiHandler extends SimpleXMLElement
         if (!$result){
             throw new CmdiHandlerException(t("Failed adding new resources to Cmdi"));
         }
-
-        $result = $this->updateExistingResources($cmdi_resources, $directory_resources);
+        
+	$result = $this->updateExistingResources($cmdi_resources, $directory_resources);
 
         if (!$result){
             throw new CmdiHandlerException(t("Failed updating cmdi resources"));
@@ -396,7 +401,7 @@ class CmdiHandler extends SimpleXMLElement
 
     /**
      * Call to fits REST API allowing to determine the mime type of a specified file.
-     * Returns false if file is not accessible, FITS service returns wrong response code or the format attribute within
+     * Returns FALSE if file is not accessible, FITS service returns wrong response code or the format attribute within
      * the xml file returned by fits service is not set.
      *
      * @param string $filename name of the file to be checked
@@ -417,7 +422,7 @@ class CmdiHandler extends SimpleXMLElement
                 CURLOPT_PORT => $port,
                 CURLOPT_RETURNTRANSFER => 1,
                 CURLOPT_CONNECTTIMEOUT => 5,
-                CURLOPT_TIMEOUT => 5,
+                CURLOPT_TIMEOUT => 300,
             )
         );
 
@@ -427,7 +432,7 @@ class CmdiHandler extends SimpleXMLElement
 
         if ($httpcode < 200 OR $httpcode >= 300){
 
-            return false;
+            return FALSE;
 
         }
 
@@ -435,7 +440,7 @@ class CmdiHandler extends SimpleXMLElement
 
         if (!isset($xml->identification->identity['mimetype'])){
 
-            return false;
+            return FALSE;
 
         }
 
@@ -525,8 +530,8 @@ class CmdiHandler extends SimpleXMLElement
 
         $node = $this->getNodeForAddingResources($this);
 
-        if ($node === false){
-            return false;
+        if ($node === FALSE){
+            return FALSE;
         }
 
         foreach ($tags as $tag){
@@ -536,7 +541,7 @@ class CmdiHandler extends SimpleXMLElement
             }
 
         }
-        return true;
+        return TRUE;
     }
 
 
@@ -564,90 +569,89 @@ class CmdiHandler extends SimpleXMLElement
 
 
     /**
-     * Copies resources from an existing fedora object cmdi datastream to a the cmdi object.
+     * Adds new resources from the data directory to the cmdi object.
      *
-     * @param $fid String Fedora PID of a fedora object
+     * @param $cmdi_resources array of existing resources already present in the cmdi object
+     * 
+     * @param $directory_resources array of new resources in the data directory, to be added to the cmdi object 
+     *
      */
     private function addNewDirectoryResources($cmdi_resources, $directory_resources)
-    {
-        // prepare
-        $profile = $this->getNameById();
-        $xml = simplexml_load_file(CmdiHandler::FORM_TEMPLATES_PATH . "/$profile.xml");
+{
+    // prepare
+    $profile = $this->getNameById();
+    $xml = simplexml_load_file(CmdiHandler::FORM_TEMPLATES_PATH . "/$profile.xml");
 
-        $targetNode = $this->getNodeForAddingResources($this);
+    $targetNode = $this->getNodeForAddingResources($this);
 
-        if ($targetNode === false) {
-            return false;
-        }
+    if ($targetNode === FALSE) {
+        return FALSE;
+    }
 
-        // Add new resources to ResourceProxyList
-        $new_resources = array_diff_key ($directory_resources, $cmdi_resources);
+    // Add new resources to ResourceProxyList
+    $new_resources = array_diff_key($directory_resources, $cmdi_resources);
+    $resourceProxyList = $this->xpath('cmd:Resources/cmd:ResourceProxyList')[0];
 
-        $resourceProxyList = $this->xpath('cmd:Resources/cmd:ResourceProxyList')[0];
-
-        foreach ($new_resources as $rid => $file_name) {
+    foreach ($new_resources as $rid => $file_name) {
             $file_mime = self::fits_mimetype_check(drupal_realpath($file_name));
             if (!$file_mime) {
-                return false;
+                return FALSE;
             }
             $proxy = $resourceProxyList->addChild("cmd:ResourceProxy", '', "http://www.clarin.eu/cmd/");
             $proxy->addAttribute('id', $rid);
             $proxy->addChild("ResourceType", "Resource");
-            $proxy->children('cmd',true)->ResourceType->addAttribute('mimetype', $file_mime);
+            $proxy->children('cmd', TRUE)->ResourceType->addAttribute('mimetype', $file_mime);
             $proxy->addChild("ResourceRef");
-            $proxy->children('cmd',true)->ResourceRef->addAttribute('lat:localURI', 'file:' . $file_name, "http://lat.mpi.nl/");
-
-
-            // Create new DOMElements from the two SimpleXMLElements
+            $proxy->children('cmd', TRUE)->ResourceRef->addAttribute('lat:localURI', 'file:' . $file_name, "http://lat.mpi.nl/");
+            
+	    // Create new DOMElements from the two SimpleXMLElements
             $tag = $this->getTag($xml, $file_mime);
 
-            if (!$tag){
-                return false;
+            if (!$tag) {
+                return FALSE;
             }
 
-
-
-            $id = (String)$tag['id'];
+            $id = (String) $tag['id'];
             $sourceResource = simplexml_load_string("<cmd:$id xmlns:cmd=\"http://www.clarin.eu/cmd/\"></cmd:$id>");
 
             $sourceResource->addAttribute('ref', $rid);
 
-            foreach ($tag->updated_values as $value){
-                $child_id = (String)$value->attributes();
+            foreach ($tag->updated_values as $value) {
+                $child_id = (String) $value->attributes();
 
-                if ((String)$value[0] != ''){
-                    $sourceResource->addChild('cmd:'. $child_id, (String)$value[0]);
+                if ((String) $value[0] != '') {
+                    $sourceResource->addChild('cmd:' . $child_id, (String) $value[0]);
                     continue;
                 }
 
-                if (strtolower($child_id) == 'size'){
-                    $sourceResource->addChild('cmd:'. $child_id, filesize($file_name));
+                if (strtolower($child_id) == 'size') {
+                    $sourceResource->addChild('cmd:' . $child_id, filesize($file_name));
                     continue;
                 }
 
-                if (strtolower($child_id) == 'format'){
-                    $sourceResource->addChild('cmd:'. $child_id, $file_mime);
+                if (strtolower($child_id) == 'format') {
+                    $sourceResource->addChild('cmd:' . $child_id, $file_mime);
                     continue;
                 }
-                if (strtolower($child_id) == 'type'){
-                    $sourceResource->addChild('cmd:'. $child_id, explode('/', $file_mime)[0]);
+                if (strtolower($child_id) == 'type') {
+                    $sourceResource->addChild('cmd:' . $child_id, explode('/', $file_mime)[0]);
                     continue;
                 }
             }
 
-            if (!$sourceResource){
-                return false;
-            }
+            if (!$sourceResource) {
+            	return FALSE;
+	    }
 
             $resource = dom_import_simplexml($sourceResource);
-            $insertBefores = $tag->xpath('insert_before');;
-            $existingChildren = $targetNode->children('cmd',true)->xpath('child::node()');
+            $insertBefores = $tag->xpath('insert_before');
+            $existingChildren = $targetNode->children('cmd', TRUE)->xpath('child::node()');
 
-            switch(true) {
+            switch (TRUE) {
 
-                    //Case: Resource section has no children
+                //Case: Resource section has no children
                 case empty($existingChildren):
-                    //Case: Resource section has no other resources to care about
+                //Case: Resource section has no other resources to care about
                 case empty($insertBefores):
 
                     $parent = $targetNode;
@@ -657,7 +661,7 @@ class CmdiHandler extends SimpleXMLElement
                     break;
 
                 default:
-                    $found = false;
+                    $found = FALSE;
                     foreach ($insertBefores as $insertBefore) {
 
                         $results = $targetNode->xpath('cmd:' . $insertBefore);
@@ -667,11 +671,11 @@ class CmdiHandler extends SimpleXMLElement
                             break;
                         }
                     }
-                    if ($found){
-                            $domxml = dom_import_simplexml($parent);
-                            $domDsResource = $domxml->ownerDocument->importNode($resource, TRUE);
-                            $domxml->parentNode->insertBefore($domDsResource, $domxml);
-                            break;
+                    if ($found) {
+                        $domxml = dom_import_simplexml($parent);
+                        $domDsResource = $domxml->ownerDocument->importNode($resource, TRUE);
+                        $domxml->parentNode->insertBefore($domDsResource, $domxml);
+                        break;
                     }
                     $parent = $targetNode;
                     $domxml = dom_import_simplexml($parent);
@@ -680,9 +684,11 @@ class CmdiHandler extends SimpleXMLElement
                     break;
 
             }
-        }
-        return true;
     }
+	return TRUE;
+}
+
+
 
     private function getTag($profile, $file_mime){
 
@@ -695,7 +701,7 @@ class CmdiHandler extends SimpleXMLElement
             }
 
         }
-        return false;
+        return FALSE;
     }
 
     private function getResourceInComponentSection($cmdi, $profile, $resource_id)
@@ -704,8 +710,8 @@ class CmdiHandler extends SimpleXMLElement
 
         $root = $cmdi->getNodeForAddingResources($cmdi);
 
-        if ($root ===false){
-            return false;
+        if ($root ===FALSE){
+            return FALSE;
         }
 
         $tags = $profile->xpath('/profileToDrupal/resources/allowed_tags/tag');
@@ -718,7 +724,7 @@ class CmdiHandler extends SimpleXMLElement
                 return $results[0];
             }
         }
-        return false;
+        return FALSE;
     }
 
     /**
@@ -757,7 +763,7 @@ class CmdiHandler extends SimpleXMLElement
         //Copy resources to Components
         $this->addResourcesToComponents($fObjectCmdi);
 
-        return true;
+        return TRUE;
     }
 
     /**
@@ -838,7 +844,7 @@ class CmdiHandler extends SimpleXMLElement
             if (!empty($res)) {
                 $pid = $res[0]['fid']['value'];
             } else {
-                $pid = false;
+                $pid = FALSE;
             }
         }
 
@@ -894,7 +900,7 @@ class CmdiHandler extends SimpleXMLElement
 
             // generate new ID if resource name is unknown
             if (!$resource_id){
-                $unique = false;
+                $unique = FALSE;
 
                 while (!$unique) {
                     $c++;
@@ -942,16 +948,16 @@ class CmdiHandler extends SimpleXMLElement
         foreach ($existing_resources as $rid => $file_name) {
             $file_mime = self::fits_mimetype_check(drupal_realpath($file_name));
             if (!$file_mime) {
-                return false;
+                return FALSE;
             }
 
             $proxy = $resourceProxyList->xpath('cmd:ResourceProxy[@id="'. $rid .'"]');
             if (empty($proxy)){
-                return false;
+                return FALSE;
             }
 
             // change value of existing attribute or add new one
-            $attributes = $proxy[0]->children('cmd',TRUE)->ResourceRef->attributes('lat', true);
+            $attributes = $proxy[0]->children('cmd',TRUE)->ResourceRef->attributes('lat', TRUE);
             if (isset($attributes['localURI'])){
                 $attributes['localURI'] = 'file:' . $file_name;
             } else {
@@ -970,7 +976,7 @@ class CmdiHandler extends SimpleXMLElement
             $resource = $this->getResourceInComponentSection($this, $xml, $rid);
 
             if (!$resource){
-                return false;
+                return FALSE;
             }
 
             $values = array(
@@ -989,7 +995,7 @@ class CmdiHandler extends SimpleXMLElement
                 $value->{$id} = $values[$id];
             }
         }
-        return true;
+        return TRUE;
     }
 
 
@@ -998,24 +1004,24 @@ class CmdiHandler extends SimpleXMLElement
         $xml = simplexml_load_file(CmdiHandler::FORM_TEMPLATES_PATH . "/$profile.xml");
 
         $resources_root_path = (String)$xml->xpath('/profileToDrupal/resources/root_path')[0];
-        $resources_root_node = $cmdi->children('cmd',true)->Components->{$resources_root_path};
+        $resources_root_node = $cmdi->children('cmd',TRUE)->Components->{$resources_root_path};
 
 
         if (empty($resources_root_node)){
-            return false;
+            return FALSE;
         }
 
         // Return subNode if this is set for the specific profile
         $subnodes = (String)$xml->xpath('/profileToDrupal/resources/subnodes')[0];
 
         if (!empty($subnodes)){
-            // add subnode if this node does not exist and return false if this is not possible
+            // add subnode if this node does not exist and return FALSE if this is not possible
             if (empty($resources_root_node[0]->xpath('cmd:' .$subnodes))){
                 $resources_root_node[0]->addChild('cmd:' . $subnodes, '', 'http://www.clarin.eu/cmd/');
             }
 
             if (empty($resources_root_node[0]->xpath('cmd:' .$subnodes))){
-                return false;
+                return FALSE;
             }
 
             return $resources_root_node[0]->xpath('cmd:' .$subnodes)[0];
@@ -1023,4 +1029,15 @@ class CmdiHandler extends SimpleXMLElement
 
         return $resources_root_node[0];
     }
+
+    public function logging($message){
+
+            error_log ( date(DATE_ATOM) . "\t" . $message ."\n", $message_type = 3 , '/easylat/www/htdocs/cmdi_handler.log' );
+
+
+    }
+
+
+
+
 }

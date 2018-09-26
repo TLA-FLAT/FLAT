@@ -6,7 +6,7 @@ module_load_include('inc', 'node', 'node.pages');
  * Date: 04/05/2017
  * Time: 11:57
  */
-class Workspaces
+class Nextcloud
 {
 
 
@@ -19,48 +19,19 @@ class Workspaces
             '#type' => 'container',
             '#tree' => FALSE,
             '#attributes' => array(
-                'id' => array('workspace_navigation'),
+                'id' => array('nextcloud_navigation'),
             ),
             'field' => array(
                 '#type' => 'fieldset',
                 '#description' => t("Select the folder that contains the file(s) for this bundle. The final folder can have no sub-folders and should not contain more than @max_files files.", array('@max_files' => $max_files)),
                 '#states' => array(
-                    // Hide this select menu if source of resources is not local.
+                    // Hide this select menu if source of resources is not cloud.
                     'visible' => array(
-                        ':input[name="flat_source[und]"]' => array('value' => 'local'),
+                        ':input[name="flat_source[und]"]' => array('value' => 'cloud'),
                     ),
                 ),
 
-                'department' => array(
-                    '#type' => 'radios',
-                    '#title' => t('Department'),
-                    '#options' => drupal_parse_info_format(variable_get('flat_workspaces')['department_mapping']),
-                    '#empty_option' => '-- Select Department --',
-                    '#empty_value' => 'unselected',
-                    '#ajax' => array(
-                        'callback' => 'reload_workspace_navigation_container_ajax_callback',
-                        'wrapper' => 'workspace_navigation',
-                        'effect' => 'fade',
-                        'progress' => 'throbber',
-                    ),
-                ),
-
-                'workspace' => array(
-                    '#title' => 'Workspace',
-                    '#type' => 'select',
-                    '#options' => array(),
-                    '#empty_option' => '-- Select Workspace --',
-                    '#empty_value' => 'none',
-                    '#access' => FALSE,
-                    '#ajax' => array(
-                        'callback' => 'reload_workspace_navigation_container_ajax_callback',
-                        'wrapper' => 'workspace_navigation',
-                        'effect' => 'fade',
-                        'progress' => 'throbber',
-                    ),
-
-                ),
-                'next_directories' => array(
+                'next_nc_directories' => array(
                     '#title' => 'Navigate to',
                     '#type' => 'select',
                     '#empty_option' => '-- Select Subfolder --',
@@ -68,8 +39,8 @@ class Workspaces
                     '#access' => FALSE,
                     '#options' => array(),
                     '#ajax' => array(
-                        'callback' => 'reload_workspace_navigation_container_ajax_callback',
-                        'wrapper' => 'workspace_navigation',
+                        'callback' => 'reload_nextcloud_navigation_container_ajax_callback',
+                        'wrapper' => 'nextcloud_navigation',
                         'effect' => 'fade',
                         'progress' => 'throbber',
                     ),
@@ -81,16 +52,15 @@ class Workspaces
 
     }
 
-
-     /**
-     * Get the path of a bundles" resource files. If value of node field 'flat_ws_path' is not set yet, path is set to project root.
-     * Otherwise, if project root folder has changed set 'ws path' to root folder. Otherwise take saved value
+    /**
+     * Get the path of a bundles" resource files. If value of node field 'original_path' is not set yet, path is set to project root.
+     * Otherwise, if project root folder has changed set 'original path' to root folder. Otherwise take saved value
 
      * @param $form_state
      * @param $project_root
      * @return string
      */
-    static function get_flat_ws_path($form_state, $project_root){
+    static function get_flat_nc_path($form_state, $project_root){
         if (isset($form_state['values']['flat_source']['und'][0]['value'])) {
             if ($form_state['values']['flat_source']['und'][0]['value'] == 'external') {
 
@@ -100,7 +70,8 @@ class Workspaces
         // 1) If not set yet, set to project root. Otherwise,
         // 2) if project root folder has changed set to root folder.
         // 3) Otherwise take saved value
-        $value = isset($form_state['values']['flat_ws_path']['und'][0]['value']) ? $form_state['values']['flat_ws_path']['und'][0]['value'] : $project_root;
+
+        $value = isset($form_state['values']['flat_nc_path']['und'][0]['value']) ? $form_state['values']['flat_nc_path']['und'][0]['value'] : $project_root;
 
 
         if (strpos ($value, $project_root ) === FALSE){
@@ -117,12 +88,16 @@ class Workspaces
 
     }
 
-
-     static function listAccessibleFolderContent($directory, $filters=[]){
+     static function listAccessibleFolderContent($directory, $root, $filters=[]){
 
         $content = [];
         if (!file_exists($directory)){
             return $content;
+        }
+
+        if ($directory == $root) {
+            // if we are in the user's Nextcloud data root, do not list the .. option to go one directory up
+            $filters[] = 'isNotParentDir';
         }
 
         $results = scandir($directory);
@@ -208,8 +183,8 @@ class Workspaces
     }
 
     static function userHasReadPermissions($directory){
-        module_load_include('inc', 'flat_workspaces','inc/class.AclHandler');
-        $acl = new AclHandler(drupal_realpath($directory));
+        module_load_include('inc', 'flat_nextcloud','inc/class.AclHandler');
+        $acl = new AclHandlerNc(drupal_realpath($directory));
         if (empty($acl->getInfo())){
             return false;
         }
@@ -222,8 +197,8 @@ class Workspaces
     }
 
     static function webUserHasReadPermissions($directory){
-        module_load_include('inc', 'flat_workspaces','inc/class.AclHandler');
-        $acl = new AclHandler(drupal_realpath($directory));
+        module_load_include('inc', 'flat_nextcloud','inc/class.AclHandler');
+        $acl = new AclHandlerNc(drupal_realpath($directory));
 
         if (empty($acl->getInfo())){
             return false;
@@ -235,8 +210,8 @@ class Workspaces
     }
 
     static function userHasWritePermissions($directory){
-        module_load_include('inc', 'flat_workspaces','inc/class.AclHandler');
-        $acl = new AclHandler(drupal_realpath($directory));
+        module_load_include('inc', 'flat_nextcloud','inc/class.AclHandler');
+        $acl = new AclHandlerNc(drupal_realpath($directory));
 
         if (empty($acl->getInfo())){
             return false;
@@ -250,8 +225,8 @@ class Workspaces
     }
 
     static function webUserHasWritePermissions($directory){
-        module_load_include('inc', 'flat_workspaces','inc/class.AclHandler');
-        $acl = new AclHandler(drupal_realpath($directory));
+        module_load_include('inc', 'flat_nextcloud','inc/class.AclHandler');
+        $acl = new AclHandlerNc(drupal_realpath($directory));
 
         if (empty($acl->getInfo())){
             return false;
@@ -265,10 +240,10 @@ class Workspaces
 }
 
 
-function reload_workspace_navigation_container_ajax_callback ($form, $form_state)
+function reload_nextcloud_navigation_container_ajax_callback ($form, $form_state)
 {
-
-    return $form['workspace_navigation'];
+    
+    return $form['nextcloud_navigation'];
 
 }
 

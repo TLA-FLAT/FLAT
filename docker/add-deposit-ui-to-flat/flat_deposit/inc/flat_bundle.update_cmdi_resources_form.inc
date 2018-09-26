@@ -12,12 +12,17 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
     // hide blocks for nodes without assigned fedora ID (to be updated bundles) or $nodes without cmdi file
     $node_wrapper = entity_metadata_wrapper('node', $node);
 
+    $status = $node_wrapper->flat_bundle_status->value();
 
     $fedora_id = $node_wrapper->flat_fid->value();
 
     $file = $node_wrapper->flat_cmdi_file->value();
     $fName = $file['uri'];
 
+    $form['values']['status'] = array(
+        '#type' => 'value',
+        '#value' => $status
+    );
 
 
     $form['table_container'] = array
@@ -41,7 +46,7 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
         $cmd = @CmdiHandler::simplexml_load_cmdi_file(drupal_realpath($fName));
         if (!$cmd){
 
-            drupal_set_message("Record cmdi of this bundle can not be read using Simplexml", 'error');
+            drupal_set_message("The CMDI metadata file of this bundle cannot be read as XML", 'error');
             return $form;
 
         }
@@ -108,8 +113,9 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
 
     $form['buttons']['reset'] = array(
         '#type' => 'submit',
-        '#value' => 'Reset bundle',
+        '#value' => 'Reset',
         '#submit' => array('flat_bundle_reset_cmdi_resource_submit'),
+	'#suffix' => '<div><br/></div>',
     );
 
     $form['note'] = array(
@@ -127,6 +133,9 @@ function flat_bundle_delete_cmdi_resource_submit($form, &$form_state){
     $index = 0;
     $count = 0;
     $resourceIDs = [];
+
+    $node = menu_get_object();
+    $wrapper = entity_metadata_wrapper('node', $node);
     
     module_load_include('inc','flat_deposit','Helpers/CMDI/class.CmdiHandler');
     
@@ -144,6 +153,8 @@ function flat_bundle_delete_cmdi_resource_submit($form, &$form_state){
 
     if ($count > 0){
         $cmd->stripResources($resourceIDs);
+        $wrapper->flat_deleted_resources->set(implode(",",$resourceIDs));
+        $wrapper->save();
         $fid = $form_state['values']['data']['file_id'];
         $file = file_load($fid);
         $export = $cmd->asXML($file->uri);
@@ -158,6 +169,10 @@ function flat_bundle_delete_cmdi_resource_submit($form, &$form_state){
 
 
 function flat_bundle_reset_cmdi_resource_submit($form, &$form_state){
+
+    $node = menu_get_object();
+    $wrapper = entity_metadata_wrapper('node', $node);
+
     $fid = $form_state['values']['data']['fedora_id'];
 
 
@@ -169,11 +184,50 @@ function flat_bundle_reset_cmdi_resource_submit($form, &$form_state){
 
     $cmdi_file = $ds->getContent($file->uri);
 
+    $wrapper->flat_deleted_resources->set('');
+    $wrapper->save();
+
 
     if ($cmdi_file) {
         file_save($file);
 
-        drupal_set_message(t('Original bundle has been restored'));
+        drupal_set_message(t('List of current files has been reset'));
 
     }
+}
+
+function flat_deposit_form_flat_bundle_update_cmdi_resources_form_alter(&$form, &$form_state, $form_id) {
+    if($form_id == 'flat_bundle_update_cmdi_resources_form') {
+    $status = $form['values']['status']['#value'];
+    switch ($status) {
+        case 'open': {
+	   $form['buttons']['delete']['#disabled'] = FALSE;
+           $form['buttons']['reset']['#disabled'] = FALSE;
+           break;
+        }
+
+        case 'validating': {
+           $form['buttons']['delete']['#disabled'] = TRUE;
+           $form['buttons']['reset']['#disabled'] = TRUE;
+           break;
+        }
+
+        case 'failed': {
+           $form['buttons']['delete']['#disabled'] = TRUE;
+           $form['buttons']['reset']['#disabled'] = TRUE;
+           break;
+        }
+
+        case 'valid': {
+           $form['buttons']['delete']['#disabled'] = TRUE;
+           $form['buttons']['reset']['#disabled'] = TRUE;
+           break;
+        }
+        case 'processing': {
+           $form['buttons']['delete']['#disabled'] = TRUE;
+           $form['buttons']['reset']['#disabled'] = TRUE;
+           break;
+        }
+   }
+}
 }

@@ -180,7 +180,7 @@ class FlatBundle
 
                 $source = $wrapper->flat_source->value();
                 // flat_bundle nodes will be put back to original_path location
-                if ($source == 'local') {
+                if (($source == 'local') || ($source == 'cloud')) {
 
                     $original_location = $wrapper->flat_original_path->value();
                     $new_location = $original_location;
@@ -304,6 +304,9 @@ class FlatBundle
         } else {
             $moved = rename(drupal_realpath($source_location), drupal_realpath($target_location));
             #$moved = rename(drupal_realpath($source_location), drupal_realpath($target_location)); // Unfortunately, rename does not return true on success
+
+            // hook for additional actions after move
+            $actions = module_invoke_all('data_move_actions', $source_location, $target_location);
 
             if (!file_exists($target_location)) {
 

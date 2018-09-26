@@ -23,29 +23,35 @@ class CmdiLeaf extends CmdiComponent{
 
         $name = (string)$component['name'];
 
-        $componentData = $data[$id];
+        if (isset($data[$id])) {
+            $componentData = $data[$id];
 
-        foreach (array_keys($componentData) as $key){
-            if (!is_numeric($key))
-                unset($componentData[$key]);
+            foreach (array_keys($componentData) as $key){
+                if (!is_numeric($key))
+                    unset($componentData[$key]);
 
+            }
         }
 
 
         if (isset($componentData)) {
+
             foreach ($componentData as $key => $value) {
 
                 if ($value != null AND $value != ""){
+
                     $converted = $this->convertValue((string)$component->type, $value);
-                    //$rootNewComponents->addChild($name, utf8_encode(htmlspecialchars($converted)));
-                    $child = $rootNewComponents->addChild($name, $converted);
+                    $child = $rootNewComponents->addChild($name, htmlspecialchars($converted));
                     foreach ($component->attribute as $attribute) {
                         $attributeId = (string) $attribute['id'];
                         $attributeName = (string) $attribute['name'];
-                        $attributeData = (string) $data[$attributeId][0];
-                        if ($attributeData != null and $attributeData != "") {
-                            $child->addAttribute($attributeName, $attributeData);
+                        if (isset($data[$attributeId][0])) {
+                            $attributeData = (string) $data[$attributeId][0];
+                            if ($attributeData != null and $attributeData != "") {
+                                $child->addAttribute($attributeName, $attributeData);
+                            }
                         }
+                    
                     }
 
                 }

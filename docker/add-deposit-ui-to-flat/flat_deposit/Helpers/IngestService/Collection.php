@@ -104,6 +104,37 @@ class Collection extends SIP
     {
 
         $this->logging('Starting addResourcesToCmdi');
+
+        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
+
+        $file_name = $this->cmdiTarget;
+
+        $cmdi = CmdiHandler::simplexml_load_cmdi_file($file_name);
+
+
+        if (!$cmdi OR !$cmdi->canBeValidated()){
+            throw new IngestServiceException('Unable to load record.cmdi file');
+        }
+
+        try{
+
+            $md_type = isset($this->wrapper->flat_cmdi_option) ? $this->wrapper->flat_cmdi_option->value() : NULL;
+            switch ($md_type) {
+                case 'new':
+                    $cmdi->cleanMdSelfLink();
+                    break;
+                case 'import':
+                case 'template': 
+                    $cmdi->removeMdSelfLink();
+                    break;
+            }
+
+        } catch (CmdiHandlerException $exception){
+
+            throw new IngestServiceException($exception->getMessage());
+
+        }
+        
         /*
         $file_name = $this->cmdiTarget;
         module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
