@@ -6,4 +6,5 @@
   <password>test</password>
   <email>me@example.com</email>
   <status>test</status>
+  <tombstone>http://example.com/</tombstone>
 </PIDService>
