@@ -1020,16 +1020,15 @@ class CmdiHandler extends SimpleXMLElement
         $profile = $cmdi->getNameById();
         $xml = simplexml_load_file(CmdiHandler::FORM_TEMPLATES_PATH . "/$profile.xml");
 
-        $resources_root_path = (String)$xml->xpath('/profileToDrupal/resources/root_path')[0];
+        $resources_root_path = (!empty($xml->xpath('/profileToDrupal/resources/root_path'))) ? (String)$xml->xpath('/profileToDrupal/resources/root_path')[0] : FALSE;
         $resources_root_node = $cmdi->children('cmd',TRUE)->Components->{$resources_root_path};
-
 
         if (empty($resources_root_node)){
             return FALSE;
         }
 
         // Return subNode if this is set for the specific profile
-        $subnodes = (String)$xml->xpath('/profileToDrupal/resources/subnodes')[0];
+        $subnodes = (!empty($xml->xpath('/profileToDrupal/resources/subnodes'))) ? (String)$xml->xpath('/profileToDrupal/resources/subnodes')[0] : FALSE;
 
         if (!empty($subnodes)){
             // add subnode if this node does not exist and return FALSE if this is not possible
