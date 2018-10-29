@@ -114,6 +114,14 @@ $handler->display->display_options['footer']['view']['table'] = 'views';
 $handler->display->display_options['footer']['view']['field'] = 'view';
 $handler->display->display_options['footer']['view']['label'] = 'Notification block';
 $handler->display->display_options['footer']['view']['view_to_insert'] = 'notifications:block';
+/* No results behavior: Global: Text area */
+$handler->display->display_options['empty']['area']['id'] = 'area';
+$handler->display->display_options['empty']['area']['table'] = 'views';
+$handler->display->display_options['empty']['area']['field'] = 'area';
+$handler->display->display_options['empty']['area']['label'] = 'no bundles';
+$handler->display->display_options['empty']['area']['empty'] = TRUE;
+$handler->display->display_options['empty']['area']['content'] = 'No bundles in progress';
+$handler->display->display_options['empty']['area']['format'] = 'filtered_html';
 /* Relationship: Content: Author */
 $handler->display->display_options['relationships']['uid']['id'] = 'uid';
 $handler->display->display_options['relationships']['uid']['table'] = 'node';

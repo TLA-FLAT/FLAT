@@ -448,6 +448,23 @@ class CmdiHandler extends SimpleXMLElement
 
     }
 
+    /**
+     * get mime-type of a file using the linux file command. Much quicker but less reliable than calling FITS,
+     * however mime types are being re-evaluated using FITS in the doorkeeper anyway.
+     * 
+     * @param string $filename name of the file to be checked
+     * 
+     * @return bool|string
+     * 
+     */
+    static public function linux_mimetype_check($file){
+       
+        $result = shell_exec("file -b --mime-type \"$file\"");
+
+        return $result;
+
+    }
+
 
     function add_attribute_tree_to_xml($data, &$xml_data ){
 
@@ -512,7 +529,7 @@ class CmdiHandler extends SimpleXMLElement
     }
 
 
-    private function stripResourceProxyAndResources()
+    public function stripResourceProxyAndResources()
     {
         // Strip ResourceProxy
         $proxies = $this->xpath('cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy');
@@ -593,7 +610,7 @@ class CmdiHandler extends SimpleXMLElement
     $resourceProxyList = $this->xpath('cmd:Resources/cmd:ResourceProxyList')[0];
 
     foreach ($new_resources as $rid => $file_name) {
-            $file_mime = self::fits_mimetype_check(drupal_realpath($file_name));
+            $file_mime = self::linux_mimetype_check(drupal_realpath($file_name));
             if (!$file_mime) {
                 return FALSE;
             }
@@ -946,7 +963,7 @@ class CmdiHandler extends SimpleXMLElement
         $existing_resources = array_intersect_key($directory_resources, $cmdi_resources);
 
         foreach ($existing_resources as $rid => $file_name) {
-            $file_mime = self::fits_mimetype_check(drupal_realpath($file_name));
+            $file_mime = self::linux_mimetype_check(drupal_realpath($file_name));
             if (!$file_mime) {
                 return FALSE;
             }
@@ -1003,16 +1020,15 @@ class CmdiHandler extends SimpleXMLElement
         $profile = $cmdi->getNameById();
         $xml = simplexml_load_file(CmdiHandler::FORM_TEMPLATES_PATH . "/$profile.xml");
 
-        $resources_root_path = (String)$xml->xpath('/profileToDrupal/resources/root_path')[0];
+        $resources_root_path = (!empty($xml->xpath('/profileToDrupal/resources/root_path'))) ? (String)$xml->xpath('/profileToDrupal/resources/root_path')[0] : FALSE;
         $resources_root_node = $cmdi->children('cmd',TRUE)->Components->{$resources_root_path};
-
 
         if (empty($resources_root_node)){
             return FALSE;
         }
 
         // Return subNode if this is set for the specific profile
-        $subnodes = (String)$xml->xpath('/profileToDrupal/resources/subnodes')[0];
+        $subnodes = (!empty($xml->xpath('/profileToDrupal/resources/subnodes'))) ? (String)$xml->xpath('/profileToDrupal/resources/subnodes')[0] : FALSE;
 
         if (!empty($subnodes)){
             // add subnode if this node does not exist and return FALSE if this is not possible

@@ -20,6 +20,13 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object){
 
     global $user;
 
+    $form['file'] = array(
+        '#type' => 'file',
+        '#name' => 'files[cmdi]',
+        '#title' => t('(Optional) Upload an updated CMDI file. Note: if a file is selected here, any changes in the form below will be ignored.'),
+        '#description' => t('Update your metadata by uploading an updated CMDI file. The uploaded file needs to have the same CMDI profile as the archived file. Allowed file extensions: cmd, cmdi, xml'),
+      );
+
     $form['owner'] = array(
         '#title' => t('Owner of this bundle'),
         '#type' => 'textfield',
@@ -68,6 +75,7 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object){
     );
 
 
+
     //********************************************************************
     // Generate profile specific form render array and attach to container
     //********************************************************************
@@ -75,8 +83,10 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object){
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
     $availableFormTemplates = FormBuilder::getAvailableTemplates('flat_bundle');
 
-    if (in_array($profile, $availableFormTemplates)) {
 
+
+    if (in_array($profile, $availableFormTemplates)) {
+        
         // Load form builder app
         module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
         $formBuilder = new FormBuilder($form_state['build_info']['args'][0]);
@@ -102,17 +112,23 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object){
             drupal_set_message('Unable to generate cmdi form based on profile', 'warning');
 
         }
-
+        
     } else {
         drupal_set_message('Online editing of the metadata of this bundle is not supported');
         $form['Submit']['#disabled'] = TRUE;
     }
-    return $form;
 
+    return $form;
 
 }
 
 function flat_bundle_update_form_final_validate($form, &$form_state){
+
+    $file = file_save_upload('cmdi', array(
+        'file_validate_extensions' => array('cmd cmdi xml'))
+    );
+
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
     module_load_include('inc','flat_deposit', 'inc/class.FlatTuque');
     $owner = $form_state['values']['owner'];
     $profile = $form_state['values']['select_profile_name'];
@@ -121,45 +137,15 @@ function flat_bundle_update_form_final_validate($form, &$form_state){
     $fid = $form_state['values']['data']['fid'];
     $fidParent = FlatTuque::getIsPartOfCollection($fid);
 
+    $form_state['values']['cmdiFile'] = $cmdiFile;
+
     // Validate if owner exists.
     if (!user_load_by_name($owner)) {
         form_set_error('owner', 'Specified owner is unknown to drupal');
         return $form;
     };
 
-    //*******************//
-    // Title Validations //
-    //*******************//
-    $new_title = $form_state['values']['template_container']['elements']['title_field'][0];
-
-
-    // 1. Title uniqueness validation.
-    // Gets fedoraObject->id of parent, uses this id to search all children (fObjects with isPartOfCollection attribute
-    // set to parent), extract their fedoraObject->label(s) and checks whether one of these labels is the same as the title
-    // for the current object.
-    // Note. Only do this if title has actually changed.
-
-    $old_title = $form['template_container']['elements']['title_field'][0]['#default_value'];
-
-    if ($old_title !== $new_title){
-
-
-
-
-        $values = FlatTuque::getChildrenLabels($fidParent);
-
-        if ($values === false) {
-            form_set_error('title', 'Unable to validate that collection name is unique at this location');
-            return $form;
-        }
-
-        if (in_array(strtoupper($new_title), array_unique(array_map('strtoupper', $values)))) {
-            form_set_error('title', 'Another collection or bundle with same name exists at this location. Please use other name');
-            return $form;
-        }
-    }
-
-    // 2. Validate that output directory for new cmdi exists or can be created
+    // Validate that output directory for new cmdi exists or can be created
 
     if (!file_exists($export_dir)) {
         drupal_mkdir($export_dir, NULL, TRUE);
@@ -170,44 +156,123 @@ function flat_bundle_update_form_final_validate($form, &$form_state){
         return $form;
     }
 
-
-    //*******************//
-    // Generate Cmdi file //
-    //*******************//
-
-    $form_state['values']['cmdiFile'] = $cmdiFile;
-
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
-
-    $templateName = $form_state['values']['select_profile_name'];
-    $form_data = $form_state['values']['template_container']['elements'];
-
-    $owner = $form_state['values']['owner'];
-
-    $creator = new CmdiCreator();
-
-    try {
-        $creator->setCmdi($templateName, $form_data, $owner);
-        $generatedCmdi = $creator->getCmdi();
-    } catch (CmdiCreatorException $e) {
-        form_set_error('error', $e->getMessage());
-        return $form;
-    }
-
-
     // get original cmdi by datastream
     $ds = islandora_datastream_load('CMD', $fid);
     $originalCmdi = CmdiHandler::simplexml_load_cmdi_string($ds->content);
 
+    // In case a CMDI file was uploaded, just deal with that file and ignore the rest of the form
+
+    if ($file) {
+        $uploadedCmdi = file_get_contents($file->uri);
+        // delete temp file, we don't need it
+        file_delete($file);
+
+        $updatedCmdi = CmdiHandler::simplexml_load_cmdi_string($uploadedCmdi);
+
+        // check whether uploaded file has the same CMDI profile, return an error if not
+
+        $uploadedProfile = $updatedCmdi->getNameById();
+
+        if ($uploadedProfile !== $profile) {
+            form_set_error('error', 'Your uploaded CMDI file does not have the same profile as the archived CMDI file.');
+            return $form;
+        }
+
+        // 1. Title uniqueness validation.
+        // Gets fedoraObject->id of parent, uses this id to search all children (fObjects with isPartOfCollection attribute
+        // set to parent), extract their fedoraObject->label(s) and checks whether one of these labels is the same as the title
+        // for the current object.
+        // Note. Only do this if title has actually changed.
+    
+        $title_field_title = $form['template_container']['elements']['title_field'][0]['#title'];
+
+        $new_title = (string)$updatedCmdi->xpath("//cmd:Components/cmd:{$profile}/cmd:{$title_field_title}")[0];
+    
+        $old_title = $form['template_container']['elements']['title_field'][0]['#default_value'];
+    
+        if ($old_title !== $new_title){
+    
+            $values = FlatTuque::getChildrenLabels($fidParent);
+    
+            if ($values === false) {
+                form_set_error('title', 'Unable to validate that collection name is unique at this location');
+                return $form;
+            }
+    
+            if (in_array(strtoupper($new_title), array_unique(array_map('strtoupper', $values)))) {
+                form_set_error('title', t('Another collection or bundle with the name @name exists at this location. Please use a different name.', array('@name' => $new_title)));
+                return $form;
+            }
+        }
+
+        // get rid of any resource proxies and resource nodes, those will be taken from the archived CMDI
+
+        $updatedCmdi->stripResourceProxyAndResources();
+
+    }
+
+    // In case no CMDI file was uploaded, generate an updated CMDI file using the rest of the form
+
+    else {
+    
+        $new_title = $form_state['values']['template_container']['elements']['title_field'][0];
+    
+        // 1. Title uniqueness validation.
+        // Gets fedoraObject->id of parent, uses this id to search all children (fObjects with isPartOfCollection attribute
+        // set to parent), extract their fedoraObject->label(s) and checks whether one of these labels is the same as the title
+        // for the current object.
+        // Note. Only do this if title has actually changed.
+    
+        $old_title = $form['template_container']['elements']['title_field'][0]['#default_value'];
+    
+        if ($old_title !== $new_title){
+    
+            $values = FlatTuque::getChildrenLabels($fidParent);
+    
+            if ($values === false) {
+                form_set_error('title', 'Unable to validate that collection name is unique at this location');
+                return $form;
+            }
+    
+            if (in_array(strtoupper($new_title), array_unique(array_map('strtoupper', $values)))) {
+                form_set_error('title', 'Another collection or bundle with same name exists at this location. Please use other name');
+                return $form;
+            }
+        }
+    
+        //*******************//
+        // Generate Cmdi file //
+        //*******************//
+    
+        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
+    
+        $templateName = $form_state['values']['select_profile_name'];
+        $form_data = $form_state['values']['template_container']['elements'];
+    
+        $owner = $form_state['values']['owner'];
+    
+        $creator = new CmdiCreator();
+    
+        try {
+            $creator->setCmdi($templateName, $form_data, $owner);
+            $generatedCmdi = $creator->getCmdi();
+        } catch (CmdiCreatorException $e) {
+            form_set_error('error', $e->getMessage());
+            return $form;
+        }
+    
+        $updatedCmdi = CmdiHandler::simplexml_load_cmdi_string($generatedCmdi->asXML());
+    
+    }
+    
     // add resource Section to updated components
-    $newlyGeneratedCmdi = CmdiHandler::simplexml_load_cmdi_string($generatedCmdi->asXML());
-    $newlyGeneratedCmdi->addResourceSectionToComponents($originalCmdi);
+    $updatedCmdi->addResourceSectionToComponents($originalCmdi);
 
     // merge original cmdi and and edited components section
     $path = '//cmd:Components';
 
     $targetComponentNode = $originalCmdi->xpath($path)[0] ;
-    $sourceNode = $newlyGeneratedCmdi->xpath($path)[0];
+    $sourceNode = $updatedCmdi->xpath($path)[0];
 
     unset($targetComponentNode->children('cmd',true)->{$profile});
 
@@ -236,8 +301,6 @@ function flat_bundle_update_form_final_validate($form, &$form_state){
 
     $test = FALSE;
 
-
-
     module_load_include('php','flat_deposit','Helpers/IngestService/IngestClient');
 
     try{
@@ -262,12 +325,12 @@ function flat_bundle_update_form_final_validate($form, &$form_state){
         return $form;
     }
 
-
     $form_state['values']['data']['fid'] = (string)$fid;
     $form_state['values']['data']['label']=  $fObject->label;
     $form_state['values']['data']['owner']=  $fObject->owner;
 
     return $form;
+  
 }
 
 

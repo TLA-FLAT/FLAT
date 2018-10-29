@@ -228,6 +228,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
             <item id="field_18" name="Id" type="Leaf" inherited="true" minOccurrence="1">
                 <title>Id</title>
                 <type>textfield</type>
+                <description>Valid entries are: ISO639-3 language code (e.g. ISO639-3:nld) | Unknown | Unspecified</description>
             </item>
         </item>
         <item id="fieldset_06" type="Composite" name="Location" multival="true" inherited="true" minOccurrence="0">
@@ -236,8 +237,19 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
             <container>Locations</container>
             <item id="field_19" name="Continent" type="Leaf" minOccurrence="1">
                 <title>Continent</title>
-                <type>textfield</type>
-                <multival>true</multival>
+                <type>dropdown</type>
+                <options>
+                    <option>Unknown</option>
+                    <option>Unspecified</option>
+                    <option>Africa</option>
+                    <option>Asia</option>
+                    <option>Europe</option>
+                    <option>Australia</option>
+                    <option>Oceania</option>
+                    <option>North-America</option>
+                    <option>Middle-America</option>
+                    <option>South-America</option>
+                </options>
             </item>
             <item id="field_20" type="Leaf" name="Country" inherited="true" minOccurrence="1">
                 <title>Country</title>
@@ -250,17 +262,20 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
             <item id="fieldset_07" name="geoCoordinates" type="Composite"  multival="true" inherited="true" minOccurrence="0">
                 <title>Geo coordinates</title>
                 <type>fieldset</type>
-                <item id="field_22" name="Latitute" type="Leaf" inherited="true" minOccurrence="1">
+                <item id="field_22" name="Latitude" type="Leaf" inherited="true" minOccurrence="1">
                     <title>Latitude</title>
                     <type>textfield</type>
+                    <description>Latitude in decimal degrees</description>
                 </item>
                 <item id="field_23" name="Longitude" type="Leaf" inherited="true" minOccurrence="1">
                     <title>Longitude</title>
                     <type>textfield</type>
+                    <description>Longitude in decimal degrees</description>
                 </item>
                 <item id="field_24" name="Elevation" type="Leaf" inherited="true" minOccurrence="0">
                     <title>Elevation</title>
                     <type>textfield</type>
+                    <description>Elevation in metres above sea level</description>
                 </item>
             </item>
         </item>
