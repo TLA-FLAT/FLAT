@@ -35,6 +35,11 @@
         </action>
     </init>
     <main>
+        <action class="nl.mpi.tla.flat.deposit.action.IndexRollback">
+            <parameter name="gsearchServer" value="{$gsearchServer}"/>
+            <parameter name="gsearchUser" value="{$gsearchUser}"/>
+            <parameter name="gsearchPassword" value="{$gsearchPassword}"/>
+        </action>
         <action name="assemble package" class="nl.mpi.tla.flat.deposit.action.ResourceMapping">
             <parameter name="dir" value="{$work}/resources"/>
             <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
