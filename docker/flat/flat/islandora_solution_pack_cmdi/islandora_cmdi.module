@@ -80,6 +80,10 @@ function islandora_cmdi_islandora_metadata_display_info() {
  *   Markup representing the metadata display pulled from cmdi.
  */
 function cmdi_metadata_display_callback(AbstractObject $object, $print = FALSE) {
+
+  // display notification if current object is old
+  islandora_cmdi_check_version($object);
+
   if (in_array('islandora:sp_cmdiCModel', $object->models)) {
     $markup = array(
       '#theme' => 'islandora_cmdi_display',
@@ -92,4 +96,22 @@ function cmdi_metadata_display_callback(AbstractObject $object, $print = FALSE) 
 
 function cmdi_metadata_description_callback(AbstractObject $object, $print = FALSE) {
   return FALSE;
+}
+
+function islandora_cmdi_check_version(AbstractObject $object) {
+
+  $params = drupal_get_query_parameters();
+
+  if (isset($params['asOfDateTime']) && null !== ($cmd = $object->getDatastream('CMD'))) {
+
+    $recent = $cmd[0]->createdDate;
+    $chosen = new \DateTime($params['asOfDateTime']);
+    $url    = url(current_path(), array('query' => array('asOfDateTime' => (string)$recent)));
+
+    if ($chosen->getTimestamp() < $recent->getTimestamp()) {
+
+      drupal_set_message(t('You are viewing an older version of this object.'));
+      drupal_set_message(t('Click <a href="@new">here</a> to view the new version.', ['@new' => $url]));
+    }
+  }
 }
