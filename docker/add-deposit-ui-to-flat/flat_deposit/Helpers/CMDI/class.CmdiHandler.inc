@@ -127,6 +127,10 @@ class CmdiHandler extends SimpleXMLElement
                 $name = 'lat-session';
                 break;
 
+            case 'clarin.eu:cr1:p_1417617523856' :
+                $name = 'lat-SL-session';
+                break;
+
             case 'clarin.eu:cr1:p_1407745712064' :
                 $name = 'lat-corpus';
                 break;
@@ -363,7 +367,14 @@ class CmdiHandler extends SimpleXMLElement
                 }
                 break;
             case 'import':
-
+                if (!$fid) {
+                    // stripping resources from newly uploaded CMDI (same as template), as they cause errors if not all linked files are provided. 
+                    // need to find a different solution for still allowing resource-specific metadata (e.g. description)
+                    $result = $this->stripResourceProxyAndResources();
+                    if (!$result){
+                        throw new CmdiHandlerException(t("Strip of Resources was not successful"));
+                    }
+                }
                 break;
         }
 
@@ -459,7 +470,7 @@ class CmdiHandler extends SimpleXMLElement
      */
     static public function linux_mimetype_check($file){
        
-        $result = shell_exec("file -b --mime-type \"$file\"");
+        $result = trim(shell_exec("file -b --mime-type \"$file\""));
 
         return $result;
 

@@ -24,8 +24,9 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
  -->
 <profileToDrupal>
     <header>
-        <template_name>lat-corpus</template_name>
         <content_type>flat_collection</content_type>
+        <template_name>lat-corpus</template_name>
+        <template_description>Language Corpus Collection (lat-corpus)</template_description>
     </header>
     <items>
         <item id="field_01" name="History" type="Leaf" minOccurrence="0">
@@ -169,6 +170,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                             <option>true</option>
                             <option>false</option>
                         </options>
+                        <default>Unspecified</default>
                     </item>
                     <item id="field_23" name="SourceLanguage" type="Leaf" minOccurrence="0">
                         <title>SourceLanguage</title>
@@ -179,6 +181,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                             <option>true</option>
                             <option>false</option>
                         </options>
+                        <default>Unspecified</default>
                     </item>
                     <item id="field_24" name="TargetLanguage" type="Leaf" minOccurrence="0">
                         <title>TargetLanguage</title>
@@ -189,6 +192,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                             <option>true</option>
                             <option>false</option>
                         </options>
+                        <default>Unspecified</default>
                     </item>
                     <item id="fieldset_10" name="descriptions" type="Composite" minOccurrence="0">
                         <type>fieldset</type>

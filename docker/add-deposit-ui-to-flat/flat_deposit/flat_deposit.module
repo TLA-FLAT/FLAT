@@ -975,8 +975,9 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
             $fid = $wrapper->flat_fid->value();
             $fObject = islandora_object_load($fid);
             if ($fObject) {
-
-                $options[$nid] = $fObject->label;
+                if (in_array('islandora:sp_cmdiCModel', $fObject->models)) {
+                    $options[$nid] = $fObject->label;
+                }
 
             }
 

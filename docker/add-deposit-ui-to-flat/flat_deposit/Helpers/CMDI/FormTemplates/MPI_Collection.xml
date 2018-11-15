@@ -22,8 +22,9 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
  -->
 <profileToDrupal>
     <header>
-        <template_name>MPI_Collection</template_name>
         <content_type>flat_collection</content_type>
+        <template_name>MPI_Collection</template_name>
+        <template_description>MPI Collection (non-corpus collections)</template_description>
     </header>
     <items>
         <item id="field_01" name="Title" type="Leaf"  minOccurrence="1">
@@ -218,7 +219,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
             </item>
         </item>
         <item id="fieldset_05" type="Composite" name="Content_Language" multival="true" inherited="true" minOccurrence="0">
-            <title>Content Language</title>
+            <title>Content_Language</title>
             <type>fieldset</type>
             <container>Content Languages</container>
             <item id="field_17" name="Name" type="Leaf" inherited="true" minOccurrence="1">
