@@ -85,7 +85,7 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object){
 
 
 
-    if (in_array($profile, $availableFormTemplates)) {
+    if (array_key_exists($profile, $availableFormTemplates)) {
         
         // Load form builder app
         module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');

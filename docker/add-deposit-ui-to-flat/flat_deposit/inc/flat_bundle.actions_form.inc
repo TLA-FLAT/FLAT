@@ -196,7 +196,7 @@ function flat_bundle_action_form_describe_validate($form, &$form_state){
 
     $parent_nid = $wrapper->flat_parent_nid->value();
     if ($parent_nid === '0'){
-        form_set_error('describe_bundle', "To generate or edit a cmdi file, you need to select a collection first");
+        form_set_error('describe_bundle', "You need to assign this bundle to a parent collection first before editing the metadata. Go to \"Edit Bundle Properties\" to select a parent collection.");
         return $form;
 
     }
@@ -239,7 +239,9 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
     //$good_name = has_correct_filename($nid); filename here not relevant, only in SIP that is offered to doorkeeper
     $file_exists = bundle_file_exists($nid);  
     $user_has_permissions = user_has_permissions($nid);
-
+    $max_file_size_exceeded = bundle_max_file_size_exceeded($nid);
+    $invalid_file_names = bundle_invalid_file_names($nid);
+    $invalid_file_extensions = bundle_invalid_file_extensions($nid);
 
     // validate that a collection has been selected
     if ($parent_is_known === false){
@@ -287,31 +289,48 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
         return $form;
     }
 
+    $errors = [];
+
     $nFiles = count(array_diff(scandir(drupal_realpath($path)), ['.','..']));
     $deletedFiles = isset($wrapper->flat_deleted_resources) ? $wrapper->flat_deleted_resources->value() : NULL;
 
     $max = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
+    $max_size = variable_get('flat_deposit_ingest_service')['max_file_size'];
 
     if ($nFiles == 0){
         if (isset($deletedFiles)) {
             if ($deletedFiles == '') {
-                form_set_error('validate_bundle', t('No new files added and no exising files selected for removal.'));
+                $errors[] = t('No new files added and no exising files selected for removal.');
             }
         }
         else {
-            form_set_error('validate_bundle', t('The selected folder does not contain any (accessible) files.'));
+            $errors[] = t('The selected folder does not contain any (accessible) files.');
         }
-        return $form;
     }
 
     if ($nFiles > $max){
-        form_set_error('validate_bundle', t('The selected folder contains too many files, the maximum is !limit', array('!limit'=> $max)));
-        return $form;
+        $errors[] = t('The selected folder contains too many files, the maximum is !limit.', array('!limit'=> $max));
     }
 
+    if ($max_file_size_exceeded) {
+        $max_file_size_exceeded_list = implode (", ", $max_file_size_exceeded);
+        $errors[] = t('The selected folder contains files that are larger than the maximum allowed file size of !max_size GB: !max_file_size_exceeded_list.', ['!max_size' => $max_size, '!max_file_size_exceeded_list' => $max_file_size_exceeded_list]);
+    }
 
+    if ($invalid_file_names) {
+        $invalid_filenames_list = implode (", ", $invalid_file_names);
+        $errors[] = t('The selected folder contains files that have disallowed characters in their name: !invalid_filenames_list.', ['!invalid_filenames_list' => $invalid_filenames_list]);
+    }
 
+    if ($invalid_file_extensions) {
+        $invalid_file_extensions_list = implode (", ", $invalid_file_extensions);
+        $errors[] = t('The selected folder contains files that have a disallowed file extension: !invalid_file_extensions_list. See the deposit manual for allowed file types and extensions.', ['!invalid_file_extensions_list' => $invalid_file_extensions_list]);
+    }
 
+    if (!empty($errors)) {
+        form_set_error('validate_bundle', implode('<br>', $errors));
+        return $form;
+    }
 
 }
 

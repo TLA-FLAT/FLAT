@@ -278,24 +278,67 @@ function flat_workspaces_form_flat_bundle_node_form_alter(&$form, &$form_state, 
 function flat_workspaces_flat_bundle_node_form_validate($form, &$form_state)
 {
     
-    // Validate that currently selected folder has no subfolders and contains no more than configured maximum files
+    // Validate that currently selected folder has no subfolders, contains no more than configured maximum files, contains no files that are larger than configured maximum size, contains files with valid names and allowed extensions.
     if ($form_state['values']['flat_source']['und'][0]['value'] == 'local') {
         $dir = isset($form_state['values']['flat_ws_path']['und'][0]['value']) ? $form_state['values']['flat_ws_path']['und'][0]['value'] : FALSE;
         if (!$dir OR !file_exists(drupal_realpath($dir))) {
-            form_set_error('next_directories', 'Please select a valid workspace folder');
+            form_set_error('next_directories', 'Please select a valid workspace folder.');
             return $form;
         }
         if ($dir) {
+            $errors = array();
             $files = file_scan_directory($dir, '/.*/', array('min_depth' => 0));
             $max_files = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
+            $max_size = variable_get('flat_deposit_ingest_service')['max_file_size'];
+            $max_size_bytes = ($max_size * 1073741824);
+            $allowed_extensions = explode(', ', variable_get('flat_deposit_ingest_service')['allowed_extensions']);
+            $filename_pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+\.[\da-zA-Z]{2,9}$/';
+            //$max_size_bytes = 100;
             if (file_exists(drupal_realpath($dir)) AND !empty(glob(drupal_realpath($dir).'/*', GLOB_ONLYDIR))){
-                form_set_error('next_directories', 'The selected workspace folder contains subfolders');
+                form_set_error('next_directories', 'The selected workspace folder contains subfolders.');
                 return $form;
             }
             elseif (count($files) > $max_files) {
-                form_set_error('next_directories', t('The selected workspace folder contains more than !max_files files', ['!max_files' => $max_files]));
+                //form_set_error('next_directories', t('The selected workspace folder contains more than !max_files files', ['!max_files' => $max_files]));
+                $errors[] = t('The selected workspace folder contains too many files, the maximum is !max_files.', ['!max_files' => $max_files]);
+            }
+            $max_file_size_exceeded = array();
+            $invalid_file_names = array();
+            $invalid_file_extensions = array();
+            foreach ($files as $file) {
+                $path = $file->uri;
+                $name = basename($path);
+                $size = filesize($path);
+                $extension = pathinfo($path, PATHINFO_EXTENSION);
+                if ($size > $max_size_bytes) {
+                    $max_file_size_exceeded[] = $name;
+                }
+                if (preg_match($filename_pattern, $name) == FALSE) {
+                    $invalid_file_names[] = $name;
+                }
+                if (!in_array($extension, $allowed_extensions)) {
+                    $invalid_file_extensions[] = $name;
+                }
+        
+            }
+            if (!empty($max_file_size_exceeded)) {
+                $max_file_size_exceeded_list = implode (", ", $max_file_size_exceeded);
+                $errors[] = t('The selected workspace folder contains files that are larger than the maximum allowed file size of !max_size GB: !max_file_size_exceeded_list.', ['!max_size' => $max_size, '!max_file_size_exceeded_list' => $max_file_size_exceeded_list]);
+            }
+            if (!empty($invalid_file_names)) {
+                $invalid_file_names_list = implode (", ", $invalid_file_names);
+                $errors[] = t('The selected workspace folder contains files that have disallowed characters in their name: !invalid_file_names_list.', ['!invalid_file_names_list' => $invalid_file_names_list]);
+
+            }
+            if (!empty($invalid_file_extensions)) {
+                $invalid_file_extensions_list = implode (", ", $invalid_file_extensions);
+                $errors[] = t('The selected workspace folder contains files that have a disallowed file extension: !invalid_file_extensions_list. See the deposit manual for allowed file types and extensions.', ['!invalid_file_extensions_list' => $invalid_file_extensions_list]);
+            }
+            if (!empty($errors)) {
+                form_set_error('next_directories', implode('<br>', $errors));
                 return $form;
             }
+
         }
         $query = new EntityFieldQuery();
         $query->entityCondition('entity_type', 'node')
@@ -312,7 +355,7 @@ function flat_workspaces_flat_bundle_node_form_validate($form, &$form_state)
 
             if ($nid !== $form_state['values']['nid']) {
 
-            form_set_error('next_directories', 'The selected workspace folder is already in use for a different bundle');
+            form_set_error('next_directories', 'The selected workspace folder is already in use for a different bundle.');
 
             }
 

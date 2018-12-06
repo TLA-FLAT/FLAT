@@ -101,7 +101,7 @@ function flat_collection_update_form($form, &$form_state, $fedora_object)
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
     $availableFormTemplates = FormBuilder::getAvailableTemplates('flat_collection');
 
-    if (in_array($profile, $availableFormTemplates)) {
+    if (array_key_exists($profile, $availableFormTemplates)) {
 
         // Load form builder app
         $formBuilder = new FormBuilder(null);

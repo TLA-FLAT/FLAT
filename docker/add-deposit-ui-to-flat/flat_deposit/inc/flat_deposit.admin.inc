@@ -153,11 +153,23 @@ function flat_deposit_admin_form($form, &$form_state)
         '#title' => t('Maximal number of files per bundle'),
         '#description' => t('Validation parameter for bundles before ingest'),
         '#default_value' => $service['max_ingest_files'],
-        '#required' => FALSE,
+        '#required' => TRUE,
+    );
+    $form['ingest_service']['max_file_size'] = array (
+        '#type' => 'textfield',
+        '#title' => t('Maximum size per ingested file (GB)'),
+        '#description' => t('Validation parameter for bundles before ingest'),
+        '#default_value' => $service['max_file_size'],
+        '#required' => TRUE,
     );
 
-
-
+    $form['ingest_service']['allowed_extensions'] = array (
+        '#type' => 'textarea',
+        '#title' => t('Allowed file extensions (comma separated list)'),
+        '#description' => t('Validation parameter for bundles before ingest'),
+        '#default_value' => $service['allowed_extensions'],
+        '#required' => TRUE,
+    );
 
     // FITS
     $form['fits'] = array(

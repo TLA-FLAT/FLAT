@@ -159,6 +159,106 @@ function bundle_max_files_exceeded($nid) {
 
 }
 
+function bundle_max_file_size_exceeded($nid) {
+
+    $node = node_load($nid);
+    $wrapper = entity_metadata_wrapper('node', $node);
+    $location = $wrapper->flat_location->value();
+
+    $max_size = variable_get('flat_deposit_ingest_service')['max_file_size'];
+    $max_size_bytes = ($max_size * 1073741824);
+
+    $files = file_scan_directory($location, '/.*/', array('min_depth' => 0));
+
+    $max_file_size_exceeded = array();
+    foreach ($files as $file) {
+        $path = $file->uri;
+        $name = basename($path);
+        $size = filesize($path);
+        if ($size > $max_size_bytes) {
+            $max_file_size_exceeded[] = $name;
+        }
+    }
+    if (!empty($max_file_size_exceeded)) {
+
+        return $max_file_size_exceeded;
+
+    }
+
+    else {
+
+        return FALSE;
+
+    }
+
+}
+
+function bundle_invalid_file_names($nid) {
+
+    $node = node_load($nid);
+    $wrapper = entity_metadata_wrapper('node', $node);
+    $location = $wrapper->flat_location->value();
+
+    $filename_pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+\.[\da-zA-Z]{2,9}$/';
+
+    $files = file_scan_directory($location, '/.*/', array('min_depth' => 0));
+
+    $invalid_file_names = array();
+    foreach ($files as $file) {
+        $path = $file->uri;
+        $name = basename($path);
+        if (preg_match($filename_pattern, $name) == FALSE) {
+            $invalid_file_names[] = $name;
+        }
+    }
+    if (!empty($invalid_file_names)) {
+
+        return $invalid_file_names;
+
+    }
+
+    else {
+
+        return FALSE;
+
+    }
+
+}
+
+function bundle_invalid_file_extensions($nid) {
+
+    $node = node_load($nid);
+    $wrapper = entity_metadata_wrapper('node', $node);
+    $location = $wrapper->flat_location->value();
+
+    $allowed_extensions = explode(', ', variable_get('flat_deposit_ingest_service')['allowed_extensions']);
+
+    $files = file_scan_directory($location, '/.*/', array('min_depth' => 0));
+
+    $invalid_file_extensions = array();
+    foreach ($files as $file) {
+        $path = $file->uri;
+        $name = basename($path);
+        $extension = pathinfo($path, PATHINFO_EXTENSION);
+        if (!in_array($extension, $allowed_extensions)) {
+            $invalid_file_extensions[] = $name;
+        }
+    }
+    if (!empty($invalid_file_extensions)) {
+
+        return $invalid_file_extensions;
+
+    }
+
+    else {
+
+        return FALSE;
+
+    }
+
+}
+
+
 
 function user_has_permissions($nid)
 {
