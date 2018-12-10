@@ -292,7 +292,7 @@ function flat_workspaces_flat_bundle_node_form_validate($form, &$form_state)
             $max_size = variable_get('flat_deposit_ingest_service')['max_file_size'];
             $max_size_bytes = ($max_size * 1073741824);
             $allowed_extensions = explode(', ', variable_get('flat_deposit_ingest_service')['allowed_extensions']);
-            $filename_pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+\.[\da-zA-Z]{2,9}$/';
+            $filename_pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+$/';
             //$max_size_bytes = 100;
             if (file_exists(drupal_realpath($dir)) AND !empty(glob(drupal_realpath($dir).'/*', GLOB_ONLYDIR))){
                 form_set_error('next_directories', 'The selected workspace folder contains subfolders.');

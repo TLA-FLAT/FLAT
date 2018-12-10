@@ -199,7 +199,7 @@ function bundle_invalid_file_names($nid) {
     $wrapper = entity_metadata_wrapper('node', $node);
     $location = $wrapper->flat_location->value();
 
-    $filename_pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+\.[\da-zA-Z]{2,9}$/';
+    $filename_pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+$/';
 
     $files = file_scan_directory($location, '/.*/', array('min_depth' => 0));
 
