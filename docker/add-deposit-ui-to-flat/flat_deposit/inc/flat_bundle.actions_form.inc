@@ -239,9 +239,14 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
     //$good_name = has_correct_filename($nid); filename here not relevant, only in SIP that is offered to doorkeeper
     $file_exists = bundle_file_exists($nid);  
     $user_has_permissions = user_has_permissions($nid);
+    $max_files_exceeded = bundle_max_files_exceeded($nid);
     $max_file_size_exceeded = bundle_max_file_size_exceeded($nid);
     $invalid_file_names = bundle_invalid_file_names($nid);
     $invalid_file_extensions = bundle_invalid_file_extensions($nid);
+    $has_new_or_deleted_files = (bundle_new_files($nid) OR bundle_deleted_files($nid));
+
+    $max_number_files = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
+    $max_size = variable_get('flat_deposit_ingest_service')['max_file_size'];
 
     // validate that a collection has been selected
     if ($parent_is_known === false){
@@ -291,25 +296,12 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
 
     $errors = [];
 
-    $nFiles = count(array_diff(scandir(drupal_realpath($path)), ['.','..']));
-    $deletedFiles = isset($wrapper->flat_deleted_resources) ? $wrapper->flat_deleted_resources->value() : NULL;
-
-    $max = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
-    $max_size = variable_get('flat_deposit_ingest_service')['max_file_size'];
-
-    if ($nFiles == 0){
-        if (isset($deletedFiles)) {
-            if ($deletedFiles == '') {
-                $errors[] = t('No new files added and no exising files selected for removal.');
-            }
-        }
-        else {
-            $errors[] = t('The selected folder does not contain any (accessible) files.');
-        }
+    if (!$has_new_or_deleted_files) {
+            $errors[] = t('No new files added and no exising files selected for removal.');
     }
 
-    if ($nFiles > $max){
-        $errors[] = t('The selected folder contains too many files, the maximum is !limit.', array('!limit'=> $max));
+    if ($max_files_exceeded){
+        $errors[] = t('The bundle contains too many files, the maximum is !limit.', array('!limit'=> $max_number_files));
     }
 
     if ($max_file_size_exceeded) {

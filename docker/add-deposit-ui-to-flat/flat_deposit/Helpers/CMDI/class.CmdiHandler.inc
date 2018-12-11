@@ -3,6 +3,14 @@
 module_load_include('inc','flat_deposit','Helpers/CMDI/Template2FormParser');
 module_load_include('inc','flat_deposit','Helpers/CMDI/Form2CmdiParser');
 
+class RecursiveDotFilterIterator extends  RecursiveFilterIterator
+{
+    public function accept()
+    {
+        return '.' !== substr($this->current()->getFilename(), 0, 1);
+    }
+}
+
 
 class CmdiHandlerException extends Exception {}
 /**
@@ -900,8 +908,6 @@ class CmdiHandler extends SimpleXMLElement
         return $resources;
     }
 
-
-
     /**
      * Iterates through directory and adds every file to an array of resource with a unique resource ID as key.
      * In case an existing resource with identical file name is found, assign that resource the ID of the existing resource.
@@ -917,7 +923,13 @@ class CmdiHandler extends SimpleXMLElement
         $resources = array();
         $c=10000; # counter for resource ID (each resource within an CMDI-object needs an unique identifier)
 
-        $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory,RecursiveDirectoryIterator::FOLLOW_SYMLINKS));
+        //$rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory,RecursiveDirectoryIterator::FOLLOW_SYMLINKS));
+
+        $rii = new RecursiveIteratorIterator(
+            new RecursiveDotFilterIterator(
+                new RecursiveDirectoryIterator($directory,RecursiveDirectoryIterator::FOLLOW_SYMLINKS)
+            )
+        );
 
         foreach ($rii as $file) {
             if ($file->isDir()){continue;}

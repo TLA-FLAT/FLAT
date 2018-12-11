@@ -189,20 +189,25 @@ class Bundle extends SIP
         $this->logging('Starting validateResources');
         $path = $this->wrapper->flat_location->value();
 
-        $fileNames = scandir($path);
-        if(empty($fileNames)){
-            throw new IngestServiceException('Unable to scan directory with files');
+        $fileNames = file_scan_directory($path, '/.*/', array('min_depth' => 0));
+
+        $deletedFiles = $this->wrapper->flat_deleted_resources ? $this->wrapper->flat_deleted_resources->value() : NULL;
+
+        if (!isset($deletedFiles) OR ($deletedFiles == '')) {
+
+            if(empty($fileNames)){
+                throw new IngestServiceException('There are no (accessible) files in the chosen folder.');
+
+            }
 
         }
 
         $pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+\.[\da-zA-Z]{2,9}$/';
         $violators = [];
 
-        foreach ($fileNames as $fileName){
-            if ($fileName == '.' OR $fileName == '..' ) {
-                continue;
-            }
+        foreach ($fileNames as $uri => $file_array){
 
+            $fileName = $file_array->filename;
             if (preg_match($pattern, $fileName) == false){
              $violators[] = $fileName;
             }

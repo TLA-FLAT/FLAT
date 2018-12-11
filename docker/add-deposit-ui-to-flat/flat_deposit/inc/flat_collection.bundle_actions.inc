@@ -162,10 +162,14 @@ function flat_collection_bundle_action_form_validate_validate($form, &$form_stat
         //$good_name = has_correct_filename($nid); filename here not relevant, only in SIP that is offered to doorkeeper
         $file_exists = bundle_file_exists($nid);
         $user_has_permissions = user_has_permissions($nid);
-        $has_new_or_deleted_files = (bundle_new_files($nid) OR bundle_deleted_files($nid));
         $max_files_not_exceeded = !bundle_max_files_exceeded($nid);
+        $max_file_size_not_exceeded = !bundle_max_file_size_exceeded($nid);
+        $valid_file_names = !bundle_invalid_file_names($nid);
+        $valid_file_extensions = !bundle_invalid_file_extensions($nid);
+        $has_new_or_deleted_files = (bundle_new_files($nid) OR bundle_deleted_files($nid));
         //$tests = array($complete, $parent_is_known, $has_cmdi, $valid_xml, $good_name, $file_exists, $user_has_permissions);
-        $tests = array('complete' => $complete, 'parent_is_known' => $parent_is_known, 'has_cmdi' => $has_cmdi, 'valid_xml' => $valid_xml, 'file_exists' => $file_exists, 'user_has_permissions' => $user_has_permissions, 'has_new_or_deleted_files' => $has_new_or_deleted_files, 'max_files_not_exceeded' => $max_files_not_exceeded);
+        $tests = array('complete' => $complete, 'parent_is_known' => $parent_is_known, 'has_cmdi' => $has_cmdi, 'valid_xml' => $valid_xml, 'file_exists' => $file_exists, 'user_has_permissions' => $user_has_permissions, 'max_files_not_exceeded' => $max_files_not_exceeded,
+        'max_file_size_not_exceeded' => $max_file_size_not_exceeded, 'valid_file_names' => $valid_file_names, 'valid_file_extensions' => $valid_file_extensions, 'has_new_or_deleted_files' => $has_new_or_deleted_files);
         foreach ($form_state['values']['data'] as $bundle) {
                 if ($bundle['nid'] == $nid) {
                         $title = $bundle['title'];
@@ -187,7 +191,7 @@ function flat_collection_bundle_action_form_validate_validate($form, &$form_stat
             $form_state['values']['reject_bundle_titles'][] = $title;
             foreach ($tests as $test => $value) {
                 if ($value === false) {
-                    $form_state['values']['reject_bundle_failed_tests'][][] = $test;
+                    $form_state['values']['reject_bundle_failed_tests'][$nid][] = $test;
                 }
 
             }
@@ -273,47 +277,55 @@ function flat_collection_bundle_action_form_submit($form, &$form_state)
 
             if (!empty($form_state['values']['reject_bundles'])) {
 
-                drupal_set_message('Unable to validate bundle(s): ' . implode(' and ', $form_state['values']['reject_bundle_titles']) . '.', 'error');
+                drupal_set_message('Validation failed for the following bundle(s): ' . implode(' and ', $form_state['values']['reject_bundle_titles']) . '.', 'error');
 
+                $max_files = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
+                $max_file_size = variable_get('flat_deposit_ingest_service')['max_file_size'];
 
                 foreach ($form_state['values']['reject_bundles'] as $index => $rejected_bundle) {
 
-                    foreach ($form_state['values']['reject_bundle_failed_tests'][$index] as $failed_test) {
+                    $errors = [];
+
+                    foreach ($form_state['values']['reject_bundle_failed_tests'][$rejected_bundle] as $failed_test) {
 
                         $rejected_title =  $form_state['values']['reject_bundle_titles'][$index];
-                        $max_files = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
-                        switch($failed_test) {
-                            case 'complete': {
-                                drupal_set_message('Bundle ' . $rejected_title . ' is not complete.', 'error');
-                                break;
-                            }
-                            case 'parent_is_known': {
-                                drupal_set_message('The parent of bundle ' . $rejected_title . ' is not known.', 'error');
-                                break;
-                            }
-                            case 'has_cmdi': {
-                                drupal_set_message('Bundle ' . $rejected_title . ' does not have a CMDI metadata file.', 'error');
-                                break;
-                            }
-                            case 'file_exists': {
-                                drupal_set_message('The specified file location for Bundle ' . $rejected_title . ' does not exist.', 'error');
-                                break;
-                            }
-                            case 'user_has_permissions': {
-                                drupal_set_message('You do not have enough permissions for Bundle ' . $rejected_title . '.', 'error');
-                                break;
-                            }
-                            case 'has_new_or_deleted_files': {
-                                drupal_set_message('Bundle ' . $rejected_title . ' has no new or deleted files.', 'error');
-                                break;
-                            }
-                            case 'max_files_not_exceeded': {
-                                drupal_set_message('Bundle ' . $rejected_title . ' contains more than the maximum of ' . $max_files . ' files.', 'error');
-                                break;
-                            }
 
+                        if ($failed_test == 'complete') {
+                            $errors[] = t('Bundle ' . $rejected_title . ' is not complete.');
                         }
+                        if ($failed_test == 'parent_is_known') {
+                            $errors[] = t('The parent of bundle ' . $rejected_title . ' is not known.');
+                        }
+                        if ($failed_test == 'has_cmdi') {
+                            $errors[] = t('Bundle ' . $rejected_title . ' does not have a CMDI metadata file.');
+                        }
+                        if ($failed_test == 'file_exists') {
+                            $errors[] = t('The specified file location for Bundle ' . $rejected_title . ' does not exist.');
+                        }
+                        if ($failed_test == 'user_has_permissions') {
+                            $errors[] = t('You do not have enough permissions for Bundle ' . $rejected_title . '.');
+                        }
+                        if ($failed_test == 'max_files_not_exceeded') {
+                            $errors[] = t('Bundle ' . $rejected_title . ' contains more than the maximum of ' . $max_files . ' files.');
+                        }
+                        if ($failed_test == 'max_file_size_not_exceeded') {
+                            $errors[] = t('Bundle ' . $rejected_title . ' contains files that are larger than the maximum allowed file size of ' . $max_file_size . 'GB.');
+                        }
+                        if ($failed_test == 'valid_file_names') {
+                            $errors[] = t('Bundle ' . $rejected_title . ' contains files that have disallowed characters in their name.');
+                        }
+                        if ($failed_test == 'valid_file_extensions') {
+                            $errors[] = t('Bundle ' . $rejected_title . ' contains files that have a disallowed file extension. See the deposit manual for allowed file types and extensions.');
+                        }
+                        if ($failed_test == 'has_new_or_deleted_files') {
+                            $errors[] = t('Bundle ' . $rejected_title . ' has no new or deleted files.');
+                        }
+                    }
 
+                    if (!empty($errors)) {
+                        foreach ($errors as $error) {
+                            drupal_set_message($error, 'error');
+                        }
                     }
 
                 }

@@ -242,7 +242,7 @@ function flat_nextcloud_form_flat_bundle_node_form_alter(&$form, &$form_state, $
         // Get original directory value.
         $current = Nextcloud::get_flat_nc_path($form_state, $nextcloud_root);
 
-        // (if chosen) extend 'current' directory value with value of next_directories
+        // (if chosen) extend 'current' directory value with value of next_nc_directories
         if (!empty($form_state['values']['next_nc_directories'])) {
 
             if ($form_state['values']['next_nc_directories'] == '..') {
@@ -323,7 +323,7 @@ function flat_nextcloud_flat_bundle_node_form_validate($form, &$form_state)
             $allowed_extensions = explode(', ', variable_get('flat_deposit_ingest_service')['allowed_extensions']);
             $filename_pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+$/';
             if (file_exists(drupal_realpath($dir)) AND !empty(glob(drupal_realpath($dir).'/*', GLOB_ONLYDIR))){
-                form_set_error('next_directories', 'The selected Nextcloud folder contains subfolders.');
+                form_set_error('next_nc_directories', 'The selected Nextcloud folder contains subfolders.');
                 return $form;
             }
             elseif (count($files) > $max_files) {
@@ -362,7 +362,7 @@ function flat_nextcloud_flat_bundle_node_form_validate($form, &$form_state)
                 $errors[] = t('The selected Nextcloud folder contains files that have a disallowed file extension: !invalid_file_extensions_list. See the deposit manual for allowed file types and extensions.', ['!invalid_file_extensions_list' => $invalid_file_extensions_list]);
             }
             if (!empty($errors)) {
-                form_set_error('next_directories', implode('<br>', $errors));
+                form_set_error('next_nc_directories', implode('<br>', $errors));
                 return $form;
             }
 

@@ -98,7 +98,7 @@ function bundle_new_files($nid) {
     $wrapper = entity_metadata_wrapper('node', $node);
     $location = $wrapper->flat_location->value();
 
-    $nFiles = count(array_diff(scandir(drupal_realpath($location)), ['.','..']));
+    $nFiles = count(file_scan_directory($location, '/.*/', array('min_depth' => 0)));
 
     if ($nFiles == 0) {
 
@@ -137,15 +137,60 @@ function bundle_deleted_files($nid) {
 
 function bundle_max_files_exceeded($nid) {
 
+    module_load_include('inc','flat_deposit','Helpers/CMDI/class.CmdiHandler');
+
     $node = node_load($nid);
     $wrapper = entity_metadata_wrapper('node', $node);
     $location = $wrapper->flat_location->value();
 
-    $nFiles = count(array_diff(scandir(drupal_realpath($location)), ['.','..']));
+    $fedora_id = $wrapper->flat_fid->value();
+
+    $cmdi_file = $wrapper->flat_cmdi_file->value();
+    $cmdi_file_uri = $cmdi_file['uri'];
+
+    if (file_exists(drupal_realpath($cmdi_file_uri))){
+        $cmd = @CmdiHandler::simplexml_load_cmdi_file(drupal_realpath($cmdi_file_uri));
+        if (!$cmd){
+            return TRUE;
+
+        }
+    }
+
+    else {
+        return TRUE;
+    }
+
+    $existing_resources_count = 0;
+
+    if ($fedora_id) {
+
+        foreach ($cmd->children('cmd',true)->Resources->ResourceProxyList->ResourceProxy as $resource){
+
+            $resource_type = (String)$resource->children('cmd',true)->ResourceType;
+            if ($resource_type == 'LandingPage'){
+                continue;
+            }
+
+            else {
+                $existing_resources_count++;
+
+            }
+
+        }
+
+    }
+
+    $nFiles = count(file_scan_directory($location, '/.*/', array('min_depth' => 0)));
+    $deletedFiles = isset($wrapper->flat_deleted_resources) ? $wrapper->flat_deleted_resources->value() : NULL;
+    $nDeletedFiles = $deletedFiles ? count($deletedFiles) : 0;
+
+    $totalFiles = $nFiles + $existing_resources_count - $nDeletedFiles;
+
+    file_put_contents('/easylat/www/htdocs/log.txt', "nFiles: " . $nFiles . "\nnDeletedFiles: " . $nDeletedFiles . "\n" . "existing_resources_count: " . $existing_resources_count . "\n", FILE_APPEND );
 
     $max = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
 
-    if ($nFiles > $max) {
+    if ($totalFiles > $max) {
 
         return TRUE;
 
