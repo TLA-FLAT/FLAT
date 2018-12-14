@@ -238,8 +238,8 @@ function flat_workspaces_form_flat_bundle_node_form_alter(&$form, &$form_state, 
         $form['flat_ws_path']['und'][0]['value']['#default_value'] = $current;
 
         // print result to screen
-        $form['workspace_navigation']['field']['current_directory']['#markup'] = '</br>Currently selected folder: <strong><br>' .
-        str_replace('local://', '[Workspaces]/', $current . '</strong>');
+        $form['workspace_navigation']['field']['current_directory']['#markup'] = 'Currently selected folder: <strong><br/>' .
+        str_replace('local://', '[Workspaces]/', $current . '</strong><br/><br/>');
         // Add dropdown menu with lower level directories to go into
         $subDirs = Workspaces::listAccessibleFolderContent($current, ['hasValidDirectoryName', 'isDir', 'userHasWritePermissions', 'webUserHasWritePermissions', 'isNotCurrentDir']);
         if (!empty($subDirs)) {

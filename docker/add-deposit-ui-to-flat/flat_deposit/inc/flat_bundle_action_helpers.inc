@@ -150,19 +150,20 @@ function bundle_max_files_exceeded($nid) {
 
     if (file_exists(drupal_realpath($cmdi_file_uri))){
         $cmd = @CmdiHandler::simplexml_load_cmdi_file(drupal_realpath($cmdi_file_uri));
-        if (!$cmd){
-            return TRUE;
-
-        }
     }
 
-    else {
-        return TRUE;
+    $new_files = [];
+    if (file_exists($location)) {
+
+        $new_files = array_diff(preg_grep('/^([^.])/', scandir($location)), array('..', '.'));
+
     }
 
-    $existing_resources_count = 0;
+    $new_files_count = count($new_files);
 
-    if ($fedora_id) {
+    $existing_files = [];
+
+    if ($fedora_id && $cmd) {
 
         foreach ($cmd->children('cmd',true)->Resources->ResourceProxyList->ResourceProxy as $resource){
 
@@ -172,7 +173,14 @@ function bundle_max_files_exceeded($nid) {
             }
 
             else {
-                $existing_resources_count++;
+
+                $resource_id = (string)$resource->attributes()->id;
+                $resourceref_attributes = $resource->children('cmd',true)->ResourceRef->attributes('lat', TRUE);
+                $fid = $resourceref_attributes['flatURI'];
+        
+                $fObj = islandora_object_load($fid);
+                $label = $fObj->label;
+                $existing_files[] = $label;
 
             }
 
@@ -180,14 +188,13 @@ function bundle_max_files_exceeded($nid) {
 
     }
 
-    $nFiles = count(file_scan_directory($location, '/.*/', array('min_depth' => 0)));
-    $deletedFiles = isset($wrapper->flat_deleted_resources) ? $wrapper->flat_deleted_resources->value() : NULL;
-    $nDeletedFiles = $deletedFiles ? count($deletedFiles) : 0;
+    $existing_files_count = count($existing_files);
 
-    $totalFiles = $nFiles + $existing_resources_count - $nDeletedFiles;
+    $replaced_files = array_intersect($new_files, $existing_files);
+    $replaced_files_count = count($replaced_files);
 
-    file_put_contents('/easylat/www/htdocs/log.txt', "nFiles: " . $nFiles . "\nnDeletedFiles: " . $nDeletedFiles . "\n" . "existing_resources_count: " . $existing_resources_count . "\n", FILE_APPEND );
-
+    $totalFiles = $new_files_count + $existing_files_count - $replaced_files_count;
+    
     $max = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
 
     if ($totalFiles > $max) {

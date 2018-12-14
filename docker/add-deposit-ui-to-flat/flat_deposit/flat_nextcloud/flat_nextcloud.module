@@ -268,8 +268,8 @@ function flat_nextcloud_form_flat_bundle_node_form_alter(&$form, &$form_state, $
         $form['flat_nc_path']['und'][0]['value']['#value'] = $current;
         
         // print result to screen
-        $form['nextcloud_navigation']['field']['current_directory']['#markup'] = '</br>Currently selected folder: <strong><br>' .
-        str_replace('nextcloud://' . $nextcloudUid . '/files', '[Nextcloud]', $current . '</strong>');
+        $form['nextcloud_navigation']['field']['current_directory']['#markup'] = 'Currently selected folder: <strong><br/>' .
+        str_replace('nextcloud://' . $nextcloudUid . '/files', '[Nextcloud]', $current . '</strong><br/><br/>');
 
         // populate dropdown with subdirectories
         $NcSubDirs = Nextcloud::listAccessibleFolderContent($current, $nextcloud_root, ['hasValidDirectoryName', 'isDir', 'webUserHasWritePermissions', 'isNotCurrentDir']);

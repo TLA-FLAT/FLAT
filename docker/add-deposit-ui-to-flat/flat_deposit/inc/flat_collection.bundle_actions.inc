@@ -229,6 +229,14 @@ function flat_collection_bundle_action_form_archive_validate($form, &$form_state
     }
 }
 
+function implode_comma_and($array) {
+    //helper function to implode an array with commas except for the final value, there it will be 'and'. 
+    $last  = array_slice($array, -1);
+    $first = implode(', ', array_slice($array, 0, -1));
+    $both  = array_filter(array_merge(array($first), $last), 'strlen');
+    return implode(' and ', $both);
+}
+
 function flat_collection_bundle_action_form_submit($form, &$form_state)
 {
 
@@ -248,13 +256,13 @@ function flat_collection_bundle_action_form_submit($form, &$form_state)
                     $wrapper->save();
 
                 }
-                drupal_set_message('Re-open succeeded for bundle(s): ' . implode(' and ', $form_state['values']['reopen_bundle_titles']));
+                drupal_set_message('Re-open succeeded for bundle(s): ' . implode_comma_and($form_state['values']['reopen_bundle_titles']));
                 //$form_state['redirect'] = 'dashboard';
             }
 
             if (!empty($form_state['values']['reopen_error'])){
 
-                drupal_set_message('Unable to re-open bundle(s): ' .  implode(' and ', $form_state['values']['reopen_error_titles']) . '. Only valid or failed bundles can be re-opened.', 'error');
+                drupal_set_message('Unable to re-open bundle(s): ' .  implode_comma_and($form_state['values']['reopen_error_titles']) . '. Only valid or failed bundles can be re-opened.', 'error');
 
             }
             break;
@@ -271,13 +279,13 @@ function flat_collection_bundle_action_form_submit($form, &$form_state)
                     send_request($bundle, $action, false);
                 }
 
-                drupal_set_message('Validation submission succeeded for bundle(s) ' . implode(' and ', $form_state['values']['validate_bundle_titles']));
+                drupal_set_message('Validation submission succeeded for bundle(s) ' . implode_comma_and($form_state['values']['validate_bundle_titles']));
                 //$form_state['redirect'] = 'dashboard';
             }
 
             if (!empty($form_state['values']['reject_bundles'])) {
 
-                drupal_set_message('Validation failed for the following bundle(s): ' . implode(' and ', $form_state['values']['reject_bundle_titles']) . '.', 'error');
+                drupal_set_message('Validation failed for the following bundle(s): ' . implode_comma_and($form_state['values']['reject_bundle_titles']) . '.', 'error');
 
                 $max_files = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
                 $max_file_size = variable_get('flat_deposit_ingest_service')['max_file_size'];
@@ -345,14 +353,14 @@ function flat_collection_bundle_action_form_submit($form, &$form_state)
 
                 }
 
-                drupal_set_message('Bundle(s) submitted for archiving:  ' . implode(' and ', $form_state['values']['archive_bundle_titles']));
+                drupal_set_message('Bundle(s) submitted for archiving:  ' . implode_comma_and($form_state['values']['archive_bundle_titles']));
                 //$form_state['redirect'] = 'dashboard';
 
             }
 
             if (!empty($form_state['values']['archive_reject'])) {
 
-                drupal_set_message('Failed submitting bundle(s) for archiving: ' . implode(' and ', $form_state['values']['archive_reject_titles']) . '. Only valid bundles can be archived.', 'error');
+                drupal_set_message('Failed submitting bundle(s) for archiving: ' . implode_comma_and($form_state['values']['archive_reject_titles']) . '. Only valid bundles can be archived.', 'error');
 
             }
 

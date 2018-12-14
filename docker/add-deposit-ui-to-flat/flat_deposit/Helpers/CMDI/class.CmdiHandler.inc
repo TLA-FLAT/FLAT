@@ -384,6 +384,8 @@ class CmdiHandler extends SimpleXMLElement
                     }
                 }
                 break;
+            case 'existing':
+                break;
         }
 
 
@@ -410,7 +412,7 @@ class CmdiHandler extends SimpleXMLElement
             throw new CmdiHandlerException(t("Failed adding new resources to Cmdi"));
         }
         
-	$result = $this->updateExistingResources($cmdi_resources, $directory_resources);
+	    $result = $this->updateExistingResources($cmdi_resources, $directory_resources);
 
         if (!$result){
             throw new CmdiHandlerException(t("Failed updating cmdi resources"));
@@ -861,10 +863,11 @@ class CmdiHandler extends SimpleXMLElement
             return basename($lat_attributes['localURI']);
         }
 
+        /*
         if (isset($ref)){
             return basename((String)$ref);
         }
-
+        */
 
         if (isset($lat_attributes->flatURI)){
             $pid = (string)$lat_attributes->flatURI;
@@ -1004,10 +1007,12 @@ class CmdiHandler extends SimpleXMLElement
                 $proxy[0]->children('cmd',TRUE)->ResourceRef->addAttribute('lat:localURI', 'file:' . $file_name, "http://lat.mpi.nl/");
             }
 
+            /*
             $value = (String)$proxy[0]->children('cmd',TRUE)->ResourceRef;
             if(!empty($value)){
                 $proxy[0]->children('cmd',TRUE)->ResourceRef = '';
             }
+            */
 
             //Update resources in Components section
             $profile = $this->getNameById();

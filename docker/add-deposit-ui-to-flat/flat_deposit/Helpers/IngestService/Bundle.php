@@ -250,8 +250,11 @@ class Bundle extends SIP
         try{
 
             $fid = isset($this->wrapper->flat_fid) ? $this->wrapper->flat_fid->value() : null;
-            $md_type = isset($this->wrapper->flat_cmdi_option) ? $this->wrapper->flat_cmdi_option->value() : NULL;
             $flat_type = isset($this->wrapper->flat_type) ? $this->wrapper->flat_type->value() : NULL;
+            $md_type = isset($this->wrapper->flat_cmdi_option) ? $this->wrapper->flat_cmdi_option->value() : NULL;
+            if ($flat_type == 'update') {
+                $md_type = 'existing';
+            }
 
             switch ($md_type) {
                 case 'new':
@@ -259,6 +262,7 @@ class Bundle extends SIP
                     break;
                 case 'import':
                 case 'template': 
+                case 'existing':
                     if ($flat_type !== 'update') {
                         $cmdi->removeMdSelfLink();
                     }
