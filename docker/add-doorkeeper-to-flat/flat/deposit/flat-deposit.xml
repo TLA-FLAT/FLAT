@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <flow xmlns:flat="java:nl.mpi.tla.flat">
     <config>
+        <namespace prefix="dc" uri="http://purl.org/dc/elements/1.1/"/>
         <import class="nl.mpi.tla.flat.deposit.context.Environment" prefix="env-"/>
         <import class="nl.mpi.tla.flat.deposit.context.SystemProperties" prefix="sys-"/>
         <property name="fitsService" value="http://localhost:8080/fits/" uniq="true"/>
@@ -35,6 +36,11 @@
         </action>
     </init>
     <main>
+        <action class="nl.mpi.tla.flat.deposit.action.IndexRollback">
+            <parameter name="gsearchServer" value="{$gsearchServer}"/>
+            <parameter name="gsearchUser" value="{$gsearchUser}"/>
+            <parameter name="gsearchPassword" value="{$gsearchPassword}"/>
+        </action>
         <action name="assemble package" class="nl.mpi.tla.flat.deposit.action.ResourceMapping">
             <parameter name="dir" value="{$work}/resources"/>
             <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
@@ -50,9 +56,10 @@
         </action>
         <!-- ^^^ VALIDATE vvv ARCHIVE -->
         <action name="purge updates" class="nl.mpi.tla.flat.deposit.action.PurgeUpdates">
-            <parameter name="dir" value="{$work}/resources"/>
             <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
-            <parameter name="fits" value="{$work}/fits"/>
+            <parameter name="dir" value="{$work}/fits"/>
+            <parameter name="ext" value=".FITS.xml"/>
+            <parameter name="path" value="normalize-space(//fits:md5checksum)"/>
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.HandleAssignment">
             <parameter name="prefix" value="{$epicPrefix}"/>
@@ -113,6 +120,7 @@
             <parameter name="fedoraConfig" value="{$work}/acl/fedora-config.xml"/>
             <parameter name="firstDir" value="{$work}/fox"/>
             <parameter name="dir" value="{$work}/admin-fox"/>
+            <!--<parameter name="try-fix-pid" value="true"/>-->
         </action>
         <!-- SIP + parent collection -->
         <action class="nl.mpi.tla.flat.deposit.action.FedoraInteract">

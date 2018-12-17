@@ -27,7 +27,7 @@ RUN echo "# open up access to the OAI provider" >> /etc/apache2/apache2.conf &&\
     echo "<Location "'"'"/${FLAT_NAME}/oaiprovider"'"'">" >> /etc/apache2/apache2.conf &&\
     echo "    SetOutputFilter Sed" >> /etc/apache2/apache2.conf &&\
     echo "    OutputSed "'"'"s,>http\(s\{0,1\}\)://\([^/]*\)/oaiprovider,>http\1://\2/${FLAT_NAME}/oaiprovider,g"'"' >> /etc/apache2/apache2.conf &&\
-    echo "</Location>" >> /etc/apache2/apache2.conf &&\
+    echo "</Location>" >> /etc/apache2/apache2.conf
 
 #
 # Add FLAT's own scripts
