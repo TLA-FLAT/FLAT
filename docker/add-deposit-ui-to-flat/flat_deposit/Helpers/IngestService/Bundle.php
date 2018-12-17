@@ -189,20 +189,25 @@ class Bundle extends SIP
         $this->logging('Starting validateResources');
         $path = $this->wrapper->flat_location->value();
 
-        $fileNames = scandir($path);
-        if(empty($fileNames)){
-            throw new IngestServiceException('Unable to scan directory with files');
+        $fileNames = file_scan_directory($path, '/.*/', array('min_depth' => 0));
+
+        $deletedFiles = $this->wrapper->flat_deleted_resources ? $this->wrapper->flat_deleted_resources->value() : NULL;
+
+        if (!isset($deletedFiles) OR ($deletedFiles == '')) {
+
+            if(empty($fileNames)){
+                throw new IngestServiceException('There are no (accessible) files in the chosen folder.');
+
+            }
 
         }
 
-        $pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+\.[\da-zA-Z]{2,8}$/';
+        $pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+\.[\da-zA-Z]{2,9}$/';
         $violators = [];
 
-        foreach ($fileNames as $fileName){
-            if ($fileName == '.' OR $fileName == '..' ) {
-                continue;
-            }
+        foreach ($fileNames as $uri => $file_array){
 
+            $fileName = $file_array->filename;
             if (preg_match($pattern, $fileName) == false){
              $violators[] = $fileName;
             }
@@ -213,7 +218,7 @@ class Bundle extends SIP
             $message = 'Bundle contains files with names violating our file naming policy. ' .
             'Allowed are names starting with an alphanumeric characters (a-z,A-Z,0-9) followed by more alphanumeric characters '.
             'or these special characters (.-_). The name of the file needs to have an extension marked by a dot (".") '.
-            'followed by 2 to 8 characters. ';
+            'followed by 2 to 9 characters. ';
 
             $message .= 'Following file(s) have triggered this message: ';
             $message .= implode(', ', $violators);
@@ -245,8 +250,11 @@ class Bundle extends SIP
         try{
 
             $fid = isset($this->wrapper->flat_fid) ? $this->wrapper->flat_fid->value() : null;
-            $md_type = isset($this->wrapper->flat_cmdi_option) ? $this->wrapper->flat_cmdi_option->value() : NULL;
             $flat_type = isset($this->wrapper->flat_type) ? $this->wrapper->flat_type->value() : NULL;
+            $md_type = isset($this->wrapper->flat_cmdi_option) ? $this->wrapper->flat_cmdi_option->value() : NULL;
+            if ($flat_type == 'update') {
+                $md_type = 'existing';
+            }
 
             switch ($md_type) {
                 case 'new':
@@ -254,6 +262,7 @@ class Bundle extends SIP
                     break;
                 case 'import':
                 case 'template': 
+                case 'existing':
                     if ($flat_type !== 'update') {
                         $cmdi->removeMdSelfLink();
                     }

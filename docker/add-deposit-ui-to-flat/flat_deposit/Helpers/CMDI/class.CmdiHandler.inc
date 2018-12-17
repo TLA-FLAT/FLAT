@@ -3,6 +3,14 @@
 module_load_include('inc','flat_deposit','Helpers/CMDI/Template2FormParser');
 module_load_include('inc','flat_deposit','Helpers/CMDI/Form2CmdiParser');
 
+class RecursiveDotFilterIterator extends  RecursiveFilterIterator
+{
+    public function accept()
+    {
+        return '.' !== substr($this->current()->getFilename(), 0, 1);
+    }
+}
+
 
 class CmdiHandlerException extends Exception {}
 /**
@@ -125,6 +133,10 @@ class CmdiHandler extends SimpleXMLElement
 
             case 'clarin.eu:cr1:p_1407745712035' :
                 $name = 'lat-session';
+                break;
+
+            case 'clarin.eu:cr1:p_1417617523856' :
+                $name = 'lat-SL-session';
                 break;
 
             case 'clarin.eu:cr1:p_1407745712064' :
@@ -363,7 +375,16 @@ class CmdiHandler extends SimpleXMLElement
                 }
                 break;
             case 'import':
-
+                if (!$fid) {
+                    // stripping resources from newly uploaded CMDI (same as template), as they cause errors if not all linked files are provided. 
+                    // need to find a different solution for still allowing resource-specific metadata (e.g. description)
+                    $result = $this->stripResourceProxyAndResources();
+                    if (!$result){
+                        throw new CmdiHandlerException(t("Strip of Resources was not successful"));
+                    }
+                }
+                break;
+            case 'existing':
                 break;
         }
 
@@ -391,7 +412,7 @@ class CmdiHandler extends SimpleXMLElement
             throw new CmdiHandlerException(t("Failed adding new resources to Cmdi"));
         }
         
-	$result = $this->updateExistingResources($cmdi_resources, $directory_resources);
+	    $result = $this->updateExistingResources($cmdi_resources, $directory_resources);
 
         if (!$result){
             throw new CmdiHandlerException(t("Failed updating cmdi resources"));
@@ -445,6 +466,23 @@ class CmdiHandler extends SimpleXMLElement
         }
 
         return (string)$xml->identification->identity['mimetype'];
+
+    }
+
+    /**
+     * get mime-type of a file using the linux file command. Much quicker but less reliable than calling FITS,
+     * however mime types are being re-evaluated using FITS in the doorkeeper anyway.
+     * 
+     * @param string $filename name of the file to be checked
+     * 
+     * @return bool|string
+     * 
+     */
+    static public function linux_mimetype_check($file){
+       
+        $result = trim(shell_exec("file -b --mime-type \"$file\""));
+
+        return $result;
 
     }
 
@@ -512,7 +550,7 @@ class CmdiHandler extends SimpleXMLElement
     }
 
 
-    private function stripResourceProxyAndResources()
+    public function stripResourceProxyAndResources()
     {
         // Strip ResourceProxy
         $proxies = $this->xpath('cmd:Resources/cmd:ResourceProxyList/cmd:ResourceProxy');
@@ -593,7 +631,7 @@ class CmdiHandler extends SimpleXMLElement
     $resourceProxyList = $this->xpath('cmd:Resources/cmd:ResourceProxyList')[0];
 
     foreach ($new_resources as $rid => $file_name) {
-            $file_mime = self::fits_mimetype_check(drupal_realpath($file_name));
+            $file_mime = self::linux_mimetype_check(drupal_realpath($file_name));
             if (!$file_mime) {
                 return FALSE;
             }
@@ -825,10 +863,11 @@ class CmdiHandler extends SimpleXMLElement
             return basename($lat_attributes['localURI']);
         }
 
+        /*
         if (isset($ref)){
             return basename((String)$ref);
         }
-
+        */
 
         if (isset($lat_attributes->flatURI)){
             $pid = (string)$lat_attributes->flatURI;
@@ -872,8 +911,6 @@ class CmdiHandler extends SimpleXMLElement
         return $resources;
     }
 
-
-
     /**
      * Iterates through directory and adds every file to an array of resource with a unique resource ID as key.
      * In case an existing resource with identical file name is found, assign that resource the ID of the existing resource.
@@ -889,7 +926,13 @@ class CmdiHandler extends SimpleXMLElement
         $resources = array();
         $c=10000; # counter for resource ID (each resource within an CMDI-object needs an unique identifier)
 
-        $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory,RecursiveDirectoryIterator::FOLLOW_SYMLINKS));
+        //$rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory,RecursiveDirectoryIterator::FOLLOW_SYMLINKS));
+
+        $rii = new RecursiveIteratorIterator(
+            new RecursiveDotFilterIterator(
+                new RecursiveDirectoryIterator($directory,RecursiveDirectoryIterator::FOLLOW_SYMLINKS)
+            )
+        );
 
         foreach ($rii as $file) {
             if ($file->isDir()){continue;}
@@ -946,7 +989,7 @@ class CmdiHandler extends SimpleXMLElement
         $existing_resources = array_intersect_key($directory_resources, $cmdi_resources);
 
         foreach ($existing_resources as $rid => $file_name) {
-            $file_mime = self::fits_mimetype_check(drupal_realpath($file_name));
+            $file_mime = self::linux_mimetype_check(drupal_realpath($file_name));
             if (!$file_mime) {
                 return FALSE;
             }
@@ -964,10 +1007,12 @@ class CmdiHandler extends SimpleXMLElement
                 $proxy[0]->children('cmd',TRUE)->ResourceRef->addAttribute('lat:localURI', 'file:' . $file_name, "http://lat.mpi.nl/");
             }
 
+            /*
             $value = (String)$proxy[0]->children('cmd',TRUE)->ResourceRef;
             if(!empty($value)){
                 $proxy[0]->children('cmd',TRUE)->ResourceRef = '';
             }
+            */
 
             //Update resources in Components section
             $profile = $this->getNameById();
@@ -1003,16 +1048,15 @@ class CmdiHandler extends SimpleXMLElement
         $profile = $cmdi->getNameById();
         $xml = simplexml_load_file(CmdiHandler::FORM_TEMPLATES_PATH . "/$profile.xml");
 
-        $resources_root_path = (String)$xml->xpath('/profileToDrupal/resources/root_path')[0];
+        $resources_root_path = (!empty($xml->xpath('/profileToDrupal/resources/root_path'))) ? (String)$xml->xpath('/profileToDrupal/resources/root_path')[0] : FALSE;
         $resources_root_node = $cmdi->children('cmd',TRUE)->Components->{$resources_root_path};
-
 
         if (empty($resources_root_node)){
             return FALSE;
         }
 
         // Return subNode if this is set for the specific profile
-        $subnodes = (String)$xml->xpath('/profileToDrupal/resources/subnodes')[0];
+        $subnodes = (!empty($xml->xpath('/profileToDrupal/resources/subnodes'))) ? (String)$xml->xpath('/profileToDrupal/resources/subnodes')[0] : FALSE;
 
         if (!empty($subnodes)){
             // add subnode if this node does not exist and return FALSE if this is not possible

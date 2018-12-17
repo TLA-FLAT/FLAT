@@ -31,6 +31,10 @@ class Nextcloud
                     ),
                 ),
 
+                'current_directory' => array(
+                    '#markup' => '',
+                ),
+
                 'next_nc_directories' => array(
                     '#title' => 'Navigate to',
                     '#type' => 'select',

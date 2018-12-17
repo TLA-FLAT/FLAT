@@ -975,8 +975,9 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
             $fid = $wrapper->flat_fid->value();
             $fObject = islandora_object_load($fid);
             if ($fObject) {
-
-                $options[$nid] = $fObject->label;
+                if (in_array('islandora:sp_cmdiCModel', $fObject->models)) {
+                    $options[$nid] = $fObject->label;
+                }
 
             }
 
@@ -1848,7 +1849,8 @@ function flat_deposit_block_view($delta = '')
 
             $file_found = [];
             if (file_exists($location)) {
-                $file_found = array_diff(scandir($location), array('..', '.'));
+                // we ignore hidden files (starting with a dot). These will not be added to the bundle later on either.
+                $file_found = array_diff(preg_grep('/^([^.])/', scandir($location)), array('..', '.'));
             }
 
             if (empty($file_found)) {$file_found[] = 'Folder does not contain any (accessible) files';}

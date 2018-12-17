@@ -40,19 +40,25 @@ class CmdiComposite extends CmdiComponent {
         if (isset($component->container)) {
 
             $container = (string)$component->container;
-            $componentData = $data[$container][$id];
+            if (isset($data[$container][$id])) {
+                $componentData = $data[$container][$id];
+            }
 
         } else {
 
-            $componentData = $data[$id];
+            if (isset($data[$id])) {
+                $componentData = $data[$id];
+            }
 
         }
 
         // Unset non numeric component data arrays such as add,remove button
-        foreach (array_keys($componentData) as $key){
-            if (!is_numeric($key))
-                unset($componentData[$key]);
+        if (isset($componentData)) {
+            foreach (array_keys($componentData) as $key){
+                if (!is_numeric($key))
+                    unset($componentData[$key]);
 
+            }
         }
 
 

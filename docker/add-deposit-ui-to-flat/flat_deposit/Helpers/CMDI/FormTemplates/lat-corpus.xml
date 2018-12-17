@@ -24,8 +24,9 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
  -->
 <profileToDrupal>
     <header>
-        <template_name>lat-corpus</template_name>
         <content_type>flat_collection</content_type>
+        <template_name>lat-corpus</template_name>
+        <template_description>Language Corpus Collection (lat-corpus)</template_description>
     </header>
     <items>
         <item id="field_01" name="History" type="Leaf" minOccurrence="0">
@@ -72,7 +73,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
             <type>fieldset</type>
             <title>Catalogue</title>
             <item id="field_07" name="ContentType" type="Leaf" multival="true" minOccurrence="0">
-                <title>Description</title>
+                <title>ContentType</title>
                 <type>textarea</type>
             </item>
             <item id="field_08" name="SmallestAnnotationUnit" type="Leaf" multival="true" minOccurrence="0">
@@ -137,7 +138,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                     <item id="field_18" name="Id" type="Leaf" minOccurrence="1">
                         <title>Id</title>
                         <type>textfield</type>
-                        <description>Valid entries are: ISO639-3 language code | Unknown | Unspecified</description>
+                        <description>Valid entries are: ISO639-3 language code (e.g. ISO639-3:nld) | Unknown | Unspecified</description>
                     </item>
                     <item id="field_19" name="Name" type="Leaf" minOccurrence="1">
                         <title>Name</title>
@@ -147,14 +148,14 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
             </item>
             <item id="fieldset_08" name="Subject_Languages" type="Composite" minOccurrence="0">
                 <type>fieldset</type>
-                <title>Document Languages</title>
+                <title>Subject Languages</title>
                 <item id="fieldset_09" name="Subject_Language" type="Composite" multival="true" minOccurrence="1">
                     <type>fieldset</type>
                     <title>Subject Language</title>
                     <item id="field_20" name="Id" type="Leaf" minOccurrence="1">
                         <title>Id</title>
                         <type>textfield</type>
-                        <description>Valid entries are: ISO639-3 language code | Unknown | Unspecified</description>
+                        <description>Valid entries are: ISO639-3 language code (e.g. ISO639-3:nld) | Unknown | Unspecified</description>
                     </item>
                     <item id="field_21" name="Name" type="Leaf" minOccurrence="1">
                         <title>Name</title>
@@ -169,6 +170,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                             <option>true</option>
                             <option>false</option>
                         </options>
+                        <default>Unspecified</default>
                     </item>
                     <item id="field_23" name="SourceLanguage" type="Leaf" minOccurrence="0">
                         <title>SourceLanguage</title>
@@ -179,6 +181,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                             <option>true</option>
                             <option>false</option>
                         </options>
+                        <default>Unspecified</default>
                     </item>
                     <item id="field_24" name="TargetLanguage" type="Leaf" minOccurrence="0">
                         <title>TargetLanguage</title>
@@ -189,6 +192,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                             <option>true</option>
                             <option>false</option>
                         </options>
+                        <default>Unspecified</default>
                     </item>
                     <item id="fieldset_10" name="descriptions" type="Composite" minOccurrence="0">
                         <type>fieldset</type>
@@ -356,7 +360,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                 <type>fieldset</type>
                 <title>Access</title>
                 <item id="field_46" name="Availability" type="Leaf" minOccurrence="1">
-                    <title>Description</title>
+                    <title>Availability</title>
                     <type>textarea</type>
                 </item>
                 <item id="field_47" name="Date" type="Leaf" minOccurrence="1">

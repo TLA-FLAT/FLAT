@@ -11,7 +11,7 @@ class FlatTuque
     /**
      * Performs a Mulgara sparql query to retrieve all children labels of a given fedora object.
      *
-     * @param $pid string fedpra ID of an object.
+     * @param $pid string fedora ID of an object.
      * @return array Strings with pid
      */
     static public function getChildrenLabels($pid)

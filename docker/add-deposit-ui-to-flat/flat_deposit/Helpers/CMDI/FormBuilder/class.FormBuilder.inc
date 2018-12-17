@@ -56,11 +56,12 @@ class FormBuilder
             $fileContentType = (string)$xml->header->content_type;
 
             if ($fileContentType === $content_type) {
-                $templates [] = (string)$xml->header->template_name;
+                $template_names [] = (string)$xml->header->template_name;
+                $template_descriptions [] = (string)$xml->header->template_description;
             }
 
         }
-        return drupal_map_assoc($templates);
+        return array_combine($template_names, $template_descriptions);
     }
 
     static public function checkTemplateItems($templateName)
@@ -186,21 +187,21 @@ class FormBuilder
     }
 
 
-private function clearInheritedTitle(&$dataNode){
+    private function clearInheritedTitle(&$dataNode){
 
-    if ($this->node == null){
-        return;
+        if ($this->node == null){
+            return;
+        }
+        if (!empty($dataNode)) {
+            $title = $dataNode->children('cmd',TRUE)->Title;
+    
+            if (isset($title[0])){
+    
+                    $title[0] = '';
+    
+                    }
+            }
     }
-
-    $title = &$dataNode->children('cmd',TRUE)->Title;
-
-    if (isset($title[0])){
-
-        $title[0] = '';
-
-    }
-
-}
 
 
     /**

@@ -23,8 +23,8 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
 <profileToDrupal>
     <header>
         <content_type>flat_bundle</content_type>
-        <template_name>lat-session</template_name>
-        <template_description>Language Corpus Bundle (lat-session)</template_description>
+        <template_name>lat-SL-session</template_name>
+        <template_description>Sign Language Bundle (lat-SL-session)</template_description>
     </header>
     <items>
         <item id="field_01" name="History" type="Leaf" minOccurrence="0">
@@ -196,9 +196,29 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                 </item>
             </item>
         </item>
-        <item id="fieldset_11" name="Content" type="Composite" minOccurrence="1">
+        <item id="fieldset_36" name="SL_CreativeCommonsLicense" type="Composite" minOccurrence="0">
             <type>fieldset</type>
-            <title>Content</title>
+            <title>SL_CreativeCommonsLicense</title>
+            <item id="field_77" name="AnnotationFiles" type="Leaf" minOccurrence="0">
+                <type>textfield</type>
+                <title>AnnotationFiles</title>
+            </item>
+            <item id="field_78" name="AnnotationFiles_URL" type="Leaf" minOccurrence="0">
+                <type>textfield</type>
+                <title>AnnotationFiles_URL</title>
+            </item>
+            <item id="field_79" name="MediaFiles" type="Leaf" minOccurrence="0">
+                <type>textfield</type>
+                <title>MediaFiles</title>
+            </item>
+            <item id="field_80" name="MediaFiles_URL" type="Leaf" minOccurrence="0">
+                <type>textfield</type>
+                <title>MediaFiles_URL</title>
+            </item>
+        </item>
+        <item id="fieldset_11" name="SL-Content" type="Composite" minOccurrence="1">
+            <type>fieldset</type>
+            <title>SL-Content</title>
             <item id="field_24" name="Genre" type="Leaf" minOccurrence="1">
                 <title>Genre</title>
                 <type>textfield</type>
@@ -331,7 +351,6 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                             <option>true</option>
                             <option>false</option>
                         </options>
-                        <default>Unspecified</default>
                     </item>
                     <item id="field_39" name="SourceLanguage" type="Leaf" minOccurrence="1">
                         <title>SourceLanguage</title>
@@ -342,7 +361,6 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                             <option>true</option>
                             <option>false</option>
                         </options>
-                        <default>Unspecified</default>
                     </item>
                     <item id="field_40" name="TargetLanguage" type="Leaf" minOccurrence="1">
                         <title>TargetLanguage</title>
@@ -353,7 +371,6 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                             <option>true</option>
                             <option>false</option>
                         </options>
-                        <default>Unspecified</default>
                     </item>
                     <item id="fieldset_16" name="descriptions" type="Composite" minOccurrence="0">
                         <type>fieldset</type>
@@ -363,6 +380,64 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                             <type>textarea</type>
                         </item>
                     </item>
+                </item>
+            </item>
+            <item id="fieldset_37" name="SL_Interpreting" type="Composite" minOccurrence="0">
+                <type>fieldset</type>
+                <title>SL_Interpreting</title>
+                <description>Properties of interpreting appearing in the session.</description>
+                <item id="field_81" name="Source" type="Leaf" minOccurrence="0">
+                    <type>dropdown</type>
+                    <title>Source</title>
+                    <description>Source modality and language type.</description>
+                    <options>
+                        <option>sign language</option>
+                        <option>speech</option>
+                        <option>sign supported speech</option>
+                        <option>text</option>
+                        <option>fingerspelling</option>
+                        <option>Unspecified</option>
+                        <option>Unknown</option>
+                    </options>
+                </item>
+                <item id="field_82" name="Target" type="Leaf" minOccurrence="0">
+                    <type>dropdown</type>
+                    <title>Target</title>
+                    <description>Target modality and language type.</description>
+                    <options>
+                        <option>sign language</option>
+                        <option>speech</option>
+                        <option>sign supported speech</option>
+                        <option>text</option>
+                        <option>fingerspelling</option>
+                        <option>Unspecified</option>
+                        <option>Unknown</option>
+                    </options>
+                </item>
+                <item id="field_83" name="Visibility" type="Leaf" minOccurrence="0">
+                    <type>dropdown</type>
+                    <title>Visibility</title>
+                    <description>Visibility of the interpreter in the video recordings.</description>
+                    <options>
+                        <option>not visible</option>
+                        <option>in view during whole session</option>
+                        <option>in view during part of session</option>
+                        <option>Unspecified</option>
+                        <option>Unknown</option>
+                    </options>
+                </item>
+                <item id="field_84" name="Audience" type="Leaf" minOccurrence="0">
+                    <type>dropdown</type>
+                    <title>Audience</title>
+                    <description>Presence and nature of an audience that the interpreter is signing for.</description>
+                    <options>
+                        <option>audience not present (signing to camera)</option>
+                        <option>audience known to the interpreter</option>
+                        <option>heterogeneous group partly known to the interpreter</option>
+                        <option>anonymous audience (e.g. theatre)</option>
+                        <option>Unspecified</option>
+                        <option>Unknown</option>
+                    </options>
                 </item>
             </item>
             <item id="fieldset_17" name="Keys" type="Composite" minOccurrence="0">
@@ -406,9 +481,9 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                 </item>
             </item>
         </item>
-        <item id="fieldset_20" name="Actors" type="Composite" minOccurrence="0">
+        <item id="fieldset_20" name="SL-Actors" type="Composite" minOccurrence="0">
             <type>fieldset</type>
-            <title>Actors</title>
+            <title>SL-Actors</title>
             <item id="fieldset_21" name="descriptions" type="Composite" minOccurrence="0">
                 <type>fieldset</type>
                 <title>descriptions</title>
@@ -417,10 +492,10 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                     <type>textarea</type>
                 </item>
             </item>
-            <item id="fieldset_22" name="Actor" type="Composite" multival="true" minOccurrence="0">
+            <item id="fieldset_22" name="SL-Actor" type="Composite" multival="true" minOccurrence="0">
                 <type>fieldset</type>
-                <title>Actor</title>
-                <container>Actor</container>
+                <title>SL-Actor</title>
+                <container>SL-Actor</container>
                 <item id="field_45" name="Role" type="Leaf" minOccurrence="1">
                     <title>Role</title>
                     <type>textfield</type>
@@ -478,6 +553,21 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                         <option>Unknown</option>
                         <option>Unspecified</option>
                     </options>
+                </item>
+                <item id="field_102" name="Handedness" type="Leaf" minOccurrence="0">
+                    <title>Handedness</title>
+                    <type>dropdown</type>
+                    <options>
+                        <option>left</option>
+                        <option>right</option>
+                        <option>mixing</option>
+                        <option>Unknown</option>
+                        <option>Unspecified</option>
+                    </options>
+                </item>
+                <item id="field_103" name="Region" type="Leaf" minOccurrence="0">
+                    <title>Region</title>
+                    <type>textfield</type>
                 </item>
                 <item id="fieldset_23" name="Age" type="Composite" minOccurrence="1">
                     <type>fieldset</type>
@@ -542,7 +632,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                 <item id="fieldset_28" name="Contact" type="Composite" minOccurrence="0">
                     <type>fieldset</type>
                     <title>Contact</title>
-                    <item id="field_65" name="Name" type="Leaf" minOccurrence="0">
+                    <item id="field_65" name="Name" type="Leaf" minOccurrence="1">
                         <title>Name</title>
                         <type>textfield</type>
                     </item>
@@ -557,6 +647,220 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                     <item id="field_68" name="Organisation" type="Leaf" minOccurrence="0">
                         <title>Organisation</title>
                         <type>textfield</type>
+                    </item>
+                </item>
+                <item id="fieldset_38" name="SL_Deafness" type="Composite" minOccurrence="0">
+                    <type>fieldset</type>
+                    <title>SL_Deafness</title>
+                    <item id="field_85" name="Status" type="Leaf" minOccurrence="0">
+                        <type>dropdown</type>
+                        <title>Status</title>
+                        <description>Actor’s ability to hear.</description>
+                        <options>
+                            <option>deaf</option>
+                            <option>hard-of-hearing</option>
+                            <option>hearing</option>
+                        </options>
+                    </item>
+                    <item id="field_86" name="AidType" type="Leaf" minOccurrence="0">
+                        <type>dropdown</type>
+                        <title>AidType</title>
+                        <description>Type of hearing aid the actor has.</description>
+                        <options>
+                            <option>CI</option>
+                            <option>conventional</option>
+                            <option>none</option>
+                        </options>
+                    </item>
+                </item>
+                <item id="fieldset_39" name="SL_SignLanguageExperience" type="Composite" minOccurrence="0">
+                    <type>fieldset</type>
+                    <title>SL_SignLanguageExperience</title>
+                    <item id="field_87" name="ExposureAge" type="Leaf" minOccurrence="0">
+                        <type>textfield</type>
+                        <title>ExposureAge</title>
+                        <description>Age at which exposure to sign language and sign language use started (years;months)</description>
+                    </item>
+                    <item id="field_88" name="AcquisitionLocation" type="Leaf" minOccurrence="0">
+                        <type>dropdown</type>
+                        <title>AcquisitionLocation</title>
+                        <description>Place where sign language was learnt.</description>
+                        <options>
+                            <option>home of family</option>
+                            <option>home of tutor/</option>
+                            <option>preschool teachers</option>
+                            <option>teachers</option>
+                            <option>family beyond home</option>
+                            <option>friends</option>
+                        </options>
+                    </item>
+                    <item id="field_89" name="SignTeaching" type="Leaf" minOccurrence="0">
+                        <type>textfield</type>
+                        <title>SignTeaching</title>
+                        <description>Amount of experience with teaching sign language.</description>
+                        <options>
+                            <option>none</option>
+                            <option>some</option>
+                            <option>extensive</option>
+                        </options>
+                    </item>
+                </item>
+                <item id="fieldset_40" name="SL_Family" type="Composite" minOccurrence="0">
+                    <type>fieldset</type>
+                    <title>SL_Family</title>
+                    <item id="fieldset_41" name="SL_Mother" type="Composite" minOccurrence="0">
+                        <type>fieldset</type>
+                        <title>SL_Mother</title>
+                        <item id="field_90" name="Deafness" type="Leaf" minOccurrence="0">
+                            <type>dropdown</type>
+                            <title>Deafness</title>
+                            <description>Describes mother’s deafness status. Where appropriate, describe deafness status of alternative primary caregiver.</description>
+                            <options>
+                                <option>deaf</option>
+                                <option>hard-of-hearing</option>
+                                <option>hearing</option>
+                                <option>Unknown</option>
+                                <option>Unspecified</option>
+                            </options>
+                        </item>
+                        <item id="field_91" name="PrimaryCommunicationForm" type="Leaf" minOccurrence="0">
+                            <type>dropdown</type>
+                            <title>PrimaryCommunicationForm</title>
+                            <description>Describes mother’s language input towards the actor. Where appropriate, describe primary communication form of alternative primary caregiver.</description>
+                            <options>
+                                <option>sign</option>
+                                <option>sign-supported speech</option>
+                                <option>gesture</option>
+                                <option>mix between signing and speaking</option>
+                                <option>speech only</option>
+                                <option>writing</option>
+                                <option>Unknown</option>
+                                <option>Unspecified</option>
+                            </options>
+                        </item>
+                    </item>
+                    <item id="fieldset_42" name="SL_Father" type="Composite" minOccurrence="0">
+                        <type>fieldset</type>
+                        <title>SL_Father</title>
+                        <item id="field_92" name="Deafness" type="Leaf" minOccurrence="0">
+                            <type>dropdown</type>
+                            <title>Deafness</title>
+                            <description>Describes father’s deafness status. Where appropriate, describe deafness status of alternative primary caregiver.</description>
+                            <options>
+                                <option>deaf</option>
+                                <option>hard-of-hearing</option>
+                                <option>hearing</option>
+                                <option>Unknown</option>
+                                <option>Unspecified</option>
+                            </options>
+                        </item>
+                        <item id="field_93" name="PrimaryCommunicationForm" type="Leaf" minOccurrence="0">
+                            <type>dropdown</type>
+                           <title>PrimaryCommunicationForm</title>
+                            <description>Describes father’s language input towards the actor. Where appropriate, describe primary communication form of alternative primary caregiver.</description>
+                            <options>
+                                <option>sign</option>
+                                <option>sign-supported speech</option>
+                                <option>gesture</option>
+                                <option>mix between signing and speaking</option>
+                                <option>speech only</option>
+                                <option>writing</option>
+                                <option>Unknown</option>
+                                <option>Unspecified</option>
+                            </options>
+                        </item>
+                    </item>
+                    <item id="fieldset_43" name="SL_Partner" type="Composite" minOccurrence="0">
+                        <type>fieldset</type>
+                        <title>SL_Partner</title>
+                        <item id="field_94" name="Deafness" type="Leaf" minOccurrence="0">
+                            <type>dropdown</type>
+                            <title>Deafness</title>
+                            <description>Describes partner’s deafness status.</description>
+                            <options>
+                                <option>deaf</option>
+                                <option>hard-of-hearing</option>
+                                <option>hearing</option>
+                                <option>Unknown</option>
+                                <option>Unspecified</option>
+                            </options>
+                        </item>
+                        <item id="field_95" name="PrimaryCommunicationForm" type="Leaf" minOccurrence="0">
+                            <type>dropdown</type>
+                            <title>PrimaryCommunicationForm</title>
+                            <description>Describes partner’s language input towards the actor.</description>
+                            <options>
+                                <option>sign</option>
+                                <option>sign-supported speech</option>
+                                <option>gesture</option>
+                                <option>mix between signing and speaking</option>
+                                <option>speech only</option>
+                                <option>writing</option>
+                                <option>Unknown</option>
+                                <option>Unspecified</option>
+                            </options>
+                        </item>
+                    </item>
+                </item>
+                <item id="fieldset_44" name="SL_Education" type="Composite" minOccurrence="0">
+                    <type>fieldset</type>
+                    <title>SL_Education</title>
+                    <item id="field_96" name="Age" type="Leaf" minOccurrence="0">
+                        <type>textfield</type>
+                        <title>Age</title>
+                        <description>Describes the age during which the school was attended. Formatting: start age, dash, end age, for example: 3-6, 6;3-12;2, etc</description>
+                    </item>
+                    <item id="field_97" name="SchoolType" type="Leaf" minOccurrence="0">
+                        <type>dropdown</type>
+                        <title>SchoolType</title>
+                        <description>Describes the type of school.</description>
+                        <options>
+                            <option>bilingual home programme</option>
+                            <option>kindergarten</option>
+                            <option>preschool</option>
+                            <option>primary school</option>
+                            <option>vocational training</option>
+                            <option>college</option>
+                            <option>university</option>
+                        </options>
+                    </item>
+                    <item id="field_98" name="ClassKind" type="Leaf" minOccurrence="0">
+                        <type>dropdown</type>
+                        <title>ClassKind</title>
+                        <description>Describes the kind of class in the school.</description>
+                        <options>
+                            <option>deaf</option>
+                            <option>hard-of-hearing</option>
+                            <option>deaf class in hearing school</option>
+                            <option>individually integrated</option>
+                        </options>
+                    </item>
+                    <item id="field_99" name="EducationModel" type="Leaf" minOccurrence="0">
+                        <type>dropdown</type>
+                        <title>EducationModel</title>
+                        <description>Describes the education model used at the school. For combinations of oral education with cued speech, use ‘oral’, combinations with fingerspelling, use ‘mixed’.
+                        </description>
+                        <options>
+                            <option>bilingual</option>
+                            <option>oral</option>
+                            <option>mixed</option>
+                            <option>sign monolingual</option>
+                            <option>oral with interpreter</option>
+                        </options>
+                    </item>
+                    <item id="field_100" name="Location" type="Leaf" minOccurrence="0">
+                        <type>textfield</type>
+                        <title>Location</title>
+                        <description>Describes where (town or region) the institution was located.</description>
+                    </item>
+                    <item id="field_101" name="BoardingSchool" type="Leaf" minOccurrence="0">
+                        <type>dropdown</type>
+                        <title>BoardingSchool</title>
+                        <description>Is the school a boarding school?</description>
+                        <options>
+                            <option>yes</option>
+                            <option>no</option>
+                        </options>
                     </item>
                 </item>
                 <item id="fieldset_29" name="Keys" type="Composite" minOccurrence="0">
@@ -654,27 +958,16 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                 </item>
             </item>
         </item>
-        <item id="fieldset_36" name="References" type="Composite" minOccurrence="0">
-            <type>fieldset</type>
-            <title>References</title>
-            <item id="fieldset_37" name="descriptions" type="Composite" minOccurrence="0">
-                <type>fieldset</type>
-                <title>descriptions</title>
-                <item id="field_77" name="Description" type="Leaf" multival="true" minOccurrence="1">
-                    <title>Description</title>
-                    <type>textarea</type>
-                </item>
-            </item>
-        </item>
     </items>
     <resources>
-        <root_path>lat-session</root_path>
+        <root_path>lat-SL-session</root_path>
         <subnodes>Resources</subnodes>
         <allowed_tags>
             <tag id="MediaFile">
                 <updated_values id="Type"/>
                 <updated_values id="Format"/>
                 <updated_values id="Size"/>
+                <updated_values id="Quality">Unspecified</updated_values>
                 <mime_regex>/^(video|audio|image)\/.*$/</mime_regex>
                 <insert_before>WrittenResource</insert_before>
                 <insert_before>Source</insert_before>
@@ -683,8 +976,13 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
             <tag id="WrittenResource">
                 <updated_values id="Date">Unspecified</updated_values>
                 <updated_values id="Type">Annotation</updated_values>
+                <updated_values id="SubType">Unspecified</updated_values>
                 <updated_values id="Format"/>
                 <updated_values id="Size"/>
+                <updated_values id="CharacterEncoding">Unspecified</updated_values>
+                <updated_values id="ContentEncoding">Unspecified</updated_values>
+                <updated_values id="LanguageId">Unspecified</updated_values>
+                <updated_values id="Anonymized">Unspecified</updated_values>
                 <mime_regex>/^./</mime_regex>
                 <insert_before>Source</insert_before>
                 <insert_before>Anonyms</insert_before>
@@ -692,6 +990,6 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
         </allowed_tags>
     </resources>
     <data>
-        <clarinProfileId>clarin.eu:cr1:p_1407745712035</clarinProfileId>
+        <clarinProfileId>clarin.eu:cr1:p_1417617523856</clarinProfileId>
     </data>
 </profileToDrupal>
