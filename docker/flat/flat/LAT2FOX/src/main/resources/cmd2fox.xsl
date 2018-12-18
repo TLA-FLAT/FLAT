@@ -928,6 +928,7 @@
 						<xsl:copy-of select="@*"/>
 						<cmd:ResourceType mimetype="application/x-cmdi+xml">Metadata</cmd:ResourceType>
 						<cmd:ResourceRef>
+							<xsl:copy-of select="cmd:ResourceRef/@* except @lat:localURI"/>
 							<xsl:if test="exists(cmd:ResourceRef/@lat:localURI)">
 								<xsl:attribute name="lat:localURI" select="cmd:ResourceRef/resolve-uri(@lat:localURI,$base)"/>
 							</xsl:if>
