@@ -13,12 +13,13 @@ RUN apt-get update &&\
 ADD fits /tmp/fits
 RUN ls /tmp/
 RUN cd /tmp/fits &&\
-    if [ ! -f fits-1.2.0.zip ]; then wget http://projects.iq.harvard.edu/files/fits/files/fits-1.2.0.zip; fi &&\
-    unzip fits-1.2.0.zip &&\
-    mv fits-1.2.0 /app/fits &&\
+    if [ ! -f fits-1.3.0.zip ]; then wget http://projects.iq.harvard.edu/files/fits/files/fits-1.3.0.zip; fi &&\
+    unzip fits-1.3.0.zip &&\
+    mkdir -p /app/fits &&\
+    mv * /app/fits/ &&\
     mkdir /app/fits/log-lib &&\
-    mv /app/fits/lib/slf4j-log4j12-1.7.12.jar /app/fits/log-lib &&\
-    sed -i 's|APPCLASSPATH=""|APPCLASSPATH="${FITS_HOME}/log-lib/slf4j-log4j12-1.7.12.jar"|g' /app/fits/fits-env.sh &&\
+    mv /app/fits/lib/slf4j-log4j12-1.7.22.jar /app/fits/log-lib &&\
+    sed -i 's|APPCLASSPATH=""|APPCLASSPATH="${FITS_HOME}/log-lib/slf4j-log4j12-1.7.22.jar"|g' /app/fits/fits-env.sh &&\
     chmod +x /app/fits/*.sh &&\
     wget http://projects.iq.harvard.edu/files/fits/files/fits-1.1.3.war &&\
     cp fits-1.1.3.war /var/www/fedora/tomcat/webapps/fits.war &&\

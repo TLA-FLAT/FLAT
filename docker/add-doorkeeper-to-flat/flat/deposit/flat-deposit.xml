@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <flow xmlns:flat="java:nl.mpi.tla.flat">
     <config>
-        <namespace prefix="dc" uri="http://purl.org/dc/elements/1.1/"/>
         <import class="nl.mpi.tla.flat.deposit.context.Environment" prefix="env-"/>
         <import class="nl.mpi.tla.flat.deposit.context.SystemProperties" prefix="sys-"/>
         <property name="fitsService" value="http://localhost:8080/fits/" uniq="true"/>
