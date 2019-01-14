@@ -50,6 +50,7 @@ public class Main {
         System.err.println("INF: <DIR>      source directory to recurse for CMD files (default: .)");
         System.err.println("INF: lat2fox options:");
         System.err.println("INF: -e=<EXT>   the extension of CMD records (default: cmdi)");
+        System.err.println("INF: -w=<EXT>   the fedora namespace of the digital objects (default: lat)");
         System.err.println("INF: -r=<FILE>  load/store the relations map from/in this <FILE> (optional)");
         System.err.println("INF: -f=<DIR>   directory to store the FOX files (default: ./fox)");
         System.err.println("INF: -x=<DIR>   directory to store the FOX files with problems (default: ./fox-error)");
@@ -78,6 +79,7 @@ public class Main {
         String pdir = null;
         String mdir = null;
         String cext = "cmdi";
+        String ns = "lat";
         String cfile = null;
         String oxp = null;
         String axp = null;
@@ -89,7 +91,7 @@ public class Main {
         boolean relationCheck = true;
         int ndir = 0;
         // check command line
-        OptionParser parser = new OptionParser( "zlve:r:f:i:x:p:q:n:c:o:a:s:b:u:?*" );
+        OptionParser parser = new OptionParser( "zlve:w:r:f:i:x:p:q:n:c:o:a:s:b:u:?*" );
         OptionSet options = parser.parse(args);
         if (options.has("l"))
             laxResourceCheck = true;
@@ -99,6 +101,8 @@ public class Main {
             relationCheck = false;
         if (options.has("e"))
             cext = (String)options.valueOf("e");
+        if (options.has("w"))
+            ns = (String)options.valueOf("w");
         if (options.has("r"))
             rfile = new File((String)options.valueOf("r"));
         if (options.has("f"))
@@ -230,6 +234,7 @@ public class Main {
                     try {
                         XsltTransformer fox = cmd2fox.load();
                         //fox.setParameter(new QName("rels-uri"), new XdmAtomicValue("file:"+map.getAbsolutePath()));
+                        fox.setParameter(new QName("namespace"), new XdmAtomicValue(ns));
                         fox.setParameter(new QName("rels-doc"), relsDoc);
                         fox.setParameter(new QName("conversion-base"), new XdmAtomicValue(dir));
                         if (idir != null)

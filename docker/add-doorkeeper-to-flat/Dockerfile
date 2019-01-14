@@ -66,9 +66,11 @@ RUN cd /tmp/ServiceFLAT &&\
     cp /tmp/ServiceFLAT/logging.properties /var/www/fedora/tomcat/webapps/flat/WEB-INF/classes/logging.properties
     
 RUN if [ `grep 'environment=' /etc/supervisor/conf.d/supervisord-tomcat.conf` ]; \
-      then sed -i 's|^environment=\(.*\)$|environment=\1,FLAT_ICON_DIR="'$FLAT_ICON_DIR'"|g' /etc/supervisor/conf.d/supervisord-tomcat.conf; \
-      else echo '' >> /etc/supervisor/conf.d/supervisord-tomcat.conf; echo 'environment=FLAT_ICON_DIR="'$FLAT_ICON_DIR'"' >> /etc/supervisor/conf.d/supervisord-tomcat.conf; \
-    fi
+      then sed -i 's|^environment=\(.*\)$|environment=\1,FLAT_ICON_DIR=%(ENV_FLAT_ICON_DIR)s,FLAT_NAMESPACE=%(ENV_FLAT_NAMESPACE)s|g' /etc/supervisor/conf.d/supervisord-tomcat.conf; \
+      else echo '' >> /etc/supervisor/conf.d/supervisord-tomcat.conf; echo 'environment=FLAT_ICON_DIR=%(ENV_FLAT_ICON_DIR)s,FLAT_NAMESPACE=%(ENV_FLAT_NAMESPACE)s' >> /etc/supervisor/conf.d/supervisord-tomcat.conf; \
+    fi &&\
+    echo "export FLAT_ICON_DIR=$FLAT_ICON_DIR" >> /etc/environment &&\
+    echo "export FLAT_NAMESPACE=$FLAT_NAMESPACE" >> /etc/environment
 
 # Add proxy to Apache
 

@@ -6,6 +6,9 @@ RUN apt-get update &&\
 	update-ca-certificates -f &&\
 	apt-get -y install --reinstall ca-certificates-java 
 
+ENV FLAT_NAMESPACE=comic
+RUN echo "export FLAT_NAMESPACE=$FLAT_NAMESPACE" >> /etc/environment
+
 # add sample SIP
 RUN mkdir -p /app/flat/test
 ADD flat/deposit/test/icons/* $FLAT_ICON_DIR/

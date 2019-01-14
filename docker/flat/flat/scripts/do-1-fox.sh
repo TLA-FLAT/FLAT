@@ -11,7 +11,7 @@ export JAVA_OPTS="-DLAT2FOX.cmd2fox=file:/app/flat/deposit/policies/cmd2fox.xsl"
 
 mkdir -p /app/flat/tmp
 
-lat2fox.sh -e=$CMD_EXTENSION -v -n=1000 -r=/app/flat/tmp/relations.xml -f=/app/flat/fox -x=/app/flat/tmp/fox-error -p=/app/flat/deposit/policies -i=/lat -b=$FLAT_ICON_DIR /app/flat/cmd 2>&1 | tee -a /app/flat/tmp/lat2fox.log
+lat2fox.sh -w=$FLAT_NAMESPACE -e=$CMD_EXTENSION -v -n=1000 -r=/app/flat/tmp/relations.xml -f=/app/flat/fox -x=/app/flat/tmp/fox-error -p=/app/flat/deposit/policies -i=/lat -b=$FLAT_ICON_DIR /app/flat/cmd 2>&1 | tee -a /app/flat/tmp/lat2fox.log
 ERR=$?
 
 date
