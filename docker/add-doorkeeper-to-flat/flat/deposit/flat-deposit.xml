@@ -123,12 +123,12 @@
             <!--<parameter name="try-fix-pid" value="true"/>-->
         </action>
         <!-- SIP + parent collection -->
-        <action class="nl.mpi.tla.flat.deposit.action.FedoraInteract">
+        <action name="update sip and parent collection" class="nl.mpi.tla.flat.deposit.action.FedoraInteract">
             <parameter name="fedoraConfig" value="{$work}/acl/fedora-config.xml"/>
             <parameter name="dir" value="{$work}/fox"/>
         </action>
         <!-- ancestor collections -->
-        <action class="nl.mpi.tla.flat.deposit.action.FedoraInteract">
+        <action name="update ancestor collections" class="nl.mpi.tla.flat.deposit.action.FedoraInteract">
             <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
             <parameter name="dir" value="{$work}/admin-fox"/>
         </action>
