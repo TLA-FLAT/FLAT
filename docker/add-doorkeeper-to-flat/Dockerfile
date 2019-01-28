@@ -13,8 +13,8 @@ RUN apt-get update &&\
 ADD fits /tmp/fits
 RUN ls /tmp/
 RUN cd /tmp/fits &&\
-    if [ ! -f fits-1.3.0.zip ]; then wget http://projects.iq.harvard.edu/files/fits/files/fits-1.3.0.zip; fi &&\
-    unzip fits-1.3.0.zip &&\
+    if [ ! -f fits-1.4.0.zip ]; then wget https://github.com/harvard-lts/fits/releases/download/1.4.0/fits-1.4.0.zip; fi &&\
+    unzip fits-1.4.0.zip &&\
     mkdir -p /app/fits &&\
     mv * /app/fits/ &&\
     mkdir /app/fits/log-lib &&\
@@ -45,7 +45,7 @@ RUN cd /tmp &&\
     mvn -DskipTests clean install
 
 RUN cd /tmp &&\
-    git clone -b 1.0.0 https://github.com/meertensinstituut/EPICify.git epicify &&\
+    git clone -b 1.0.1 https://github.com/meertensinstituut/EPICify.git epicify &&\
     cd /tmp/epicify &&\
     mvn clean install &&\
     cp cli/target/epicify.jar /app/flat/lib/
