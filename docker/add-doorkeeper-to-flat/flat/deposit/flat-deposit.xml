@@ -19,6 +19,7 @@
     <init>
         <action name="logSetup" class="nl.mpi.tla.flat.deposit.action.WorkspaceLogSetup">
             <parameter name="dir" value="{$work}/logs"/>
+            <parameter name="logConfig" value="{$base}/policies/log-config.xml"/>
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.Owner">
             <parameter name="policy" value="{$work}/metadata/policy.n3"/>
