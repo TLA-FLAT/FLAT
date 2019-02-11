@@ -225,18 +225,24 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
             <item id="field_17" name="Name" type="Leaf" inherited="true" minOccurrence="1">
                 <title>Name</title>
                 <type>textfield</type>
+        	<data>
+            		<role>flat-lang-autocomplete</role>
+        	</data>
             </item>
             <item id="field_18" name="Id" type="Leaf" inherited="true" minOccurrence="1">
                 <title>Id</title>
                 <type>textfield</type>
                 <description>Valid entries are: ISO639-3 language code (e.g. ISO639-3:nld) | Unknown | Unspecified</description>
+       	 	<data>
+            		<role>flat-lang-autocomplete-destination</role>
+        	</data>
             </item>
         </item>
         <item id="fieldset_06" type="Composite" name="Location" multival="true" inherited="true" minOccurrence="0">
             <type>fieldset</type>
             <title>Location</title>
             <container>Locations</container>
-            <item id="field_19" name="Continent" type="Leaf" minOccurrence="1">
+            <item id="field_19" name="Continent" type="Leaf" inherited="true" minOccurrence="1">
                 <title>Continent</title>
                 <type>dropdown</type>
                 <options>

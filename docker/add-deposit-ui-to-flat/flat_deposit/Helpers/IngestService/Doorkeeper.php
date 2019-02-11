@@ -20,16 +20,33 @@ class Doorkeeper
      *
      * @throws IngestServiceException
      */
-    public function triggerServlet($sipId, $to=FALSE){
+    public function triggerServlet($sipId, $to=NULL){
 
+        $config = variable_get('flat_deposit_doorkeeper');
+        $config_general = variable_get('flat_deposit_general');
+        $namespace = $config_general['namespace'];
 
+        /*
         if($to){
             $query = '?to=' . $to ;
         } else {
             $query = '';
         }
+        */
 
-        $config = variable_get('flat_deposit_doorkeeper');
+        $query_params = [];
+        $query_params['to'] = $to;
+        $query_params['ns'] = $namespace;
+        $query = http_build_query($query_params);
+        if ($query) {
+            $query = '?' . $query;
+        }
+        else {
+            $query = '';
+        }
+
+        file_put_contents('/easylat/www/htdocs/log.txt', $query_params['to'] . "\n" . $query . "\n", FILE_APPEND);
+
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $config['url'] . $sipId . $query);
         curl_setopt($ch, CURLOPT_PORT, $config['port']);
@@ -65,8 +82,20 @@ class Doorkeeper
     {
 
         $config = variable_get('flat_deposit_doorkeeper');
+        $config_general = variable_get('flat_deposit_general');
+        $namespace = $config_general['namespace'];
+
+        $query_params = [];
+        $query_params['ns'] = $namespace;
+        $query = http_build_query($query_params);
+        if ($query) {
+            $query = '?' . $query;
+        } else {
+            $query = '';
+        }
+
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $config['url'] . $sipId);
+        curl_setopt($ch, CURLOPT_URL, $config['url'] . $sipId . '?ns=' . $namespace);
         curl_setopt($ch, CURLOPT_PORT, $config['port']);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);

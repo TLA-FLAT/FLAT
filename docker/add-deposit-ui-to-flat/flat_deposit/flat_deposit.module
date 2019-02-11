@@ -1,6 +1,10 @@
 <?php
 
 /**
+ * @file
+ */
+
+/**
  * Implements hook_stream_wrappers().
  */
 function flat_deposit_stream_wrappers()
@@ -8,7 +12,7 @@ function flat_deposit_stream_wrappers()
     return array(
         'freeze' => array(
             'name' => t('The Data Freeze Stream'),
-            //a class that implement the stream
+            // A class that implement the stream.
             'class' => 'FreezeStreamWrapper',
             'description' => t('Stream wrapper for frozen files'),
             'type' => STREAM_WRAPPERS_LOCAL_NORMAL,
@@ -31,8 +35,15 @@ function flat_deposit_stream_wrappers()
     );
 }
 
+/**
+ *
+ */
 class FreezeStreamWrapper extends DrupalPrivateStreamWrapper
 {
+
+    /**
+     *
+     */
     public function getDirectoryPath()
     {
 
@@ -52,7 +63,7 @@ class FreezeStreamWrapper extends DrupalPrivateStreamWrapper
     }
 
     /**
-     * Overrides StreamWrapperInterface::rename
+     * Overrides StreamWrapperInterface::rename.
      */
     public function rename($from_uri, $to_uri)
     {
@@ -60,7 +71,7 @@ class FreezeStreamWrapper extends DrupalPrivateStreamWrapper
     }
 
     /**
-     * Overrides StreamWrapperInterface::getLocalPath
+     * Overrides StreamWrapperInterface::getLocalPath.
      */
     protected function getLocalPath($uri = null)
     {
@@ -81,9 +92,15 @@ class FreezeStreamWrapper extends DrupalPrivateStreamWrapper
     }
 
 }
-
+/**
+ *
+ */
 class MetadataStreamWrapper extends DrupalPrivateStreamWrapper
 {
+
+    /**
+     *
+     */
     public function getDirectoryPath()
     {
 
@@ -102,7 +119,7 @@ class MetadataStreamWrapper extends DrupalPrivateStreamWrapper
     }
 
     /**
-     * Overrides StreamWrapperInterface::rename
+     * Overrides StreamWrapperInterface::rename.
      */
     public function rename($from_uri, $to_uri)
     {
@@ -110,7 +127,7 @@ class MetadataStreamWrapper extends DrupalPrivateStreamWrapper
     }
 
     /**
-     * Overrides StreamWrapperInterface::getLocalPath
+     * Overrides StreamWrapperInterface::getLocalPath.
      */
     protected function getLocalPath($uri = null)
     {
@@ -131,9 +148,15 @@ class MetadataStreamWrapper extends DrupalPrivateStreamWrapper
     }
 
 }
-
+/**
+ *
+ */
 class ExternalStreamWrapper extends DrupalPrivateStreamWrapper
 {
+
+    /**
+     *
+     */
     public function getDirectoryPath()
     {
 
@@ -152,7 +175,7 @@ class ExternalStreamWrapper extends DrupalPrivateStreamWrapper
     }
 
     /**
-     * Overrides StreamWrapperInterface::rename
+     * Overrides StreamWrapperInterface::rename.
      */
     public function rename($from_uri, $to_uri)
     {
@@ -160,7 +183,7 @@ class ExternalStreamWrapper extends DrupalPrivateStreamWrapper
     }
 
     /**
-     * Overrides StreamWrapperInterface::getLocalPath
+     * Overrides StreamWrapperInterface::getLocalPath.
      */
     protected function getLocalPath($uri = null)
     {
@@ -187,42 +210,53 @@ class ExternalStreamWrapper extends DrupalPrivateStreamWrapper
  */
 function flat_deposit_permission()
 {
-    // setting up permissions to use and administer the deposit module
+    // Setting up permissions to use and administer the deposit module.
     return array(
         'admin deposit module' => array(
             'title' => t('Administration of the deposit module'),
             'description' => t('All administrative tasks'),
-            'restrict access' => true),
+            'restrict access' => true,
+        ),
         'use deposit module' => array(
             'title' => t('Usage of the deposit module'),
-            'description' => t('Make use of the FLAT deposit')),
+            'description' => t('Make use of the FLAT deposit'),
+        ),
         'create flat_bundle content' => array(
             'title' => t('Create bundles'),
-            'description' => t('Create new FLAT bundles')),
+            'description' => t('Create new FLAT bundles'),
+        ),
         'edit own flat_bundle content' => array(
             'title' => t('Edit own bundles'),
-            'description' => t('Edit own FLAT bundles')),
+            'description' => t('Edit own FLAT bundles'),
+        ),
         'delete own flat_bundle content' => array(
             'title' => t('Delete own bundles'),
-            'description' => t('Create new FLAT bundles')),
+            'description' => t('Create new FLAT bundles'),
+        ),
         'edit any flat_bundle content' => array(
             'title' => t('Edit any bundles'),
-            'description' => t('Edit any FLAT bundles')),
+            'description' => t('Edit any FLAT bundles'),
+        ),
         'delete any flat_bundle content' => array(
             'title' => t('Delete any bundles'),
-            'description' => t('Delete any FLAT bundles')),
+            'description' => t('Delete any FLAT bundles'),
+        ),
         'validate bundles' => array(
             'title' => t('Validate bundles'),
-            'description' => t('Allow to validate new bundles')),
+            'description' => t('Allow to validate new bundles'),
+        ),
         'ingest bundles' => array(
             'title' => t('Ingest bundles'),
-            'description' => t('Allow to do ingest after validation')),
+            'description' => t('Allow to do ingest after validation'),
+        ),
         'view collection' => array(
             'title' => t('View collections'),
-            'description' => t('See overview collections')),
+            'description' => t('See overview collections'),
+        ),
         'admin collection' => array(
             'title' => t('Administer collections'),
-            'description' => t('Administer collections')),
+            'description' => t('Administer collections'),
+        ),
         'add bundle menu' => array(
             'title' => t('Add bundles to own account'),
             'description' => t('Allows to create personal archive bundles'),
@@ -256,19 +290,19 @@ function flat_deposit_permission()
 /**
  * Implements hook_enable().
  *
- * setup of initial configuration that is not already configured during install
+ * Setup of initial configuration that is not already configured during install.
  */
 function flat_deposit_enable()
 {
 
-    // Set correct permissions
+    // Set correct permissions.
     module_load_include('inc', 'flat_deposit', 'inc/config');
     flat_deposit_set_custom_roles();
     flat_deposit_set_anonymous_user_permissions();
     flat_deposit_set_authenticated_user_permissions();
     flat_deposit_set_content_access();
 
-    // enable blog functionality in order to allow the backend to create ingest reports
+    // Enable blog functionality in order to allow the backend to create ingest reports.
     module_enable(array('blog', 'flat_views'));
 
     $paths = variable_get('flat_deposit_general');
@@ -309,7 +343,7 @@ function flat_deposit_enable()
 function flat_deposit_menu()
 {
 
-    // Admin configuration group
+    // Admin configuration group.
     $items['admin/config/flat_deposit'] = array(
         'title' => 'FLAT Deposit user interface',
         'description' => 'FLAT Deposit user interface settings',
@@ -317,32 +351,32 @@ function flat_deposit_menu()
         'weight' => 999,
     );
 
-    // Admin configuration - Upload settings
+    // Admin configuration - Upload settings.
     $items['admin/config/flat_deposit/customize'] = array(
         'title' => 'Deposit UI settings',
         'description' => 'FLAT Deposit user interface settings',
         'page callback' => 'drupal_get_form',
         'page arguments' => array('flat_deposit_admin_form'),
         'file' => 'inc/flat_deposit.admin.inc',
-        'access arguments' => array('admin deposit module'));
+        'access arguments' => array('admin deposit module'),
+    );
 
-    //User menus
-
+    // User menus.
     $items['dashboard'] = array(
         'type' => MENU_NORMAL_ITEM,
         'title' => 'My dashboard',
         'description' => 'User deposit menu link in navigation bar',
         'page callback' => 'flat_deposit_dashboard_view',
         'access arguments' => array('use deposit module'),
-        //'access callback' => 'flat_deposit_dashboard_access',
-        //'menu_name' => 'main-menu', // uncomment to place in main menu instead of user menu
+        // 'access callback' => 'flat_deposit_dashboard_access',
+        // 'menu_name' => 'main-menu', // uncomment to place in main menu instead of user menu.
     );
 
     $items['dashboard/%user'] = array(
         'title' => 'My dashboard',
         'type' => MENU_DEFAULT_LOCAL_TASK,
-        #'page callback' => 'flat_deposit_dashboard_collections_view',
-        #'page arguments' => array(1),
+        // 'page callback' => 'flat_deposit_dashboard_collections_view',
+        // 'page arguments' => array(1),.
         'access callback' => true,
     );
 
@@ -371,18 +405,18 @@ function flat_deposit_menu()
         'access arguments' => array('use deposit module'),
     );
 
-/*
-$items['user/%user/collections'] = array(
-'title' => 'My collections',
-'type' => MENU_LOCAL_TASK,
-'page callback' => 'flat_deposit_dashboard_collections_view',
-'page arguments' => array(1),
-'access callback' => 'user_edit_access',
-'access arguments' => array(1),
-);
- */
-//FLAT_BUNDLE
-    // bundle creation
+    /*
+    $items['user/%user/collections'] = array(
+    'title' => 'My collections',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => 'flat_deposit_dashboard_collections_view',
+    'page arguments' => array(1),
+    'access callback' => 'user_edit_access',
+    'access arguments' => array(1),
+    );
+     */
+    // FLAT_BUNDLE
+    // bundle creation.
     $items['islandora/object/%islandora_object/add_bundle'] = array(
         'title' => 'Add Bundle',
         'type' => MENU_LOCAL_TASK,
@@ -393,7 +427,7 @@ $items['user/%user/collections'] = array(
         'weight' => 99,
     );
 
-    // bundle update
+    // Bundle update.
     $items['islandora/object/%islandora_object/update_bundle'] = array(
         'title' => 'Update Bundle',
         'type' => MENU_LOCAL_TASK,
@@ -404,19 +438,19 @@ $items['user/%user/collections'] = array(
         'weight' => 99,
     );
 
-/*
-$items['islandora/object/%islandora_object/view_node'] = array(
-'title' => 'Update',
-'type' => MENU_LOCAL_TASK,
-'page callback' => 'flat_deposit_update',
-'page arguments' => array(2),
-'access callback' => 'islandora_object_access_callback',
-'access arguments' => array('view node menu', 2),
-'weight' => 99,
-);
- */
+    /*
+    $items['islandora/object/%islandora_object/view_node'] = array(
+    'title' => 'Update',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => 'flat_deposit_update',
+    'page arguments' => array(2),
+    'access callback' => 'islandora_object_access_callback',
+    'access arguments' => array('view node menu', 2),
+    'weight' => 99,
+    );
+     */
 
-    // bundle update metadata
+    // Bundle update metadata.
     $items['islandora/object/%islandora_object/update_bundle_metadata'] = array(
         'title' => 'Update Metadata',
         'type' => MENU_LOCAL_TASK,
@@ -428,7 +462,7 @@ $items['islandora/object/%islandora_object/view_node'] = array(
         'weight' => 99,
     );
 
-    // flat bundle cmdi file creator form
+    // Flat bundle cmdi file creator form.
     $items['node/%node/cmdi'] = array(
         'title' => 'Create Bundle Metadata',
         'type' => MENU_CALLBACK,
@@ -438,7 +472,7 @@ $items['islandora/object/%islandora_object/view_node'] = array(
         'access arguments' => array('use deposit module', 1),
     );
 
-// FLAT_Collection
+    // FLAT_Collection.
     $items['islandora/object/%islandora_object/add_collection'] = array(
         'title' => 'Add Collection',
         'type' => MENU_LOCAL_TASK,
@@ -475,6 +509,9 @@ $items['islandora/object/%islandora_object/view_node'] = array(
     return $items;
 }
 
+/**
+ *
+ */
 function flat_deposit_dashboard_access()
 {
     global $user;
@@ -487,27 +524,40 @@ function flat_deposit_dashboard_access()
     return false;
 }
 
+/**
+ *
+ */
 function flat_deposit_dashboard_view()
 {
 
     global $user;
-    #krumo($user);
+    // krumo($user);
     drupal_goto('dashboard/' . $user->uid . '/bundles');
 
     return '';
 }
 
+/**
+ *
+ */
 function flat_deposit_dashboard_bundles($var)
 {
 
     return '';
 }
 
+/**
+ *
+ */
 function flat_deposit_dashboard_collections($var)
 {
 
     return '';
 }
+
+/**
+ *
+ */
 function flat_deposit_dashboard_notifications($var)
 {
 
@@ -515,10 +565,8 @@ function flat_deposit_dashboard_notifications($var)
 }
 
 /**
- * Implements hook_menu_local_task_alter
- *
+ * Implements hook_menu_local_task_alter.
  */
-
 function flat_deposit_menu_local_tasks_alter(&$data, $router_item, $root_path)
 {
 
@@ -526,7 +574,7 @@ function flat_deposit_menu_local_tasks_alter(&$data, $router_item, $root_path)
         $tabs = $data['tabs'][0]['output'];
         foreach ($tabs as $index => $tab) {
 
-            // Remove "edit" tab from node view
+            // Remove "edit" tab from node view.
             if ($tab['#link']['path'] == 'node/%/edit') {
 
                 $data['tabs'][0]['output'][$index]['#link']['access'] = false;
@@ -535,7 +583,7 @@ function flat_deposit_menu_local_tasks_alter(&$data, $router_item, $root_path)
             }
         }
     }
-    // Remove "view" tab from node view for flat_bundles
+    // Remove "view" tab from node view for flat_bundles.
     $type = null;
     foreach ($router_item["map"] as $map) {
         if (!isset($map->type)) {
@@ -560,7 +608,7 @@ function flat_deposit_menu_local_tasks_alter(&$data, $router_item, $root_path)
         }
     }
 
-/*
+    /*
 // Add icons
 if (isset($data['tabs'][1]['output'])) {
 $tabs = &$data['tabs'][1]['output'];
@@ -581,10 +629,13 @@ if ($tab['#link']['path'] == 'dashboard/%/reports') {
 
 }
 
+/**
+ *
+ */
 function flat_deposit_process_menu_local_tasks(&$variables)
 {
 
-#krumo ($variables);
+    // Krumo ($variables);.
 }
 
 /**
@@ -630,10 +681,12 @@ function flat_deposit_theme()
 }
 
 /**
- * Theme function that translates our input into renderable HTML
+ * Theme function that translates our input into renderable HTML.
  *
- * $param variables array of data to be rendered
- * @return string HTML code
+ * $param variables array of data to be rendered.
+ *
+ * @return string
+ *   HTML code
  */
 function theme_image_link($variables)
 {
@@ -650,6 +703,9 @@ function theme_image_link($variables)
     return $output;
 }
 
+/**
+ *
+ */
 function theme_flat_collection_form_table($variables)
 {
     // Note: $form will be $form['table_container'] from your
@@ -657,7 +713,7 @@ function theme_flat_collection_form_table($variables)
     // applied to.
     $form = $variables['form'];
 
-// Define our $header and $rows variables
+    // Define our $header and $rows variables.
     $header = array(t('Name'), t('link'), t('Activate'));
     $rows = array();
 
@@ -666,7 +722,7 @@ function theme_flat_collection_form_table($variables)
         $row = array();
 
         $row[] = drupal_render($form[$index]['label']);
-        #$row[] = drupal_render($form[$index]['pid']);
+        // $row[] = drupal_render($form[$index]['pid']);.
         $row[] = drupal_render($form[$index]['link']);
         $row[] = drupal_render($form[$index]['activate']);
 
@@ -677,13 +733,16 @@ function theme_flat_collection_form_table($variables)
     return theme('table', array('header' => $header, 'rows' => $rows));
 }
 
+/**
+ *
+ */
 function theme_flat_bundle_action_table($variables)
 {
     // Note: $form will be $form['table_container'] from your
     // form definition, as that is the element that #theme was
     // applied to.
     $form = $variables['form'];
-    // Define our $header and $rows variables
+    // Define our $header and $rows variables.
     $header = array(t('Bundle Name'), t('Status'), t('Metadata'), t('Select'));
     $rows = array();
 
@@ -703,6 +762,9 @@ function theme_flat_bundle_action_table($variables)
     return theme('table', array('header' => $header, 'rows' => $rows));
 }
 
+/**
+ *
+ */
 function theme_flat_bundle_cmdi_resource_table($variables)
 {
     // Note: $form will be $form['table_container'] from your
@@ -711,17 +773,18 @@ function theme_flat_bundle_cmdi_resource_table($variables)
     $form = $variables['form'];
 
     // Define our $header and $rows variables
-    //$header = array(t('Resource ID'), t('File name'), t('Select'));
+    // $header = array(t('Resource ID'), t('File name'), t('Select'));.
     $header = array(array('data' => t('Select'), 'class' => 'resource-table-select'),
-        array('data' => t('File name'), 'class' => 'resource-table-filename'));
+        array('data' => t('File name'), 'class' => 'resource-table-filename'),
+    );
     $rows = array();
 
     foreach (element_children($form) as $index) {
 
         $row = array();
 
-        //$row[] = drupal_render($form[$index]['resource_id']);
-        //$row[] = drupal_render($form[$index]['label']);
+        // $row[] = drupal_render($form[$index]['resource_id']);
+        // $row[] = drupal_render($form[$index]['label']);.
         $row[] = drupal_render($form[$index]['checked']);
         $row[] = drupal_render($form[$index]['label']);
 
@@ -733,13 +796,13 @@ function theme_flat_bundle_cmdi_resource_table($variables)
 }
 
 /**
- * FLAT_BUNDLE RELATED FUNCTIONS
+ * FLAT_BUNDLE RELATED FUNCTIONS.
  */
 
 /**
- * Implements hook_node_info
+ * Implements hook_node_info.
  *
- * makes custom content type flat_bundle available
+ * Makes custom content type flat_bundle available.
  */
 function flat_deposit_node_info()
 {
@@ -757,13 +820,15 @@ function flat_deposit_node_info()
     );
 }
 
+/**
+ *
+ */
 function flat_bundle_add_bundle($pid)
 {
     global $user;
 
     // Query all flat_collection nodes that are owned by the user and have no empty fedora_fid (flat_fid) value.
     // Resulting nodes will be added as options with the node's nid as option-key and node's title as option-labels.
-
     module_load_include('inc', 'flat_deposit', 'inc/class.FlatCollection');
     $user_collection_nodes = FlatCollection::getUserCollectionNodes($user->uid, $pid->id);
 
@@ -787,8 +852,7 @@ function flat_bundle_add_bundle($pid)
 
     $node_type = 'flat_bundle';
     $types = node_type_get_types();
-    #$collection = $collections ['collection_name'][0];
-
+    // $collection = $collections ['collection_name'][0];.
     $node = (object) array('uid' => $user->uid, 'name' => (isset($user->name) ? $user->name : ''), 'type' => $node_type, 'language' => LANGUAGE_NONE);
     drupal_set_title(t('Create @name', array('@name' => $types[$node_type]->name)), PASS_THROUGH);
     $form = drupal_get_form($node_type . '_node_form', $node, $custom);
@@ -797,6 +861,9 @@ function flat_bundle_add_bundle($pid)
 
 }
 
+/**
+ *
+ */
 function flat_bundle_update_bundle($fid_bundle)
 {
     global $user;
@@ -842,10 +909,10 @@ function flat_bundle_update_bundle($fid_bundle)
         }
 
     } else {
-        // should not get here normally if access checks are working and object is as expected
+        // Should not get here normally if access checks are working and object is as expected.
         $no_active_parent = true;
 
-        drupal_set_message('Unable to find parent collection of this bundle in your active collections. Please activate the parent collection first.', 'error');
+        drupal_set_message(t('Unable to find parent collection of this bundle in your active collections. Please activate the parent collection first.'), 'error');
 
     }
 
@@ -854,7 +921,13 @@ function flat_bundle_update_bundle($fid_bundle)
     $node_type = 'flat_bundle';
     $types = node_type_get_types();
 
-    $node = (object) array('uid' => $user->uid, 'name' => (isset($user->name) ? $user->name : ''), 'type' => $node_type, 'language' => LANGUAGE_NONE);
+    $node = (object) array(
+        'uid' => $user->uid,
+        'name' => (isset($user->name) ? $user->name : ''),
+        'type' => $node_type,
+        'language' => LANGUAGE_NONE,
+    );
+
     drupal_set_title(t('Update @name', array('@name' => $types[$node_type]->name)), PASS_THROUGH);
     if ($no_active_parent) {
         $form = '<form/>';
@@ -867,10 +940,9 @@ function flat_bundle_update_bundle($fid_bundle)
 }
 
 /**
- * Implements hook_form.
+ * Implements hook_form().
  *
- *  flat_bundle add/edit form
- *
+ *  Flat_bundle add/edit form.
  */
 function flat_bundle_form($node, $form_state)
 {
@@ -879,10 +951,9 @@ function flat_bundle_form($node, $form_state)
 }
 
 /**
- * Implements hook_form.
+ * Implements hook_form().
  *
- *  flat_collection add/edit form
- *
+ *  Flat_collection add/edit form.
  */
 function flat_collection_form($node, $form_state)
 {
@@ -890,10 +961,9 @@ function flat_collection_form($node, $form_state)
 }
 
 /**
- * Implements hook_form_FORMID_alter.
+ * Implements hook_form_FORMID_alter().
  *
- * changes visibility and accessibility of certain node fields and adds collection-selection options based on users membership
- *
+ * Changes visibility and accessibility of certain node fields and adds collection-selection options based on users membership.
  */
 function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $form_id)
 {
@@ -906,7 +976,8 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
         $form['revision_information']['#access'] = false;
     }
 
-    $form['flat_parent_nid']['und']['#required'] = false; //remove after next install
+    // Remove after next install.
+    $form['flat_parent_nid']['und']['#required'] = false;
 
     $form['flat_policies']['und']['#description'] = t('Select which access policy should be applied to the files within this bundle. "Public" materials can be accessed by anyone without having to log in. "Authenticated Users" means any user with a valid account for the archive. "Academic Users" are users that log in with an academic account or whose academic status has been verified. "Private" means that the materials are only accessible to the depositor. Access policies can be refined later.');
 
@@ -920,7 +991,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
 
     global $user;
 
-    // Hide unwanted buttons and fields
+    // Hide unwanted buttons and fields.
     hide($form['flat_bundle_status']);
     hide($form['flat_exception']);
     hide($form['flat_create_cmdi']);
@@ -933,17 +1004,16 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
     hide($form['actions']['preview']);
 
     $form['flat_type']['und']['#disabled'] = true;
-    //$form['flat_type']['#weight'] = -2;
-
-    // prevent deletion of a node to run through validation
-    $form['actions']['delete']['#limit_validation_errors'] = array();
+    // $form['flat_type']['#weight'] = -2;
 
     // Conditionally hide cmdi file field.
     $form['flat_cmdi_file']['und'][0]['#states'] = array(
         'visible' => array(
             array(
-                array(':input[name="flat_cmdi_option[und]"]' => array('value' => 'import'),
-                    ':input[name="flat_type[und]"]' => array('value' => 'new')),
+                array(
+                    ':input[name="flat_cmdi_option[und]"]' => array('value' => 'import'),
+                    ':input[name="flat_type[und]"]' => array('value' => 'new'),
+                ),
                 'or',
                 array(':input[name="flat_cmdi_option[und]"]' => array('value' => 'template')),
             ),
@@ -984,7 +1054,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
         }
     }
 
-    // Adapt parent node related fields
+    // Adapt parent node related fields.
     $args = $form_state['build_info']['args'];
     $form['flat_parent_title']['und']['#disabled'] = true;
     $form['flat_parent_nid']['und']['#empty_value'] = 0;
@@ -997,7 +1067,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
 
     }
 
-    // Form alterations depending on node status
+    // Form alterations depending on node status.
     $node = $form_state['node'];
     if (!isset($node->nid) || isset($node->is_new)) {
         $new_node = true;
@@ -1030,13 +1100,12 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
 
                 drupal_set_title(t('Add Bundle'));
 
-                // Assign value to flat_original_path field
+                // Assign value to flat_original_path field.
                 $form['flat_original_path']['und'][0]['value']['#default_value'] = 'external://USER/COLLECTION/BUNDLE';
 
                 // Create selection of collections.
                 // This is dependent from extra parameters. In case the name of a collection is provided only that specific collection can be used
-                // Otherwise options are queried based on collection membership
-
+                // Otherwise options are queried based on collection membership.
                 if (isset($args[1])) {
 
                     $form['flat_parent_nid']['und']['#default_value'][] = (string) $args[1]['parent_nid'];
@@ -1047,7 +1116,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
 
                 /*
                  */
-                // custom validation and submission
+                // custom validation and submission.
                 $form['#validate'][] = 'flat_bundle_node_form_add_validate';
                 $form['#validate'][] = 'flat_bundle_node_form_add_import_validate';
                 $form['#submit'][] = 'flat_bundle_node_form_add_submit';
@@ -1055,7 +1124,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
                 break;
             }
 
-        // for existing bundles:
+        // For existing bundles:
         case 'edit':{
 
                 if ($update) {
@@ -1065,20 +1134,20 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
                 }
                 $node_wrapper = entity_metadata_wrapper('node', $node);
 
-                // prevent altering bundle name (title), policy
+                // Prevent altering bundle name (title), policy.
                 $form['title']['#disabled'] = true;
-                #$form['flat_policies']['und']['#disabled'] = TRUE;
+                // $form['flat_policies']['und']['#disabled'] = TRUE;.
                 $form['flat_cmdi_option']['und']['#disabled'] = true;
                 $form['flat_source']['und']['#disabled'] = true;
 
-                // hide cmdi file field
+                // Hide cmdi file field.
                 $status = $node_wrapper->flat_bundle_status->value();
                 if ($status != 'open' and $status != 'failed') {
                     hide($form['flat_cmdi_file']);
                     $form['flat_parent_nid']['und']['#disabled'] = true;
                 }
 
-                // set default_value of parent_nid and parent_title
+                // Set default_value of parent_nid and parent_title.
                 $parent_nid = $node_wrapper->flat_parent_nid->value();
                 $form['flat_parent_nid']['und']['#default_value'][] = $parent_nid;
 
@@ -1088,54 +1157,71 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
                 $form['#validate'][] = 'flat_bundle_node_form_edit_validate';
                 $form['#submit'][] = 'flat_bundle_node_form_edit_submit';
 
-                break;}
-        // for updated bundles:
+                break;
+            }
+        // For updated bundles:
         case 'update':{
 
-                // Assign value to flat_original_path field
+                // Assign value to flat_original_path field.
                 $form['flat_original_path']['und'][0]['value']['#default_value'] = 'external://USER/COLLECTION/BUNDLE';
 
-                // set default_value of parent_nid and parent_title
+                // Set default_value of parent_nid and parent_title.
                 $form['flat_cmdi_option']['und']['#default_value'][] = 'import';
-                if (isset($args[1]['node_title'])) {$form['title']['#default_value'] = (string) $args[1]['node_title'];}
-                if (isset($args[1]['parent_nid'])) {$form['flat_parent_nid']['und']['#default_value'][] = (string) $args[1]['parent_nid'];}
-                if (isset($args[1]['flat_parent_title'])) {$form['flat_parent_title']['und'][0]['value']['#default_value'] = (string) $args[1]['parent_title'];}
-                if (isset($args[1]['fid_bundle'])) {$form['flat_fid']['und'][0]['value']['#default_value'] = (string) $args[1]['fid_bundle']->id;}
+                if (isset($args[1]['node_title'])) {
+                    $form['title']['#default_value'] = (string) $args[1]['node_title'];
+                }
+                if (isset($args[1]['parent_nid'])) {
+                    $form['flat_parent_nid']['und']['#default_value'][] = (string) $args[1]['parent_nid'];
+                }
+                if (isset($args[1]['flat_parent_title'])) {
+                    $form['flat_parent_title']['und'][0]['value']['#default_value'] = (string) $args[1]['parent_title'];
+                }
+                if (isset($args[1]['fid_bundle'])) {
+                    $form['flat_fid']['und'][0]['value']['#default_value'] = (string) $args[1]['fid_bundle']->id;
+                }
 
                 $form['title']['#disabled'] = true;
                 $form['flat_parent_nid']['und']['#disabled'] = true;
                 $form['flat_cmdi_option']['und']['#disabled'] = true;
 
-                // Attach fedora object to validation
+                // Attach fedora object to validation.
                 $form['bundleInFedora'] = array(
                     '#type' => 'value',
                     '#value' => $args[1]['fid_bundle'],
                 );
 
-                $form['#validate'][] = 'flat_bundle_node_form_add_validate'; # use same validation as add bundle and add some extra validation
+                // Use same validation as add bundle and add some extra validation.
+                $form['#validate'][] = 'flat_bundle_node_form_add_validate';
                 $form['#validate'][] = 'flat_bundle_node_form_update_validate';
-                $form['#submit'][] = 'flat_bundle_node_form_add_submit'; # use same submission handler as add bundle and add some extra handling
+                // Use same submission handler as add bundle and add some extra handling.
+                $form['#submit'][] = 'flat_bundle_node_form_add_submit';
                 $form['#submit'][] = 'flat_bundle_node_form_update_submit';
                 break;
             }
     }
 }
 
+/**
+ *
+ */
 function flat_bundle_node_form_add_import_validate($form, &$form_state)
 {
+
+    // Prevent deletion of a node to run through validation.
+    $form['actions']['delete']['#limit_validation_errors'] = array();
 
     $file_id = $form_state['values']['flat_cmdi_file']['und'][0]['fid'];
     if (isset($file_id) and $file_id != 0) {
 
         $file = file_load($file_id);
 
-        // Validate valid xml file
+        // Validate valid xml file.
         if (!@simplexml_load_file($file->uri)) {
             form_set_error('cmdi_file', 'File is not a valid xml file');
             return $form;
         }
 
-        //Validate kind of cmdi
+        // Validate kind of cmdi.
         module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
         $cmdi = CmdiHandler::simplexml_load_cmdi_file($file->uri);
 
@@ -1152,14 +1238,18 @@ function flat_bundle_node_form_add_import_validate($form, &$form_state)
 }
 
 /**
- * Flat_bundle creation validation
+ * Flat_bundle creation validation.
  */
 function flat_bundle_node_form_add_validate($form, &$form_state)
 {
+
+    // Prevent deletion of a node to run through validation.
+    $form['actions']['delete']['#limit_validation_errors'] = array();
+
     $source = $form_state['values']['flat_source']['und'][0]['value'];
     $bundle_name = $form_state['values']['title'];
 
-    // Get collection name of this bundle by loading the collection node using the value 'parent_nid'
+    // Get collection name of this bundle by loading the collection node using the value 'parent_nid'.
     $collection_nid = (string) $form_state['values']['flat_parent_nid']['und'][0]['value'];
 
     if ((integer) $collection_nid != 0) {
@@ -1174,7 +1264,7 @@ function flat_bundle_node_form_add_validate($form, &$form_state)
     $is_update = $form_state['values']['flat_type']['und'][0]['value'] == "update" ? true : false;
 
     if ($collection != 'unassigned' and !$is_update) {
-        // Validate that no other bundle or collection at same location exists
+        // Validate that no other bundle or collection at same location exists.
         $collection_node = node_load($collection_nid);
         $wrapper = entity_metadata_wrapper('node', $collection_node);
 
@@ -1192,7 +1282,7 @@ function flat_bundle_node_form_add_validate($form, &$form_state)
 
     }
 
-    // Assign value to flat_original_path field
+    // Assign value to flat_original_path field.
     if ($form_state['values']['flat_source']['und'][0]['value'] == 'external') {
 
         global $user;
@@ -1204,7 +1294,7 @@ function flat_bundle_node_form_add_validate($form, &$form_state)
 
     $original_path = $form_state['values']['flat_original_path']['und'][0]['value'];
 
-    //Check that bundle name within collection is distinctive from existing bundles, otherwise we get problems with creating new folders.
+    // Check that bundle name within collection is distinctive from existing bundles, otherwise we get problems with creating new folders.
     $user_id = $GLOBALS['user']->uid;
 
     module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
@@ -1214,19 +1304,18 @@ function flat_bundle_node_form_add_validate($form, &$form_state)
         form_set_error('title', t('Bundle with same or very similar bundle name exists'));
     }
 
-    // Validate that currently selected folder has no subfolders
+    // Validate that currently selected folder has no subfolders.
     $dirs = array_filter(glob($original_path . '/*'), 'is_dir');
     if (file_exists(drupal_realpath($original_path)) and !empty(glob(drupal_realpath($original_path) . '/*', GLOB_ONLYDIR))) {
         form_set_error('department', 'Chosen directory contains subfolders');
         return $form;
     }
 
-    // Validate that no other bundle is using same folder
+    // Validate that no other bundle is using same folder.
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', 'node')
         ->entityCondition('bundle', 'flat_bundle')
-        ->fieldCondition('flat_original_path', 'value', $original_path, '=')
-    ;
+        ->fieldCondition('flat_original_path', 'value', $original_path, '=');
 
     $results = $query->execute();
     if (empty(!$results)) {
@@ -1241,7 +1330,7 @@ function flat_bundle_node_form_add_validate($form, &$form_state)
 }
 
 /**
- * Submission handler for newly created bundles
+ * Submission handler for newly created bundles.
  */
 function flat_bundle_node_form_add_submit($form, &$form_state)
 {
@@ -1249,15 +1338,15 @@ function flat_bundle_node_form_add_submit($form, &$form_state)
     $bundle = $form_state['values']['title'];
     $collection = $form_state['values']['flat_parent_title']['und'][0]['value'];
 
-    // initiate user directories if necessary
+    // Initiate user directories if necessary.
     module_load_include('inc', 'imce', 'inc/imce.page');
     global $user;
     imce_initiate_profile($user, 'external');
 
-    // Determine directories for metadata and resources
+    // Determine directories for metadata and resources.
     $meta_dir = 'metadata://' . str_replace('@', '_at_', $user->name) . "/$collection/$bundle";
 
-    // Set resources location depending on defined source
+    // Set resources location depending on defined source.
     $source = $form_state['values']['flat_source']['und'][0]['value'];
     if (in_array($source, array('local', 'cloud'))) {
 
@@ -1269,7 +1358,7 @@ function flat_bundle_node_form_add_submit($form, &$form_state)
 
     }
 
-    // Create bundle data and metadata directories
+    // Create bundle data and metadata directories.
     if (!file_exists($resource_dir)) {
         drupal_mkdir($resource_dir, null, true);
     }
@@ -1278,12 +1367,11 @@ function flat_bundle_node_form_add_submit($form, &$form_state)
         drupal_mkdir($meta_dir, null, true);
     }
 
-    // Add resource_directory to node
+    // Add resource_directory to node.
     $form_state['values']['flat_location']['und'][0]['value'] = $resource_dir;
 
-    // Adapt Is part of collection info
-
-    // Change naming of uploaded file
+    // Adapt Is part of collection info.
+    // Change naming of uploaded file.
     $mDataName = 'record.cmdi';
     $file_id = $form_state['values']['flat_cmdi_file']['und'][0]['fid'];
     if (isset($file_id) and $file_id != 0) {
@@ -1301,25 +1389,32 @@ function flat_bundle_node_form_add_submit($form, &$form_state)
 
 }
 
+/**
+ *
+ */
 function flat_bundle_node_form_update_validate($form, &$form_state)
 {
 
-    //Todo add extra validation
+    // Prevent deletion of a node to run through validation.
+    $form['actions']['delete']['#limit_validation_errors'] = array();
 
+    // Todo add extra validation.
 }
 
-// Adds cmdi from existing fedora object datastream to flat_cmdi_file
+/**
+ * Adds cmdi from existing fedora object datastream to flat_cmdi_file.
+ */
 function flat_bundle_node_form_update_submit($form, &$form_state)
 {
 
-    // Determine target directory for metadata
+    // Determine target directory for metadata.
     $bundle = $form_state['values']['title'];
     $collection = $form_state['values']['flat_parent_title']['und'][0]['value'];
     global $user;
 
     $meta_dir = 'metadata://' . str_replace('@', '_at_', $user->name) . "/$collection/$bundle";
 
-    // create cmdi file from datastream in user metadata directory
+    // Create cmdi file from datastream in user metadata directory.
     $fObj = $form['bundleInFedora']['#value'];
     $ds = $fObj['CMD'];
 
@@ -1331,7 +1426,7 @@ function flat_bundle_node_form_update_submit($form, &$form_state)
 
     }
 
-    // create managed file entry in drupal database
+    // Create managed file entry in drupal database.
     $new_file = file_save((object) array(
         'filename' => 'record.cmdi',
         'uri' => $fName,
@@ -1351,7 +1446,7 @@ function flat_bundle_node_form_update_submit($form, &$form_state)
             array('!fname' => $fName, 'uri' => $new_file->uri)), 'warning');
     }
 
-    // attach managed file to bundle
+    // Attach managed file to bundle.
     $form_state['values']['flat_cmdi_file']['und'][] = array(
         'fid' => $new_file->fid,
         'display' => "1",
@@ -1365,13 +1460,18 @@ function flat_bundle_node_form_update_submit($form, &$form_state)
 }
 
 /**
- * Validation of flat_bundle node edits. At the moment this is only assigning a bundle to a different collection
+ * Validation of flat_bundle node edits. At the moment this is only assigning a bundle to a different collection.
+ *
  * @param $form
  * @param $form_state
+ *
  * @return mixed
  */
 function flat_bundle_node_form_edit_validate($form, &$form_state)
 {
+
+    // Prevent deletion of a node to run through validation.
+    $form['actions']['delete']['#limit_validation_errors'] = array();
 
     $node = $form['#node'];
     $wrapper = entity_metadata_wrapper('node', $node);
@@ -1383,12 +1483,12 @@ function flat_bundle_node_form_edit_validate($form, &$form_state)
 
     $collection_node = get_collection_node($new_collection_nid);
 
-    // Set parent nid value of this bundle to the name of the new collection
+    // Set parent nid value of this bundle to the name of the new collection.
     $form_state['values']['flat_parent_title']['und'][0]['value'] = $collection_node->title;
 
     $collection_has_changed = $original_collection_nid != $new_collection_nid;
 
-    // Validate that no record.cmdi exists with metadata related to a collection and then, the collection changes
+    // Validate that no record.cmdi exists with metadata related to a collection and then, the collection changes.
     $cmdi_option = $wrapper->flat_cmdi_option->value();
     $cmdi_file = $wrapper->flat_cmdi_file->value();
     if ($cmdi_option == 'new' and !is_null($cmdi_file) and $collection_has_changed) {
@@ -1398,7 +1498,7 @@ function flat_bundle_node_form_edit_validate($form, &$form_state)
 
     }
 
-    //Check that bundle name within collection is distinctive from existing bundles, otherwise we get problems with creating new folders.
+    // Check that bundle name within collection is distinctive from existing bundles, otherwise we get problems with creating new folders.
     $user_id = $node->uid;
     module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
     $unique = FlatBundle::checkUniquenessNaming($user_id, $collection_node->title, $wrapper->title);
@@ -1416,15 +1516,21 @@ function flat_bundle_node_form_edit_validate($form, &$form_state)
 
 }
 
+/**
+ *
+ */
 function flat_bundle_node_form_edit_submit($form, &$form_state)
 {
 
 }
 
+/**
+ *
+ */
 function get_collection_node($nid)
 {
     // If parent nid has changed
-    // get name of collection
+    // get name of collection.
     if ((integer) $nid == 0) {
         $collection_node = new stdClass();
         $collection_node->title = 'unassigned';
@@ -1435,14 +1541,20 @@ function get_collection_node($nid)
 
     return $collection_node;
 }
+
 /**
  * Flat_bundle node validator called every time a flat_bundle node is created or edited (also AJAX!!)
+ *
  * @param $node
  * @param $form
  * @param $form_state
  */
 function flat_bundle_validate($node, $form, &$form_state)
 {
+
+    // Prevent deletion of a node to run through validation.
+    $form['actions']['delete']['#limit_validation_errors'] = array();
+
     $node_wrapper = entity_metadata_wrapper('node', $node);
     $source = $node_wrapper->flat_source->value();
     $original_path = $node_wrapper->flat_original_path->value();
@@ -1503,9 +1615,8 @@ function flat_collection_view($node, $view_mode)
             ),
         );
 
-        #flat_fid
-
-        // Add form to node
+        // flat_fid.
+        // Add form to node.
         module_load_include('inc', 'flat_deposit', '/inc/flat_collection.bundle_actions');
         $extra_form = drupal_get_form('flat_collection_bundle_action_form', $node);
         $node->content['extra_form'] = $extra_form;
@@ -1524,11 +1635,9 @@ function flat_bundle_view($node, $view_mode)
 
     $wrapper = entity_metadata_wrapper('node', $node);
     $file = $wrapper->flat_cmdi_file->value();
-    #if (!file_exists($meta_dir)) drupal_mkdir($meta_dir, NULL, TRUE);
-
+    // If (!file_exists($meta_dir)) drupal_mkdir($meta_dir, NULL, TRUE);.
     if ($view_mode == 'full' && node_is_page($node)) {
         // Breadcrumb navigation.  l() escapes title, so we should not escape !name.
-
         drupal_set_breadcrumb(array(
             l(t('Home'), null),
             l(t('My Dashboard'), 'dashboard'),
@@ -1545,20 +1654,18 @@ function flat_bundle_view($node, $view_mode)
 }
 
 /**
- *
  * Implements hook_node_view()
- *
  *
  * Act on a node being viewed.
  *
  * @param $node
- * The node that is being view.
+ *   The node that is being view.
  *
  * @param $view_mode
- * The view mode of node.
+ *   The view mode of node.
  *
  * @param $langcode
- * The language of node.
+ *   The language of node.
  *
  * @ingroup node_api_hooks
  */
@@ -1584,19 +1691,18 @@ function flat_deposit_node_view($node, $view_mode, $langcode)
         unset($node->content['flat_external']);
         unset($node->content['flat_location']);
 
-        //if (isset($node->content['flat_fid'])){
+        // If (isset($node->content['flat_fid'])){
         //    $node->content['flat_fid']['#title'] = 'Link to archived bundle ';
         //    $node->content['flat_fid'][0]['#markup'] = l('link archive' , 'islandora/object/' . rawurlencode($node->content['flat_fid'][0]['#markup'])) ;
-        //} else {
-
+        // } else {.
         unset($node->content['flat_fid']);
 
-        //}
+        // }.
         unset($node->content['flat_type']);
     }
 
     if ($node->type == 'blog' and $view_mode == 'full' and node_is_page($node)) {
-        // modify breadcrumb for blog nodes (reports)
+        // Modify breadcrumb for blog nodes (reports)
         global $user;
         drupal_set_breadcrumb(array(
             l(t('Home'), null),
@@ -1604,7 +1710,7 @@ function flat_deposit_node_view($node, $view_mode, $langcode)
         ));
     }
 
-/*
+    /*
 $node->content['link_dashboard']['#title'] = 'Return to dashboard';
 $node->content['link_dashboard']['#markup'] = l('Shortcut to dashboard' , 'dashboard') ;
  */
@@ -1615,7 +1721,6 @@ $node->content['link_dashboard']['#markup'] = l('Shortcut to dashboard' , 'dashb
  * Implements hook_node_view_alter().
  *
  * Remove "user's blog" link from blog posts (reports)
- *
  */
 function flat_deposit_node_view_alter(&$build)
 {
@@ -1625,8 +1730,7 @@ function flat_deposit_node_view_alter(&$build)
 /**
  * Implements hook_preprocess_node().
  *
- * Remove "submitted by" from any node
- *
+ * Remove "submitted by" from any node.
  */
 function flat_deposit_preprocess_node(&$variables)
 {
@@ -1639,8 +1743,7 @@ function flat_deposit_preprocess_node(&$variables)
 /**
  * Implements hook_preprocess_page().
  *
- * Modify bundle title in page view depending on whether it is new or an update
- *
+ * Modify bundle title in page view depending on whether it is new or an update.
  */
 function flat_deposit_preprocess_page(&$variables)
 {
@@ -1672,13 +1775,13 @@ function flat_bundle_delete($node)
 
     $tail = str_replace('@', '_at_', $user->name) . "/$collection/$bundle";
 
-    //$bundle_resources_directory = drupal_realpath('external://') . "/$tail";
+    // $bundle_resources_directory = drupal_realpath('external://') . "/$tail";.
     $bundle_metadata_directory = drupal_realpath('metadata://') . "/$tail";
 
-    //$bundle_resources_freeze_directory = drupal_realpath('freeze://data') . "/$tail";
+    // $bundle_resources_freeze_directory = drupal_realpath('freeze://data') . "/$tail";.
     $bundle_metadata_freeze_directory = drupal_realpath('freeze://metadata') . "/$tail";
 
-    //$dirs = [$bundle_resources_directory, $bundle_metadata_directory, $bundle_resources_freeze_directory, $bundle_metadata_freeze_directory];
+    // $dirs = [$bundle_resources_directory, $bundle_metadata_directory, $bundle_resources_freeze_directory, $bundle_metadata_freeze_directory];.
     $dirs = [$bundle_metadata_directory, $bundle_metadata_freeze_directory];
 
     module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
@@ -1696,8 +1799,7 @@ function flat_bundle_delete($node)
 /**
  * Implements hook_form_alter().
  *
- * prevent deletion of flat_collection in case there are active flat_bundle children
- *
+ * Prevent deletion of flat_collection in case there are active flat_bundle children.
  */
 function flat_deposit_form_alter(&$form, &$form_state, $form_id)
 {
@@ -1727,9 +1829,7 @@ function flat_deposit_form_alter(&$form, &$form_state, $form_id)
 }
 
 /**
- *
- * custom form submit handler for flat_bundle in order to get rid of "node created" messages
- *
+ * Custom form submit handler for flat_bundle in order to get rid of "node created" messages.
  */
 function flat_deposit_flat_bundle_node_form_submit($form, &$form_state)
 {
@@ -1748,7 +1848,7 @@ function flat_deposit_flat_bundle_node_form_submit($form, &$form_state)
     );
     if ($insert) {
         watchdog('content', '@type: added %title.', $watchdog_args, WATCHDOG_NOTICE, $node_link);
-        //drupal_set_message(t('@type %title has been created.', $t_args));
+        // drupal_set_message(t('@type %title has been created.', $t_args));.
     } else {
         watchdog('content', '@type: updated %title.', $watchdog_args, WATCHDOG_NOTICE, $node_link);
         drupal_set_message(t('Properties of bundle %title have been updated.', $t_args));
@@ -1849,11 +1949,13 @@ function flat_deposit_block_view($delta = '')
 
             $file_found = [];
             if (file_exists($location)) {
-                // we ignore hidden files (starting with a dot). These will not be added to the bundle later on either.
+                // We ignore hidden files (starting with a dot). These will not be added to the bundle later on either.
                 $file_found = array_diff(preg_grep('/^([^.])/', scandir($location)), array('..', '.'));
             }
 
-            if (empty($file_found)) {$file_found[] = 'Folder does not contain any (accessible) files';}
+            if (empty($file_found)) {
+                $file_found[] = 'Folder does not contain any (accessible) files';
+            }
 
             $rows = array();
 
@@ -1876,13 +1978,13 @@ function flat_deposit_block_view($delta = '')
 
             $node = menu_get_object();
 
-            // hide blocks for function calls that are not related to nodes
+            // Hide blocks for function calls that are not related to nodes.
             if (!$node) {
                 $block['content'] = [];
                 break;
             }
 
-            // hide blocks for nodes without flat_fid or flat_cmdi_file field
+            // Hide blocks for nodes without flat_fid or flat_cmdi_file field.
             $node_wrapper = entity_metadata_wrapper('node', $node);
 
             if (!isset($node_wrapper->flat_fid) or !isset($node_wrapper->flat_cmdi_file)) {
@@ -1890,7 +1992,7 @@ function flat_deposit_block_view($delta = '')
                 break;
             }
 
-            // hide blocks for nodes without assigned fedora ID or without cmdi file
+            // Hide blocks for nodes without assigned fedora ID or without cmdi file.
             $fedora_id = $node_wrapper->flat_fid->value();
             $file = $node_wrapper->flat_cmdi_file->value();
             $fName = $file['uri'];
@@ -1917,6 +2019,9 @@ function flat_deposit_block_view($delta = '')
 
 }
 
+/**
+ *
+ */
 function flat_deposit_menu_access($op, $object)
 {
 
@@ -1983,11 +2088,9 @@ function flat_deposit_menu_access($op, $object)
             case 'update bundle menu':
             case 'update bundle metadata menu':
 
-                //Bundles should in principle have compoundCModel and not collectioCModel, however empty imported bundles do not seem to have compoundCModel...
-                //$has_compoundCModel = !empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:compoundCModel'));
-
-                // check that archived bundle has no active bundle node (i.e. is being updated)
-
+                // Bundles should in principle have compoundCModel and not collectioCModel, however empty imported bundles do not seem to have compoundCModel...
+                // $has_compoundCModel = !empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:compoundCModel'));
+                // Check that archived bundle has no active bundle node (i.e. is being updated)
                 $query = new EntityFieldQuery();
                 $query->entityCondition('entity_type', 'node')
                     ->entityCondition('bundle', 'flat_bundle')
@@ -2029,10 +2132,9 @@ $rendered["Default output"]['#markup'] .= drupal_render($output);
  */
 
 /**
- * Implements hook_cmodel_pid_view_object_alter
+ * Implements hook_cmodel_pid_view_object_alter.
  *
  * Adding rendered cmdi metadata to view of object with cmdi model. Only for bundles!!!
- *
  */
 function flat_deposit_islandora_sp_cmdiCModel_islandora_view_object_alter(&$object, &$rendered)
 {
@@ -2042,18 +2144,20 @@ function flat_deposit_islandora_sp_cmdiCModel_islandora_view_object_alter(&$obje
         '#islandora_object' => $object,
     );
 
-    #krumo($object);
-    #krumo($rendered);
-
+    // krumo($object);
+    // krumo($rendered);
     if (isset($rendered["Default output"]['#markup'])) {
         $rendered["Default output"]['#markup'] .= drupal_render($markup);
     }
 }
 
+/**
+ *
+ */
 function flat_deposit_update($fedora_object)
 {
 
-    // check that archived bundle has no active bundle node (i.e. is being updated)
+    // Check that archived bundle has no active bundle node (i.e. is being updated)
     $fid = $fedora_object;
 
     global $user;
@@ -2077,10 +2181,9 @@ function flat_deposit_update($fedora_object)
 }
 
 /**
- * Implements hook_cmodel_pid_view_object_alter
+ * Implements hook_cmodel_pid_view_object_alter.
  *
- * Adding rendered cmdi metadata to view of object with collection model. Thus only for collections
- *
+ * Adding rendered cmdi metadata to view of object with collection model. Thus only for collections.
  */
 function flat_deposit_islandora_collectionCModel_islandora_view_object_alter(&$object, &$rendered)
 {
@@ -2102,14 +2205,13 @@ function flat_deposit_islandora_collectionCModel_islandora_view_object_alter(&$o
 }
 
 /**
- * Implements hook_admin_paths_alter
+ * Implements hook_admin_paths_alter.
  *
- * Preventing node edit to use the admin overlay
- *
+ * Preventing node edit to use the admin overlay.
  */
 function flat_deposit_admin_paths_alter(&$paths)
 {
-    //return FALSE to the path where you don't want to show in OVERLAY
+    // Return FALSE to the path where you don't want to show in OVERLAY.
     $paths['node/*/edit'] = false;
     $paths['node/*/delete'] = false;
 }
@@ -2117,8 +2219,7 @@ function flat_deposit_admin_paths_alter(&$paths)
 /**
  * Implements hook_node_access().
  *
- * Restrict access to FLAT node types and blog (reports) to node owner and manager users
- *
+ * Restrict access to FLAT node types and blog (reports) to node owner and manager users.
  */
 function flat_deposit_node_access($node, $op, $account)
 {
@@ -2131,10 +2232,10 @@ function flat_deposit_node_access($node, $op, $account)
     }
     if ($op == 'view' && (in_array($type, $types)) && $node->status) {
         if (($account->uid == $node->uid) || (in_array('manager', $account->roles))) {
-            // Grant access to user
+            // Grant access to user.
             return NODE_ACCESS_ALLOW;
         } else {
-            // Deny access to user
+            // Deny access to user.
             return NODE_ACCESS_DENY;
         }
     }
@@ -2144,8 +2245,7 @@ function flat_deposit_node_access($node, $op, $account)
 /**
  * Implements hook_menu_alter().
  *
- * Get rid of blog listings
- *
+ * Get rid of blog listings.
  */
 function flat_deposit_menu_alter(&$items)
 {
@@ -2154,6 +2254,7 @@ function flat_deposit_menu_alter(&$items)
     unset($items['blog/%user/feed']);
     unset($items['blog/feed']);
 }
+
 /*
 /**
  * Implements hook_data_move_actions().

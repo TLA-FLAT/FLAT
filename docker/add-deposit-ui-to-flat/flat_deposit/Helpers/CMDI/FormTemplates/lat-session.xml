@@ -316,11 +316,18 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                     <item id="field_36" name="Id" type="Leaf" minOccurrence="1">
                         <title>Id</title>
                         <type>textfield</type>
-                        <description>Valid entries are: ISO639-3 language code (e.g. ISO639-3:nld) | Unknown | Unspecified</description>
+                        <description>Will be filled in automatically upon choosing a language
+                            name from the list of suggestions. Valid entries are: ISO639-3 language code (e.g. ISO639-3:nld) | Unknown | Unspecified</description>
+                        <data>
+                            <role>flat-lang-autocomplete-destination</role>
+                        </data>
                     </item>
                     <item id="field_37" name="Name" type="Leaf" minOccurrence="1">
                         <title>Name</title>
                         <type>textfield</type>
+                        <data>
+                            <role>flat-lang-autocomplete</role>
+                        </data>
                     </item>
                     <item id="field_38" name="Dominant" type="Leaf" minOccurrence="1">
                         <title>Dominant</title>
@@ -616,11 +623,18 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                         <item id="field_72" name="Id" type="Leaf" minOccurrence="1">
                             <title>Id</title>
                             <type>textfield</type>
-                            <description>Valid entries are: ISO639-3 language code (e.g. ISO639-3:nld) | Unknown | Unspecified</description>
+                            <description>Will be filled in automatically upon choosing a language
+                                name from the list of suggestions. Valid entries are: ISO639-3 language code (e.g. ISO639-3:nld) | Unknown | Unspecified</description>
+                            <data>
+                                <role>flat-lang-autocomplete-destination</role>
+                            </data>
                         </item>
                         <item id="field_73" name="Name" type="Leaf" minOccurrence="1">
                             <title>Name</title>
                             <type>textfield</type>
+                            <data>
+                                <role>flat-lang-autocomplete</role>
+                            </data>
                         </item>
                         <item id="field_74" name="MotherTongue" type="Leaf" minOccurrence="1">
                             <title>MotherTongue</title>
