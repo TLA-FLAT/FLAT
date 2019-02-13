@@ -45,8 +45,6 @@ class Doorkeeper
             $query = '';
         }
 
-        file_put_contents('/easylat/www/htdocs/log.txt', $query_params['to'] . "\n" . $query . "\n", FILE_APPEND);
-
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $config['url'] . $sipId . $query);
         curl_setopt($ch, CURLOPT_PORT, $config['port']);
