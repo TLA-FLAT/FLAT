@@ -1,7 +1,7 @@
 <?php
 /**
  * Module for using Nexcloud alongside FLAT for uploading data
- * 
+ *
  */
 
 /**
@@ -74,7 +74,7 @@ class NextcloudStreamWrapper extends DrupalPrivateStreamWrapper
  * Implements hook_permission().
  *
  * setting up permission to use the Nextcloud module
- * 
+ *
  */
 function flat_nextcloud_permission()
 {
@@ -165,7 +165,7 @@ function flat_nextcloud_node_view_alter($node, $view_mode)
 
 /**
  * Implements hook_node_form_alter
- * 
+ *
  * create form elements for selecting a nextcloud folder as the source of the files to be added to the bundle
  *
  */
@@ -175,7 +175,7 @@ function flat_nextcloud_form_flat_bundle_node_form_alter(&$form, &$form_state, $
     hide($form['flat_nc_path']);
     // also hide flat_ws_path, in case the workspaces module was installed but is not active
     if(isset($form['flat_ws_path'])) {
-        hide($form['flat_ws_path']); 
+        hide($form['flat_ws_path']);
     }
 
     $form['#validate'][] = 'flat_nextcloud_flat_bundle_node_form_validate';
@@ -189,7 +189,7 @@ function flat_nextcloud_form_flat_bundle_node_form_alter(&$form, &$form_state, $
 
     $form['nextcloud_navigation'] = Nextcloud::get_container();
 
-    // permission checks    
+    // permission checks
     global $user;
     $user_full = user_load($user->uid);
     $nextcloudActivated = variable_get('flat_nextcloud')['activated'];
@@ -266,7 +266,7 @@ function flat_nextcloud_form_flat_bundle_node_form_alter(&$form, &$form_state, $
         // alter value of the flat_nc_path field to current dir value
 
         $form['flat_nc_path']['und'][0]['value']['#value'] = $current;
-        
+
         // print result to screen
         $form['nextcloud_navigation']['field']['current_directory']['#markup'] = 'Currently selected folder: <strong><br/>' .
         str_replace('nextcloud://' . $nextcloudUid . '/files', '[Nextcloud]', $current . '</strong><br/><br/>');
@@ -322,6 +322,10 @@ function flat_nextcloud_flat_bundle_node_form_validate($form, &$form_state)
             $max_size_bytes = ($max_size * 1073741824);
             $allowed_extensions = explode(', ', variable_get('flat_deposit_ingest_service')['allowed_extensions']);
             $filename_pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+$/';
+            $max_path_length = 4000; // db entries can be 5000 chars but there seems to be some overhead
+            if (strlen($dir) > $max_path_length) {
+                form_set_error('next_directories', 'The path to reach the specified workspace folder is too long. Move the folder up in the hierearchy to reduce the total path length.');
+            }
             if (file_exists(drupal_realpath($dir)) AND !empty(glob(drupal_realpath($dir).'/*', GLOB_ONLYDIR))){
                 form_set_error('next_nc_directories', 'The selected Nextcloud folder contains subfolders.');
                 return $form;
@@ -346,7 +350,7 @@ function flat_nextcloud_flat_bundle_node_form_validate($form, &$form_state)
                 if (!in_array($extension, $allowed_extensions)) {
                     $invalid_file_extensions[] = $name;
                 }
-        
+
             }
             if (!empty($max_file_size_exceeded)) {
                 $max_file_size_exceeded_list = implode (", ", $max_file_size_exceeded);
@@ -440,11 +444,11 @@ function flat_nextcloud_data_move_actions($source_location, $target_location)
 
 /**
  * Implements hook_node_presave()
- * 
+ *
  * get value from flat_nc_path and set flat_original_path and flat_location to that value
- * 
+ *
  * note! also gets called during node delete and metadata save, hence the extra checks
- * 
+ *
  */
 function flat_nextcloud_node_presave($node) {
 

@@ -261,7 +261,7 @@ class Bundle extends SIP
                     $cmdi->cleanMdSelfLink();
                     break;
                 case 'import':
-                case 'template': 
+                case 'template':
                 case 'existing':
                     if ($flat_type !== 'update') {
                         $cmdi->removeMdSelfLink();
@@ -271,7 +271,7 @@ class Bundle extends SIP
                     }
                     break;
             }
-            
+
             $cmdi->addResources($md_type, $directory, $fid);
 
         } catch (CmdiHandlerException $exception){
@@ -308,6 +308,8 @@ class Bundle extends SIP
 
                 */
 
+        $this->createBlogEntry(TRUE);
+
         if ($this->test){
 
             $this->wrapper->flat_bundle_status->set('valid');
@@ -328,7 +330,6 @@ class Bundle extends SIP
 
         }
 
-        $this->createBlogEntry(TRUE);
 
         $this->logging('Stop finish');
 
@@ -352,13 +353,11 @@ class Bundle extends SIP
         $scheme = variable_get('flat_deposit_ingest_service')['host_scheme'];
         if (!$this->test AND $succeeded){
 
-
-
             $url_link = '/islandora/object/' . $this->fid ;
 
         } else {
 
-            $url_link = 'node/' . (string)$this->node->nid;
+            $url_link = '/node/' . (string)$this->node->nid;
 
         }
 
@@ -368,11 +367,8 @@ class Bundle extends SIP
         $bundle = $this->node->title;
         $collection = $this->wrapper->flat_parent_title->value();
 
-
-
         $summary = sprintf("<p>%s of %s %s</p>",$action, $bundle, $outcome);
-        $body = sprintf("<p>%s %s</p><p>%s of %s belonging to %s %s. Check bundle ". l(t('here'), $url_link, array('html' => TRUE, 'external' => FALSE, 'absolute' => TRUE, 'base_url' => $scheme . '://' . $host)) . '</p>',$bundle, $collection, $action, $bundle, $collection, $outcome);
-        $body = preg_replace(array('/lat_/') , array('lat%3A'), $body);
+        $body = sprintf("<p>%s %s</p><p>%s of %s belonging to %s %s. Check bundle ". l(t('here'), $url_link, array('html' => TRUE, 'external' => TRUE, 'absolute' => TRUE, 'base_url' => $scheme . '://' . $host)) . '</p>', $bundle, $collection, $action, $bundle, $collection, $outcome);
 
         if ($additonal_message){ $body .=  '</p>Exception message:</p>' . $additonal_message ;};
 

@@ -236,7 +236,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
             <type>fieldset</type>
             <title>Location</title>
             <container>Locations</container>
-            <item id="field_19" name="Continent" type="Leaf" minOccurrence="1">
+            <item id="field_19" name="Continent" type="Leaf" inherited="true" minOccurrence="1">
                 <title>Continent</title>
                 <type>dropdown</type>
                 <options>

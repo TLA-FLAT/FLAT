@@ -7,6 +7,8 @@ DEFAULT SETTINGS OF THE FLAT_DEPOSIT MODULE AND FUNCTIONS TO SET THESE
 function flat_deposit_set_general($updated_values=null)
 {
     $defaults =  array(
+        #fedora namespace for ingests
+        'namespace' => 'lat',
         #directory for uploading external data
         'external' => '/var/www/html/flat/sites/default/files/private/flat_deposit/data',
         #directory for storing metadata

@@ -55,6 +55,7 @@ class FormField
         $this->setFieldDefaultValue($formField);
         $this->setFieldRequired($formField);
         $this->setFieldDescription($formField);
+        $this->setFieldDataAttributes($formField);
         $this->formField = $formField;
     }
 
@@ -154,7 +155,7 @@ class FormField
             case 'container':
 
                  $type = 'container';
-                 
+
                 break;
 
             case 'textarea':
@@ -203,6 +204,22 @@ class FormField
     {
         if (isset($this->formTemplateNode->description)) {
             $formField['#description'] = (string)$this->formTemplateNode->description;
+        }
+
+    }
+
+    /**
+     * Set data attributes of form formFields
+     * @param $id
+     * @param $field
+     */
+    private function setFieldDataAttributes(&$formField)
+    {
+        if (isset($this->formTemplateNode->data)) {
+
+            foreach ($this->formTemplateNode->data->children() as $attribute => $value) {
+                $formField['#attributes']['data-' . $attribute] = (string)$value;
+            }
         }
 
     }
@@ -284,7 +301,7 @@ class FormField
                     $attributeKey = (string)$attribute->attributes()['name'];
 
                     $attributeDataNode = $existingCmdiNode->{$key}[$index];
-		    
+
                     $attributeButtonId = $buttonId . "_" . (int)$index;
 
                     $attributePressedButton = isset($pressedButtons[$index]) ? $pressedButtons[$index] : null;
@@ -316,7 +333,7 @@ class FormField
                 $attributeKey = (string)$attribute->attributes()['name'];
 
                 $attributeDataNode = $existingCmdiNode->{$key}[$index];
-        
+
                 $attributeButtonId = $buttonId . "_" . (int)$index;
 
                 $attributePressedButton = isset($pressedButtons[$index]) ? $pressedButtons[$index] : null;
