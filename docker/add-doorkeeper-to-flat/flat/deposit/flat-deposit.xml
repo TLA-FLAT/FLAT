@@ -3,7 +3,10 @@
     <config>
         <import class="nl.mpi.tla.flat.deposit.context.Environment" prefix="env-"/>
         <import class="nl.mpi.tla.flat.deposit.context.SystemProperties" prefix="sys-"/>
-        <property name="fedoraNamespace" value="{$env-FLAT_NAMESPACE}" uniq="true"/>
+        <property name="activeFedoraNamespace" value="{$env-FLAT_NAMESPACE}" uniq="true"/>
+        <property name="fedoraNamespace" value="comic"/>
+        <property name="fedoraNamespace" value="mpi"/>
+        <property name="fedoraNamespace" value="lat"/>
         <property name="fitsService" value="http://localhost:8080/fits/" uniq="true"/>
         <property name="home" value="/app/flat" uniq="true"/>
         <property name="base" value="{$home}/deposit" uniq="true"/>

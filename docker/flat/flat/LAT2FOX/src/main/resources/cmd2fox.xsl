@@ -38,11 +38,13 @@
 	
 	<xsl:param name="namespace" select="'lat'"/>
 	<xsl:variable name="ns" select="concat($namespace,':')"/>
+	<xsl:param name="namespaces" select="('lat')"/>
+	<xsl:variable name="nss" select="for $n in $ns return concat($n,':')"/>
 	
-	<xsl:variable name="namespaces">
+	<xsl:variable name="_NS">
 		<ns/>
 	</xsl:variable>
-	<xsl:variable name="NS" select="$namespaces/descendant-or-self::ns"/>
+	<xsl:variable name="NS" select="$_NS/descendant-or-self::ns"/>
 	
 	<xsl:param name="icon-base" select="'/app/flat/icons'"/>
 	
@@ -324,7 +326,7 @@
 										<xsl:message use-when="$debug">DBG: IsPartOf.islandora[<xsl:value-of select="."/>]</xsl:message>
 										<xsl:sequence select="replace(.,'#.*','')"/>
 									</xsl:when>
-									<xsl:when test="starts-with(.,$ns)">
+									<xsl:when test="replace(.,'^([a-z]+:).*','$1')=$nss">
 										<xsl:message use-when="$debug">DBG: IsPartOf.lat[<xsl:value-of select="."/>]</xsl:message>
 										<xsl:sequence select="replace(.,'#.*','')"/>
 									</xsl:when>
@@ -347,7 +349,7 @@
 						<xsl:when test="exists($collections)">
 							<xsl:for-each select="$collections/@pid">
 								<xsl:choose>
-									<xsl:when test="starts-with(current(),$ns)">
+									<xsl:when test="replace(current(),'^([a-z]+:).*','$1')=$nss">
 										<xsl:sequence select="current()"/>
 									</xsl:when>
 									<xsl:when test="starts-with(current(),'hdl:') or matches(current(),'http(s)?://hdl.handle.net/')">
@@ -722,6 +724,7 @@
 													<xsl:choose>
 														<xsl:when test="exists($compounds)">
 															<xsl:for-each select="$compounds">
+																<!-- NOTE: will only work if the compounds use the same namespace! -->
 																<fedora:isConstituentOf rdf:resource="info:fedora/{cmd:lat($ns,current())}"/>
 															</xsl:for-each>
 														</xsl:when>
@@ -917,7 +920,7 @@
 			<xsl:message use-when="$debug">DBG: - non metadata or landing page</xsl:message>
 			<xsl:apply-templates select="cmd:ResourceProxy[not(cmd:ResourceType = ('LandingPage','Metadata','SearchPage'))]" mode="#current"/>
 			<xsl:message use-when="$debug">DBG: - create landing page</xsl:message>
-			<cmd:ResourceProxy id="home-{replace($fid,$ns,'')}">
+			<cmd:ResourceProxy id="home-{replace($fid,'^[a-z]+:','')}">
 				<cmd:ResourceType mimetype="text/html">LandingPage</cmd:ResourceType>
 				<cmd:ResourceRef>
 					<xsl:value-of select="concat($repository,'/islandora/object/',encode-for-uri($fid),'#',if ($fid eq cmd:lat($ns, $pid)) then () else concat('?pid=',encode-for-uri($pid)))"/>
