@@ -13,12 +13,13 @@ RUN apt-get update &&\
 ADD fits /tmp/fits
 RUN ls /tmp/
 RUN cd /tmp/fits &&\
-    if [ ! -f fits-1.2.0.zip ]; then wget http://projects.iq.harvard.edu/files/fits/files/fits-1.2.0.zip; fi &&\
-    unzip fits-1.2.0.zip &&\
-    mv fits-1.2.0 /app/fits &&\
+    if [ ! -f fits-1.4.0.zip ]; then wget https://github.com/harvard-lts/fits/releases/download/1.4.0/fits-1.4.0.zip; fi &&\
+    unzip fits-1.4.0.zip &&\
+    mkdir -p /app/fits &&\
+    mv * /app/fits/ &&\
     mkdir /app/fits/log-lib &&\
-    mv /app/fits/lib/slf4j-log4j12-1.7.12.jar /app/fits/log-lib &&\
-    sed -i 's|APPCLASSPATH=""|APPCLASSPATH="${FITS_HOME}/log-lib/slf4j-log4j12-1.7.12.jar"|g' /app/fits/fits-env.sh &&\
+    mv /app/fits/lib/slf4j-log4j12-1.7.22.jar /app/fits/log-lib &&\
+    sed -i 's|APPCLASSPATH=""|APPCLASSPATH="${FITS_HOME}/log-lib/slf4j-log4j12-1.7.22.jar"|g' /app/fits/fits-env.sh &&\
     chmod +x /app/fits/*.sh &&\
     wget http://projects.iq.harvard.edu/files/fits/files/fits-1.1.3.war &&\
     cp fits-1.1.3.war /var/www/fedora/tomcat/webapps/fits.war &&\
@@ -44,7 +45,7 @@ RUN cd /tmp &&\
     mvn -DskipTests clean install
 
 RUN cd /tmp &&\
-    git clone -b 1.0.0 https://github.com/meertensinstituut/EPICify.git epicify &&\
+    git clone -b 1.0.1 https://github.com/meertensinstituut/EPICify.git epicify &&\
     cd /tmp/epicify &&\
     mvn clean install &&\
     cp cli/target/epicify.jar /app/flat/lib/
@@ -65,9 +66,11 @@ RUN cd /tmp/ServiceFLAT &&\
     cp /tmp/ServiceFLAT/logging.properties /var/www/fedora/tomcat/webapps/flat/WEB-INF/classes/logging.properties
     
 RUN if [ `grep 'environment=' /etc/supervisor/conf.d/supervisord-tomcat.conf` ]; \
-      then sed -i 's|^environment=\(.*\)$|environment=\1,FLAT_ICON_DIR="'$FLAT_ICON_DIR'"|g' /etc/supervisor/conf.d/supervisord-tomcat.conf; \
-      else echo '' >> /etc/supervisor/conf.d/supervisord-tomcat.conf; echo 'environment=FLAT_ICON_DIR="'$FLAT_ICON_DIR'"' >> /etc/supervisor/conf.d/supervisord-tomcat.conf; \
-    fi
+      then sed -i 's|^environment=\(.*\)$|environment=\1,FLAT_ICON_DIR=%(ENV_FLAT_ICON_DIR)s,FLAT_NAMESPACE=%(ENV_FLAT_NAMESPACE)s|g' /etc/supervisor/conf.d/supervisord-tomcat.conf; \
+      else echo '' >> /etc/supervisor/conf.d/supervisord-tomcat.conf; echo 'environment=FLAT_ICON_DIR=%(ENV_FLAT_ICON_DIR)s,FLAT_NAMESPACE=%(ENV_FLAT_NAMESPACE)s' >> /etc/supervisor/conf.d/supervisord-tomcat.conf; \
+    fi &&\
+    echo "export FLAT_ICON_DIR=$FLAT_ICON_DIR" >> /etc/environment &&\
+    echo "export FLAT_NAMESPACE=$FLAT_NAMESPACE" >> /etc/environment
 
 # Add proxy to Apache
 

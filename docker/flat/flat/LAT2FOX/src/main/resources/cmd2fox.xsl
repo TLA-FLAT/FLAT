@@ -36,10 +36,15 @@
 	
 	<xsl:param name="owner" select="'admin'"/>
 	
-	<xsl:variable name="namespaces">
+	<xsl:param name="namespace" select="'lat'"/>
+	<xsl:variable name="ns" select="concat($namespace,':')"/>
+	<xsl:param name="namespaces" select="('lat')"/>
+	<xsl:variable name="nss" select="for $n in $ns return concat($n,':')"/>
+	
+	<xsl:variable name="_NS">
 		<ns/>
 	</xsl:variable>
-	<xsl:variable name="NS" select="$namespaces/descendant-or-self::ns"/>
+	<xsl:variable name="NS" select="$_NS/descendant-or-self::ns"/>
 	
 	<xsl:param name="icon-base" select="'/app/flat/icons'"/>
 	
@@ -264,7 +269,7 @@
 					<xsl:sequence select="replace(normalize-space($rec/cmd:CMD/cmd:Header/cmd:MdSelfLink/@lat:flatURI),'#.*','')"/>
 				</xsl:when>
 				<xsl:otherwise>
-					<xsl:sequence select="cmd:lat('lat:', $pid)"/>
+					<xsl:sequence select="cmd:lat($ns, $pid)"/>
 				</xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
@@ -305,7 +310,7 @@
 				<xsl:when test="exists($rels)">
 					<xsl:message use-when="$debug">DBG: relations.xml[<xsl:value-of select="string-join($rels,',')"/>]</xsl:message>
 					<xsl:for-each select="$rels">
-						<xsl:sequence select="cmd:lat('lat:',cmd:pid(current(),'WRN',current()))"/>
+						<xsl:sequence select="cmd:lat($ns,cmd:pid(current(),'WRN',current()))"/>
 					</xsl:for-each>
 				</xsl:when>
 				<xsl:when test="exists($rec/cmd:CMD/cmd:Resources/cmd:IsPartOfList/cmd:IsPartOf)">
@@ -321,16 +326,16 @@
 										<xsl:message use-when="$debug">DBG: IsPartOf.islandora[<xsl:value-of select="."/>]</xsl:message>
 										<xsl:sequence select="replace(.,'#.*','')"/>
 									</xsl:when>
-									<xsl:when test="starts-with(.,'lat:')">
+									<xsl:when test="replace(.,'^([a-z]+:).*','$1')=$nss">
 										<xsl:message use-when="$debug">DBG: IsPartOf.lat[<xsl:value-of select="."/>]</xsl:message>
 										<xsl:sequence select="replace(.,'#.*','')"/>
 									</xsl:when>
 									<xsl:when test="starts-with(.,'hdl:') or matches(.,'http(s)?://hdl.handle.net/')">
-										<xsl:message use-when="$debug">DBG: IsPartOf.hdl[<xsl:value-of select="cmd:lat('lat:',cmd:hdl(.))"/>]</xsl:message>
-										<xsl:sequence select="cmd:lat('lat:',cmd:hdl(.))"/>
+										<xsl:message use-when="$debug">DBG: IsPartOf.hdl[<xsl:value-of select="cmd:lat($ns,cmd:hdl(.))"/>]</xsl:message>
+										<xsl:sequence select="cmd:lat($ns,cmd:hdl(.))"/>
 									</xsl:when>
 									<xsl:otherwise>
-										<xsl:variable name="lcl" select="cmd:lat('lat:',cmd:pid(resolve-uri(.,$base),'ERR',resolve-uri(.,$base)))"/>
+										<xsl:variable name="lcl" select="cmd:lat($ns,cmd:pid(resolve-uri(.,$base),'ERR',resolve-uri(.,$base)))"/>
 										<xsl:message use-when="$debug">DBG: IsPartOf.lcl[<xsl:value-of select="."/>][<xsl:value-of select="resolve-uri(.,$base)"/>][<xsl:value-of select="$lcl"/>]</xsl:message>
 										<xsl:sequence select="$lcl"/>
 									</xsl:otherwise>
@@ -344,14 +349,14 @@
 						<xsl:when test="exists($collections)">
 							<xsl:for-each select="$collections/@pid">
 								<xsl:choose>
-									<xsl:when test="starts-with(current(),'lat:')">
+									<xsl:when test="replace(current(),'^([a-z]+:).*','$1')=$nss">
 										<xsl:sequence select="current()"/>
 									</xsl:when>
 									<xsl:when test="starts-with(current(),'hdl:') or matches(current(),'http(s)?://hdl.handle.net/')">
-										<xsl:sequence select="cmd:lat('lat:',cmd:hdl(current()))"/>
+										<xsl:sequence select="cmd:lat($ns,cmd:hdl(current()))"/>
 									</xsl:when>
 									<xsl:otherwise>
-										<xsl:sequence select="cmd:lat('lat:',cmd:pid(resolve-uri(current(),$base),'ERR',resolve-uri(current(),$base)))"/>
+										<xsl:sequence select="cmd:lat($ns,cmd:pid(resolve-uri(current(),$base),'ERR',resolve-uri(current(),$base)))"/>
 									</xsl:otherwise>
 								</xsl:choose>
 							</xsl:for-each>
@@ -535,7 +540,7 @@
 								<xsl:sequence select="replace(normalize-space($res/cmd:ResourceRef/@lat:flatURI),'#.*','')"/>
 							</xsl:when>
 							<xsl:otherwise>
-								<xsl:sequence select="cmd:lat('lat:', $resPID)"/>
+								<xsl:sequence select="cmd:lat($ns, $resPID)"/>
 							</xsl:otherwise>
 						</xsl:choose>
 					</xsl:variable>
@@ -719,7 +724,8 @@
 													<xsl:choose>
 														<xsl:when test="exists($compounds)">
 															<xsl:for-each select="$compounds">
-																<fedora:isConstituentOf rdf:resource="info:fedora/{cmd:lat('lat:',current())}"/>
+																<!-- NOTE: will only work if the compounds use the same namespace! -->
+																<fedora:isConstituentOf rdf:resource="info:fedora/{cmd:lat($ns,current())}"/>
 															</xsl:for-each>
 														</xsl:when>
 														<xsl:otherwise>
@@ -892,7 +898,7 @@
 						<xsl:apply-templates select="cmd:MdSelfLink/@lat:flatURI" mode="#current"/>
 					</xsl:when>
 					<xsl:otherwise>
-						<xsl:attribute name="lat:flatURI" select="cmd:lat('lat:', $pid)"/>
+						<xsl:attribute name="lat:flatURI" select="cmd:lat($ns, $pid)"/>
 					</xsl:otherwise>
 				</xsl:choose>
 				<xsl:value-of select="replace($pid,'hdl:','https://hdl.handle.net/')"/>
@@ -914,10 +920,10 @@
 			<xsl:message use-when="$debug">DBG: - non metadata or landing page</xsl:message>
 			<xsl:apply-templates select="cmd:ResourceProxy[not(cmd:ResourceType = ('LandingPage','Metadata','SearchPage'))]" mode="#current"/>
 			<xsl:message use-when="$debug">DBG: - create landing page</xsl:message>
-			<cmd:ResourceProxy id="home-{replace($fid,'lat:','')}">
+			<cmd:ResourceProxy id="home-{replace($fid,'^[a-z]+:','')}">
 				<cmd:ResourceType mimetype="text/html">LandingPage</cmd:ResourceType>
 				<cmd:ResourceRef>
-					<xsl:value-of select="concat($repository,'/islandora/object/',encode-for-uri($fid),'#',if ($fid eq cmd:lat('lat:', $pid)) then () else concat('?pid=',encode-for-uri($pid)))"/>
+					<xsl:value-of select="concat($repository,'/islandora/object/',encode-for-uri($fid),'#',if ($fid eq cmd:lat($ns, $pid)) then () else concat('?pid=',encode-for-uri($pid)))"/>
 				</cmd:ResourceRef>
 			</cmd:ResourceProxy>
 			<!-- process Metadata resource proxies -->
@@ -928,6 +934,7 @@
 						<xsl:copy-of select="@*"/>
 						<cmd:ResourceType mimetype="application/x-cmdi+xml">Metadata</cmd:ResourceType>
 						<cmd:ResourceRef>
+							<xsl:copy-of select="cmd:ResourceRef/@* except @lat:localURI"/>
 							<xsl:if test="exists(cmd:ResourceRef/@lat:localURI)">
 								<xsl:attribute name="lat:localURI" select="cmd:ResourceRef/resolve-uri(@lat:localURI,$base)"/>
 							</xsl:if>
@@ -1035,7 +1042,7 @@
 								</xsl:when>
 								<xsl:otherwise>
 									<xsl:attribute name="lat:flatURI" xmlns:lat="http://lat.mpi.nl/">
-										<xsl:value-of select="cmd:lat('lat:', $hdl)"/>
+										<xsl:value-of select="cmd:lat($ns, $hdl)"/>
 									</xsl:attribute>
 								</xsl:otherwise>
 							</xsl:choose>
@@ -1054,7 +1061,7 @@
 						<xsl:otherwise>
 							<xsl:if test="normalize-space(@lat:flatURI)=''">
 								<xsl:attribute name="lat:flatURI" xmlns:lat="http://lat.mpi.nl/">
-									<xsl:value-of select="cmd:lat('lat:', $hdl)"/>
+									<xsl:value-of select="cmd:lat($ns, $hdl)"/>
 								</xsl:attribute>
 							</xsl:if>
 							<xsl:value-of select="replace($hdl,'hdl:','https://hdl.handle.net/')"/>

@@ -276,7 +276,7 @@ abstract class SIP
     {
         $this->logging('Starting doDoorkeeper');
 
-        $query = $this->test ? 'validate%20resources' : '';
+        $query = $this->test ? 'validate resources' : NULL;
 
 
         module_load_include('php', 'flat_deposit', '/Helpers/IngestService/Doorkeeper');
@@ -355,7 +355,7 @@ abstract class SIP
 
     }
 
-    
+
     public function logging($message){
 
         if ($this->logProcess){

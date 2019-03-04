@@ -20,6 +20,7 @@ ADD blazegraph/wait-tomcat-blzg.sh /wait-tomcat-blzg.sh
 RUN chmod u+x /wait-tomcat-blzg.sh
 
 # install Blazegraph
+#	wget http://sourceforge.net/projects/bigdata/files/bigdata/2.1.4/blazegraph.war/download -O blazegraph.war &&\
 RUN mkdir /tmp/blazegraph_conf &&\
 	mkdir -p /var/bigdata/logs &&\
 	mkdir -p /etc/bigdata/ &&\
@@ -28,7 +29,7 @@ RUN mkdir /tmp/blazegraph_conf &&\
 	cp blazegraph_conf/RWStore.properties /etc/bigdata &&\
 	cp blazegraph_conf/log4j.properties /etc/bigdata &&\
 	cd /usr/share/tomcat-blzg/webapps &&\
-	wget https://sourceforge.net/projects/bigdata/files/bigdata/2.1.4/blazegraph.war/download -O blazegraph.war &&\
+	wget https://netcologne.dl.sourceforge.net/project/bigdata/bigdata/2.1.4/blazegraph.war -O blazegraph.war &&\
 	service supervisor start &&\
 	/wait-postgres.sh &&\
 	supervisorctl start tomcat &&\

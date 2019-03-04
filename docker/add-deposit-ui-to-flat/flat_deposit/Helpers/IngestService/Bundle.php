@@ -189,20 +189,25 @@ class Bundle extends SIP
         $this->logging('Starting validateResources');
         $path = $this->wrapper->flat_location->value();
 
-        $fileNames = scandir($path);
-        if(empty($fileNames)){
-            throw new IngestServiceException('Unable to scan directory with files');
+        $fileNames = file_scan_directory($path, '/.*/', array('min_depth' => 0));
+
+        $deletedFiles = $this->wrapper->flat_deleted_resources ? $this->wrapper->flat_deleted_resources->value() : NULL;
+
+        if (!isset($deletedFiles) OR ($deletedFiles == '')) {
+
+            if(empty($fileNames)){
+                throw new IngestServiceException('There are no (accessible) files in the chosen folder.');
+
+            }
 
         }
 
-        $pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+\.[\da-zA-Z]{2,8}$/';
+        $pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+\.[\da-zA-Z]{2,9}$/';
         $violators = [];
 
-        foreach ($fileNames as $fileName){
-            if ($fileName == '.' OR $fileName == '..' ) {
-                continue;
-            }
+        foreach ($fileNames as $uri => $file_array){
 
+            $fileName = $file_array->filename;
             if (preg_match($pattern, $fileName) == false){
              $violators[] = $fileName;
             }
@@ -213,7 +218,7 @@ class Bundle extends SIP
             $message = 'Bundle contains files with names violating our file naming policy. ' .
             'Allowed are names starting with an alphanumeric characters (a-z,A-Z,0-9) followed by more alphanumeric characters '.
             'or these special characters (.-_). The name of the file needs to have an extension marked by a dot (".") '.
-            'followed by 2 to 8 characters. ';
+            'followed by 2 to 9 characters. ';
 
             $message .= 'Following file(s) have triggered this message: ';
             $message .= implode(', ', $violators);
@@ -245,15 +250,19 @@ class Bundle extends SIP
         try{
 
             $fid = isset($this->wrapper->flat_fid) ? $this->wrapper->flat_fid->value() : null;
-            $md_type = isset($this->wrapper->flat_cmdi_option) ? $this->wrapper->flat_cmdi_option->value() : NULL;
             $flat_type = isset($this->wrapper->flat_type) ? $this->wrapper->flat_type->value() : NULL;
+            $md_type = isset($this->wrapper->flat_cmdi_option) ? $this->wrapper->flat_cmdi_option->value() : NULL;
+            if ($flat_type == 'update') {
+                $md_type = 'existing';
+            }
 
             switch ($md_type) {
                 case 'new':
                     $cmdi->cleanMdSelfLink();
                     break;
                 case 'import':
-                case 'template': 
+                case 'template':
+                case 'existing':
                     if ($flat_type !== 'update') {
                         $cmdi->removeMdSelfLink();
                     }
@@ -262,7 +271,7 @@ class Bundle extends SIP
                     }
                     break;
             }
-            
+
             $cmdi->addResources($md_type, $directory, $fid);
 
         } catch (CmdiHandlerException $exception){
@@ -299,6 +308,8 @@ class Bundle extends SIP
 
                 */
 
+        $this->createBlogEntry(TRUE);
+
         if ($this->test){
 
             $this->wrapper->flat_bundle_status->set('valid');
@@ -319,7 +330,6 @@ class Bundle extends SIP
 
         }
 
-        $this->createBlogEntry(TRUE);
 
         $this->logging('Stop finish');
 
@@ -343,13 +353,11 @@ class Bundle extends SIP
         $scheme = variable_get('flat_deposit_ingest_service')['host_scheme'];
         if (!$this->test AND $succeeded){
 
-
-
             $url_link = '/islandora/object/' . $this->fid ;
 
         } else {
 
-            $url_link = 'node/' . (string)$this->node->nid;
+            $url_link = '/node/' . (string)$this->node->nid;
 
         }
 
@@ -359,11 +367,8 @@ class Bundle extends SIP
         $bundle = $this->node->title;
         $collection = $this->wrapper->flat_parent_title->value();
 
-
-
         $summary = sprintf("<p>%s of %s %s</p>",$action, $bundle, $outcome);
-        $body = sprintf("<p>%s %s</p><p>%s of %s belonging to %s %s. Check bundle ". l(t('here'), $url_link, array('html' => TRUE, 'external' => FALSE, 'absolute' => TRUE, 'base_url' => $scheme . '://' . $host)) . '</p>',$bundle, $collection, $action, $bundle, $collection, $outcome);
-        $body = preg_replace(array('/lat_/') , array('lat%3A'), $body);
+        $body = sprintf("<p>%s %s</p><p>%s of %s belonging to %s %s. Check bundle ". l(t('here'), $url_link, array('html' => TRUE, 'external' => TRUE, 'absolute' => TRUE, 'base_url' => $scheme . '://' . $host)) . '</p>', $bundle, $collection, $action, $bundle, $collection, $outcome);
 
         if ($additonal_message){ $body .=  '</p>Exception message:</p>' . $additonal_message ;};
 

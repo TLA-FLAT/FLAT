@@ -31,6 +31,10 @@ class Workspaces
                     ),
                 ),
 
+                'current_directory' => array(
+                    '#markup' => '',
+                ),
+
                 'department' => array(
                     '#type' => 'radios',
                     '#title' => t('Department'),

@@ -3,6 +3,10 @@
     <config>
         <import class="nl.mpi.tla.flat.deposit.context.Environment" prefix="env-"/>
         <import class="nl.mpi.tla.flat.deposit.context.SystemProperties" prefix="sys-"/>
+        <property name="activeFedoraNamespace" value="{$env-FLAT_NAMESPACE}" uniq="true"/>
+        <property name="fedoraNamespace" value="comic"/>
+        <property name="fedoraNamespace" value="mpi"/>
+        <property name="fedoraNamespace" value="lat"/>
         <property name="fitsService" value="http://localhost:8080/fits/" uniq="true"/>
         <property name="home" value="/app/flat" uniq="true"/>
         <property name="base" value="{$home}/deposit" uniq="true"/>
@@ -18,6 +22,7 @@
     <init>
         <action name="logSetup" class="nl.mpi.tla.flat.deposit.action.WorkspaceLogSetup">
             <parameter name="dir" value="{$work}/logs"/>
+            <parameter name="logConfig" value="{$base}/policies/log-config.xml"/>
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.Owner">
             <parameter name="policy" value="{$work}/metadata/policy.n3"/>
@@ -55,9 +60,10 @@
         </action>
         <!-- ^^^ VALIDATE vvv ARCHIVE -->
         <action name="purge updates" class="nl.mpi.tla.flat.deposit.action.PurgeUpdates">
-            <parameter name="dir" value="{$work}/resources"/>
             <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
-            <parameter name="fits" value="{$work}/fits"/>
+            <parameter name="dir" value="{$work}/fits"/>
+            <parameter name="ext" value=".FITS.xml"/>
+            <parameter name="path" value="normalize-space(//fits:md5checksum)"/>
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.HandleAssignment">
             <parameter name="prefix" value="{$epicPrefix}"/>
@@ -118,14 +124,15 @@
             <parameter name="fedoraConfig" value="{$work}/acl/fedora-config.xml"/>
             <parameter name="firstDir" value="{$work}/fox"/>
             <parameter name="dir" value="{$work}/admin-fox"/>
+            <!--<parameter name="try-fix-pid" value="true"/>-->
         </action>
         <!-- SIP + parent collection -->
-        <action class="nl.mpi.tla.flat.deposit.action.FedoraInteract">
+        <action name="update sip and parent collection" class="nl.mpi.tla.flat.deposit.action.FedoraInteract">
             <parameter name="fedoraConfig" value="{$work}/acl/fedora-config.xml"/>
             <parameter name="dir" value="{$work}/fox"/>
         </action>
         <!-- ancestor collections -->
-        <action class="nl.mpi.tla.flat.deposit.action.FedoraInteract">
+        <action name="update ancestor collections" class="nl.mpi.tla.flat.deposit.action.FedoraInteract">
             <parameter name="fedoraConfig" value="{$base}/policies/fedora-config.xml"/>
             <parameter name="dir" value="{$work}/admin-fox"/>
         </action>
@@ -161,7 +168,7 @@
             <parameter name="tmpl-bag" value="{$bag}"/>
             <parameter name="tmpl-user" value="{if (sx:fileExists(concat('file:',$work,'/acl/owner.xml') cast as xs:anyURI)) then (doc(concat($work,'/acl/owner.xml'))/user/name) else ('')}"/>
         </action>
-        -->  
+        -->
         <action name="status" class="nl.mpi.tla.flat.deposit.action.UpdateSwordStatus">
             <parameter name="props" value="{$bag}/deposit.properties"/>
         </action>

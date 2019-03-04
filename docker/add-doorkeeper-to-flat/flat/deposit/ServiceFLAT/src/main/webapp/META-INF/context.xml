@@ -9,7 +9,7 @@
         <!--
  	<Parameter name="doorkeeperQueue"
          value="100"
-         description="max. number of DoorKeeper requests in the waiting queue" />
+         description="max. number of DoorKeeper runs, ran or not, in memory" />
         -->
  	<Parameter name="doorkeeperConfig"
          value="/app/flat/deposit/flat-deposit.xml"

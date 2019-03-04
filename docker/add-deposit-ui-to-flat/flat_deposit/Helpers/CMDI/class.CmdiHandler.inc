@@ -3,6 +3,14 @@
 module_load_include('inc','flat_deposit','Helpers/CMDI/Template2FormParser');
 module_load_include('inc','flat_deposit','Helpers/CMDI/Form2CmdiParser');
 
+class RecursiveDotFilterIterator extends  RecursiveFilterIterator
+{
+    public function accept()
+    {
+        return '.' !== substr($this->current()->getFilename(), 0, 1);
+    }
+}
+
 
 class CmdiHandlerException extends Exception {}
 /**
@@ -125,6 +133,10 @@ class CmdiHandler extends SimpleXMLElement
 
             case 'clarin.eu:cr1:p_1407745712035' :
                 $name = 'lat-session';
+                break;
+
+            case 'clarin.eu:cr1:p_1417617523856' :
+                $name = 'lat-SL-session';
                 break;
 
             case 'clarin.eu:cr1:p_1407745712064' :
@@ -363,7 +375,16 @@ class CmdiHandler extends SimpleXMLElement
                 }
                 break;
             case 'import':
-
+                if (!$fid) {
+                    // stripping resources from newly uploaded CMDI (same as template), as they cause errors if not all linked files are provided. 
+                    // need to find a different solution for still allowing resource-specific metadata (e.g. description)
+                    $result = $this->stripResourceProxyAndResources();
+                    if (!$result){
+                        throw new CmdiHandlerException(t("Strip of Resources was not successful"));
+                    }
+                }
+                break;
+            case 'existing':
                 break;
         }
 
@@ -391,7 +412,7 @@ class CmdiHandler extends SimpleXMLElement
             throw new CmdiHandlerException(t("Failed adding new resources to Cmdi"));
         }
         
-	$result = $this->updateExistingResources($cmdi_resources, $directory_resources);
+	    $result = $this->updateExistingResources($cmdi_resources, $directory_resources);
 
         if (!$result){
             throw new CmdiHandlerException(t("Failed updating cmdi resources"));
@@ -459,7 +480,7 @@ class CmdiHandler extends SimpleXMLElement
      */
     static public function linux_mimetype_check($file){
        
-        $result = shell_exec("file -b --mime-type \"$file\"");
+        $result = trim(shell_exec("file -b --mime-type \"$file\""));
 
         return $result;
 
@@ -842,10 +863,11 @@ class CmdiHandler extends SimpleXMLElement
             return basename($lat_attributes['localURI']);
         }
 
+        /*
         if (isset($ref)){
             return basename((String)$ref);
         }
-
+        */
 
         if (isset($lat_attributes->flatURI)){
             $pid = (string)$lat_attributes->flatURI;
@@ -889,8 +911,6 @@ class CmdiHandler extends SimpleXMLElement
         return $resources;
     }
 
-
-
     /**
      * Iterates through directory and adds every file to an array of resource with a unique resource ID as key.
      * In case an existing resource with identical file name is found, assign that resource the ID of the existing resource.
@@ -906,7 +926,13 @@ class CmdiHandler extends SimpleXMLElement
         $resources = array();
         $c=10000; # counter for resource ID (each resource within an CMDI-object needs an unique identifier)
 
-        $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory,RecursiveDirectoryIterator::FOLLOW_SYMLINKS));
+        //$rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory,RecursiveDirectoryIterator::FOLLOW_SYMLINKS));
+
+        $rii = new RecursiveIteratorIterator(
+            new RecursiveDotFilterIterator(
+                new RecursiveDirectoryIterator($directory,RecursiveDirectoryIterator::FOLLOW_SYMLINKS)
+            )
+        );
 
         foreach ($rii as $file) {
             if ($file->isDir()){continue;}
@@ -981,10 +1007,12 @@ class CmdiHandler extends SimpleXMLElement
                 $proxy[0]->children('cmd',TRUE)->ResourceRef->addAttribute('lat:localURI', 'file:' . $file_name, "http://lat.mpi.nl/");
             }
 
+            /*
             $value = (String)$proxy[0]->children('cmd',TRUE)->ResourceRef;
             if(!empty($value)){
                 $proxy[0]->children('cmd',TRUE)->ResourceRef = '';
             }
+            */
 
             //Update resources in Components section
             $profile = $this->getNameById();

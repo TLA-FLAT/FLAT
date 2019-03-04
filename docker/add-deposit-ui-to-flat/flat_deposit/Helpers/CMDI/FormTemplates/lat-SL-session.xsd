@@ -1,0 +1,1674 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:cmd="http://www.clarin.eu/cmd/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:dcr="http://www.isocat.org/ns/dcr" xmlns:ann="http://www.clarin.eu" targetNamespace="http://www.clarin.eu/cmd/" elementFormDefault="qualified">
+    <xs:annotation>
+        <xs:appinfo>
+            <ann:Header>
+                <ann:ID>clarin.eu:cr1:p_1417617523856</ann:ID>
+                <ann:Name>lat-SL-session</ann:Name>
+                <ann:Description>IMDI metadata</ann:Description>
+            </ann:Header>
+        </xs:appinfo>
+    </xs:annotation>
+    <xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="http://www.w3.org/2001/xml.xsd"/>
+    <xs:simpleType name="simpletype-Date-1---">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{4}(-(0[1-9]|1[012])(-([0-2][0-9]|3[01]))?)?(/[0-9]{4}(-(0[1-9]|1[012])(-([0-2][0-9]|3[01]))?)?)?|Unknown|Unspecified"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-Continent-clarin.eu.cr1.c_1407745712016">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Unknown" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2591_f769d93b-c007-d2c9-aff2-99e9177e5764" ann:label=""/>
+            <xs:enumeration value="Unspecified" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2592_6bf81885-106a-fbf0-40e0-9f0233fbd88c" ann:label=""/>
+            <xs:enumeration value="Africa" dcr:datcat="" ann:label=""/>
+            <xs:enumeration value="Asia" dcr:datcat="" ann:label=""/>
+            <xs:enumeration value="Europe" dcr:datcat="" ann:label=""/>
+            <xs:enumeration value="Australia" dcr:datcat="" ann:label=""/>
+            <xs:enumeration value="Oceania" dcr:datcat="" ann:label=""/>
+            <xs:enumeration value="North-America" dcr:datcat="" ann:label=""/>
+            <xs:enumeration value="Middle-America" dcr:datcat="" ann:label=""/>
+            <xs:enumeration value="South-America" dcr:datcat="" ann:label=""/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-Interactivity-clarin.eu.cr1.c_1456409483206">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Unknown" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2591_f769d93b-c007-d2c9-aff2-99e9177e5764"/>
+            <xs:enumeration value="Unspecified" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2592_6bf81885-106a-fbf0-40e0-9f0233fbd88c"/>
+            <xs:enumeration value="interactive" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2613_9c3c15d9-ee24-5989-dd95-d32fa5ea6cc8"/>
+            <xs:enumeration value="non-interactive" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2614_26318c7d-b4c5-184e-383d-ed33810533f0"/>
+            <xs:enumeration value="semi-interactive" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2615_95078a97-a401-af2c-ca86-d2496f364552"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-PlanningType-clarin.eu.cr1.c_1456409483206">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Unknown" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2591_f769d93b-c007-d2c9-aff2-99e9177e5764"/>
+            <xs:enumeration value="Unspecified" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2592_6bf81885-106a-fbf0-40e0-9f0233fbd88c"/>
+            <xs:enumeration value="spontaneous" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2663_2a6bfc43-6262-464a-b933-0aacf9c70d2e"/>
+            <xs:enumeration value="semi-spontaneous" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2664_2188f079-9bfa-acf4-2dbf-9c490803a21b"/>
+            <xs:enumeration value="planned" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2665_67b675b9-df80-8a16-2453-5fa5062df58f"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-Involvement-clarin.eu.cr1.c_1456409483206">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Unknown" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2591_f769d93b-c007-d2c9-aff2-99e9177e5764"/>
+            <xs:enumeration value="Unspecified" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2592_6bf81885-106a-fbf0-40e0-9f0233fbd88c"/>
+            <xs:enumeration value="elicited" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2616_4da1ecdf-d117-b9ae-d587-bc3d7212cfe9"/>
+            <xs:enumeration value="non-elicited" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2617_b9debffa-3719-61fc-cd6d-ac0e2dc57f0f"/>
+            <xs:enumeration value="no-observer" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2618_49debe40-dd64-d16c-4806-b232e5f9d3fb"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-SocialContext-clarin.eu.cr1.c_1456409483206">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Unknown" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2591_f769d93b-c007-d2c9-aff2-99e9177e5764"/>
+            <xs:enumeration value="Unspecified" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2592_6bf81885-106a-fbf0-40e0-9f0233fbd88c"/>
+            <xs:enumeration value="Family" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2619_8fd62406-f815-03d6-d511-c64141454f9c"/>
+            <xs:enumeration value="Private" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2620_a6b402e8-a6ad-fcb5-68ce-6a54e383e23b"/>
+            <xs:enumeration value="Public" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2621_f68ce72f-8534-3a7c-27f5-67fd83543e2c"/>
+            <xs:enumeration value="Controlled environment" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2622_d65f6ee8-054a-6263-8e58-1b97f036c6b5"/>
+            <xs:enumeration value="Public (school)"/>
+            <xs:enumeration value="Community"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-EventStructure-clarin.eu.cr1.c_1456409483206">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Unknown" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2591_f769d93b-c007-d2c9-aff2-99e9177e5764"/>
+            <xs:enumeration value="Unspecified" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2592_6bf81885-106a-fbf0-40e0-9f0233fbd88c"/>
+            <xs:enumeration value="Monologue" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2659_fb46b0da-0dca-503c-083b-4a524d8e97cc"/>
+            <xs:enumeration value="Dialogue" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2660_0a31ff6b-dd63-a44d-096d-840918a8d097"/>
+            <xs:enumeration value="Multilogue" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2661_38e4e46b-dd13-f0b1-dff5-ee991b589755"/>
+            <xs:enumeration value="Not a natural format" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2662_91ecc008-029f-ee58-0ada-580903e640b5"/>
+            <xs:enumeration value="Conversation" dcr:datcat="" ann:label=""/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-Channel-clarin.eu.cr1.c_1456409483206">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Unknown" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2591_f769d93b-c007-d2c9-aff2-99e9177e5764"/>
+            <xs:enumeration value="Unspecified" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2592_6bf81885-106a-fbf0-40e0-9f0233fbd88c"/>
+            <xs:enumeration value="Face to Face" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2593_b4878707-c766-efaf-eb13-1092ddc989cc"/>
+            <xs:enumeration value="Experimental setting" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2594_87f0aae2-8dae-a212-e73a-84a304261853"/>
+            <xs:enumeration value="Broadcasting" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2595_33036215-f7a0-6d2f-0f89-cc879eda8c54"/>
+            <xs:enumeration value="Telephone" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2596_9665d457-1328-26b7-77c8-1304b0574bb9"/>
+            <xs:enumeration value="wizard-of-oz" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2597_1ab0fe71-0be4-8841-fb83-06df0b10f5fb"/>
+            <xs:enumeration value="Human-machine dialogue" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2598_5dee4833-7cc8-e23f-4fe9-312edcb6def4"/>
+            <xs:enumeration value="Other" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2599_93805699-d3a2-ae19-5399-d0bba0e8fc24"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-Id-clarin.eu.cr1.c_1469541567400">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="ISO639-3:[a-z]{3}|Unknown|Unspecified"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-Dominant-clarin.eu.cr1.c_1469541567400">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Unspecified" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2592_6bf81885-106a-fbf0-40e0-9f0233fbd88c" ann:label=""/>
+            <xs:enumeration value="Unknown" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2591_f769d93b-c007-d2c9-aff2-99e9177e5764" ann:label=""/>
+            <xs:enumeration value="true" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2952_4b03e9bb-4a9c-1a2a-2181-85928a4d37ab" ann:label=""/>
+            <xs:enumeration value="false" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2953_b99fa79d-2311-9005-9e66-005d04a3f017" ann:label=""/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-SourceLanguage-clarin.eu.cr1.c_1469541567400">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Unspecified" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2592_6bf81885-106a-fbf0-40e0-9f0233fbd88c" ann:label=""/>
+            <xs:enumeration value="Unknown" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2591_f769d93b-c007-d2c9-aff2-99e9177e5764" ann:label=""/>
+            <xs:enumeration value="true" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2952_4b03e9bb-4a9c-1a2a-2181-85928a4d37ab" ann:label=""/>
+            <xs:enumeration value="false" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2953_b99fa79d-2311-9005-9e66-005d04a3f017" ann:label=""/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-TargetLanguage-clarin.eu.cr1.c_1469541567400">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Unspecified" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2592_6bf81885-106a-fbf0-40e0-9f0233fbd88c" ann:label=""/>
+            <xs:enumeration value="Unknown" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2591_f769d93b-c007-d2c9-aff2-99e9177e5764" ann:label=""/>
+            <xs:enumeration value="true" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2952_4b03e9bb-4a9c-1a2a-2181-85928a4d37ab" ann:label=""/>
+            <xs:enumeration value="false" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2953_b99fa79d-2311-9005-9e66-005d04a3f017" ann:label=""/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-BirthDate-clarin.eu.cr1.c_1417698604599">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{4}(-(0[1-9]|1[012])(-([0-2][0-9]|3[01]))?)?(/[0-9]{4}(-(0[1-9]|1[012])(-([0-2][0-9]|3[01]))?)?)?|Unknown|Unspecified"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-Sex-clarin.eu.cr1.c_1417698604599">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Male" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2949_10ed5b3b-2e62-a962-dac3-300f3df5441a" ann:label=""/>
+            <xs:enumeration value="Female" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2950_38f5b23e-097e-2ceb-e5f7-b16756638b89" ann:label=""/>
+            <xs:enumeration value="NAP" dcr:datcat="http://hdl.handle.net/11459/CCR_C-5433_29c2bba2-a895-9255-d17c-7947a8703080" ann:label=""/>
+            <xs:enumeration value="Unspecified" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2592_6bf81885-106a-fbf0-40e0-9f0233fbd88c" ann:label=""/>
+            <xs:enumeration value="Unknown" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2591_f769d93b-c007-d2c9-aff2-99e9177e5764" ann:label=""/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-Anonymized-clarin.eu.cr1.c_1417698604599">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="true" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2952_4b03e9bb-4a9c-1a2a-2181-85928a4d37ab" ann:label=""/>
+            <xs:enumeration value="false" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2953_b99fa79d-2311-9005-9e66-005d04a3f017" ann:label=""/>
+            <xs:enumeration value="Unknown" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2591_f769d93b-c007-d2c9-aff2-99e9177e5764" ann:label=""/>
+            <xs:enumeration value="Unspecified" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2592_6bf81885-106a-fbf0-40e0-9f0233fbd88c" ann:label=""/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-Id-clarin.eu.cr1.c_1469541567398">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="ISO639-3:[a-z]{3}|Unknown|Unspecified"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-MotherTongue-clarin.eu.cr1.c_1469541567398">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Unspecified" dcr:datcat="" ann:label=""/>
+            <xs:enumeration value="Unknown" dcr:datcat="" ann:label=""/>
+            <xs:enumeration value="true" dcr:datcat="" ann:label=""/>
+            <xs:enumeration value="false" dcr:datcat="" ann:label=""/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-PrimaryLanguage-clarin.eu.cr1.c_1469541567398">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Unspecified" dcr:datcat="" ann:label=""/>
+            <xs:enumeration value="Unknown" dcr:datcat="" ann:label=""/>
+            <xs:enumeration value="true" dcr:datcat="" ann:label=""/>
+            <xs:enumeration value="false" dcr:datcat="" ann:label=""/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-Type-clarin.eu.cr1.c_1407745712030">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Unknown" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2591_f769d93b-c007-d2c9-aff2-99e9177e5764" ann:label=""/>
+            <xs:enumeration value="Unspecified" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2592_6bf81885-106a-fbf0-40e0-9f0233fbd88c" ann:label=""/>
+            <xs:enumeration value="audio" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2653_06ff001f-7ed4-6399-7147-02170140dd64" ann:label=""/>
+            <xs:enumeration value="video" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2654_115c5ce8-7bdb-06b4-fe52-d6ebf2f80022" ann:label=""/>
+            <xs:enumeration value="image" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2655_c21a8115-d6e7-982c-d5e8-3a278d6e653a" ann:label=""/>
+            <xs:enumeration value="document" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2656_0afe021d-a061-daa8-1e84-6cbf7d1787c8" ann:label=""/>
+            <xs:enumeration value="drawing" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2657_25c2ad8e-3ac1-1663-8c7f-82ea4abc75ce" ann:label=""/>
+            <xs:enumeration value="text" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2658_3a34bb3c-e815-efeb-c6bd-a53da6dcc0b9" ann:label=""/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-Quality-clarin.eu.cr1.c_1407745712030">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="1" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2666_737b0349-5102-0c8b-95bd-e88b787865be" ann:label=""/>
+            <xs:enumeration value="2" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2667_51f6823f-133e-2c4e-726f-754493870939" ann:label=""/>
+            <xs:enumeration value="3" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2668_7c9f5726-c6e7-10ea-389e-92b312e5fbef" ann:label=""/>
+            <xs:enumeration value="4" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2669_031a4231-e29e-e590-3dbe-5ba0a8582026" ann:label=""/>
+            <xs:enumeration value="5" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2670_bcd282be-33a9-a730-8948-69f6b316d6ce" ann:label=""/>
+            <xs:enumeration value="Unknown" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2591_f769d93b-c007-d2c9-aff2-99e9177e5764" ann:label=""/>
+            <xs:enumeration value="Unspecified" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2592_6bf81885-106a-fbf0-40e0-9f0233fbd88c" ann:label=""/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-Start-clarin.eu.cr1.c_1271859438176">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9][0-9]:[0-9][0-9]:[0-9][0-9]:?[0-9]*|Unknown|Unspecified"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-End-clarin.eu.cr1.c_1271859438176">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9][0-9]:[0-9][0-9]:[0-9][0-9]:?[0-9]*|Unknown|Unspecified"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-Date-clarin.eu.cr1.c_1407745712053">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{4}(-(0[1-9]|1[012])(-([0-2][0-9]|3[01]))?)?(/[0-9]{4}(-(0[1-9]|1[012])(-([0-2][0-9]|3[01]))?)?)?|Unknown|Unspecified"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-Date-clarin.eu.cr1.c_1407745712029">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="([0-9]+)((-[0-9]+)(-[0-9]+)?)?(/([0-9]+)((-[0-9]+)(-[0-9]+)?)?)?|Unknown|Unspecified"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-Derivation-clarin.eu.cr1.c_1407745712029">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Unknown" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2591_f769d93b-c007-d2c9-aff2-99e9177e5764" ann:label=""/>
+            <xs:enumeration value="Unspecified" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2592_6bf81885-106a-fbf0-40e0-9f0233fbd88c" ann:label=""/>
+            <xs:enumeration value="Original" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2534_04c8cf6a-4272-2213-4de7-52713b7c286f" ann:label=""/>
+            <xs:enumeration value="Analysis" dcr:datcat="" ann:label=""/>
+            <xs:enumeration value="Translation" dcr:datcat="http://hdl.handle.net/11459/CCR_C-3983_0ae7d6a6-cebc-a492-1b6f-fa1fa272ce0b" ann:label=""/>
+            <xs:enumeration value="Commentary" dcr:datcat="" ann:label=""/>
+            <xs:enumeration value="Criticism" dcr:datcat="" ann:label=""/>
+            <xs:enumeration value="Annotation" dcr:datcat="http://hdl.handle.net/11459/CCR_C-4009_a0bff262-8ee6-4ec8-4d74-657b10411a72" ann:label=""/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-Anonymized-clarin.eu.cr1.c_1407745712029">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="true" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2952_4b03e9bb-4a9c-1a2a-2181-85928a4d37ab" ann:label=""/>
+            <xs:enumeration value="false" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2953_b99fa79d-2311-9005-9e66-005d04a3f017" ann:label=""/>
+            <xs:enumeration value="Unknown" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2591_f769d93b-c007-d2c9-aff2-99e9177e5764" ann:label=""/>
+            <xs:enumeration value="Unspecified" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2592_6bf81885-106a-fbf0-40e0-9f0233fbd88c" ann:label=""/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-Type-clarin.eu.cr1.c_1407745712057">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Unknown" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2591_f769d93b-c007-d2c9-aff2-99e9177e5764" ann:label=""/>
+            <xs:enumeration value="Unspecified" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2592_6bf81885-106a-fbf0-40e0-9f0233fbd88c" ann:label=""/>
+            <xs:enumeration value="None" dcr:datcat="" ann:label=""/>
+            <xs:enumeration value="Formal" dcr:datcat="" ann:label=""/>
+            <xs:enumeration value="Content" dcr:datcat="" ann:label=""/>
+            <xs:enumeration value="Formal/Content" dcr:datcat="" ann:label=""/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-Methodology-clarin.eu.cr1.c_1407745712057">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Unknown" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2591_f769d93b-c007-d2c9-aff2-99e9177e5764" ann:label=""/>
+            <xs:enumeration value="Unspecified" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2592_6bf81885-106a-fbf0-40e0-9f0233fbd88c" ann:label=""/>
+            <xs:enumeration value="Hand" dcr:datcat="" ann:label=""/>
+            <xs:enumeration value="Automatic" dcr:datcat="" ann:label=""/>
+            <xs:enumeration value="Semi-Automatic" dcr:datcat="" ann:label=""/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-Quality-clarin.eu.cr1.c_1407745712056">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="1" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2666_737b0349-5102-0c8b-95bd-e88b787865be" ann:label=""/>
+            <xs:enumeration value="2" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2667_51f6823f-133e-2c4e-726f-754493870939" ann:label=""/>
+            <xs:enumeration value="3" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2668_7c9f5726-c6e7-10ea-389e-92b312e5fbef" ann:label=""/>
+            <xs:enumeration value="4" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2669_031a4231-e29e-e590-3dbe-5ba0a8582026" ann:label=""/>
+            <xs:enumeration value="5" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2670_bcd282be-33a9-a730-8948-69f6b316d6ce" ann:label=""/>
+            <xs:enumeration value="Unknown" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2591_f769d93b-c007-d2c9-aff2-99e9177e5764" ann:label=""/>
+            <xs:enumeration value="Unspecified" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2592_6bf81885-106a-fbf0-40e0-9f0233fbd88c" ann:label=""/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-Start-clarin.eu.cr1.c_1271859438178">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]+|Unknown|Unspecified"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="simpletype-End-clarin.eu.cr1.c_1271859438178">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]+|Unknown|Unspecified"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="Resourcetype_simple">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Metadata">
+                <xs:annotation>
+                    <xs:documentation>The ResourceProxy refers to another component metadata instance (e.g. for grouping metadata descriptions into collections)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="Resource">
+                <xs:annotation>
+                    <xs:documentation>The ResourceProxy refers to a file that is not a metadata instance (e.g. a text document)</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="SearchService">
+                <xs:annotation>
+                    <xs:documentation>The ResourceProxy refers to a (SRU/CQL) web service that can be used to query the resource described in this file</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="SearchPage">
+                <xs:annotation>
+                    <xs:documentation>The ResourceProxy refers to a web page that can be used to query the resource described in this file</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="LandingPage">
+                <xs:annotation>
+                    <xs:documentation>The ResourceProxy refers to a web page that contains the "original context" of the resource described in this file (e.g. repository web page displaying the metadata).</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="complextype-Date-1---">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-Date-1---"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-Continent-clarin.eu.cr1.c_1407745712016">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-Continent-clarin.eu.cr1.c_1407745712016"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-Interactivity-clarin.eu.cr1.c_1456409483206">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-Interactivity-clarin.eu.cr1.c_1456409483206"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-PlanningType-clarin.eu.cr1.c_1456409483206">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-PlanningType-clarin.eu.cr1.c_1456409483206"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-Involvement-clarin.eu.cr1.c_1456409483206">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-Involvement-clarin.eu.cr1.c_1456409483206"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-SocialContext-clarin.eu.cr1.c_1456409483206">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-SocialContext-clarin.eu.cr1.c_1456409483206"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-EventStructure-clarin.eu.cr1.c_1456409483206">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-EventStructure-clarin.eu.cr1.c_1456409483206"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-Channel-clarin.eu.cr1.c_1456409483206">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-Channel-clarin.eu.cr1.c_1456409483206"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-Id-clarin.eu.cr1.c_1469541567400">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-Id-clarin.eu.cr1.c_1469541567400"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-Dominant-clarin.eu.cr1.c_1469541567400">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-Dominant-clarin.eu.cr1.c_1469541567400"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-SourceLanguage-clarin.eu.cr1.c_1469541567400">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-SourceLanguage-clarin.eu.cr1.c_1469541567400"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-TargetLanguage-clarin.eu.cr1.c_1469541567400">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-TargetLanguage-clarin.eu.cr1.c_1469541567400"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-BirthDate-clarin.eu.cr1.c_1417698604599">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-BirthDate-clarin.eu.cr1.c_1417698604599"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-Sex-clarin.eu.cr1.c_1417698604599">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-Sex-clarin.eu.cr1.c_1417698604599"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-Anonymized-clarin.eu.cr1.c_1417698604599">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-Anonymized-clarin.eu.cr1.c_1417698604599"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-Id-clarin.eu.cr1.c_1469541567398">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-Id-clarin.eu.cr1.c_1469541567398"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-MotherTongue-clarin.eu.cr1.c_1469541567398">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-MotherTongue-clarin.eu.cr1.c_1469541567398"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-PrimaryLanguage-clarin.eu.cr1.c_1469541567398">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-PrimaryLanguage-clarin.eu.cr1.c_1469541567398"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-Type-clarin.eu.cr1.c_1407745712030">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-Type-clarin.eu.cr1.c_1407745712030"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-Quality-clarin.eu.cr1.c_1407745712030">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-Quality-clarin.eu.cr1.c_1407745712030"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-Start-clarin.eu.cr1.c_1271859438176">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-Start-clarin.eu.cr1.c_1271859438176"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-End-clarin.eu.cr1.c_1271859438176">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-End-clarin.eu.cr1.c_1271859438176"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-Date-clarin.eu.cr1.c_1407745712053">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-Date-clarin.eu.cr1.c_1407745712053"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-Date-clarin.eu.cr1.c_1407745712029">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-Date-clarin.eu.cr1.c_1407745712029"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-Derivation-clarin.eu.cr1.c_1407745712029">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-Derivation-clarin.eu.cr1.c_1407745712029"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-Anonymized-clarin.eu.cr1.c_1407745712029">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-Anonymized-clarin.eu.cr1.c_1407745712029"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-Type-clarin.eu.cr1.c_1407745712057">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-Type-clarin.eu.cr1.c_1407745712057"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-Methodology-clarin.eu.cr1.c_1407745712057">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-Methodology-clarin.eu.cr1.c_1407745712057"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-Quality-clarin.eu.cr1.c_1407745712056">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-Quality-clarin.eu.cr1.c_1407745712056"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-Start-clarin.eu.cr1.c_1271859438178">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-Start-clarin.eu.cr1.c_1271859438178"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="complextype-End-clarin.eu.cr1.c_1271859438178">
+        <xs:simpleContent>
+            <xs:extension base="cmd:simpletype-End-clarin.eu.cr1.c_1271859438178"/>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:element name="CMD">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="Header">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="MdCreator" minOccurs="0" maxOccurs="unbounded">
+                                <xs:complexType>
+                                    <xs:simpleContent>
+                                        <xs:extension base="xs:string">
+                                            <xs:anyAttribute namespace="##other" processContents="lax"/>
+                                        </xs:extension>
+                                    </xs:simpleContent>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="MdCreationDate" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:simpleContent>
+                                        <xs:extension base="xs:date">
+                                            <xs:anyAttribute namespace="##other" processContents="lax"/>
+                                        </xs:extension>
+                                    </xs:simpleContent>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="MdSelfLink" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:simpleContent>
+                                        <xs:extension base="xs:anyURI">
+                                            <xs:anyAttribute namespace="##other" processContents="lax"/>
+                                        </xs:extension>
+                                    </xs:simpleContent>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="MdProfile" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:simpleContent>
+                                        <xs:extension base="xs:anyURI">
+                                            <xs:anyAttribute namespace="##other" processContents="lax"/>
+                                        </xs:extension>
+                                    </xs:simpleContent>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="MdCollectionDisplayName" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:simpleContent>
+                                        <xs:extension base="xs:string">
+                                            <xs:anyAttribute namespace="##other" processContents="lax"/>
+                                        </xs:extension>
+                                    </xs:simpleContent>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                        <xs:anyAttribute namespace="##other" processContents="lax"/>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="Resources">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="ResourceProxyList">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element maxOccurs="unbounded" minOccurs="0" name="ResourceProxy">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element maxOccurs="1" minOccurs="1" name="ResourceType">
+                                                        <xs:complexType>
+                                                            <xs:simpleContent>
+                                                                <xs:extension base="cmd:Resourcetype_simple">
+                                                                    <xs:attribute name="mimetype" type="xs:string"/>
+                                                                    <xs:anyAttribute namespace="##other" processContents="lax"/>
+                                                                </xs:extension>
+                                                            </xs:simpleContent>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element maxOccurs="1" minOccurs="1" name="ResourceRef">
+                                                        <xs:complexType>
+                                                            <xs:simpleContent>
+                                                                <xs:extension base="xs:anyURI">
+                                                                    <xs:anyAttribute namespace="##other" processContents="lax"/>
+                                                                </xs:extension>
+                                                            </xs:simpleContent>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                                <xs:attribute name="id" type="xs:ID" use="required"/>
+                                                <xs:anyAttribute namespace="##other" processContents="lax"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:anyAttribute namespace="##other" processContents="lax"/>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="JournalFileProxyList">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element maxOccurs="unbounded" minOccurs="0" name="JournalFileProxy">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element maxOccurs="1" minOccurs="1" name="JournalFileRef">
+                                                        <xs:complexType>
+                                                            <xs:simpleContent>
+                                                                <xs:extension base="xs:anyURI">
+                                                                    <xs:anyAttribute namespace="##other" processContents="lax"/>
+                                                                </xs:extension>
+                                                            </xs:simpleContent>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                                <xs:anyAttribute namespace="##other" processContents="lax"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:anyAttribute namespace="##other" processContents="lax"/>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="ResourceRelationList">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element maxOccurs="unbounded" minOccurs="0" name="ResourceRelation">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element maxOccurs="1" minOccurs="1" name="RelationType">
+                                                        <xs:complexType>
+                                                            <xs:simpleContent>
+                                                                <xs:extension base="xs:string">
+                                                                    <xs:anyAttribute namespace="##other" processContents="lax"/>
+                                                                </xs:extension>
+                                                            </xs:simpleContent>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element maxOccurs="1" minOccurs="1" name="Res1">
+                                                        <xs:complexType>
+                                                            <xs:attribute name="ref" type="xs:IDREF"/>
+                                                            <xs:anyAttribute namespace="##other" processContents="lax"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element maxOccurs="1" minOccurs="1" name="Res2">
+                                                        <xs:complexType>
+                                                            <xs:attribute name="ref" type="xs:IDREF"/>
+                                                            <xs:anyAttribute namespace="##other" processContents="lax"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                                <xs:anyAttribute namespace="##other" processContents="lax"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:anyAttribute namespace="##other" processContents="lax"/>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element minOccurs="0" name="IsPartOfList">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element maxOccurs="unbounded" minOccurs="0" name="IsPartOf">
+                                            <xs:complexType>
+                                                <xs:simpleContent>
+                                                    <xs:extension base="xs:anyURI">
+                                                        <xs:anyAttribute namespace="##other" processContents="lax"/>
+                                                    </xs:extension>
+                                                </xs:simpleContent>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:anyAttribute namespace="##other" processContents="lax"/>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                        <xs:anyAttribute namespace="##other" processContents="lax"/>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="Components">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="lat-SL-session" minOccurs="1" maxOccurs="1">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="History" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                        <xs:element name="Name" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2544_3626545e-a21d-058c-ebfd-241c0464e7e5" type="xs:string" minOccurs="1" maxOccurs="1" ann:displaypriority="1"/>
+                                        <xs:element name="Title" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2545_d873f2ab-2a2f-29d6-a9ab-260cde57f227" type="xs:string" minOccurs="0" maxOccurs="1" ann:displaypriority="2"/>
+                                        <xs:element name="Date" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2510_2402e609-046a-dfbf-c2d7-5a2f1ae6dc86" minOccurs="1" maxOccurs="1" type="cmd:complextype-Date-1---"/>
+                                        <xs:element name="descriptions" minOccurs="0" maxOccurs="1">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="Description" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2520_9eeedfb4-47d3-ddee-cfcb-99ac634bf1db" minOccurs="0" ann:displaypriority="1">
+                                                        <xs:complexType>
+                                                            <xs:simpleContent>
+                                                                <xs:extension base="xs:string">
+                                                                    <xs:attribute ref="xml:lang"/>
+                                                                </xs:extension>
+                                                            </xs:simpleContent>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                                <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712036"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="InfoLink" minOccurs="0" maxOccurs="unbounded">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="Description" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2520_9eeedfb4-47d3-ddee-cfcb-99ac634bf1db" minOccurs="0" ann:displaypriority="1">
+                                                        <xs:complexType>
+                                                            <xs:simpleContent>
+                                                                <xs:extension base="xs:string">
+                                                                    <xs:attribute ref="xml:lang"/>
+                                                                </xs:extension>
+                                                            </xs:simpleContent>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                                <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712063"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="Location" minOccurs="1" maxOccurs="1">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="Continent" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2531_e0427265-2fc4-d23e-0a7c-a21981ec3734" minOccurs="1" maxOccurs="1" type="cmd:complextype-Continent-clarin.eu.cr1.c_1407745712016"/>
+                                                    <xs:element name="Country" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2532_d004b0a6-fd1d-3ca3-abf1-1e6aeb3e37b2" type="xs:string" minOccurs="1" maxOccurs="1" ann:displaypriority="1"/>
+                                                    <xs:element name="Region" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2533_fa6e1812-e29b-3cf6-e15a-50aa34b9be68" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+                                                    <xs:element name="Address" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2528_1eaf4da1-64cc-71fc-1622-bb5bfd6e52c9" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                    <xs:element name="geoCoordinates" minOccurs="0" maxOccurs="unbounded">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="Latitude" dcr:datcat="http://hdl.handle.net/11459/CCR_C-5582_0d7dc9e3-e288-56f8-2d9e-c91ae59f436f" type="xs:decimal" minOccurs="1" maxOccurs="1" ann:displaypriority="1"/>
+                                                                <xs:element name="Longitude" dcr:datcat="http://hdl.handle.net/11459/CCR_C-5583_8be52a01-2494-9656-bfef-39e7f748d104" type="xs:decimal" minOccurs="1" maxOccurs="1"/>
+                                                                <xs:element name="Elevation" dcr:datcat="http://hdl.handle.net/11459/CCR_C-6831_b35d8a30-b199-f4a5-b0ef-c3dfa2ba1d59" type="xs:decimal" minOccurs="0" maxOccurs="1"/>
+                                                            </xs:sequence>
+                                                            <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                            <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712017"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                                <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712016"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="Project" minOccurs="1" maxOccurs="1">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="Name" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2536_13fc5f10-c14a-1f64-a669-32736f6d3ef5" type="xs:string" minOccurs="1" maxOccurs="1" ann:displaypriority="1"/>
+                                                    <xs:element name="Title" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2537_fa206273-223a-f4fa-dde3-ba59b965701f" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                    <xs:element name="Id" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2535_a4f0e587-455a-ef40-c129-9f605e4c8fad" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                    <xs:element name="Contact" minOccurs="1" maxOccurs="unbounded">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="Name" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2454_e0e88868-2fc6-a87e-cd0d-d8f69c85b41d" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                <xs:element name="Address" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2505_b61e249b-ac68-b40a-0f21-03a4a26e16b4" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                <xs:element name="Email" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2521_7b01b455-0de8-d753-ad4e-dee49953ae98" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                <xs:element name="Organisation" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2459_fc4e74d6-84de-c8cd-1ae8-2c2be5ee90b1" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                            </xs:sequence>
+                                                            <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                            <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1271859438180"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="descriptions" minOccurs="0" maxOccurs="1">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="Description" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2520_9eeedfb4-47d3-ddee-cfcb-99ac634bf1db" minOccurs="0" ann:displaypriority="1">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute ref="xml:lang"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                            <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712036"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="InfoLink" minOccurs="0" maxOccurs="unbounded">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="Description" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2520_9eeedfb4-47d3-ddee-cfcb-99ac634bf1db" minOccurs="0" ann:displaypriority="1">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute ref="xml:lang"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                            <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712063"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                                <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1430905751649"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="SL_CreativeCommonsLicense" minOccurs="0" maxOccurs="1">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="AnnotationFiles" type="xs:string" minOccurs="0" maxOccurs="1" ann:displaypriority="1"/>
+                                                    <xs:element name="AnnotationFiles_URL" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                    <xs:element name="MediaFiles" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                    <xs:element name="MediaFiles_URL" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                </xs:sequence>
+                                                <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1417698604602"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="Keys" minOccurs="0" maxOccurs="1">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="Key" dcr:datcat="http://hdl.handle.net/11459/CCR_C-4174_8c1a1567-a86d-50d8-e208-e030f2688c98" minOccurs="1" maxOccurs="unbounded" ann:documentation="This element is designed to ensure backwards compatibility to IMDI metadata. Please only use it for this purpose." ann:displaypriority="1">
+                                                        <xs:complexType>
+                                                            <xs:simpleContent>
+                                                                <xs:extension base="xs:string">
+                                                                    <xs:attribute name="Name" type="xs:string"/>
+                                                                    <xs:attribute name="Link" type="xs:anyURI"/>
+                                                                    <xs:attribute name="Type">
+                                                                        <xs:simpleType>
+                                                                            <xs:restriction base="xs:string">
+                                                                                <xs:enumeration value="ClosedVocabulary" dcr:datcat="" ann:label=""/>
+                                                                                <xs:enumeration value="ClosedVocabularyList" dcr:datcat="" ann:label=""/>
+                                                                                <xs:enumeration value="OpenVocabulary" dcr:datcat="" ann:label=""/>
+                                                                                <xs:enumeration value="OpenVocabularyList" dcr:datcat="" ann:label=""/>
+                                                                            </xs:restriction>
+                                                                        </xs:simpleType>
+                                                                    </xs:attribute>
+                                                                </xs:extension>
+                                                            </xs:simpleContent>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                                <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712044"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="SL-Content" minOccurs="1" maxOccurs="1">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="Genre" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2470_d191f2b2-6339-f031-b534-70d526b28357" type="xs:string" minOccurs="1" maxOccurs="1" ann:displaypriority="1"/>
+                                                    <xs:element name="SubGenre" dcr:datcat="http://hdl.handle.net/11459/CCR_C-3899_c6c608e7-cb2e-1832-09ff-aee36e1f2ed4" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                    <xs:element name="Task" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2500_a16d939a-58e3-121d-aaa3-05237ec2d206" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                    <xs:element name="Modalities" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2490_44bc38a3-1799-4149-c791-40ac0176f0ff" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                    <xs:element name="Subject" dcr:datcat="http://hdl.handle.net/11459/CCR_C-6543_92dacb75-3098-0d5a-0665-94ddb6274f8c" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                    <xs:element name="ElicitationMethod" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                    <xs:element name="CommunicationContext">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="Interactivity" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2476_d4606c12-013a-0155-14e2-daa5a4400ef2" minOccurs="0" maxOccurs="1" type="cmd:complextype-Interactivity-clarin.eu.cr1.c_1456409483206" ann:displaypriority="1"/>
+                                                                <xs:element name="PlanningType" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2492_304b514c-3633-e348-ddef-f9222c288e10" minOccurs="0" maxOccurs="unbounded" type="cmd:complextype-PlanningType-clarin.eu.cr1.c_1456409483206" ann:displaypriority="2"/>
+                                                                <xs:element name="Involvement" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2477_e8c26158-647f-fcdb-2dd1-7cc7457e7f8e" minOccurs="0" maxOccurs="1" type="cmd:complextype-Involvement-clarin.eu.cr1.c_1456409483206" ann:displaypriority="3"/>
+                                                                <xs:element name="SocialContext" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2493_692957bc-2214-5175-99e5-c727b37ddf0f" minOccurs="0" maxOccurs="1" type="cmd:complextype-SocialContext-clarin.eu.cr1.c_1456409483206" ann:displaypriority="4"/>
+                                                                <xs:element name="EventStructure" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2469_2160b7a0-80f7-2d68-5f3e-997e052a1602" minOccurs="0" maxOccurs="unbounded" type="cmd:complextype-EventStructure-clarin.eu.cr1.c_1456409483206" ann:displaypriority="5"/>
+                                                                <xs:element name="Channel" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2464_be58b081-dad1-85f8-d20d-0445078f4ac0" minOccurs="0" maxOccurs="1" type="cmd:complextype-Channel-clarin.eu.cr1.c_1456409483206" ann:displaypriority="6"/>
+                                                            </xs:sequence>
+                                                            <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                            <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1456409483206"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="Content_Languages" minOccurs="0" maxOccurs="1">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="descriptions" minOccurs="0" maxOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Description" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2520_9eeedfb4-47d3-ddee-cfcb-99ac634bf1db" minOccurs="0" ann:displaypriority="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:simpleContent>
+                                                                                        <xs:extension base="xs:string">
+                                                                                            <xs:attribute ref="xml:lang"/>
+                                                                                        </xs:extension>
+                                                                                    </xs:simpleContent>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712036"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="Content_Language" minOccurs="0" maxOccurs="unbounded">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Id" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2482_08eded24-4086-7e3f-88e5-e0807fb01e17" minOccurs="1" maxOccurs="1" type="cmd:complextype-Id-clarin.eu.cr1.c_1469541567400"/>
+                                                                            <xs:element name="Name" type="xs:string" minOccurs="1" maxOccurs="1" ann:displaypriority="1"/>
+                                                                            <xs:element name="Dominant" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2468_e4135e12-c272-171e-a8a2-48339228387b" minOccurs="1" maxOccurs="1" type="cmd:complextype-Dominant-clarin.eu.cr1.c_1469541567400"/>
+                                                                            <xs:element name="SourceLanguage" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2494_2451c60f-fd9f-6c36-02f6-ac5b8929f487" minOccurs="1" maxOccurs="1" type="cmd:complextype-SourceLanguage-clarin.eu.cr1.c_1469541567400"/>
+                                                                            <xs:element name="TargetLanguage" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2499_52993a80-0bcf-d671-22dc-903effdb98b7" minOccurs="1" maxOccurs="1" type="cmd:complextype-TargetLanguage-clarin.eu.cr1.c_1469541567400"/>
+                                                                            <xs:element name="descriptions" minOccurs="0" maxOccurs="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:sequence>
+                                                                                        <xs:element name="Description" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2520_9eeedfb4-47d3-ddee-cfcb-99ac634bf1db" minOccurs="0" ann:displaypriority="1">
+                                                                                            <xs:complexType>
+                                                                                                <xs:simpleContent>
+                                                                                                    <xs:extension base="xs:string">
+                                                                                                        <xs:attribute ref="xml:lang"/>
+                                                                                                    </xs:extension>
+                                                                                                </xs:simpleContent>
+                                                                                            </xs:complexType>
+                                                                                        </xs:element>
+                                                                                    </xs:sequence>
+                                                                                    <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                                    <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712036"/>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1469541567400"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                            <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1469541567401"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="SL_Interpreting" minOccurs="0" maxOccurs="1">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="Source" type="xs:string" minOccurs="0" maxOccurs="1" ann:displaypriority="1"/>
+                                                                <xs:element name="Target" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                <xs:element name="Visibility" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                <xs:element name="Audience" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                            </xs:sequence>
+                                                            <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                            <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1417698604600"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="Keys" minOccurs="0" maxOccurs="1">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="Key" dcr:datcat="http://hdl.handle.net/11459/CCR_C-4174_8c1a1567-a86d-50d8-e208-e030f2688c98" minOccurs="1" maxOccurs="unbounded" ann:documentation="This element is designed to ensure backwards compatibility to IMDI metadata. Please only use it for this purpose." ann:displaypriority="1">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute name="Name" type="xs:string"/>
+                                                                                <xs:attribute name="Link" type="xs:anyURI"/>
+                                                                                <xs:attribute name="Type">
+                                                                                    <xs:simpleType>
+                                                                                        <xs:restriction base="xs:string">
+                                                                                            <xs:enumeration value="ClosedVocabulary" dcr:datcat="" ann:label=""/>
+                                                                                            <xs:enumeration value="ClosedVocabularyList" dcr:datcat="" ann:label=""/>
+                                                                                            <xs:enumeration value="OpenVocabulary" dcr:datcat="" ann:label=""/>
+                                                                                            <xs:enumeration value="OpenVocabularyList" dcr:datcat="" ann:label=""/>
+                                                                                        </xs:restriction>
+                                                                                    </xs:simpleType>
+                                                                                </xs:attribute>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                            <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712044"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="descriptions" minOccurs="0" maxOccurs="1">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="Description" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2520_9eeedfb4-47d3-ddee-cfcb-99ac634bf1db" minOccurs="0" ann:displaypriority="1">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute ref="xml:lang"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                            <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712036"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                                <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1417698604601"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="SL-Actors" minOccurs="0" maxOccurs="1">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="descriptions" minOccurs="0" maxOccurs="unbounded">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="Description" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2520_9eeedfb4-47d3-ddee-cfcb-99ac634bf1db" minOccurs="0" ann:displaypriority="1">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute ref="xml:lang"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                            <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712036"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="SL-Actor" minOccurs="0" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-4146_5ccc45c8-d729-c180-2bf1-fccc56dde24d">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="Role" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2559_edfe42c0-c0e0-9bf9-671d-60e3d075be81" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                                                                <xs:element name="Name" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2557_362261de-9ef9-1fbc-a5cd-5d55a8d44aa2" type="xs:string" minOccurs="1" maxOccurs="1" ann:displaypriority="1"/>
+                                                                <xs:element name="FullName" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2556_d852af6c-c978-30ab-45aa-31cb9eaf11c4" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                <xs:element name="Code" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2552_7b604b33-4a8f-5357-8aba-5d4d9b8ef32b" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                <xs:element name="FamilySocialRole" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2561_7ed5ad20-8c48-3a1c-0830-309f4db96822" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                                                                <xs:element name="EthnicGroup" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2555_2cd97c4f-f40b-7435-0e45-dcd4ef11e5cd" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                                                                <xs:element name="BirthDate" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2551_6a3c9287-a92d-89e5-e537-9d0ff14bbdc2" minOccurs="1" maxOccurs="1" type="cmd:complextype-BirthDate-clarin.eu.cr1.c_1417698604599"/>
+                                                                <xs:element name="Sex" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2560_ebb466e1-2b6b-6701-4e64-94618b4b455b" minOccurs="1" maxOccurs="1" type="cmd:complextype-Sex-clarin.eu.cr1.c_1417698604599"/>
+                                                                <xs:element name="Education" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2554_9de315eb-5f32-fec4-c445-cda05f2bde00" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                                                                <xs:element name="Anonymized" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2548_659fd2af-ffa3-f1ee-059d-2c59533b8467" minOccurs="0" maxOccurs="1" type="cmd:complextype-Anonymized-clarin.eu.cr1.c_1417698604599"/>
+                                                                <xs:element name="Handedness" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                <xs:element name="Region" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                <xs:element name="Age" minOccurs="1" maxOccurs="1" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2550_cdb6b956-9997-0923-68ef-09de017f24ef">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="EstimatedAge" type="xs:string" minOccurs="0" maxOccurs="1" ann:displaypriority="1"/>
+                                                                            <xs:element name="ExactAge" minOccurs="0" maxOccurs="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:sequence>
+                                                                                        <xs:element name="years" type="xs:int" minOccurs="1" maxOccurs="1" ann:displaypriority="1"/>
+                                                                                        <xs:element name="months" type="xs:int" minOccurs="0" maxOccurs="1"/>
+                                                                                        <xs:element name="days" type="xs:int" minOccurs="0" maxOccurs="1"/>
+                                                                                    </xs:sequence>
+                                                                                    <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                            <xs:element name="AgeRange" minOccurs="0" maxOccurs="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:sequence>
+                                                                                        <xs:element name="MinimumAge" minOccurs="1" maxOccurs="1">
+                                                                                            <xs:complexType>
+                                                                                                <xs:sequence>
+                                                                                                    <xs:element name="years" type="xs:int" minOccurs="1" maxOccurs="1" ann:displaypriority="1"/>
+                                                                                                    <xs:element name="months" type="xs:int" minOccurs="0" maxOccurs="1"/>
+                                                                                                    <xs:element name="days" type="xs:int" minOccurs="0" maxOccurs="1"/>
+                                                                                                </xs:sequence>
+                                                                                                <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                                            </xs:complexType>
+                                                                                        </xs:element>
+                                                                                        <xs:element name="MaximumAge" minOccurs="1" maxOccurs="1">
+                                                                                            <xs:complexType>
+                                                                                                <xs:sequence>
+                                                                                                    <xs:element name="years" type="xs:int" minOccurs="1" maxOccurs="1" ann:displaypriority="1"/>
+                                                                                                    <xs:element name="months" type="xs:int" minOccurs="0" maxOccurs="1"/>
+                                                                                                    <xs:element name="days" type="xs:int" minOccurs="0" maxOccurs="1"/>
+                                                                                                </xs:sequence>
+                                                                                                <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                                            </xs:complexType>
+                                                                                        </xs:element>
+                                                                                    </xs:sequence>
+                                                                                    <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1455633534533"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="Contact" minOccurs="0" maxOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Name" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2454_e0e88868-2fc6-a87e-cd0d-d8f69c85b41d" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                            <xs:element name="Address" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2505_b61e249b-ac68-b40a-0f21-03a4a26e16b4" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                            <xs:element name="Email" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2521_7b01b455-0de8-d753-ad4e-dee49953ae98" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                            <xs:element name="Organisation" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2459_fc4e74d6-84de-c8cd-1ae8-2c2be5ee90b1" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1271859438180"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="SL_Deafness" minOccurs="0" maxOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Status" type="xs:string" minOccurs="0" maxOccurs="1" ann:displaypriority="1"/>
+                                                                            <xs:element name="AidType" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1417698604607"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="SL_SignLanguageExperience" minOccurs="0" maxOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="ExposureAge" type="xs:string" minOccurs="0" maxOccurs="1" ann:displaypriority="1"/>
+                                                                            <xs:element name="AcquisitionLocation" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                            <xs:element name="SignTeaching" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1417698604608"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="SL_Family" minOccurs="0" maxOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="SL_Mother" minOccurs="0" maxOccurs="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:sequence>
+                                                                                        <xs:element name="Deafness" type="xs:string" minOccurs="0" maxOccurs="1" ann:displaypriority="1"/>
+                                                                                        <xs:element name="PrimaryCommunicationForm" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                                    </xs:sequence>
+                                                                                    <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                                    <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1417698604609"/>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                            <xs:element name="SL_Father" minOccurs="0" maxOccurs="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:sequence>
+                                                                                        <xs:element name="Deafness" type="xs:string" minOccurs="0" maxOccurs="1" ann:displaypriority="1"/>
+                                                                                        <xs:element name="PrimaryCommunicationForm" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                                    </xs:sequence>
+                                                                                    <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                                    <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1417698604610"/>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                            <xs:element name="SL_Partner" minOccurs="0" maxOccurs="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:sequence>
+                                                                                        <xs:element name="Deafness" type="xs:string" minOccurs="0" maxOccurs="1" ann:displaypriority="1"/>
+                                                                                        <xs:element name="PrimaryCommunicationForm" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                                    </xs:sequence>
+                                                                                    <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                                    <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1417698604611"/>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1417698604613"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="SL_Education" minOccurs="0" maxOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Age" type="xs:string" minOccurs="0" maxOccurs="1" ann:displaypriority="1"/>
+                                                                            <xs:element name="SchoolType" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                            <xs:element name="ClassKind" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                            <xs:element name="EducationModel" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                            <xs:element name="Location" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                            <xs:element name="BoardingSchool" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1417698604614"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="Keys" minOccurs="0" maxOccurs="unbounded">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Key" dcr:datcat="http://hdl.handle.net/11459/CCR_C-4174_8c1a1567-a86d-50d8-e208-e030f2688c98" minOccurs="1" maxOccurs="unbounded" ann:documentation="This element is designed to ensure backwards compatibility to IMDI metadata. Please only use it for this purpose." ann:displaypriority="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:simpleContent>
+                                                                                        <xs:extension base="xs:string">
+                                                                                            <xs:attribute name="Name" type="xs:string"/>
+                                                                                            <xs:attribute name="Link" type="xs:anyURI"/>
+                                                                                            <xs:attribute name="Type">
+                                                                                                <xs:simpleType>
+                                                                                                    <xs:restriction base="xs:string">
+                                                                                                        <xs:enumeration value="ClosedVocabulary" dcr:datcat="" ann:label=""/>
+                                                                                                        <xs:enumeration value="ClosedVocabularyList" dcr:datcat="" ann:label=""/>
+                                                                                                        <xs:enumeration value="OpenVocabulary" dcr:datcat="" ann:label=""/>
+                                                                                                        <xs:enumeration value="OpenVocabularyList" dcr:datcat="" ann:label=""/>
+                                                                                                    </xs:restriction>
+                                                                                                </xs:simpleType>
+                                                                                            </xs:attribute>
+                                                                                        </xs:extension>
+                                                                                    </xs:simpleContent>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712044"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="descriptions" minOccurs="0" maxOccurs="unbounded">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Description" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2520_9eeedfb4-47d3-ddee-cfcb-99ac634bf1db" minOccurs="0" ann:displaypriority="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:simpleContent>
+                                                                                        <xs:extension base="xs:string">
+                                                                                            <xs:attribute ref="xml:lang"/>
+                                                                                        </xs:extension>
+                                                                                    </xs:simpleContent>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712036"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="Actor_Languages" minOccurs="0" maxOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="descriptions" minOccurs="0" maxOccurs="unbounded">
+                                                                                <xs:complexType>
+                                                                                    <xs:sequence>
+                                                                                        <xs:element name="Description" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2520_9eeedfb4-47d3-ddee-cfcb-99ac634bf1db" minOccurs="0" ann:displaypriority="1">
+                                                                                            <xs:complexType>
+                                                                                                <xs:simpleContent>
+                                                                                                    <xs:extension base="xs:string">
+                                                                                                        <xs:attribute ref="xml:lang"/>
+                                                                                                    </xs:extension>
+                                                                                                </xs:simpleContent>
+                                                                                            </xs:complexType>
+                                                                                        </xs:element>
+                                                                                    </xs:sequence>
+                                                                                    <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                                    <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712036"/>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                            <xs:element name="Actor_Language" minOccurs="0" maxOccurs="unbounded">
+                                                                                <xs:complexType>
+                                                                                    <xs:sequence>
+                                                                                        <xs:element name="Id" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2482_08eded24-4086-7e3f-88e5-e0807fb01e17" minOccurs="1" maxOccurs="1" type="cmd:complextype-Id-clarin.eu.cr1.c_1469541567398"/>
+                                                                                        <xs:element name="Name" type="xs:string" minOccurs="1" maxOccurs="1" ann:displaypriority="1"/>
+                                                                                        <xs:element name="MotherTongue" minOccurs="1" maxOccurs="1" type="cmd:complextype-MotherTongue-clarin.eu.cr1.c_1469541567398"/>
+                                                                                        <xs:element name="PrimaryLanguage" minOccurs="1" maxOccurs="1" type="cmd:complextype-PrimaryLanguage-clarin.eu.cr1.c_1469541567398"/>
+                                                                                        <xs:element name="descriptions" minOccurs="0" maxOccurs="1">
+                                                                                            <xs:complexType>
+                                                                                                <xs:sequence>
+                                                                                                    <xs:element name="Description" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2520_9eeedfb4-47d3-ddee-cfcb-99ac634bf1db" minOccurs="0" ann:displaypriority="1">
+                                                                                                        <xs:complexType>
+                                                                                                            <xs:simpleContent>
+                                                                                                                <xs:extension base="xs:string">
+                                                                                                                    <xs:attribute ref="xml:lang"/>
+                                                                                                                </xs:extension>
+                                                                                                            </xs:simpleContent>
+                                                                                                        </xs:complexType>
+                                                                                                    </xs:element>
+                                                                                                </xs:sequence>
+                                                                                                <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                                                <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712036"/>
+                                                                                            </xs:complexType>
+                                                                                        </xs:element>
+                                                                                    </xs:sequence>
+                                                                                    <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                                    <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1469541567398"/>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1469541567399"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                            <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1417698604599"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                                <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1417698604603"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="Resources" minOccurs="1" maxOccurs="1">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="MediaFile" minOccurs="0" maxOccurs="unbounded">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="Type" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2570_6f596a6d-4d5c-f336-d971-e61a310e2c8c" minOccurs="1" maxOccurs="1" type="cmd:complextype-Type-clarin.eu.cr1.c_1407745712030"/>
+                                                                <xs:element name="Format" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2571_2be2e583-e5af-34c2-3673-93359ec1f7df" type="xs:string" minOccurs="1" maxOccurs="1" ann:displaypriority="1"/>
+                                                                <xs:element name="Size" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2580_6dfe4e09-1c61-9b24-98ad-16bb867860fe" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                                                                <xs:element name="Quality" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2574_85e2b550-e877-599a-fb82-76812896f9da" minOccurs="0" maxOccurs="1" type="cmd:complextype-Quality-clarin.eu.cr1.c_1407745712030"/>
+                                                                <xs:element name="RecordingConditions" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2566_5a4ee887-bc58-38ee-9b1e-a06f1916d63c" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                <xs:element name="TimePosition" minOccurs="0" maxOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Start" dcr:datcat="http://hdl.handle.net/11459/CCR_C-3896_652d9600-df81-c3d1-978a-54e494077f3f" type="cmd:complextype-Start-clarin.eu.cr1.c_1271859438176"/>
+                                                                            <xs:element name="End" dcr:datcat="http://hdl.handle.net/11459/CCR_C-3897_50871416-220f-1154-2394-b63a27379c08" minOccurs="0" maxOccurs="1" type="cmd:complextype-End-clarin.eu.cr1.c_1271859438176"/>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1271859438176"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="Access" minOccurs="0" maxOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Availability" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2453_1f0c3ea5-7966-ae11-d3c6-448424d4e6e8" type="xs:string" minOccurs="1" maxOccurs="1" ann:displaypriority="1"/>
+                                                                            <xs:element name="Date" minOccurs="1" maxOccurs="1" type="cmd:complextype-Date-clarin.eu.cr1.c_1407745712053"/>
+                                                                            <xs:element name="Owner" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                                                                            <xs:element name="Publisher" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                                                                            <xs:element name="Contact" minOccurs="1" maxOccurs="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:sequence>
+                                                                                        <xs:element name="Name" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2454_e0e88868-2fc6-a87e-cd0d-d8f69c85b41d" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                                        <xs:element name="Address" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2505_b61e249b-ac68-b40a-0f21-03a4a26e16b4" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                                        <xs:element name="Email" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2521_7b01b455-0de8-d753-ad4e-dee49953ae98" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                                        <xs:element name="Organisation" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2459_fc4e74d6-84de-c8cd-1ae8-2c2be5ee90b1" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                                    </xs:sequence>
+                                                                                    <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                                    <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1271859438180"/>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                            <xs:element name="descriptions" minOccurs="0" maxOccurs="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:sequence>
+                                                                                        <xs:element name="Description" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2520_9eeedfb4-47d3-ddee-cfcb-99ac634bf1db" minOccurs="0" ann:displaypriority="1">
+                                                                                            <xs:complexType>
+                                                                                                <xs:simpleContent>
+                                                                                                    <xs:extension base="xs:string">
+                                                                                                        <xs:attribute ref="xml:lang"/>
+                                                                                                    </xs:extension>
+                                                                                                </xs:simpleContent>
+                                                                                            </xs:complexType>
+                                                                                        </xs:element>
+                                                                                    </xs:sequence>
+                                                                                    <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                                    <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712036"/>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712053"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="descriptions" minOccurs="0" maxOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Description" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2520_9eeedfb4-47d3-ddee-cfcb-99ac634bf1db" minOccurs="0" ann:displaypriority="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:simpleContent>
+                                                                                        <xs:extension base="xs:string">
+                                                                                            <xs:attribute ref="xml:lang"/>
+                                                                                        </xs:extension>
+                                                                                    </xs:simpleContent>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712036"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="Keys" minOccurs="0" maxOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Key" dcr:datcat="http://hdl.handle.net/11459/CCR_C-4174_8c1a1567-a86d-50d8-e208-e030f2688c98" minOccurs="1" maxOccurs="unbounded" ann:documentation="This element is designed to ensure backwards compatibility to IMDI metadata. Please only use it for this purpose." ann:displaypriority="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:simpleContent>
+                                                                                        <xs:extension base="xs:string">
+                                                                                            <xs:attribute name="Name" type="xs:string"/>
+                                                                                            <xs:attribute name="Link" type="xs:anyURI"/>
+                                                                                            <xs:attribute name="Type">
+                                                                                                <xs:simpleType>
+                                                                                                    <xs:restriction base="xs:string">
+                                                                                                        <xs:enumeration value="ClosedVocabulary" dcr:datcat="" ann:label=""/>
+                                                                                                        <xs:enumeration value="ClosedVocabularyList" dcr:datcat="" ann:label=""/>
+                                                                                                        <xs:enumeration value="OpenVocabulary" dcr:datcat="" ann:label=""/>
+                                                                                                        <xs:enumeration value="OpenVocabularyList" dcr:datcat="" ann:label=""/>
+                                                                                                    </xs:restriction>
+                                                                                                </xs:simpleType>
+                                                                                            </xs:attribute>
+                                                                                        </xs:extension>
+                                                                                    </xs:simpleContent>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712044"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                            <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712030"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="WrittenResource" minOccurs="0" maxOccurs="unbounded">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="Date" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2510_2402e609-046a-dfbf-c2d7-5a2f1ae6dc86" minOccurs="1" maxOccurs="1" type="cmd:complextype-Date-clarin.eu.cr1.c_1407745712029"/>
+                                                                <xs:element name="Type" dcr:datcat="http://hdl.handle.net/11459/CCR_C-3900_8cbd76e3-556e-8271-1baf-b2170c7017ab" type="xs:string" minOccurs="1" maxOccurs="1" ann:displaypriority="1"/>
+                                                                <xs:element name="SubType" dcr:datcat="http://hdl.handle.net/11459/CCR_C-3901_af291d73-7e01-a844-b88e-0d3f0c95bd84" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                <xs:element name="Format" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2465_4444eb51-7cf7-0ff7-7687-7f741f3a4f84" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                                                                <xs:element name="Size" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2580_6dfe4e09-1c61-9b24-98ad-16bb867860fe" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                                                                <xs:element name="Derivation" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2518_ea48054d-f23f-c493-bcc0-067561b87c67" minOccurs="0" maxOccurs="1" type="cmd:complextype-Derivation-clarin.eu.cr1.c_1407745712029"/>
+                                                                <xs:element name="CharacterEncoding" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2564_880b1108-6b03-647f-eed9-cdfbd464c661" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                <xs:element name="ContentEncoding" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                <xs:element name="LanguageId" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2482_08eded24-4086-7e3f-88e5-e0807fb01e17" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                <xs:element name="Anonymized" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2548_659fd2af-ffa3-f1ee-059d-2c59533b8467" minOccurs="0" maxOccurs="1" type="cmd:complextype-Anonymized-clarin.eu.cr1.c_1407745712029"/>
+                                                                <xs:element name="Validation" minOccurs="0" maxOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Type" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2587_026dcaa6-8ece-3364-8492-6479e70f66de" minOccurs="1" maxOccurs="1" type="cmd:complextype-Type-clarin.eu.cr1.c_1407745712057" ann:displaypriority="1"/>
+                                                                            <xs:element name="Methodology" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2586_75098d25-a517-983f-817c-2b05c5ce361a" minOccurs="1" maxOccurs="1" type="cmd:complextype-Methodology-clarin.eu.cr1.c_1407745712057"/>
+                                                                            <xs:element name="Level" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2585_0fcf8ea5-a273-d077-86e9-5e8f1c50fe72" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                                                                            <xs:element name="descriptions" minOccurs="0" maxOccurs="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:sequence>
+                                                                                        <xs:element name="Description" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2520_9eeedfb4-47d3-ddee-cfcb-99ac634bf1db" minOccurs="0" ann:displaypriority="1">
+                                                                                            <xs:complexType>
+                                                                                                <xs:simpleContent>
+                                                                                                    <xs:extension base="xs:string">
+                                                                                                        <xs:attribute ref="xml:lang"/>
+                                                                                                    </xs:extension>
+                                                                                                </xs:simpleContent>
+                                                                                            </xs:complexType>
+                                                                                        </xs:element>
+                                                                                    </xs:sequence>
+                                                                                    <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                                    <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712036"/>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712057"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="Access" minOccurs="0" maxOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Availability" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2453_1f0c3ea5-7966-ae11-d3c6-448424d4e6e8" type="xs:string" minOccurs="1" maxOccurs="1" ann:displaypriority="1"/>
+                                                                            <xs:element name="Date" minOccurs="1" maxOccurs="1" type="cmd:complextype-Date-clarin.eu.cr1.c_1407745712053"/>
+                                                                            <xs:element name="Owner" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                                                                            <xs:element name="Publisher" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                                                                            <xs:element name="Contact" minOccurs="1" maxOccurs="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:sequence>
+                                                                                        <xs:element name="Name" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2454_e0e88868-2fc6-a87e-cd0d-d8f69c85b41d" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                                        <xs:element name="Address" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2505_b61e249b-ac68-b40a-0f21-03a4a26e16b4" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                                        <xs:element name="Email" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2521_7b01b455-0de8-d753-ad4e-dee49953ae98" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                                        <xs:element name="Organisation" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2459_fc4e74d6-84de-c8cd-1ae8-2c2be5ee90b1" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                                    </xs:sequence>
+                                                                                    <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                                    <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1271859438180"/>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                            <xs:element name="descriptions" minOccurs="0" maxOccurs="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:sequence>
+                                                                                        <xs:element name="Description" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2520_9eeedfb4-47d3-ddee-cfcb-99ac634bf1db" minOccurs="0" ann:displaypriority="1">
+                                                                                            <xs:complexType>
+                                                                                                <xs:simpleContent>
+                                                                                                    <xs:extension base="xs:string">
+                                                                                                        <xs:attribute ref="xml:lang"/>
+                                                                                                    </xs:extension>
+                                                                                                </xs:simpleContent>
+                                                                                            </xs:complexType>
+                                                                                        </xs:element>
+                                                                                    </xs:sequence>
+                                                                                    <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                                    <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712036"/>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712053"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="descriptions" minOccurs="0" maxOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Description" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2520_9eeedfb4-47d3-ddee-cfcb-99ac634bf1db" minOccurs="0" ann:displaypriority="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:simpleContent>
+                                                                                        <xs:extension base="xs:string">
+                                                                                            <xs:attribute ref="xml:lang"/>
+                                                                                        </xs:extension>
+                                                                                    </xs:simpleContent>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712036"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="Keys" minOccurs="0" maxOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Key" dcr:datcat="http://hdl.handle.net/11459/CCR_C-4174_8c1a1567-a86d-50d8-e208-e030f2688c98" minOccurs="1" maxOccurs="unbounded" ann:documentation="This element is designed to ensure backwards compatibility to IMDI metadata. Please only use it for this purpose." ann:displaypriority="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:simpleContent>
+                                                                                        <xs:extension base="xs:string">
+                                                                                            <xs:attribute name="Name" type="xs:string"/>
+                                                                                            <xs:attribute name="Link" type="xs:anyURI"/>
+                                                                                            <xs:attribute name="Type">
+                                                                                                <xs:simpleType>
+                                                                                                    <xs:restriction base="xs:string">
+                                                                                                        <xs:enumeration value="ClosedVocabulary" dcr:datcat="" ann:label=""/>
+                                                                                                        <xs:enumeration value="ClosedVocabularyList" dcr:datcat="" ann:label=""/>
+                                                                                                        <xs:enumeration value="OpenVocabulary" dcr:datcat="" ann:label=""/>
+                                                                                                        <xs:enumeration value="OpenVocabularyList" dcr:datcat="" ann:label=""/>
+                                                                                                    </xs:restriction>
+                                                                                                </xs:simpleType>
+                                                                                            </xs:attribute>
+                                                                                        </xs:extension>
+                                                                                    </xs:simpleContent>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712044"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                            <xs:attribute name="mediaRef" type="xs:string"/>
+                                                            <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712029"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="Source" minOccurs="0" maxOccurs="unbounded">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="Id" dcr:datcat="http://hdl.handle.net/11459/CCR_C-3894_4d08cc31-25fe-af0c-add4-ca7bdc12f5f7" type="xs:string" minOccurs="1" maxOccurs="1" ann:displaypriority="1"/>
+                                                                <xs:element name="Format" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2465_4444eb51-7cf7-0ff7-7687-7f741f3a4f84" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                                                                <xs:element name="Quality" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2574_85e2b550-e877-599a-fb82-76812896f9da" minOccurs="1" maxOccurs="1" type="cmd:complextype-Quality-clarin.eu.cr1.c_1407745712056"/>
+                                                                <xs:element name="CounterPosition" minOccurs="0" maxOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Start" type="cmd:complextype-Start-clarin.eu.cr1.c_1271859438178"/>
+                                                                            <xs:element name="End" type="cmd:complextype-End-clarin.eu.cr1.c_1271859438178"/>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1271859438178"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="TimePosition" minOccurs="0" maxOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Start" dcr:datcat="http://hdl.handle.net/11459/CCR_C-3896_652d9600-df81-c3d1-978a-54e494077f3f" type="cmd:complextype-Start-clarin.eu.cr1.c_1271859438176"/>
+                                                                            <xs:element name="End" dcr:datcat="http://hdl.handle.net/11459/CCR_C-3897_50871416-220f-1154-2394-b63a27379c08" minOccurs="0" maxOccurs="1" type="cmd:complextype-End-clarin.eu.cr1.c_1271859438176"/>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1271859438176"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="Access" minOccurs="1" maxOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Availability" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2453_1f0c3ea5-7966-ae11-d3c6-448424d4e6e8" type="xs:string" minOccurs="1" maxOccurs="1" ann:displaypriority="1"/>
+                                                                            <xs:element name="Date" minOccurs="1" maxOccurs="1" type="cmd:complextype-Date-clarin.eu.cr1.c_1407745712053"/>
+                                                                            <xs:element name="Owner" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                                                                            <xs:element name="Publisher" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                                                                            <xs:element name="Contact" minOccurs="1" maxOccurs="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:sequence>
+                                                                                        <xs:element name="Name" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2454_e0e88868-2fc6-a87e-cd0d-d8f69c85b41d" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                                        <xs:element name="Address" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2505_b61e249b-ac68-b40a-0f21-03a4a26e16b4" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                                        <xs:element name="Email" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2521_7b01b455-0de8-d753-ad4e-dee49953ae98" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                                        <xs:element name="Organisation" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2459_fc4e74d6-84de-c8cd-1ae8-2c2be5ee90b1" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                                    </xs:sequence>
+                                                                                    <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                                    <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1271859438180"/>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                            <xs:element name="descriptions" minOccurs="0" maxOccurs="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:sequence>
+                                                                                        <xs:element name="Description" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2520_9eeedfb4-47d3-ddee-cfcb-99ac634bf1db" minOccurs="0" ann:displaypriority="1">
+                                                                                            <xs:complexType>
+                                                                                                <xs:simpleContent>
+                                                                                                    <xs:extension base="xs:string">
+                                                                                                        <xs:attribute ref="xml:lang"/>
+                                                                                                    </xs:extension>
+                                                                                                </xs:simpleContent>
+                                                                                            </xs:complexType>
+                                                                                        </xs:element>
+                                                                                    </xs:sequence>
+                                                                                    <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                                    <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712036"/>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712053"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="descriptions" minOccurs="0" maxOccurs="unbounded">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Description" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2520_9eeedfb4-47d3-ddee-cfcb-99ac634bf1db" minOccurs="0" ann:displaypriority="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:simpleContent>
+                                                                                        <xs:extension base="xs:string">
+                                                                                            <xs:attribute ref="xml:lang"/>
+                                                                                        </xs:extension>
+                                                                                    </xs:simpleContent>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712036"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="Keys" minOccurs="0" maxOccurs="unbounded">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Key" dcr:datcat="http://hdl.handle.net/11459/CCR_C-4174_8c1a1567-a86d-50d8-e208-e030f2688c98" minOccurs="1" maxOccurs="unbounded" ann:documentation="This element is designed to ensure backwards compatibility to IMDI metadata. Please only use it for this purpose." ann:displaypriority="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:simpleContent>
+                                                                                        <xs:extension base="xs:string">
+                                                                                            <xs:attribute name="Name" type="xs:string"/>
+                                                                                            <xs:attribute name="Link" type="xs:anyURI"/>
+                                                                                            <xs:attribute name="Type">
+                                                                                                <xs:simpleType>
+                                                                                                    <xs:restriction base="xs:string">
+                                                                                                        <xs:enumeration value="ClosedVocabulary" dcr:datcat="" ann:label=""/>
+                                                                                                        <xs:enumeration value="ClosedVocabularyList" dcr:datcat="" ann:label=""/>
+                                                                                                        <xs:enumeration value="OpenVocabulary" dcr:datcat="" ann:label=""/>
+                                                                                                        <xs:enumeration value="OpenVocabularyList" dcr:datcat="" ann:label=""/>
+                                                                                                    </xs:restriction>
+                                                                                                </xs:simpleType>
+                                                                                            </xs:attribute>
+                                                                                        </xs:extension>
+                                                                                    </xs:simpleContent>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712044"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                            <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712056"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="Anonyms" minOccurs="0" maxOccurs="1">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="Access" minOccurs="1" maxOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Availability" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2453_1f0c3ea5-7966-ae11-d3c6-448424d4e6e8" type="xs:string" minOccurs="1" maxOccurs="1" ann:displaypriority="1"/>
+                                                                            <xs:element name="Date" minOccurs="1" maxOccurs="1" type="cmd:complextype-Date-clarin.eu.cr1.c_1407745712053"/>
+                                                                            <xs:element name="Owner" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                                                                            <xs:element name="Publisher" type="xs:string" minOccurs="1" maxOccurs="1"/>
+                                                                            <xs:element name="Contact" minOccurs="1" maxOccurs="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:sequence>
+                                                                                        <xs:element name="Name" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2454_e0e88868-2fc6-a87e-cd0d-d8f69c85b41d" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                                        <xs:element name="Address" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2505_b61e249b-ac68-b40a-0f21-03a4a26e16b4" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                                        <xs:element name="Email" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2521_7b01b455-0de8-d753-ad4e-dee49953ae98" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                                        <xs:element name="Organisation" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2459_fc4e74d6-84de-c8cd-1ae8-2c2be5ee90b1" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                                                                    </xs:sequence>
+                                                                                    <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                                    <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1271859438180"/>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                            <xs:element name="descriptions" minOccurs="0" maxOccurs="1">
+                                                                                <xs:complexType>
+                                                                                    <xs:sequence>
+                                                                                        <xs:element name="Description" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2520_9eeedfb4-47d3-ddee-cfcb-99ac634bf1db" minOccurs="0" ann:displaypriority="1">
+                                                                                            <xs:complexType>
+                                                                                                <xs:simpleContent>
+                                                                                                    <xs:extension base="xs:string">
+                                                                                                        <xs:attribute ref="xml:lang"/>
+                                                                                                    </xs:extension>
+                                                                                                </xs:simpleContent>
+                                                                                            </xs:complexType>
+                                                                                        </xs:element>
+                                                                                    </xs:sequence>
+                                                                                    <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                                    <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712036"/>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                                        <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712053"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                            <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712055"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                                <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712031"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="References" minOccurs="0" maxOccurs="1">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="descriptions" minOccurs="0" maxOccurs="1">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="Description" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2520_9eeedfb4-47d3-ddee-cfcb-99ac634bf1db" minOccurs="0" ann:displaypriority="1">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute ref="xml:lang"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                            <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712036"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="InfoLink" minOccurs="0" maxOccurs="unbounded">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="Description" maxOccurs="unbounded" dcr:datcat="http://hdl.handle.net/11459/CCR_C-2520_9eeedfb4-47d3-ddee-cfcb-99ac634bf1db" minOccurs="0" ann:displaypriority="1">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute ref="xml:lang"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                            <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1407745712063"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                                <xs:attribute name="ref" type="xs:IDREFS"/>
+                                                <xs:attribute name="ComponentId" type="xs:anyURI" fixed="clarin.eu:cr1:c_1430905751650"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute name="ref" type="xs:IDREFS"/>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                        <xs:anyAttribute namespace="##other" processContents="lax"/>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+            <xs:attribute name="CMDVersion" fixed="1.1" use="required"/>
+            <xs:anyAttribute namespace="##other" processContents="lax"/>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

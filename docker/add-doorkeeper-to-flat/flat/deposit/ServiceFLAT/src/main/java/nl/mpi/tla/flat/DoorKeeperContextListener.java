@@ -30,7 +30,7 @@ public class DoorKeeperContextListener implements ServletContextListener {
         final String queue = sce.getServletContext().getInitParameter("doorkeeperQueue");
         executed = new LinkedHashMap<String,Flow>() {
             protected boolean removeEldestEntry(Map.Entry eldest) {
-            return size() > (queue!=null?Integer.parseInt(queue):100);
+            return size() > (queue!=null?Integer.parseInt(queue):100);// TODO: only remove eldest when status != null
         }};
     }
     

@@ -4,15 +4,13 @@ import nl.mpi.tla.flat.deposit.Flow;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
 import javax.ws.rs.DefaultValue;
 
@@ -25,6 +23,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriInfo;
 import javax.xml.transform.stream.StreamSource;
 import net.sf.saxon.s9api.QName;
 import net.sf.saxon.s9api.SaxonApiException;
@@ -51,13 +50,28 @@ public class DoorKeeperServlet {
     public Response putSip(
             @PathParam("sip") String sip, 
             @DefaultValue("") @QueryParam("from") String start,
-            @DefaultValue("") @QueryParam("to") String stop
+            @DefaultValue("") @QueryParam("to") String stop,
+            @Context UriInfo uriInfo
     ) {
         DoorKeeperContextListener doorkeeperContext = (DoorKeeperContextListener)servletContext.getAttribute("DOORKEEPER");
         Flow flow = doorkeeperContext.executed(sip);
         if (flow==null) {
             Map<String,XdmValue> params = new HashMap();
             params.put("sip", new XdmAtomicValue(sip));
+            for (Entry<String, List<String>> entry : uriInfo.getQueryParameters().entrySet()) {
+                String key = entry.getKey();
+                if (!(key.equals("from") || key.equals("to") )) {
+                    XdmAtomicValue param = null;
+                    for (String value:entry.getValue()) {
+                        XdmAtomicValue val = new XdmAtomicValue(value);
+                        if (param==null)
+                            param = val;
+                        else
+                            param.append(val);
+                    }
+                    params.put(key,param);
+                }
+            }
             String sipDir = "";
             try {
                 flow = this.getFlow(params);

@@ -11,7 +11,7 @@ ENV FLAT_HOST=localhost
 ENV FLAT_ICON_DIR=/app/flat/data/icons
 ENV FLAT_TIMEOUT=150
 ENV CMD_EXTENSION=cmdi
-
+ENV FLAT_NAMESPACE=lat
 
 #
 # Setup workdir
@@ -137,6 +137,7 @@ RUN	chmod u+x /start-*.sh
 ADD supervisor/*.conf /etc/supervisor/conf.d/
 ADD supervisor/start.sh /start.sh
 RUN	chmod u+x /start.sh
+RUN echo ". /etc/environment" >> /etc/default/supervisor
 
 ENTRYPOINT /start.sh
 

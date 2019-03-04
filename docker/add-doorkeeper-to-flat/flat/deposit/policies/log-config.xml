@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <logger name="nl.knaw.meertens" level="DEBUG">
+        <appender-ref ref="USER"/>
+        <appender-ref ref="DEVEL"/>
+    </logger>
+</configuration>

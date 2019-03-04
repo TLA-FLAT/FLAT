@@ -21,13 +21,21 @@ function flat_deposit_admin_form($form, &$form_state)
         '#tree' => TRUE,
     );
 
-    $paths = variable_get('flat_deposit_general');
+    $general = variable_get('flat_deposit_general');
+
+    $form['general']['namespace'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Fedora namespace'),
+        '#description' => t('Fedora namespace to be used for ingests'),
+        '#default_value' => $general['namespace'],
+        '#required' => true,
+    );
 
     $form['general']['external'] = array (
         '#type' => 'textfield',
         '#title' => t('Upload folder for external data'),
         '#description' => t('Directory where uploaded data will be stored'),
-        '#default_value' => $paths ['external'],
+        '#default_value' => $general ['external'],
         '#required' => TRUE,
     );
 
@@ -35,7 +43,7 @@ function flat_deposit_admin_form($form, &$form_state)
         '#type' => 'textfield',
         '#title' => t('Metadata folder'),
         '#description' => t('Directory for temporarily storing metadata'),
-        '#default_value' => $paths ['metadata'],
+        '#default_value' => $general ['metadata'],
         '#required' => TRUE,
     );
 
@@ -43,7 +51,7 @@ function flat_deposit_admin_form($form, &$form_state)
         '#type' => 'textfield',
         '#title' => t('Freeze folder'),
         '#description' => t('Directory where user bundles will be placed upon validation'),
-        '#default_value' => $paths ['freeze'],
+        '#default_value' => $general ['freeze'],
         '#required' => TRUE,
     );
 
@@ -153,11 +161,23 @@ function flat_deposit_admin_form($form, &$form_state)
         '#title' => t('Maximal number of files per bundle'),
         '#description' => t('Validation parameter for bundles before ingest'),
         '#default_value' => $service['max_ingest_files'],
-        '#required' => FALSE,
+        '#required' => TRUE,
+    );
+    $form['ingest_service']['max_file_size'] = array (
+        '#type' => 'textfield',
+        '#title' => t('Maximum size per ingested file (GB)'),
+        '#description' => t('Validation parameter for bundles before ingest'),
+        '#default_value' => $service['max_file_size'],
+        '#required' => TRUE,
     );
 
-
-
+    $form['ingest_service']['allowed_extensions'] = array (
+        '#type' => 'textarea',
+        '#title' => t('Allowed file extensions (comma separated list)'),
+        '#description' => t('Validation parameter for bundles before ingest'),
+        '#default_value' => $service['allowed_extensions'],
+        '#required' => TRUE,
+    );
 
     // FITS
     $form['fits'] = array(

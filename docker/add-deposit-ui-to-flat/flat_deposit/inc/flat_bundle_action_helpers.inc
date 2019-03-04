@@ -98,7 +98,7 @@ function bundle_new_files($nid) {
     $wrapper = entity_metadata_wrapper('node', $node);
     $location = $wrapper->flat_location->value();
 
-    $nFiles = count(array_diff(scandir(drupal_realpath($location)), ['.','..']));
+    $nFiles = count(file_scan_directory($location, '/.*/', array('min_depth' => 0)));
 
     if ($nFiles == 0) {
 
@@ -137,15 +137,67 @@ function bundle_deleted_files($nid) {
 
 function bundle_max_files_exceeded($nid) {
 
+    module_load_include('inc','flat_deposit','Helpers/CMDI/class.CmdiHandler');
+
     $node = node_load($nid);
     $wrapper = entity_metadata_wrapper('node', $node);
     $location = $wrapper->flat_location->value();
 
-    $nFiles = count(array_diff(scandir(drupal_realpath($location)), ['.','..']));
+    $fedora_id = $wrapper->flat_fid->value();
 
+    $cmdi_file = $wrapper->flat_cmdi_file->value();
+    $cmdi_file_uri = $cmdi_file['uri'];
+
+    if (file_exists(drupal_realpath($cmdi_file_uri))){
+        $cmd = @CmdiHandler::simplexml_load_cmdi_file(drupal_realpath($cmdi_file_uri));
+    }
+
+    $new_files = [];
+    if (file_exists($location)) {
+
+        $new_files = array_diff(preg_grep('/^([^.])/', scandir($location)), array('..', '.'));
+
+    }
+
+    $new_files_count = count($new_files);
+
+    $existing_files = [];
+
+    if ($fedora_id && $cmd) {
+
+        foreach ($cmd->children('cmd',true)->Resources->ResourceProxyList->ResourceProxy as $resource){
+
+            $resource_type = (String)$resource->children('cmd',true)->ResourceType;
+            if ($resource_type == 'LandingPage'){
+                continue;
+            }
+
+            else {
+
+                $resource_id = (string)$resource->attributes()->id;
+                $resourceref_attributes = $resource->children('cmd',true)->ResourceRef->attributes('lat', TRUE);
+                $fid = $resourceref_attributes['flatURI'];
+        
+                $fObj = islandora_object_load($fid);
+                $label = $fObj->label;
+                $existing_files[] = $label;
+
+            }
+
+        }
+
+    }
+
+    $existing_files_count = count($existing_files);
+
+    $replaced_files = array_intersect($new_files, $existing_files);
+    $replaced_files_count = count($replaced_files);
+
+    $totalFiles = $new_files_count + $existing_files_count - $replaced_files_count;
+    
     $max = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
 
-    if ($nFiles > $max) {
+    if ($totalFiles > $max) {
 
         return TRUE;
 
@@ -158,6 +210,106 @@ function bundle_max_files_exceeded($nid) {
     }
 
 }
+
+function bundle_max_file_size_exceeded($nid) {
+
+    $node = node_load($nid);
+    $wrapper = entity_metadata_wrapper('node', $node);
+    $location = $wrapper->flat_location->value();
+
+    $max_size = variable_get('flat_deposit_ingest_service')['max_file_size'];
+    $max_size_bytes = ($max_size * 1073741824);
+
+    $files = file_scan_directory($location, '/.*/', array('min_depth' => 0));
+
+    $max_file_size_exceeded = array();
+    foreach ($files as $file) {
+        $path = $file->uri;
+        $name = basename($path);
+        $size = filesize($path);
+        if ($size > $max_size_bytes) {
+            $max_file_size_exceeded[] = $name;
+        }
+    }
+    if (!empty($max_file_size_exceeded)) {
+
+        return $max_file_size_exceeded;
+
+    }
+
+    else {
+
+        return FALSE;
+
+    }
+
+}
+
+function bundle_invalid_file_names($nid) {
+
+    $node = node_load($nid);
+    $wrapper = entity_metadata_wrapper('node', $node);
+    $location = $wrapper->flat_location->value();
+
+    $filename_pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+$/';
+
+    $files = file_scan_directory($location, '/.*/', array('min_depth' => 0));
+
+    $invalid_file_names = array();
+    foreach ($files as $file) {
+        $path = $file->uri;
+        $name = basename($path);
+        if (preg_match($filename_pattern, $name) == FALSE) {
+            $invalid_file_names[] = $name;
+        }
+    }
+    if (!empty($invalid_file_names)) {
+
+        return $invalid_file_names;
+
+    }
+
+    else {
+
+        return FALSE;
+
+    }
+
+}
+
+function bundle_invalid_file_extensions($nid) {
+
+    $node = node_load($nid);
+    $wrapper = entity_metadata_wrapper('node', $node);
+    $location = $wrapper->flat_location->value();
+
+    $allowed_extensions = explode(', ', variable_get('flat_deposit_ingest_service')['allowed_extensions']);
+
+    $files = file_scan_directory($location, '/.*/', array('min_depth' => 0));
+
+    $invalid_file_extensions = array();
+    foreach ($files as $file) {
+        $path = $file->uri;
+        $name = basename($path);
+        $extension = pathinfo($path, PATHINFO_EXTENSION);
+        if (!in_array($extension, $allowed_extensions)) {
+            $invalid_file_extensions[] = $name;
+        }
+    }
+    if (!empty($invalid_file_extensions)) {
+
+        return $invalid_file_extensions;
+
+    }
+
+    else {
+
+        return FALSE;
+
+    }
+
+}
+
 
 
 function user_has_permissions($nid)

@@ -11,11 +11,15 @@ class FlatTuque
     /**
      * Performs a Mulgara sparql query to retrieve all children labels of a given fedora object.
      *
-     * @param $pid string fedpra ID of an object.
+     * @param $pid string fedora ID of an object.
      * @return array Strings with pid
      */
     static public function getChildrenLabels($pid)
     {
+
+        $config = variable_get('flat_deposit_general');
+        $namespace = $config['namespace'];
+
         $values = false;
         $fObj = islandora_object_load($pid);
         if ($fObj) {
@@ -28,7 +32,7 @@ class FlatTuque
             $results = $fObj->repository->ri->sparqlQuery($query);
             foreach ($results as $result) {
 
-                if (preg_match('/^lat:/',$result['pid']['value'])){
+                if (preg_match("/^$namespace/", $result['pid']['value'])) {
 
                     $values[] = $result['label']['value'];
                 }
