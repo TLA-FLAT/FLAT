@@ -109,7 +109,7 @@ function flat_deposit_set_ingest_service($updated_values=null)
         # Amount of files allowed to be in one bundle
         'max_ingest_files' => 3,
         'max_file_size' => 300,
-        'allowed_extensions' => "wav, mpg, mpeg, mp4, jpg, png, tiff, svg, eaf, pfsx, cha, tbt, TextGrid, txt, html, pdf, tbx, cut, typ, lng, set, xml, xsd, kml, img, hdr, eeg, seg, sav, spv, ehst, ehtp, mat, fig, IMA, ima, dcm, vhdr, vmkr, hfinf, pcl, sce, exp, Praat, praat",
+        'allowed_extensions' => "wav, mpg, mpeg, mp4, jpg, png, tiff, svg, eaf, pfsx, cha, tbt, TextGrid, txt, html, pdf, tbx, cut, typ, lng, set, xml, xsd, kml, img, hdr, eeg, seg, sav, spv, ehst, ehtp, mat, fig, IMA, ima, dcm, vhdr, vmkr, hfinf, pcl, sce, exp, Praat, praat, zip, gz, odt, ods, odp, csv",
     );
 
     //clean up stored values

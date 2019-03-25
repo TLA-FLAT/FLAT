@@ -458,6 +458,7 @@ function flat_deposit_admin_form_save_submit ($form, &$form_state)
     module_load_include('inc', 'flat_deposit', 'inc/config');
 
     flat_deposit_set_general($form_state['values']['general']);
+    flat_deposit_set_cmdi_profiles($form_state['values']['cmdi_profiles']);
     flat_deposit_set_fits($form_state['values']['fits']);
     flat_deposit_set_ingest_service($form_state['values']['ingest_service']);
     flat_deposit_set_sword($form_state['values']['sword']);
@@ -474,6 +475,7 @@ function flat_deposit_admin_form_reset_submit ($form, &$form_state){
     module_load_include('inc', 'flat_deposit', 'inc/config');
 
     flat_deposit_set_general();
+    flat_deposit_set_cmdi_profiles();
     flat_deposit_set_fits();
     flat_deposit_set_ingest_service();
     flat_deposit_set_sword();
@@ -490,6 +492,7 @@ function flat_deposit_admin_form_export_submit()
 
     $config = array(
         'general' =>  variable_get('flat_deposit_general'),
+        'cmdi_profiles' => variable_get('flat_deposit_cmdi_profiles'),
         'fits' => variable_get('flat_deposit_fits'),
         'ingest_service' => variable_get('flat_deposit_ingest_service'),
         'sword' => variable_get('flat_deposit_sword'),
@@ -584,6 +587,7 @@ function flat_deposit_admin_form_import_submit ($form, &$form_state){
 
 
     variable_set('flat_deposit_general', $form_state['values']['imported_values']['general']);
+    variable_set('flat_deposit_cmdi_profiles', $form_state['values']['imported_values']['cmdi_profiles']);
     variable_set('flat_deposit_fits', $form_state['values']['imported_values']['fits']);
     variable_set('flat_deposit_ingest_service', $form_state['values']['imported_values']['ingest_service']);
     variable_set('flat_deposit_sword', $form_state['values']['imported_values']['sword']);
