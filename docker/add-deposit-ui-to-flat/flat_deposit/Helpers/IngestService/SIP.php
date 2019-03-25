@@ -272,6 +272,30 @@ abstract class SIP
 
     }
 
+    function checkSwordRejected()
+    {
+        $this->logging('Waiting until Sword status is REJECTED');
+
+        $sipId = $this->sipId;
+
+        module_load_include('php', 'flat_deposit', '/Helpers/IngestService/Sword');
+
+        $sword = new Sword();
+        $check = $sword->swordRejected($sipId);
+
+        if (!$check) {
+
+            $message = 'Error Checking Sword REJECTED status, max time exceeded';
+            throw new IngestServiceException($message);
+
+        } else {
+            $this->logging('Sword status is REJECTED');
+            return true;
+
+        }
+
+    }
+
     function doDoorkeeper()
     {
         $this->logging('Starting doDoorkeeper');

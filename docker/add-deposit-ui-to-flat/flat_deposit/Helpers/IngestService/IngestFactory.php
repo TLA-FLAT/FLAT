@@ -51,6 +51,7 @@ class IngestFactory
         } catch (IngestServiceException $exception){
 
             $this->factorySIP->logging('IngestServiceException for SIP ' . $SIP->getSipId() . ' : ' . $exception->getMessage());
+            $this->factorySIP->checkSwordRejected();
             $this->factorySIP->rollback($exception->getMessage());
 
             return ($SIP->getSipId() . ' : ' . $exception->getMessage());

@@ -129,4 +129,42 @@ class Sword
             return TRUE;
         }
     }
+
+    /**
+     * Wait until Doorkeeper is done and Sword status is REJECTED
+     *
+     * Rollback should not start before this, as the Doorkeeper rollback may still be ongoing
+     *
+     */
+    function swordRejected($sipId)
+    {
+
+        $bagId = $sipId . '_sword';
+
+        $time = 0;
+
+        #initial check request
+        $val = $this->getRequest($bagId);
+        $xml = simplexml_load_string($val);
+        $status = (string)$xml->category['term'];
+
+        // loop and wait until SWORD signals end of request
+        while ($status == 'FINALIZING') {
+            sleep(2);
+            $time = $time + 2;
+            $val = $this->getRequest($bagId);
+            $xml = simplexml_load_string($val);
+            $status = (string)$xml->category['term'];
+            if ($time >= 600) {
+                return false;
+            }
+        };
+
+        // check outcome SWORD
+        if ($status = 'REJECTED') {
+            return true;
+        }
+
+    }
+
 }
