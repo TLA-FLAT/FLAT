@@ -6,40 +6,32 @@ function flat_deposit_cmdi_form($form, &$form_state)
 
     // exit form generation if no parent collection has been selected
     if (isset($form_state['parent_nid'])) {
-
         $parent_nid = $form_state['parent_nid'];
-
     } else {
-
         $node = menu_get_object();
         $wrapper = entity_metadata_wrapper('node', $node);
         $parent_nid = $wrapper->flat_parent_nid->value();
         $form_state['parent_nid'] = $parent_nid;
-
     }
 
     if ($parent_nid === '0') {
         drupal_set_message('Cannot generate or edit form because collection is not specified', 'error');
         return $form;
-
     }
 
     if (!empty($node->flat_cmdi_file)) {
         drupal_set_message('Cannot generate CMDI because file is already attached', 'error');
         return $form;
-
     }
 
 
     // Set selected profile as this is updated on every AJAX request
     if (isset($form_state['values']['select_profile_name'])) {
         $form_state['selected'] = $form_state['values']['select_profile_name'];
-
     }
 
     // unset saved 'ajax_select' value if the ajax_select-button is unselected, the saved value of this button is empty and no button has been clicked
     if (!isset($form_state['values']['select_profile_name']) AND !empty($form_state['selected']) AND !isset($form_state['clicked_button'])) {
-
         $form_state['selected'] = '';
     }
 
@@ -193,10 +185,9 @@ function flat_deposit_cmdi_form($form, &$form_state)
     //********************************************************************
 
     if (isset($form_state['selected']) AND !empty($form_state['selected'])) {
-
         module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
         $check = FormBuilder::checkTemplateItems($form_state['selected']);
-        if ($check !== TRUE){
+        if ($check !== TRUE) {
             drupal_set_message($check, 'warning');
             return $form;
         }
@@ -223,7 +214,7 @@ function flat_deposit_cmdi_form($form, &$form_state)
         $formBuilder->aggregatePressedButtons($form_state);
 
         // get the node in nested array from which we can start iterating all button presses per field
-        if (isset($form_state['pressedButtons']['template_container']['elements'])){
+        if (isset($form_state['pressedButtons']['template_container']['elements'])) {
             $pressedButtonsRoot = $form_state['pressedButtons']['template_container']['elements'];
         } else {
             $pressedButtonsRoot = null;
@@ -295,7 +286,7 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     $owner = $form_state['values']['owner'];
     $profile = $form_state['values']['select_profile_name'];
 
-    $export_dir = 'metadata://' . '/' . str_replace('@', '_at_' , $owner) . "/$collection/$title";
+    $export_dir = 'metadata://' . '/' . str_replace('@', '_at_', $owner) . "/$collection/$title";
     $cmdiFile = $export_dir . '/' . $profile . '_' . uniqid() . '.cmdi';
 
     $form_state['values']['cmdiFile'] = $cmdiFile;
@@ -308,19 +299,19 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     //****************************//
 
     // stop validation immediately if errors have previously occurred
-    if(form_get_errors()){
+    if (form_get_errors()) {
         return $form;
     }
 
     // Validate that selected profile is not empty
     if ($form_state['values']['select_profile_name'] === '-- Select --') {
-        form_set_error('select_profile_name', 'Please choose correct option');
+        form_set_error('select_profile_name', t('Please choose an option'));
         return $form;
     }
 
     // Validate if owner exists.
     if (!user_load_by_name($owner)) {
-        form_set_error('owner', 'Specified owner is unknown to drupal');
+        form_set_error('owner', t('Specified owner is unknown'));
         return $form;
     };
 
@@ -330,7 +321,7 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     }
 
     if (!file_exists($export_dir)) {
-        form_set_error('error', 'Cannot create directory to temporarily store cmdi files');
+        form_set_error('error', t('Cannot create directory to temporarily store cmdi files'));
         return $form;
     }
 
@@ -356,7 +347,7 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     $title = $form_state['values']['template_container']['elements']['title_field'][0];
 
     if (!$title) {
-        form_set_error('error', 'title is not set for this cmdi file');
+        form_set_error('error', t('title is not set for this cmdi file'));
         return $form;
     }
 
@@ -368,12 +359,12 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     $values = FlatTuque::getChildrenLabels($parent_fid);
 
     if ($values === false) {
-        form_set_error('title', 'Unable to validate that collection name is unique at this location');
+        form_set_error('title', t('Unable to validate that collection name is unique at this location'));
         return $form;
     }
 
     if (in_array(strtoupper($title), array_unique(array_map('strtoupper', $values)))) {
-        form_set_error('title', 'Another collection or bundle with same name exists at this location. Please use other name');
+        form_set_error('title', t('Another collection or bundle with same name exists at this location. Please use a different name'));
         return $form;
     }
 
@@ -381,7 +372,7 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     //*******************//
     // Generate Cmdi file//
     //*******************//
-    module_load_include('inc','flat_deposit','Helpers/CMDI/CmdiCreator/class.CmdiCreator');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
 
 
     $form_data = $form_state['values']['template_container']['elements'];
@@ -390,18 +381,18 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
 
     $creator = new CmdiCreator();
 
-    try{
+    try {
         $creator->setCmdi($templateName, $form_data, $owner);
         $cmdi = $creator->getCmdi();
-    } catch (CmdiCreatorException $e){
-        form_set_error('error',$e->getMessage());
+    } catch (CmdiCreatorException $e) {
+        form_set_error('error', $e->getMessage());
         return $form;
     }
 
     $exported = $cmdi->asXML($cmdiFile);
 
-    if (!$exported){
-        form_set_error('error','Unable to save cmdi file');
+    if (!$exported) {
+        form_set_error('error', t('Unable to save cmdi file'));
     }
 
 
@@ -418,20 +409,17 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     $cmdi = CmdiHandler::simplexml_load_cmdi_file(drupal_realpath($cmdiFile));
     try {
         $cmdi->canBeValidated();
-    } catch (CmdiHandlerException $cmdiHandlerException){
-        form_set_error('cmdi_file',$cmdiHandlerException->getMessage());
+    } catch (CmdiHandlerException $cmdiHandlerException) {
+        form_set_error('cmdi_file', $cmdiHandlerException->getMessage());
         return $form;
     }
-
-
     return $form;
-
 }
 
 
 
-function flat_deposit_cmdi_form_submit($form, &$form_state){
-
+function flat_deposit_cmdi_form_submit($form, &$form_state)
+{
     $node = menu_get_object();
     $wrapper = entity_metadata_wrapper('node', $node);
 
@@ -459,6 +447,4 @@ function flat_deposit_cmdi_form_submit($form, &$form_state){
     $form_state['redirect'] = 'node/' .$node->nid;
 
     drupal_set_message(t('Metadata for bundle %title has been saved', array('%title' => $node->title)));
-
 }
-

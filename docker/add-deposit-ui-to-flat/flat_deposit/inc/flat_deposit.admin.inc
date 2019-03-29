@@ -420,8 +420,8 @@ function flat_deposit_admin_form($form, &$form_state)
 /**
  * keeps the default password in case no
  */
-function keep_default_password($form, &$form_state) {
-
+function keep_default_password($form, &$form_state)
+{
     if (empty($form_state['values']['sword']['password'])) {
         $form_state['values']['sword']['password'] = variable_get('flat_deposit_sword')['password'];
     }
@@ -429,32 +429,27 @@ function keep_default_password($form, &$form_state) {
     if (empty($form_state['values']['fedora']['password'])) {
         $form_state['values']['fedora']['password'] = variable_get('flat_deposit_fedora')['password'];
     }
-
 }
 
-function flat_deposit_admin_form_save_validate($form, &$form_state){
-
+function flat_deposit_admin_form_save_validate($form, &$form_state)
+{
     $excluded = []; #fill with values if general get extra values that are not paths to check
-    foreach ( $form_state['values']['general'] as $key=>$path) {
-
-        if (!is_numeric(array_search($key, $excluded))){
-
-
-            if (!file_exists($path)) drupal_mkdir($path, NULL, TRUE);
+    foreach ($form_state['values']['general'] as $key => $path) {
+        if (!is_numeric(array_search($key, $excluded))) {
+            if (!file_exists($path)) {
+                drupal_mkdir($path, NULL, TRUE);
+            }
 
             if (!file_exists($path)) {
                 form_set_error($key, 'Directory ('. $path .') does not exist and cannot be created');
             }
         }
-
     }
-
 }
 
 
-function flat_deposit_admin_form_save_submit ($form, &$form_state)
+function flat_deposit_admin_form_save_submit($form, &$form_state)
 {
-
     module_load_include('inc', 'flat_deposit', 'inc/config');
 
     flat_deposit_set_general($form_state['values']['general']);
@@ -466,12 +461,12 @@ function flat_deposit_admin_form_save_submit ($form, &$form_state)
     flat_deposit_set_fedora($form_state['values']['fedora']);
     flat_deposit_set_solr($form_state['values']['solr']);
     drupal_set_message(t('Changed values have been saved'));
-
 }
 
 
 
-function flat_deposit_admin_form_reset_submit ($form, &$form_state){
+function flat_deposit_admin_form_reset_submit($form, &$form_state)
+{
     module_load_include('inc', 'flat_deposit', 'inc/config');
 
     flat_deposit_set_general();
@@ -509,11 +504,10 @@ function flat_deposit_admin_form_export_submit()
         'Content-Disposition' => 'attachment; filename=flat_deposit_settings.json');
 
     file_transfer($URI, $header);
-
 }
 
 
-function flat_deposit_admin_form_import_validate ($form, &$form_state)
+function flat_deposit_admin_form_import_validate($form, &$form_state)
 {
 
     // Check if file is specified
@@ -541,7 +535,6 @@ function flat_deposit_admin_form_import_validate ($form, &$form_state)
     $content = file_get_contents($tmp);
 
     if ($content === FALSE) {
-
         form_set_error('import', t('Settings file cannot be processed'));
         return $form;
     }
@@ -558,10 +551,8 @@ function flat_deposit_admin_form_import_validate ($form, &$form_state)
     $imported_values = json_decode($content, true);
 
     if ($imported_values === false) {
-
         form_set_error('import', t('Unable to decode the settings file'));
         return $form;
-
     }
 
     // validate that unserialization of imported string results in arrays corresponding to the drupal 'flat_deposit'-variables
@@ -571,7 +562,6 @@ function flat_deposit_admin_form_import_validate ($form, &$form_state)
         if (!empty(array_diff_key($imported_values[$check], $form_state['values'][$check]))) {
 
             form_set_error('imported variable keys do not match with flat_deposit variable keys');
-
         };
     }
 
@@ -582,10 +572,8 @@ function flat_deposit_admin_form_import_validate ($form, &$form_state)
 }
 
 
-
-function flat_deposit_admin_form_import_submit ($form, &$form_state){
-
-
+function flat_deposit_admin_form_import_submit($form, &$form_state)
+{
     variable_set('flat_deposit_general', $form_state['values']['imported_values']['general']);
     variable_set('flat_deposit_cmdi_profiles', $form_state['values']['imported_values']['cmdi_profiles']);
     variable_set('flat_deposit_fits', $form_state['values']['imported_values']['fits']);
@@ -595,9 +583,5 @@ function flat_deposit_admin_form_import_submit ($form, &$form_state){
     variable_set('flat_deposit_fedora', $form_state['values']['imported_values']['fedora']);
     variable_set('flat_deposit_solr', $form_state['values']['imported_values']['solr']);
 
-
-
     drupal_set_message(t('Setting import completed'));
-
-
 }

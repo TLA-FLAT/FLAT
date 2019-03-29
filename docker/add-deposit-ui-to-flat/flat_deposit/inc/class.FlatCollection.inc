@@ -4,7 +4,9 @@
  *
  */
 
-class FlatCollectiomException extends Exception {}
+class FlatCollectiomException extends Exception
+{
+}
 
 class FlatCollection
 {
@@ -17,13 +19,13 @@ class FlatCollection
      *
      * @return array results of the query
      */
-    static public function getUserCollectionNodes($user_id,  $fid = null)
+    public static function getUserCollectionNodes($user_id, $fid = null)
     {
         $query = new EntityFieldQuery();
         $query->entityCondition('entity_type', 'node')
             ->entityCondition('bundle', 'flat_collection')
             ->propertyCondition('uid', $user_id);
-        if ($fid){
+        if ($fid) {
             $query->fieldCondition('flat_fid', 'value', "$fid", '=');
         }
 
@@ -31,7 +33,4 @@ class FlatCollection
 
         return $collection_nodes;
     }
-
-
-
 }

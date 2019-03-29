@@ -2,7 +2,6 @@
 
 include_once('SIP.php');
 
-
 class IngestFactory
 {
 
@@ -16,7 +15,6 @@ class IngestFactory
      */
     protected $processLog;
 
-
     /**
      * @param SIP $SIP an instantiation of the SIP class
      *
@@ -28,8 +26,7 @@ class IngestFactory
     protected function DoSipIngest($SIP, $info)
     {
 
-        try{
-
+        try {
             $this->factorySIP = $SIP;
             $this->processLog = [];
             $this->processLog['ingestInitiated'] = $this->factorySIP->init($info);
@@ -47,18 +44,14 @@ class IngestFactory
             $this->processLog['finish'] = $this->factorySIP->finish();
 
             return $this->factorySIP->getFid();
-
-        } catch (IngestServiceException $exception){
-
+        } catch (IngestServiceException $exception) {
             $this->factorySIP->logging('IngestServiceException for SIP ' . $SIP->getSipId() . ' : ' . $exception->getMessage());
             $this->factorySIP->checkSwordRejected();
             $this->factorySIP->rollback($exception->getMessage());
 
             return ($SIP->getSipId() . ' : ' . $exception->getMessage());
         }
-
     }
-
 
     /**
      * public request for factory to ingest a sip
@@ -69,9 +62,8 @@ class IngestFactory
      *
      * @return mixed|string
      */
-    public function RequestSipIngest($SIP, $info = []){
-
+    public function RequestSipIngest($SIP, $info = [])
+    {
         return $this->DoSipIngest($SIP, $info);
     }
-
 }

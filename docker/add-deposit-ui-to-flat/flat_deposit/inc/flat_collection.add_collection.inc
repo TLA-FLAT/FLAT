@@ -1,7 +1,7 @@
 <?php
 
-function flat_collection_add_form($form, &$form_state, $fedoraObject){
-
+function flat_collection_add_form($form, &$form_state, $fedoraObject)
+{
     drupal_set_title(t('Add Collection'));
 
     ctools_add_js('ajax-responder');
@@ -9,7 +9,6 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject){
     // Set selected profile as this is updated on every AJAX request
     if (isset($form_state['values']['select_profile_name'])) {
         $form_state['selected'] =  $form_state['values']['select_profile_name'];
-
     }
 
     // unset saved 'ajax_select' value if the ajax_select-button is unselected, the saved value of this button is empty and no button has been clicked
@@ -36,7 +35,7 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject){
         '#default_value' => $user->name,
     );
 
-    if (!user_access('admin collection')){
+    if (!user_access('admin collection')) {
         $form['owner']['#disabled'] = TRUE;
     }
 
@@ -53,7 +52,9 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject){
             'effect' => 'fade',
         ),
     );
-    if (isset($form_state['selected'])){$form['trigger']['select_profile_name']['#default_value'] = $form_state['selected'];};
+    if (isset($form_state['selected'])) {
+        $form['trigger']['select_profile_name']['#default_value'] = $form_state['selected'];
+    };
 
     $form['cmdi_file'] = array(
         '#type' => 'file',
@@ -71,7 +72,7 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject){
     $form['select_policy'] = array(
         '#title' => t('Which access policy do you want to apply?'),
         '#type' => 'select',
-	'#description' => t('Select which access policy should be applied as the default for bundles within this collection. "Public" materials can be accessed by anyone without having to log in. "Authenticated Users" means any user with a valid account for the archive. "Academic Users" are users that logs in with an academic account or whose academic status has been verified. "Private" means that the materials are only accessible to the depositor. Access policies can be refined later.'),
+        '#description' => t('Select which access policy should be applied as the default for bundles within this collection. "Public" materials can be accessed by anyone without having to log in. "Authenticated Users" means any user with a valid account for the archive. "Academic Users" are users that logs in with an academic account or whose academic status has been verified. "Private" means that the materials are only accessible to the depositor. Access policies can be refined later.'),
         '#required' => TRUE,
         '#options' => array('public' => t('public'), 'authenticated' => t('authenticated users'), 'academic' => t('academic users'), 'private' => t('private')),
         '#default_value' => 'public',
@@ -80,7 +81,7 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject){
     $form['visibility'] = array(
         '#title' => t('Visibility'),
         '#type' => 'select',
-	'#description' => t('Hidden collections are not visible to anyone but the depositor and the archive managers. This is to be used only in rare cases in which the name or other metadata fields reveal too much information about work in progresss. The visibility will be applied to this collection and will be the default value for any sub-collections or bundles within this collection. Only materials with a private access policy can be hidden.'),
+        '#description' => t('Hidden collections are not visible to anyone but the depositor and the archive managers. This is to be used only in cases in which the name or other metadata fields reveal too much information about work in progresss. The visibility will be applied to this collection and will be the default value for any sub-collections or bundles within this collection. Only materials with a private access policy can be hidden.'),
         '#required' => TRUE,
         '#options'=> array(
                 'show' => 'visible',
@@ -91,7 +92,7 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject){
                 'visible' => array(
                         ':input[name="select_policy"]' => array('value' => 'private'),
                 ),
-	),
+            ),
     );
 
 /*
@@ -146,8 +147,6 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject){
         '#validate' => array('flat_collection_add_form_final_validate'),
     );
 
-
-
     //********************************************************************
     // Generate profile specific form render array and attach to container
     //********************************************************************
@@ -158,12 +157,11 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject){
         #$inherit = $form_state['values']['inherit_from_collection'];
 
         // Load inherited cmdi metadata from node
-        $cmdiDs = islandora_datastream_load('CMD',$fedoraObject);
-        if($cmdiDs){
+        $cmdiDs = islandora_datastream_load('CMD', $fedoraObject);
+        if ($cmdiDs) {
             module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
             $inheritedData = simplexml_load_string($cmdiDs->content, 'CmdiHandler');
         }
-
 
         // Load form builder app
         $templateName = $form_state['selected'];
@@ -188,30 +186,26 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject){
 
         // check if everything worked as expected
         if (!is_array($form['template_container']['elements'])) {
-            drupal_set_message('Unable to generate cmdi form based on profile', 'warning');
+            drupal_set_message(t('Unable to generate CMDI form based on selected profile'), 'warning');
         }
-
     }
-
     return $form;
-
-    }
-
+}
 
 
-
-function flat_collection_add_form_final_validate($form, &$form_state){
-
+function flat_collection_add_form_final_validate($form, &$form_state) {
     // Form Validation setup
     $owner = $form_state['values']['owner'];
     $profile = $form_state['values']['select_profile_name'];
+    $allowed_collection_profiles = variable_get('flat_deposit_cmdi_profiles')['collection_profile_ids'];
+    $allowed_collection_profile_ids = explode(',', $allowed_collection_profiles);
     $export_dir = 'metadata://' . str_replace('@', '_at_', $owner) . "/.collection/";
     $cmdiFile = $export_dir . '/' . $profile . '_' . uniqid() . '.cmdi';
     $form_state['values']['cmdiFile'] = $cmdiFile;
 
     $fid = $form_state['values']['data']['fid'];
     // stop validation if errors have previously occurred
-    if(form_get_errors()){
+    if (form_get_errors()) {
         return $form;
     }
 
@@ -221,14 +215,14 @@ function flat_collection_add_form_final_validate($form, &$form_state){
 
     // Validate that selected profile is not empty
     if ($form_state['values']['select_profile_name'] === '-- Select --') {
-        form_set_error('select_profile_name', 'Please choose correct option');
+        form_set_error('select_profile_name', t('Please choose an option from the list'));
         return $form;
     }
 
     // Validate if owner exists.
     if (!user_load_by_name($owner)) {
 
-        form_set_error('owner', 'Specified owner is unknown to drupal');
+        form_set_error('owner', t('Specified owner is unknown'));
         return $form;
     };
 
@@ -238,7 +232,7 @@ function flat_collection_add_form_final_validate($form, &$form_state){
     }
 
     if (!file_exists($export_dir)) {
-        form_set_error('error', 'Cannot create directory to temporarily store cmdi files');
+        form_set_error('error', t('Cannot create a directory to temporarily store CMDI files'));
         return $form;
     }
 
@@ -250,7 +244,6 @@ function flat_collection_add_form_final_validate($form, &$form_state){
     switch (true) {
         // For all not imported cases
         case $selected != 'Import':
-
             //*******************//
             // Title Validations //
             //*******************//
@@ -261,12 +254,12 @@ function flat_collection_add_form_final_validate($form, &$form_state){
             $values = FlatTuque::getChildrenLabels($fid);
 
             if ($values === false) {
-                form_set_error('title', 'Unable to validate that collection name is unique at this location');
+                form_set_error('title', t('Unable to validate that collection name is unique at this location'));
                 return $form;
             }
 
             if (in_array(strtoupper($title), array_unique(array_map('strtoupper', $values)))) {
-                form_set_error('title', 'Another collection or bundle with same name exists at this location. Please use other name');
+                form_set_error('title', t('Another collection or bundle with same name exists at this location. Please use a different name'));
                 return $form;
             }
 
@@ -276,7 +269,7 @@ function flat_collection_add_form_final_validate($form, &$form_state){
             }
 
             if (!file_exists($export_dir)) {
-                form_set_error('error', 'Cannot create directory to temporarily store cmdi files');
+                form_set_error('error', t('Cannot create directory to temporarily store cmdi files'));
                 return $form;
             }
 
@@ -303,31 +296,46 @@ function flat_collection_add_form_final_validate($form, &$form_state){
             $exported = $cmdi->asXML($cmdiFile);
 
             if (!$exported) {
-                form_set_error('error', 'Unable to save cmdi file');
+                form_set_error('error', t('Unable to save CMDI file on the server'));
                 return $form;
             }
 
             break;
 
         case 'Import':
+            module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
+
             $file = file_save_upload('cmdi_file', array(
-                // Validate extensions.
+                // Validate file extensions
                 'file_validate_extensions' => array('cmdi'),
             ));
-            // If the file did not passed validation:
             if (!$file) {
-                form_set_error('cmdi_file','File was not specified or has not correct extension (.cmdi)');
+                // No file specified or has incorrect extension
+                form_set_error('cmdi_file', t('No file was specified or it has an incorrect file extension (should be .cmdi)'));
                 return $form;
             }
-            // Validate valid xml file
-            if (!@simplexml_load_file($file->uri)) {
-                form_set_error('cmdi_file','File is not a valid xml file');
+            $cmdi = CmdiHandler::simplexml_load_cmdi_file(drupal_realpath($file->uri));
+            // Valid xml?
+            if (!$cmdi) {
+                form_set_error('cmdi_file', t('Your uploaded CMDI file is not a valid XML file'));
                 return $form;
             }
+            // Check whether CMDI file has allowed CMDI collection profile
+            $type = $cmdi->getCmdiProfileType();
+            if ($type !== 'collection') {
+                form_set_error('cmdi_file', t('Your uploaded CMDI file has a profile that is not accepted as a Collection profile. See the deposit manual for more information about accepted CMDI profiles.'));
+                return $form;
+            }
+            // Remove MdSelfLink (new collections cannot have an existing MdSelfLink)
+            $cmdi->removeMdSelfLink();
 
-            copy(drupal_realpath($file->uri), $cmdiFile);
-            if (!file_exists($cmdiFile)) {
-                form_set_error('cmdi_file', 'Unable to copy specified file to target location');
+            // Remove Resources (new collections should not already link to resources)
+            $cmdi->stripResourceProxyAndResources();
+
+            $exported = $cmdi->asXML($cmdiFile);
+
+            if (!$exported) {
+                form_set_error('error', t('Unable to save CMDI file on the server'));
                 return $form;
             }
 
@@ -340,7 +348,7 @@ function flat_collection_add_form_final_validate($form, &$form_state){
     //***************//
     // Validate cmdi //
     //***************//
-/*
+    /*
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.DOMValidator');
     $validator = new DomValidator;
     try{
@@ -353,7 +361,7 @@ function flat_collection_add_form_final_validate($form, &$form_state){
         return $form;
 
     }
-*/
+    */
     /*
     */
     //********************************//
@@ -363,14 +371,13 @@ function flat_collection_add_form_final_validate($form, &$form_state){
     $fid = $form_state['values']['data']['fid'];
     $test = FALSE;
 
-    module_load_include('php','flat_deposit','Helpers/IngestService/IngestClient');
-    try{
+    module_load_include('php', 'flat_deposit', 'Helpers/IngestService/IngestClient');
+    try {
         $ingest_client = new IngestClient($sipType, $owner, $cmdiFile, $fid, $test);
-    } catch (IngestServiceException $exception){
+    } catch (IngestServiceException $exception) {
         form_set_error('debug', $exception->getMessage());
         return $form;
     }
-
 
     $options = [];
     $options ['policy'] = $form_state['values']['select_policy'];
@@ -380,18 +387,16 @@ function flat_collection_add_form_final_validate($form, &$form_state){
 
     $fObject = islandora_object_load($fid);
 
-    if (!$fObject){
+    if (!$fObject) {
         form_set_error('error', t('Check of FID for new collection item did not reveal valid data. Error message:' . $fid));
         return $form;
     }
 
-
     $form_state['values']['data']['fid'] = (string)$fid;
-    $form_state['values']['data']['label']=  $fObject->label;
-    $form_state['values']['data']['owner']=  $fObject->owner;
+    $form_state['values']['data']['label'] = $fObject->label;
+    $form_state['values']['data']['owner'] = $fObject->owner;
 
     return $form;
-
 }
 
 
@@ -399,28 +404,28 @@ function flat_collection_add_form_final_validate($form, &$form_state){
 * Creates new flat_collection node and redirects to parent node.
  *
  */
-function flat_collection_add_form_submit($form, &$form_state){
+function flat_collection_add_form_submit($form, &$form_state)
+{
 
     $owner = user_load_by_name($form_state['values']['data']['owner']);
     $uid = $owner->uid;
     $label = $form_state['values']['data']['label'];
     $fid = $form_state['values']['data']['fid'];
-    $target = 'islandora/object/' . $form_state['values']['data'][ 'fid'];
+    $target = 'islandora/object/' . $form_state['values']['data']['fid'];
     create_collection_node($label, $uid, $fid);
 
-    drupal_set_message('New collection item has been created');
+    drupal_set_message(t('New collection item has been created'));
 
     ctools_include('ajax');
     ctools_add_js('ajax-responder');
     $commands[] = ctools_ajax_command_redirect($target);
     print ajax_render($commands);
     exit;
-
 }
 
 
-function create_collection_node($label, $uid, $fid){
-
+function create_collection_node($label, $uid, $fid)
+{
     $new_node = new stdClass();
     $new_node->type = 'flat_collection';
     $new_node->language = 'und';
@@ -433,12 +438,10 @@ function create_collection_node($label, $uid, $fid){
     $new_node->revision = 0;
     $new_node->flat_fid['und'][0]['value'] = $fid;
     node_save($new_node);
-
 }
 
 
-
-function flat_collection_add_form_ajax_handler (&$form, &$form_state){
+function flat_collection_add_form_ajax_handler(&$form, &$form_state)
+{
     return $form;
 }
-

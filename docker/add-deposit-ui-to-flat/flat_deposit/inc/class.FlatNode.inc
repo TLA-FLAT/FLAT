@@ -8,7 +8,8 @@
  */
 class FlatNode
 {
-    static public function transliteration_clean_filename($filename, $source_langcode = NULL) {
+    public static function transliteration_clean_filename($filename, $source_langcode = NULL)
+    {
         if (is_array($filename)) {
             foreach ($filename as $key => $value) {
                 $filename[$key] = self::transliteration_clean_filename($value, $source_langcode);
@@ -28,7 +29,8 @@ class FlatNode
         }
         return $filename;
     }
-    static public function transliteration_get($text, $unknown = '?', $source_langcode = NULL) {
+    public static function transliteration_get($text, $unknown = '?', $source_langcode = NULL)
+    {
         static $loaded = FALSE;
         if (!$loaded) {
             module_load_include('inc', 'transliteration');

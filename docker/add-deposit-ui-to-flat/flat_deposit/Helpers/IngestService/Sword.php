@@ -11,7 +11,8 @@ class Sword
      * @return bool
      * @throws IngestServiceException
      */
-    function postSip($pathToSip, $zipName, $sipId) {
+    function postSip($pathToSip, $zipName, $sipId)
+    {
         $cwd = getcwd();
 
         chdir($pathToSip);
@@ -30,18 +31,18 @@ class Sword
         $port = $config['port'];
         #$port = '8080';
 
-        curl_setopt($ch, CURLOPT_URL, $url); //
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_PORT, $config['port']);
-        curl_setopt($ch, CURLOPT_USERPWD, sprintf("%s:%s",$config['user'],$config['password']));
+        curl_setopt($ch, CURLOPT_USERPWD, sprintf("%s:%s", $config['user'], $config['password']));
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE); // -i
-        curl_setopt($ch, CURLOPT_BINARYTRANSFER, TRUE); // --data-binary
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($ch, CURLOPT_BINARYTRANSFER, TRUE);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 
-        curl_setopt($ch, CURLOPT_HEADER, TRUE); // -i
+        curl_setopt($ch, CURLOPT_HEADER, TRUE);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             'Content-Type: application/zip',
             'Content-Disposition: attachment; filename='.$zipName,
@@ -57,14 +58,11 @@ class Sword
         chdir($cwd);
 
         if ($httpcode != 200 && $httpcode != 202 && $httpcode != 201) {
-            $message = sprintf("SWORD Server error (HTTP error code (%d) ;\n", $httpcode) .  $content;;
-            throw new IngestServiceException ($message);
-        } else{
-
+            $message = sprintf("SWORD Server error (HTTP error code (%d) ;\n", $httpcode) . $content;
+            throw new IngestServiceException($message);
+        } else {
             return TRUE;
-
         }
-
     }
 
 
@@ -76,18 +74,18 @@ class Sword
      * @param bool $code_only if true method returns only HTTP response code
      * @return mixed
      */
-    function getRequest($bagId, $code_only=FALSE)
+    function getRequest($bagId, $code_only = FALSE)
     {
         $config = variable_get('flat_deposit_sword');
         $ch = curl_init();
 
-        curl_setopt($ch, CURLOPT_URL, $config['url'] . 'statement/' . $bagId ); //
+        curl_setopt($ch, CURLOPT_URL, $config['url'] . 'statement/' . $bagId);
         curl_setopt($ch, CURLOPT_PORT, $config['port']);
-        curl_setopt($ch, CURLOPT_USERPWD, sprintf("%s:%s",$config['user'],$config['password']));
+        curl_setopt($ch, CURLOPT_USERPWD, sprintf("%s:%s", $config['user'], $config['password']));
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE); // -i
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
 
         $val = curl_exec($ch);
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -124,7 +122,7 @@ class Sword
         // check outcome SWORD
         if ($status != 'SUBMITTED') {
             $message = "Error creating bag;\n" .  $val;
-            throw new IngestServiceException ($message);
+            throw new IngestServiceException($message);
         } else {
             return TRUE;
         }
@@ -138,7 +136,6 @@ class Sword
      */
     function swordRejected($sipId)
     {
-
         $bagId = $sipId . '_sword';
 
         $time = 0;
@@ -164,7 +161,5 @@ class Sword
         if ($status = 'REJECTED') {
             return true;
         }
-
     }
-
 }

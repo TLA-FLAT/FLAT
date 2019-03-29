@@ -1,6 +1,8 @@
 <?php
 
-class IngestServiceException extends Exception {}
+class IngestServiceException extends Exception
+{
+}
 
 /**
  * Interface SIP
@@ -55,7 +57,7 @@ abstract class SIP
 
     abstract function customRollback($message);
 
-    function __construct($owner, $cmdiFileName, $parentFid, $test)
+    public function __construct($owner, $cmdiFileName, $parentFid, $test)
     {
         $uuid = uniqid();
 
@@ -68,8 +70,8 @@ abstract class SIP
         $base_name = variable_get('flat_deposit_ingest_service')['error_log_file'];
 
         // put feedback on screen if logging is set and error_log dir is not accessible
-        if ((!file_exists($base_name) OR !is_writable($base_name)) AND $this->logProcess){
-            drupal_set_message('Unable to write log file to log directory','warning');
+        if ((!file_exists($base_name) OR !is_writable($base_name)) AND $this->logProcess) {
+            drupal_set_message('Unable to write log file to log directory', 'warning');
         };
 
         $this->logFile = $base_name . "/" . $this->sipId . '_' . $owner . '_' . date("Y-m-d\TH-i-s") . '.log';
@@ -78,10 +80,7 @@ abstract class SIP
             '!owner'=> $owner,
             '!cmdiFileName' => $cmdiFileName,
             '!parentFid' => $parentFid,
-            '!test' => ($test ? 'TRUE' : 'FALSE'),
-                    )
-            )
-        );
+            '!test' => ($test ? 'TRUE' : 'FALSE'),)));
 
         $this->cmdiRecord =$cmdiFileName;
 
@@ -121,7 +120,7 @@ abstract class SIP
      *
      * @throws IngestServiceException
      */
-    function copyMetadata()
+    public function copyMetadata()
     {
         $this->logging('Starting copyMetadata');
 
@@ -129,44 +128,43 @@ abstract class SIP
 
 
         // create (if necessary) backend directory
-        if (!file_exists(dirname($this->cmdiTarget))) drupal_mkdir(dirname($this->cmdiTarget), NULL, TRUE);
+        if (!file_exists(dirname($this->cmdiTarget))) {
+            drupal_mkdir(dirname($this->cmdiTarget), NULL, TRUE);
+        }
 
         copy($cmdi_source, $this->cmdiTarget);
 
         if (!file_exists($this->cmdiTarget)) {
 
             throw new IngestServiceException('Could not copy cmdi file to target location');
-
         }
 
         $resourceDir = dirname($this->cmdiTarget) . "/../resources";
         drupal_mkdir($resourceDir, NULL, TRUE);
 
         if (!file_exists($resourceDir)) {
-
                 throw new IngestServiceException('Could not create resource directory at target location');
         }
 
         $this->logging('Finishing copyMetadata');
         return TRUE;
-
     }
 
 
-    function addIsPartOfProperty(){
-
+    function addIsPartOfProperty()
+    {
         $this->logging('Starting addIsPartOfProperty');
         $parentFid = $this->parentFid;
         $file_name = $this->cmdiTarget;
 
-        module_load_include('inc','flat_deposit','/Helpers/CMDI/class.CmdiHandler');
+        module_load_include('inc', 'flat_deposit', '/Helpers/CMDI/class.CmdiHandler');
         $cmdi = CmdiHandler::simplexml_load_cmdi_file(drupal_realpath($file_name));
-        if (!$cmdi){
+        if (!$cmdi) {
             throw new IngestServiceException($cmdi);
         }
         $cmdi->addIsPartOfProperty($parentFid);
         $check = $cmdi->asXML($file_name);
-        if ($check !== TRUE){
+        if ($check !== TRUE) {
             throw new IngestServiceException($check);
         }
 
@@ -180,21 +178,20 @@ abstract class SIP
         $this->logging('Starting generatePolicy');
         $policy = $this->info['policy'];
         $visibility = $this->info['visibility'];
-        if ($policy != "inherited"){
-
-            $fname = drupal_get_path('module','flat_deposit') . '/Helpers/IngestService/Policies/' . $policy . '.n3';
+        if ($policy != "inherited") {
+            $fname = drupal_get_path('module', 'flat_deposit') . '/Helpers/IngestService/Policies/' . $policy . '.n3';
 
             $string = file_get_contents($fname);
             $new_string = preg_replace('/ACCOUNT_NAME/', $this->owner , $string);
 
-            if (($visibility == 'hide') && ($policy == 'private')){
+            if (($visibility == 'hide') && ($policy == 'private')) {
                 $new_string .= "\n";
                 $new_string .= "# hide the whole SIP\n";
                 $new_string .= "[acl:accessTo <sip>; acl:mode lat:Hide; acl:agentClass foaf:Agent].\n";
             }
 
             $cmdi_dir = dirname($this->cmdiTarget);
-            $write = file_put_contents( $cmdi_dir . '/policy.n3', $new_string);
+            $write = file_put_contents($cmdi_dir . '/policy.n3', $new_string);
 
             if (!$write) {
                 throw new IngestServiceException('Unable to write policy to target location (' . $cmdi_dir . ')');
@@ -216,29 +213,27 @@ abstract class SIP
 
         exec($command, $output, $return);
 
-        if ($return)
-        {
+        if ($return) {
             $message = 'Error making bag';
-            throw new IngestServiceException ($message);
+            throw new IngestServiceException($message);
         }
 
         $command = $bagit_executable . ' update ' . '"' . $this->frozenSipDir .  '"';
 
         exec($command, $output, $return);
 
-        if ($return)
-        {
+        if ($return) {
             $message = 'Error updating bag info';
-            throw new IngestServiceException ($message);
+            throw new IngestServiceException($message);
         }
 
-        $command = DRUPAL_ROOT . '/'. drupal_get_path('module','flat_deposit') . '/Helpers/scripts/zip_sip.sh "' . $this->frozenSipDir .'" "' . $this->sipId .'"';
+        $command = DRUPAL_ROOT . '/'. drupal_get_path('module', 'flat_deposit') . '/Helpers/scripts/zip_sip.sh "' . $this->frozenSipDir .'" "' . $this->sipId .'"';
 
         exec($command, $output_prep, $return);
 
         if ($return) {
             $message = 'Error creating zip file;';
-            throw new IngestServiceException ($message);
+            throw new IngestServiceException($message);
         }
 
         $this->logging('Finishing createBag');
@@ -259,17 +254,13 @@ abstract class SIP
         $upload = $sword->postSip($path, $zipName, $sipId);
         $check = $sword->checkStatus($sipId);
 
-        if (!$upload OR !$check){
-
+        if (!$upload OR !$check) {
             $message = 'Error Doing sword';
-            throw new IngestServiceException ($message);
-
+            throw new IngestServiceException($message);
         } else {
             $this->logging('Finishing doSword');
             return TRUE;
-
         }
-
     }
 
     function checkSwordRejected()
@@ -284,16 +275,12 @@ abstract class SIP
         $check = $sword->swordRejected($sipId);
 
         if (!$check) {
-
             $message = 'Error Checking Sword REJECTED status, max time exceeded';
             throw new IngestServiceException($message);
-
         } else {
             $this->logging('Sword status is REJECTED');
             return true;
-
         }
-
     }
 
     function doDoorkeeper()
@@ -325,11 +312,11 @@ abstract class SIP
     {
         $this->logging('Starting rollback');
 
-        if (file_exists($this->frozenSipDir)){
+        if (file_exists($this->frozenSipDir)) {
          #   $this->removeFrozenZipDir();
         }
 
-        if (file_exists(dirname($this->frozenSipDir) . '/' . $this->sipId . '.zip')){
+        if (file_exists(dirname($this->frozenSipDir) . '/' . $this->sipId . '.zip')) {
         #    $this->removeFrozenZipDir();
         }
         /*if ($processes['doSword']){
@@ -337,7 +324,7 @@ abstract class SIP
         }
         */
 
-        if($this->fid){
+        if ($this->fid) {
             #$this->removeIngestedObject();
         }
 
@@ -349,13 +336,12 @@ abstract class SIP
     }
 
 
-    protected function removeFrozenZipDir(){
-
+    protected function removeFrozenZipDir() {
         // remove directory with SIP data
         $sip_dir = $this->frozenSipDir;
         module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
 
-        if (file_exists($sip_dir)){
+        if (file_exists($sip_dir)) {
             FlatBundle::recursiveRmDir($sip_dir);
             rmdir($sip_dir);
         }
@@ -365,30 +351,23 @@ abstract class SIP
     {
         // remove zipped SIP directory
         drupal_unlink(dirname($this->frozenSipDir) . '/' . $this->sipId . '.zip');
-
     }
 
 
-    protected function removeSwordBag(){
-
+    protected function removeSwordBag()
+    {
         $basePath = variable_get('flat_deposit_ingest_service')['bag_dir'];
         $bagDir = $basePath . $this->sipId;
         module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
         FlatBundle::recursiveRmDir($bagDir);
         rmdir($bagDir);
-
     }
 
 
-    public function logging($message){
-
-        if ($this->logProcess){
-
-            error_log ( date(DATE_ATOM) . "\t" . $message ."\n", $message_type = 3 , $this->logFile );
-
+    public function logging($message)
+    {
+        if ($this->logProcess) {
+            error_log(date(DATE_ATOM) . "\t" . $message ."\n", $message_type = 3, $this->logFile);
         }
-
-
     }
-
 }

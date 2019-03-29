@@ -31,7 +31,9 @@ function flat_collection_update_form($form, &$form_state, $fedora_object)
         '#disabled' => true,
     );
 
-    if (!user_access('admin collection')) {$form['owner']['#disabled'] = true;}
+    if (!user_access('admin collection')) {
+        $form['owner']['#disabled'] = true;
+    }
 
     $form['select_profile_name'] = array(
         '#type' => 'hidden',
@@ -102,7 +104,6 @@ function flat_collection_update_form($form, &$form_state, $fedora_object)
     $availableFormTemplates = FormBuilder::getAvailableTemplates('flat_collection');
 
     if (array_key_exists($profile, $availableFormTemplates)) {
-
         // Load form builder app
         $formBuilder = new FormBuilder(null);
 
@@ -128,13 +129,11 @@ function flat_collection_update_form($form, &$form_state, $fedora_object)
             drupal_set_message('Unable to generate cmdi form based on profile', 'warning');
         }
     } else {
-
         drupal_set_message('Online editing of the metadata of this collection is not supported');
         $form['Submit']['#disabled'] = true;
     }
 
     return $form;
-
 }
 
 function flat_collection_update_form_ajax_handler(&$form, &$form_state)
@@ -159,8 +158,7 @@ function flat_collection_update_form_final_validate($form, &$form_state)
     // Validate if owner exists.
     $owner = $form_state['values']['owner'];
     if (!user_load_by_name($owner)) {
-
-        form_set_error('owner', 'Specified owner is unknown to drupal');
+        form_set_error('owner', t('Specified owner is unknown'));
         return $form;
     }
     ;
@@ -188,12 +186,12 @@ function flat_collection_update_form_final_validate($form, &$form_state)
         $values = FlatTuque::getChildrenLabels($fidParent);
 
         if ($values === false) {
-            form_set_error('title', 'Unable to validate that collection name is unique at this location');
+            form_set_error('title', t('Unable to validate that collection name is unique at this location'));
             return $form;
         }
 
         if (in_array(strtoupper($new_title), array_unique(array_map('strtoupper', $values)))) {
-            form_set_error('title', 'Another collection or bundle with same name exists at this location. Please use other name');
+            form_set_error('title', t('Another collection or bundle with same name exists at this location. Please use a different name'));
             return $form;
         }
     }
@@ -205,7 +203,7 @@ function flat_collection_update_form_final_validate($form, &$form_state)
     }
 
     if (!file_exists($export_dir)) {
-        form_set_error('error', 'Cannot create directory to temporarily store cmdi files');
+        form_set_error('error', t('Cannot create directory to temporarily store cmdi files'));
         return $form;
     }
 
@@ -301,27 +299,22 @@ function flat_collection_update_form_final_validate($form, &$form_state)
     // Ingest succeeded, in case the title has changed we need to modify the title of any existing Drupal node for this collection ("My Collections" entries for all users)
 
     if ($old_title !== $new_title) {
-
         $query = new EntityFieldQuery();
         $query->entityCondition('entity_type', 'node')
             ->entityCondition('bundle', 'flat_collection')
             ->fieldCondition('flat_fid', 'value', "$fid", '=');
 
         $collection_nodes = $query->execute();
-        
-        foreach ($collection_nodes['node'] as $collection_node) {
 
+        foreach ($collection_nodes['node'] as $collection_node) {
             $nid = $collection_node->nid;
             $node = node_load($nid);
             $node->title = $new_title;
             node_save($node);
-
         }
-
     }
 
     return $form;
-
 }
 
 /**
@@ -330,7 +323,6 @@ function flat_collection_update_form_final_validate($form, &$form_state)
  */
 function flat_collection_update_form_submit($form, &$form_state)
 {
-
     $target = 'islandora/object/' . $form_state['values']['data']['fid'];
 
     drupal_set_message('Collection has been updated');
@@ -340,5 +332,4 @@ function flat_collection_update_form_submit($form, &$form_state)
     $commands[] = ctools_ajax_command_redirect($target);
     print ajax_render($commands);
     exit;
-
 }

@@ -4,7 +4,7 @@
 DEFAULT SETTINGS OF THE FLAT_DEPOSIT MODULE AND FUNCTIONS TO SET THESE
 */
 
-function flat_deposit_set_general($updated_values=null)
+function flat_deposit_set_general($updated_values = null)
 {
     $defaults =  array(
         #fedora namespace for ingests
@@ -42,7 +42,7 @@ function flat_deposit_set_general($updated_values=null)
     return TRUE;
 }
 
-function flat_deposit_set_cmdi_profiles($updated_values=null)
+function flat_deposit_set_cmdi_profiles($updated_values = null)
 {
     $defaults = array(
         'collection_profiles' => 'clarin.eu:cr1:p_1475136016239,clarin.eu:cr1:p_1407745712064',
@@ -64,7 +64,7 @@ function flat_deposit_set_cmdi_profiles($updated_values=null)
     return TRUE;
 }
 
-function flat_deposit_set_fits($updated_values=null)
+function flat_deposit_set_fits($updated_values = null)
 {
     $defaults = array(
         'url' => 'http://127.0.0.1/fits',
@@ -87,7 +87,7 @@ function flat_deposit_set_fits($updated_values=null)
 }
 
 
-function flat_deposit_set_ingest_service($updated_values=null)
+function flat_deposit_set_ingest_service($updated_values = null)
 {
     $defaults = array(
         # host name of http server
@@ -137,7 +137,7 @@ function flat_deposit_set_ingest_service($updated_values=null)
 }
 
 
-function flat_deposit_set_sword($updated_values=null)
+function flat_deposit_set_sword($updated_values = null)
 {
     $defaults = array(
         'url' => 'https://localhost/easy-deposit/',
@@ -163,7 +163,7 @@ function flat_deposit_set_sword($updated_values=null)
 }
 
 
-function flat_deposit_set_doorkeeper($updated_values=null)
+function flat_deposit_set_doorkeeper($updated_values = null)
 {
     $defaults =  array(
         'url' => "http://localhost/flat/doorkeeper/",
@@ -186,7 +186,7 @@ function flat_deposit_set_doorkeeper($updated_values=null)
 }
 
 
-function flat_deposit_set_fedora($updated_values=null)
+function flat_deposit_set_fedora($updated_values = null)
 {
     $defaults =  array(
         'host_name' => 'localhost',
@@ -214,7 +214,7 @@ function flat_deposit_set_fedora($updated_values=null)
 }
 
 
-function flat_deposit_set_solr($updated_values=null)
+function flat_deposit_set_solr($updated_values = null)
 {
     $defaults =  array(
         'schema' => 'https',
