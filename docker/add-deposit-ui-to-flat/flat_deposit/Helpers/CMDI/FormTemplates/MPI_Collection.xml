@@ -27,7 +27,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
         <template_description>MPI Collection (non-corpus collections)</template_description>
     </header>
     <items>
-        <item id="field_01" name="Title" type="Leaf"  minOccurrence="1">
+        <item id="title_field" name="Title" type="Leaf"  minOccurrence="1">
             <type>textfield</type>
             <title>Collection title</title>
         </item>

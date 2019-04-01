@@ -194,6 +194,7 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject)
 
 
 function flat_collection_add_form_final_validate($form, &$form_state) {
+    module_load_include('inc', 'flat_deposit', 'inc/class.FlatTuque');
     // Form Validation setup
     $owner = $form_state['values']['owner'];
     $profile = $form_state['values']['select_profile_name'];
@@ -250,7 +251,6 @@ function flat_collection_add_form_final_validate($form, &$form_state) {
             $title = $form_state['values']['template_container']['elements']['title_field'][0];
 
             // 1. Validate that no other collection at same collection with very similar name exists
-            module_load_include('inc', 'flat_deposit', 'inc/class.FlatTuque');
             $values = FlatTuque::getChildrenLabels($fid);
 
             if ($values === false) {
@@ -304,6 +304,7 @@ function flat_collection_add_form_final_validate($form, &$form_state) {
 
         case 'Import':
             module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
+            module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
 
             $file = file_save_upload('cmdi_file', array(
                 // Validate file extensions
@@ -326,6 +327,35 @@ function flat_collection_add_form_final_validate($form, &$form_state) {
                 form_set_error('cmdi_file', t('Your uploaded CMDI file has a profile that is not accepted as a Collection profile. See the deposit manual for more information about accepted CMDI profiles.'));
                 return $form;
             }
+
+            // Check that no other collection/bundle exists at this level with same or very similar name
+            $profile_name = $cmdi->getNameById();
+            $profile_filename = FormBuilder::FORM_TEMPLATES_PATH . $profile_name .".xml";
+            $template_xml = simplexml_load_file($profile_filename);
+            $template_name = (string)$template_xml->xpath('/profileToDrupal/header/template_name')[0];
+            $title_field = (string)$template_xml->xpath('/profileToDrupal/items/item[@id="title_field"]/title')[0];
+            $values = FlatTuque::getChildrenLabels($fid);
+            $title = (string)$cmdi->xpath("/cmd:CMD/cmd:Components/cmd:$template_name/cmd:$title_field")[0];
+            if (!$title) {
+                //let's try without namespace
+                $title = (string)$cmdi->xpath("/CMD/Components/$template_name/$title_field")[0];
+            }
+
+            if (!$title) {
+                form_set_error('cmdi_file', t('Unable to read the collection name from your uploaded CMDI file'));
+                return $form;
+            }
+
+            if ($values === false) {
+                form_set_error('cmdi_file', t('Unable to validate that collection name is unique at this location'));
+                return $form;
+            }
+
+            if (in_array(strtoupper($title), array_unique(array_map('strtoupper', $values)))) {
+                form_set_error('cmdi_file', t('Another collection or bundle with same name exists at this location. Please use a different name'));
+                return $form;
+            }
+
             // Remove MdSelfLink (new collections cannot have an existing MdSelfLink)
             $cmdi->removeMdSelfLink();
 

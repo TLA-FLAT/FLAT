@@ -118,6 +118,10 @@ class CmdiHandler extends SimpleXMLElement
     public function getNameById()
     {
         $node = $this->xpath('cmd:Header/cmd:MdProfile')[0];
+        if (!$node) {
+            // possibly non-namespaced CMDI
+            $node = $this->xpath('Header/MdProfile')[0];
+        }
 
         if (!isset($node) OR empty((string)$node)) {
             return FALSE;
