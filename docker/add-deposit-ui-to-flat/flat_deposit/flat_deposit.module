@@ -1284,7 +1284,7 @@ function flat_bundle_node_form_add_validate($form, &$form_state)
 
     $flat_cmdi_option = $form_state['values']['flat_cmdi_option']['und'][0]['value'];
 
-    if (($flat_cmdi_option == 'import') OR ($flat_cmdi_option == 'template')) {
+    if ((($flat_cmdi_option == 'import') OR ($flat_cmdi_option == 'template')) AND !$is_update) {
         module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
         $fid = $form_state['values']['flat_cmdi_file']['und'][0]['fid'];
         $cmdi_file = file_load($fid)->uri;
