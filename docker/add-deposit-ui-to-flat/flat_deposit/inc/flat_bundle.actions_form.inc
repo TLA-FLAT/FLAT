@@ -360,8 +360,8 @@ function flat_bundle_action_form_submit($form, &$form_state)
 
             global $user;
             $form_state['redirect'] = 'dashboard';
-            $_SESSION['messages'] = '';
-            drupal_set_message("Bundle is being $processed");
+            drupal_get_messages('status');
+            drupal_set_message(t('Bundle is being %processed.', array('%processed' => $processed)));
 
             break;
 
