@@ -140,8 +140,10 @@ class FormBuilder
 
         $dataNode = $this->getHeadNode($cmdi);
 
-        if ((get_class($this->node)) !== 'IslandoraFedoraObject') {
-            $this->clearInheritedTitle($dataNode);
+        if ($this->node) {
+            if ((get_class($this->node)) !== 'IslandoraFedoraObject') {
+                $this->clearInheritedTitle($dataNode);
+            }
         }
 
         $setComponets = $this->setFormComponents($template, $dataNode, $pressedButtons, $index = 0, $inheritAll);

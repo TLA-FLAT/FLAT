@@ -48,7 +48,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                 <option>EEG data</option>
                 <option>Eye tracking data</option>
                 <option>FCPP (forced choice pointing) data</option>
-                <option>item notes</option>
+                <option>Field notes</option>
                 <option>fMRI data</option>
                 <option>Genome data</option>
                 <option>Geolocation data</option>
@@ -293,16 +293,16 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                 <type>textfield</type>
             </item>
         </item>
-        <item id="fieldset_09" name="Licence" type="Composite" multival="true" inherited="true" minOccurrence="0">
-            <title>Licence</title>
+        <item id="fieldset_09" name="License" type="Composite" multival="true" inherited="true" minOccurrence="0">
+            <title>License</title>
             <type>fieldset</type>
             <container>Licences</container>
-            <item id="field_27" name="Licence" type="Leaf" inherited="true" minOccurrence="1">
-                <title>Licence</title>
+            <item id="field_27" name="License" type="Leaf" inherited="true" minOccurrence="1">
+                <title>License</title>
                 <type>textfield</type>
             </item>
-            <item id="field_28" name="LicenseUrl" type="Leaf" inherited="true" minOccurrence="1">
-                <title>Licence URL</title>
+            <item id="field_28" name="LicenseURL" type="Leaf" inherited="true" minOccurrence="1">
+                <title>License URL</title>
                 <type>textfield</type>
             </item>
         </item>

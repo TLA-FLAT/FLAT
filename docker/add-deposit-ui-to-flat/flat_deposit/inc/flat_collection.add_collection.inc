@@ -34,6 +34,20 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject)
         '#required' => TRUE,
         '#default_value' => $user->name,
     );
+    // Field for entering namespace value should only be shown to admin and manager users
+    if(count(array_intersect(array('manager', 'administrator'), $user->roles)) > 0) {
+	    $show_namespace_field = TRUE;
+    }
+    else {
+	    $show_namespace_field = FALSE;
+    }
+
+    $form['namespace'] = array(
+        '#title' => t('Namespace for the collection (leave blank to use parent namespace)'),
+        '#type' => 'textfield',
+	'#required' => FALSE,
+	'#access' => $show_namespace_field,
+    );
 
     if (!user_access('admin collection')) {
         $form['owner']['#disabled'] = TRUE;
@@ -192,11 +206,11 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject)
     return $form;
 }
 
-
 function flat_collection_add_form_final_validate($form, &$form_state) {
     module_load_include('inc', 'flat_deposit', 'inc/class.FlatTuque');
     // Form Validation setup
     $owner = $form_state['values']['owner'];
+    $namespace = $form_state['values']['namespace'];
     $profile = $form_state['values']['select_profile_name'];
     $allowed_collection_profiles = variable_get('flat_deposit_cmdi_profiles')['collection_profile_ids'];
     $allowed_collection_profile_ids = explode(',', $allowed_collection_profiles);
@@ -403,7 +417,7 @@ function flat_collection_add_form_final_validate($form, &$form_state) {
 
     module_load_include('php', 'flat_deposit', 'Helpers/IngestService/IngestClient');
     try {
-        $ingest_client = new IngestClient($sipType, $owner, $cmdiFile, $fid, $test);
+        $ingest_client = new IngestClient($sipType, $owner, $cmdiFile, $fid, $test, $namespace);
     } catch (IngestServiceException $exception) {
         form_set_error('debug', $exception->getMessage());
         return $form;

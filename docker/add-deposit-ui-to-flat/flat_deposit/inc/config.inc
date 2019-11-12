@@ -94,6 +94,8 @@ function flat_deposit_set_ingest_service($updated_values = null)
         'host_name' => 'localhost',
         # host name of http server
         'host_scheme' => 'http',
+        # java home
+        'java_home' => '/usr/lib/jvm/java-8-oracle',
         # the bagit executable
         'bag_exe' => '/usr/local/bin/bagit-4.9.0/bin/bag',
         #backend directory where bags will be placed

@@ -25,6 +25,9 @@ abstract class SIP
     // FID of the parent fedora Object
     protected $parentFid;
 
+    // Fedora namespace for the object
+    protected $namespace;
+
     // boolean indicating whether ingest should be completed or only simulated
     protected $test;
 
@@ -57,11 +60,13 @@ abstract class SIP
 
     abstract function customRollback($message);
 
-    public function __construct($owner, $cmdiFileName, $parentFid, $test)
+    public function __construct($owner, $cmdiFileName, $parentFid, $test, $namespace)
     {
         $uuid = uniqid();
 
         $this->owner = $owner;
+
+        $this->namespace = $namespace;
 
         $this->sipId = get_class($this) . '_'. $uuid;
 
@@ -208,8 +213,10 @@ abstract class SIP
         $this->logging('Starting createBag');
 
         $bagit_executable = variable_get('flat_deposit_ingest_service')['bag_exe'];
+        
+        $java_home = variable_get('flat_deposit_ingest_service')['java_home'];
 
-        $command = $bagit_executable . ' baginplace ' . '"' . $this->frozenSipDir .  '"';
+        $command = 'JAVA_HOME=' . $java_home . ' ' $bagit_executable . ' baginplace ' . '"' . $this->frozenSipDir .  '"';
 
         exec($command, $output, $return);
 
@@ -218,7 +225,7 @@ abstract class SIP
             throw new IngestServiceException($message);
         }
 
-        $command = $bagit_executable . ' update ' . '"' . $this->frozenSipDir .  '"';
+        $command = 'JAVA_HOME=' . $java_home . ' ' $bagit_executable . ' update ' . '"' . $this->frozenSipDir .  '"';
 
         exec($command, $output, $return);
 
@@ -289,10 +296,13 @@ abstract class SIP
 
         $query = $this->test ? 'validate resources' : NULL;
 
+        $namespace = $this->namespace ? $this->namespace : NULL;
+
+        $parentFid = $this->parentFid ? $this->parentFid : NULL;
 
         module_load_include('php', 'flat_deposit', '/Helpers/IngestService/Doorkeeper');
         $dk = new Doorkeeper();
-        $dk->triggerServlet($this->sipId, $query);
+        $dk->triggerServlet($this->sipId, $query, $namespace, $parentFid);
         $fid = $dk->checkStatus($this->sipId, 1800);
 
         $this->fid =$fid ;
@@ -371,3 +381,4 @@ abstract class SIP
         }
     }
 }
+

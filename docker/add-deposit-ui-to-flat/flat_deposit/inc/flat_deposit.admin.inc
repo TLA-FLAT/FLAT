@@ -108,6 +108,14 @@ function flat_deposit_admin_form($form, &$form_state)
         '#default_value' => $service['host_scheme'],
         '#required' => TRUE,
     );
+    
+    $form['ingest_service']['java_home'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Java home'),
+        '#description' => t('Specific Java home path'),
+        '#default_value' => $service['java_home'],
+        '#required' => TRUE,
+    );
 
     $form['ingest_service']['bag_exe'] = array (
         '#type' => 'textfield',
