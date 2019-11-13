@@ -216,7 +216,7 @@ abstract class SIP
         
         $java_home = variable_get('flat_deposit_ingest_service')['java_home'];
 
-        $command = 'JAVA_HOME=' . $java_home . ' ' $bagit_executable . ' baginplace ' . '"' . $this->frozenSipDir .  '"';
+        $command = 'JAVA_HOME=' . $java_home . ' ' . $bagit_executable . ' baginplace ' . '"' . $this->frozenSipDir .  '"';
 
         exec($command, $output, $return);
 
@@ -225,7 +225,7 @@ abstract class SIP
             throw new IngestServiceException($message);
         }
 
-        $command = 'JAVA_HOME=' . $java_home . ' ' $bagit_executable . ' update ' . '"' . $this->frozenSipDir .  '"';
+        $command = 'JAVA_HOME=' . $java_home . ' ' . $bagit_executable . ' update ' . '"' . $this->frozenSipDir .  '"';
 
         exec($command, $output, $return);
 
