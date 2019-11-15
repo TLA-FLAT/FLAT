@@ -25,7 +25,7 @@ class IngestClient
      *
      * @param bool $test Should ingest be completed or only validated
      */
-    public function __construct($sipClassName, $owner, $cmdiFileName, $parentFid, $test=FALSE)
+    public function __construct($sipClassName, $owner, $cmdiFileName, $parentFid, $test=FALSE, $namespace=NULL)
     {
         if (!$sipClassName OR !$owner OR !$cmdiFileName OR !$parentFid){
             throw new IngestServiceException('One or more required constructor parameters are not set.');
@@ -33,7 +33,7 @@ class IngestClient
 
         $this->IngestFactory = new IngestFactory();
 
-        $this->sipConcrete = new $sipClassName($owner, $cmdiFileName, $parentFid, $test);
+        $this->sipConcrete = new $sipClassName($owner, $cmdiFileName, $parentFid, $test, $namespace);
 
     }
 

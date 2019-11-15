@@ -14,7 +14,7 @@ class FlatTuque
      * @param $pid string fedora ID of an object.
      * @return array Strings with pid
      */
-    static public function getChildrenLabels($pid)
+    public static function getChildrenLabels($pid)
     {
 
         $config = variable_get('flat_deposit_general');
@@ -23,7 +23,6 @@ class FlatTuque
         $values = false;
         $fObj = islandora_object_load($pid);
         if ($fObj) {
-
             $values = [];
             module_load_include('php', 'flat_deposit', '/inc/fedora_queries');
 
@@ -31,16 +30,12 @@ class FlatTuque
 
             $results = $fObj->repository->ri->sparqlQuery($query);
             foreach ($results as $result) {
-
                 if (preg_match("/^$namespace/", $result['pid']['value'])) {
-
                     $values[] = $result['label']['value'];
                 }
             }
-
         }
         return $values;
-
     }
 
     /**
@@ -49,28 +44,24 @@ class FlatTuque
      * @param $fid fedora ID
      * @return bool|String value of the isMemberOfCollection property or false
      */
-    static public function getIsPartOfCollection($fid){
+    public static function getIsPartOfCollection($fid)
+    {
         $return_value = false;
 
         $fObj = islandora_object_load($fid);
-        if ($fObj){
-
+        if ($fObj) {
             $results = $fObj->relationships->get(FEDORA_RELS_EXT_URI, 'isMemberOfCollection');
             $count = 0;
             foreach ($results as $result) {
-
                 $value = $result['object']['value'];
                 $count ++;
             }
 
-            if ($count == 1){
+            if ($count == 1) {
                 $return_value = $value;
             }
-
-
         }
         return $return_value;
-
     }
 
     /**
@@ -79,21 +70,15 @@ class FlatTuque
      * @param $fid fedora ID
      * @return bool|String value of the isMemberOfCollection property or false
      */
-    static public function getCModels($fedoraObject){
+    public static function getCModels($fedoraObject)
+    {
         $model_array = [];
 
         $cmodels = $fedoraObject->relationships->get('info:fedora/fedora-system:def/model#', 'hasModel');
 
-        foreach ($cmodels as $cmodel){
-
+        foreach ($cmodels as $cmodel) {
             $model_array[] = $cmodel['object']['value'];
-
         }
-
         return $model_array;
-
     }
-
-
-
 }

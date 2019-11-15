@@ -844,7 +844,7 @@ function flat_bundle_add_bundle($pid)
     } else {
 
         $custom = null;
-        drupal_set_message('No parent collection assigned. Please assign a parent collection first.', 'warning');
+        drupal_set_message(t('No parent collection assigned. Please assign a parent collection first.'), 'warning');
 
     }
 
@@ -877,9 +877,9 @@ function flat_bundle_update_bundle($fid_bundle)
 
     $nParents = count($isMemberOfCollection);
     if ($nParents === 0) {
-        drupal_set_message('Unable to derive relation information for this bundle. Please contact the archive staff.', 'error');
+        drupal_set_message(t('Unable to derive relation information for this bundle. Please contact the archive staff.'), 'error');
     } elseif ($nParents > 1) {
-        drupal_set_message('More than one parent found, modifications not supported.', 'error');
+        drupal_set_message(t('More than one parent found, modifications not supported.'), 'error');
     }
     $custom = ['type' => 'update', 'nParents' => $nParents];
 
@@ -1217,7 +1217,7 @@ function flat_bundle_node_form_add_import_validate($form, &$form_state)
 
         // Validate valid xml file.
         if (!@simplexml_load_file($file->uri)) {
-            form_set_error('cmdi_file', 'File is not a valid xml file');
+            form_set_error('cmdi_file', t('File is not a valid XML file'));
             return $form;
         }
 
@@ -1276,9 +1276,35 @@ function flat_bundle_node_form_add_validate($form, &$form_state)
 
         if ($values and in_array(strtoupper($bundle_name), array_unique(array_map('strtoupper', $values)))) {
 
-            form_set_error('title', 'Another collection or bundle with same name exists at this location. Please use other name');
+            form_set_error('title', t('Another collection or bundle with same name exists at this location. Please use a different name'));
             return $form;
         }
+
+    }
+
+    $flat_cmdi_option = $form_state['values']['flat_cmdi_option']['und'][0]['value'];
+
+    if ((($flat_cmdi_option == 'import') OR ($flat_cmdi_option == 'template')) AND !$is_update) {
+        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
+        $fid = $form_state['values']['flat_cmdi_file']['und'][0]['fid'];
+        $cmdi_file = file_load($fid)->uri;
+        if (!$fid) {
+            // No file specified or has incorrect extension
+            form_set_error('flat_cmdi_file', t('No file was specified or it has an incorrect file extension (should be .cmdi)'));
+            return $form;
+        }
+        $cmdi = CmdiHandler::simplexml_load_cmdi_file(drupal_realpath($cmdi_file));
+        // Valid xml?
+        if (!$cmdi) {
+            form_set_error('flat_cmdi_file', t('Your uploaded CMDI file is not a valid XML file'));
+            return $form;
+        }
+        // Check whether CMDI file has allowed CMDI bundle profile
+        $type = $cmdi->getCmdiProfileType();
+        if ($type !== 'bundle') {
+            form_set_error('flat_cmdi_file', t('Your uploaded CMDI file has a profile that is not accepted as a Bundle profile. See the deposit manual for more information about accepted CMDI profiles.'));
+            return $form;
+            }
 
     }
 
@@ -1307,7 +1333,7 @@ function flat_bundle_node_form_add_validate($form, &$form_state)
     // Validate that currently selected folder has no subfolders.
     $dirs = array_filter(glob($original_path . '/*'), 'is_dir');
     if (file_exists(drupal_realpath($original_path)) and !empty(glob(drupal_realpath($original_path) . '/*', GLOB_ONLYDIR))) {
-        form_set_error('department', 'Chosen directory contains subfolders');
+        form_set_error('department', t('Chosen directory contains subfolders'));
         return $form;
     }
 
@@ -1320,10 +1346,9 @@ function flat_bundle_node_form_add_validate($form, &$form_state)
     $results = $query->execute();
     if (empty(!$results)) {
 
-        form_set_error('flat_original_path', 'Specified path for resources is already in use');
+        form_set_error('flat_original_path', t('Specified path for resources is already in use'));
 
     }
-    ;
 
     return $form;
 
@@ -1383,7 +1408,7 @@ function flat_bundle_node_form_add_submit($form, &$form_state)
         $new_location = file_move($file, $meta_dir . '/' . $mDataName);
 
         if (!$new_location) {
-            drupal_set_message('Error during move of metadata file', 'error');
+            drupal_set_message(t('Error during move of metadata file'), 'error');
         }
     }
 
@@ -1422,7 +1447,7 @@ function flat_bundle_node_form_update_submit($form, &$form_state)
     $cmdi_file = $ds->getContent($fName);
     if (!$cmdi_file) {
 
-        drupal_set_message('Unable to write cmdi to file', 'error');
+        drupal_set_message(t('Unable to write cmdi to file'), 'error');
 
     }
 
@@ -1438,7 +1463,7 @@ function flat_bundle_node_form_update_submit($form, &$form_state)
 
     if (!$new_file) {
 
-        drupal_set_message('Unable to create managed file entry', 'error');
+        drupal_set_message(t('Unable to create managed file entry'), 'error');
     }
 
     if ($new_file->uri != $fName) {
@@ -1493,7 +1518,7 @@ function flat_bundle_node_form_edit_validate($form, &$form_state)
     $cmdi_file = $wrapper->flat_cmdi_file->value();
     if ($cmdi_option == 'new' and !is_null($cmdi_file) and $collection_has_changed) {
 
-        form_set_error('flat_parent_nid', 'It is not possible to change the collection if new metadata file has been saved. Please remove record.cmdi first');
+        form_set_error('flat_parent_nid', t('It is not possible to change the collection if new metadata file has been saved. Please remove record.cmdi first'));
         return $form;
 
     }
@@ -1816,8 +1841,8 @@ function flat_deposit_form_alter(&$form, &$form_state, $form_id)
 
             $user_bundle_nodes = $query->execute();
             if (!empty($user_bundle_nodes['node'])) {
-                drupal_set_title('Cannot delete collection "' . $node->title . '".');
-                drupal_set_message('This collection cannot be removed from your active collections because it has active bundles associated with it', 'error');
+                drupal_set_title(t('Cannot delete collection "') . $node->title . '".');
+                drupal_set_message(t('This collection cannot be removed from your active collections because it has active bundles associated with it'), 'error');
                 unset($form['actions']['submit']);
                 unset($form['description']);
                 $form['actions']['cancel']['#title'] = t('Back to previous page');
@@ -1921,6 +1946,8 @@ function flat_deposit_block_info()
  */
 function flat_deposit_block_view($delta = '')
 {
+
+    $block = [];
 
     switch ($delta) {
         case 'node_actions':

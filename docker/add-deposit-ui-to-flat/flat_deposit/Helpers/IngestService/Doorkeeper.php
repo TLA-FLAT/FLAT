@@ -20,11 +20,19 @@ class Doorkeeper
      *
      * @throws IngestServiceException
      */
-    public function triggerServlet($sipId, $to=NULL){
+    public function triggerServlet($sipId, $to=NULL, $namespace = NULL, $parentFid = NULL) {
 
         $config = variable_get('flat_deposit_doorkeeper');
         $config_general = variable_get('flat_deposit_general');
-        $namespace = $config_general['namespace'];
+        if (is_null($namespace) && is_null($parentFid)) {
+        // Use default namespace from config, should not really be happening as there should always be a parent
+        	$namespace = $config_general['namespace'];
+        }
+        elseif (is_null($namespace)) {
+        // If no namespace is explicitly passed, use the namespace from the parent object
+        	$arr = explode(':', $parentFid, 2);
+        	$namespace = $arr[0];
+        }
 
         /*
         if($to){
@@ -80,20 +88,9 @@ class Doorkeeper
     {
 
         $config = variable_get('flat_deposit_doorkeeper');
-        $config_general = variable_get('flat_deposit_general');
-        $namespace = $config_general['namespace'];
-
-        $query_params = [];
-        $query_params['ns'] = $namespace;
-        $query = http_build_query($query_params);
-        if ($query) {
-            $query = '?' . $query;
-        } else {
-            $query = '';
-        }
 
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $config['url'] . $sipId . '?ns=' . $namespace);
+        curl_setopt($ch, CURLOPT_URL, $config['url'] . $sipId);
         curl_setopt($ch, CURLOPT_PORT, $config['port']);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);

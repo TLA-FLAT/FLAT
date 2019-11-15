@@ -1,7 +1,8 @@
 <?php
 spl_autoload_register('autoload_formbuilder');
 
-function autoload_formbuilder() {
+function autoload_formbuilder()
+{
     include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormComponent.inc';
     include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormComposite.inc';
     include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormLeaf.inc';
@@ -14,8 +15,6 @@ function autoload_formbuilder() {
  */
 class FormBuilder
 {
-
-
     // Path containing xml form templates files for drupal form generation
     const FORM_TEMPLATES_PATH = __DIR__  . '/../FormTemplates/';
 
@@ -48,7 +47,7 @@ class FormBuilder
      *
      * @return array associative array with file names
      */
-    static public function getAvailableTemplates($content_type)
+    public static function getAvailableTemplates($content_type)
     {
         $templates = [];
         foreach (glob(self::FORM_TEMPLATES_PATH . "*.xml") as $filename) {
@@ -59,20 +58,18 @@ class FormBuilder
                 $template_names [] = (string)$xml->header->template_name;
                 $template_descriptions [] = (string)$xml->header->template_description;
             }
-
         }
         return array_combine($template_names, $template_descriptions);
     }
 
-    static public function checkTemplateItems($templateName)
+    public static function checkTemplateItems($templateName)
     {
 
         $filename = self::FORM_TEMPLATES_PATH . $templateName .".xml";
 
         $xml = simplexml_load_file($filename);
         $res = $xml->xpath('/profileToDrupal/items/item');
-        if (empty($res)){
-
+        if (empty($res)) {
             return "Chosen profile has no complete form template";
         }
 
@@ -87,10 +84,11 @@ class FormBuilder
      *
      * @return String the id of the field
      */
-    static public function getTitleId($profile){
+    public static function getTitleId($profile)
+    {
 
         $check = FormBuilder::checkTemplateItems($profile);
-        if ($check !== TRUE){
+        if ($check !== TRUE) {
             return false;
         }
 
@@ -99,24 +97,20 @@ class FormBuilder
         $xml = simplexml_load_file($filename);
         $res = $xml->xpath('/profileToDrupal/items/item[@name="Title"]');
 
-        if (empty($res)){
+        if (empty($res)) {
             return false;
         }
 
         $str = (String)$res[0]['id'];
         return $str;
-
-
     }
 
     /**
      * Template2FormParser constructor.
      */
-    public function __construct($node){
-
-
+    public function __construct($node)
+    {
         $this->node = $node;
-
     }
 
 
@@ -134,23 +128,26 @@ class FormBuilder
      * @return boolean Success of operation.
      *
      */
-    public function setForm($templateName, $cmdi = null, $pressedButtons = null, $inheritAll = false){
+    public function setForm($templateName, $cmdi = null, $pressedButtons = null, $inheritAll = false)
+    {
 
         $fName = self::FORM_TEMPLATES_PATH . $templateName . '.xml';
         $template = simplexml_load_file($fName);
 
-        if (!$template){
+        if (!$template) {
             return false;
         }
 
         $dataNode = $this->getHeadNode($cmdi);
-        
-        if ((get_class($this->node)) !== 'IslandoraFedoraObject') {
-            $this->clearInheritedTitle($dataNode);
+
+        if ($this->node) {
+            if ((get_class($this->node)) !== 'IslandoraFedoraObject') {
+                $this->clearInheritedTitle($dataNode);
+            }
         }
 
         $setComponets = $this->setFormComponents($template, $dataNode, $pressedButtons, $index = 0, $inheritAll);
-        if (!$setComponets){
+        if (!$setComponets) {
             return false;
         }
         $this->setData($template);
@@ -161,16 +158,13 @@ class FormBuilder
 
         $this->form['data'] = $this->data;
 
-	if ($this->node) {
-
-        if ((get_class($this->node)) == 'IslandoraFedoraObject') {
-            $this->form['title_field'][0]['#default_value'] = $this->node->label;
+        if ($this->node) {
+            if ((get_class($this->node)) == 'IslandoraFedoraObject') {
+                $this->form['title_field'][0]['#default_value'] = $this->node->label;
+            } else {
+                $this->form['title_field'][0]['#default_value'] = $this->node->title;
+            }
         }
-        else {
-            $this->form['title_field'][0]['#default_value'] = $this->node->title;
-        }
-
-	}
 
         return true;
     }
@@ -187,20 +181,18 @@ class FormBuilder
     }
 
 
-    private function clearInheritedTitle(&$dataNode){
-
-        if ($this->node == null){
+    private function clearInheritedTitle(&$dataNode)
+    {
+        if ($this->node == null) {
             return;
         }
         if (!empty($dataNode)) {
-            $title = $dataNode->children('cmd',TRUE)->Title;
-    
-            if (isset($title[0])){
-    
+            $title = $dataNode->children('cmd', TRUE)->Title;
+
+            if (isset($title[0])) {
                     $title[0] = '';
-    
-                    }
             }
+        }
     }
 
 
@@ -220,9 +212,10 @@ class FormBuilder
      * @param $inheritAll boolean Set to true will overwrite template attribute "inherited" and populate all form fields with data from data source
      *
      */
-    private function setFormComponents($template, $dataNode = null, $pressedButtons = null, $index = 0, $inheritAll = false){
+    private function setFormComponents($template, $dataNode = null, $pressedButtons = null, $index = 0, $inheritAll = false)
+    {
 
-        if (!isset($template->items)){
+        if (!isset($template->items)) {
             return false;
         }
 
@@ -233,11 +226,9 @@ class FormBuilder
             $formComponent->setFormComponent($component, $dataNode, $pressedButtons, $index, $inheritAll);
             $nodeName = $formComponent->getFormKeyName($component);
             $this->formComponents[$nodeName] = $formComponent->getFormComponent();
-	        
         }
 
         return true;
-
     }
 
 
@@ -247,11 +238,12 @@ class FormBuilder
      * @param $cmdi CmdiHandler
      * @return head node of the cmdi components section
      */
-    private function getHeadNode($cmdi){
+    private function getHeadNode($cmdi)
+    {
 
         if ($cmdi) {
             $name = $cmdi->getNameById();
-            return $cmdi->children('cmd',true)->Components->{$name};
+            return $cmdi->children('cmd', true)->Components->{$name};
         }
 
         return null;
@@ -262,7 +254,8 @@ class FormBuilder
      *
      * @param $template SimpleXMLElement Template file with 'data' child
      */
-    private function setData($template){
+    private function setData($template)
+    {
         $data = [];
 
         // loop through array to get core attributes of each element
@@ -301,7 +294,6 @@ class FormBuilder
         $parents = $form_state['clicked_button']['#parents'];
 
         foreach ($parents as $key => $parent) {
-
             if ($parent === $componentId) {
                 $pointer[$componentId]['base'] = isset($pointer[$componentId]['base']) ? $pointer[$componentId]['base'] :  0;
                 $pointer = &$pointer[$componentId]['base'];
@@ -323,17 +315,14 @@ class FormBuilder
         } else {
             $pointer = $pointer - 1;
         }
-
     }
 }
-
-
 
 
 /**
  * Ajax callback for the selected option fields.
  */
-function select_profile_name_ajax_callback ($form, &$form_state)
+function select_profile_name_ajax_callback($form, &$form_state)
 {
     return $form['template_container'];
 }
@@ -341,15 +330,15 @@ function select_profile_name_ajax_callback ($form, &$form_state)
 /**
  * Ajax callback for click an add button
  */
-function add_multival_to_cmdi_form_ajax($form, $form_state) {
-
+function add_multival_to_cmdi_form_ajax($form, $form_state)
+{
     return $form['template_container'];
 }
 
 /**
  * Ajax callback for click an remove button
  */
-function remove_multival_from_cmdi_form_ajax($form, $form_state) {
-
+function remove_multival_from_cmdi_form_ajax($form, $form_state)
+{
     return $form['template_container'];
 }

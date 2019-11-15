@@ -202,7 +202,7 @@ class Bundle extends SIP
 
         }
 
-        $pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+\.[\da-zA-Z]{2,9}$/';
+        $pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+\.[\da-zA-Z]{1,9}$/';
         $violators = [];
 
         foreach ($fileNames as $uri => $file_array){
@@ -218,7 +218,7 @@ class Bundle extends SIP
             $message = 'Bundle contains files with names violating our file naming policy. ' .
             'Allowed are names starting with an alphanumeric characters (a-z,A-Z,0-9) followed by more alphanumeric characters '.
             'or these special characters (.-_). The name of the file needs to have an extension marked by a dot (".") '.
-            'followed by 2 to 9 characters. ';
+            'followed by 1 to 9 characters. ';
 
             $message .= 'Following file(s) have triggered this message: ';
             $message .= implode(', ', $violators);
