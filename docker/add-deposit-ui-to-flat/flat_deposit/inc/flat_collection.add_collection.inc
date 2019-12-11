@@ -41,12 +41,26 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject)
     else {
 	    $show_namespace_field = FALSE;
     }
+    $form['namespace_toggle'] = array(
+        '#title' => t('Enter namespace value'),
+        '#type' => 'checkbox',
+        '#required' => FALSE,
+        '#access' => $show_namespace_field,
+    );
 
     $form['namespace'] = array(
         '#title' => t('Namespace for the collection (leave blank to use parent namespace)'),
         '#type' => 'textfield',
 	'#required' => FALSE,
 	'#access' => $show_namespace_field,
+	  '#states' => array(
+    	   // Only show this field when the 'toggle_me' checkbox is enabled.
+    		'visible' => array(
+      			':input[name="namespace_toggle"]' => array(
+        			'checked' => TRUE,
+      			),
+    		),
+  	),
     );
 
     if (!user_access('admin collection')) {

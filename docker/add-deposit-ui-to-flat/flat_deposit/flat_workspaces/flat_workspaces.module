@@ -390,13 +390,12 @@ function flat_workspaces_node_view($node, $view_mode, $langcode)
 /**
  * Implements hook_node_presave()
  *
- * get value from flat_nc_path and set flat_original_path and flat_location to that value
+ * get value from flat_ws_path and set flat_original_path and flat_location to that value
  *
  * note! also gets called during node delete and metadata save, hence the extra checks
  *
  */
 function flat_workspaces_node_presave($node) {
-
     if (isset($node->form_id)) {
         if ($node->form_id == 'flat_bundle_node_form') {
             if (isset($node->flat_source)) {

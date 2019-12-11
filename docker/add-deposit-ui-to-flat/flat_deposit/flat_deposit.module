@@ -1093,7 +1093,6 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
         $form['actions']['submit']['#submit'][0] = 'flat_deposit_flat_bundle_node_form_submit';
 
     }
-
     switch ($node_status) {
 
         case 'create':{
@@ -1574,6 +1573,7 @@ function get_collection_node($nid)
  * @param $form
  * @param $form_state
  */
+/*
 function flat_bundle_validate($node, $form, &$form_state)
 {
 
@@ -1583,6 +1583,7 @@ function flat_bundle_validate($node, $form, &$form_state)
     $node_wrapper = entity_metadata_wrapper('node', $node);
     $source = $node_wrapper->flat_source->value();
     $original_path = $node_wrapper->flat_original_path->value();
+    echo($original_path);
     if ($source == 'local') {
 
         if (!file_exists($original_path)) {
@@ -1593,7 +1594,7 @@ function flat_bundle_validate($node, $form, &$form_state)
     }
 
 }
-
+ */
 /**
  * Implements hook_view().
  */

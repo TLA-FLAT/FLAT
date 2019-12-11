@@ -287,13 +287,6 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
         return $form;
     }
 
-    // Validate path, number of files in bundle and whether there are deleted files
-
-    if (!file_exists($path)){
-        form_set_error('validate_bundle', t('The selected folder does not exist or is not accessible.'));
-        return $form;
-    }
-
     $errors = [];
 
     if (!$has_new_or_deleted_files) {
@@ -360,7 +353,6 @@ function flat_bundle_action_form_submit($form, &$form_state)
 
             global $user;
             $form_state['redirect'] = 'dashboard';
-            $_SESSION['messages'] = '';
             drupal_set_message("Bundle is being $processed");
 
             break;
