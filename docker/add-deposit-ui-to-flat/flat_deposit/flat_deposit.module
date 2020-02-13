@@ -1362,10 +1362,12 @@ function flat_bundle_node_form_add_submit($form, &$form_state)
     $bundle = $form_state['values']['title'];
     $collection = $form_state['values']['flat_parent_title']['und'][0]['value'];
 
+    global $user;
+    /* removed this since we no longer use IMCE. Should remove entire IMCE dependency at some point
     // Initiate user directories if necessary.
     module_load_include('inc', 'imce', 'inc/imce.page');
-    global $user;
     imce_initiate_profile($user, 'external');
+    */
 
     // Determine directories for metadata and resources.
     $meta_dir = 'metadata://' . str_replace('@', '_at_', $user->name) . "/$collection/$bundle";

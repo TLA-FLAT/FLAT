@@ -347,17 +347,19 @@ class Bundle extends SIP
      */
     protected function  createBlogEntry ($succeeded, $additonal_message = NULL){
 
+        global $base_url;
+
         $this->logging('Starting createBlogEntry');
 
         $host = variable_get('flat_deposit_ingest_service')['host_name'];
         $scheme = variable_get('flat_deposit_ingest_service')['host_scheme'];
         if (!$this->test AND $succeeded){
 
-            $url_link = '/islandora/object/' . $this->fid ;
+            $url_link = 'islandora/object/' . $this->fid ;
 
         } else {
 
-            $url_link = '/node/' . (string)$this->node->nid;
+            $url_link = 'node/' . (string)$this->node->nid;
 
         }
 
@@ -368,7 +370,7 @@ class Bundle extends SIP
         $collection = $this->wrapper->flat_parent_title->value();
 
         $summary = sprintf("<p>%s of %s %s</p>",$action, $bundle, $outcome);
-        $body = sprintf("<p>%s %s</p><p>%s of %s belonging to %s %s. Check bundle ". l(t('here'), $url_link, array('html' => TRUE, 'external' => TRUE, 'absolute' => TRUE, 'base_url' => $scheme . '://' . $host)) . '</p>', $bundle, $collection, $action, $bundle, $collection, $outcome);
+        $body = sprintf("<p>%s %s</p><p>%s of %s belonging to %s %s. Check bundle ". l(t('here'), $url_link, array('html' => TRUE, 'external' => FALSE, 'absolute' => TRUE, 'base_url' => $base_url)) . '</p>', $bundle, $collection, $action, $bundle, $collection, $outcome);
 
         if ($additonal_message){ $body .=  '</p>Exception message:</p>' . $additonal_message ;};
 
