@@ -53,20 +53,65 @@ class FlatNode
         $query = new EntityFieldQuery();
         $query->entityCondition('entity_type', 'node')
             ->entityCondition('bundle', 'flat_bundle')
-            ->propertyCondition('flat_bundle_status_value', 'processing');
+            ->fieldCondition('flat_bundle_status', 'value', 'processing');
 
-        $processing_bundles = $query->execute();
+        $result = $query->execute();
+        if (isset($result['node'])) {
+            $processing_bundles_nids = array_keys($result['node']);
+            $processing_bundles = entity_load('node', $processing_bundles_nids);
+        }
+        if ($processing_bundles) {
+            $processing_bundles_parents_nids = [];
+            foreach ($processing_bundles as $processing_bundle) {
+                $processing_bundles_parents_nids[] = $processing_bundle->flat_parent_nid['und'][0]['value'];
+            }
+        }
 
-        // get cmdi ancestors of the current node
+        $processing_bundles_parents = entity_load('node', $processing_bundles_parents_nids);
+
+        $processing_bundles_parents_fids = [];
+        if ($processing_bundles_parents) {
+                    foreach ($processing_bundles_parents as $processing_bundle_parent) {
+                            $processing_bundles_parents_fids[] = $processing_bundle_parent->flat_fid['und'][0]['value'];
+                    }
+            }
+
+        // establish connection to Fedora RI for SPARQL queries
         $connection = islandora_get_tuque_connection();
         $ri = $connection->repository->ri;
 
-        $ancestors_query = get_cmdi_ancestors($fid);
+        // get cmdi ancestors of the parents of all currently processing bundle nodes
+        $processing_bundles_parents_ancestors = [];
+        foreach ($processing_bundles_parents_fids as $processing_bundles_parents_fid) {
+            $ancestors_query = get_cmdi_ancestors($processing_bundles_parents_fid);
+            $ancestors = $ri->sparqlQuery($ancestors_query);
+            $processing_bundles_parents_ancestors = array_merge($processing_bundles_parents_ancestors, $ancestors);
+        }
 
-        $ancestors = $ri->sparqlQuery($ancestors_query);
+        $processing_bundles_parents_ancestor_fids = [];
+        foreach ($processing_bundles_parents_ancestors as $ancestor) {
+                    $processing_bundles_parents_ancestor_fids[] = $ancestor['pid']['value'];
+        }
 
-        dd($processing_bundles);
-        dd($ancestors);
+        // all fids together (parents + ancestors of parents)
+        $all_processing_bundles_ancestors = array_merge($processing_bundles_parents_fids, $processing_bundles_parents_ancestor_fids);
+
+        // get cmdi ancestors of the current node
+            $current_ancestors_query = get_cmdi_ancestors($fid);
+            $current_ancestors = $ri->sparqlQuery($ancestors_query);
+            $current_ancestor_fids = [];
+            foreach ($current_ancestors as $ancestor) {
+            $current_ancestor_fids[] = $ancestor['pid']['value'];
+        }
+
+        // see wether there is an overlap between the ancestors of the current node and the ancestors of all processing bundles
+        $overlap = array_intersect($current_ancestor_fids, $all_processing_bundles_ancestors);
+        if ($overlap) {
+            return TRUE;
+        }
+        else {
+            return FALSE;
+        }
 
     }
 }

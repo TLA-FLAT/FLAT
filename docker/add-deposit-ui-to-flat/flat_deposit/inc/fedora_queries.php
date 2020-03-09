@@ -130,13 +130,15 @@ function create_query_all_owned_files($user) {
  *
  * @param string $fid Fedora ID of the object for which to query the ancestors, without prefix
  *
- * @return array of ancestors
+ * @return array of ancestor nodes
  */
 function get_cmdi_ancestors($fid) {
     $query = "PREFIX relex: <info:fedora/fedora-system:def/relations-external#>
-    SELECT ?x WHERE {
-        <info:fedora/" . $fid . "> relex:isMemberOfCollection>+ ?x .
-        ?x <info:fedora/fedora-system:def/model#hasModel> <info:fedora/islandora:sp_cmdiCModel> .
+    SELECT distinct ?pid
+    FROM <#ri>
+    WHERE {
+        <info:fedora/" . $fid . "> relex:isMemberOfCollection+ ?pid .
+        ?pid <info:fedora/fedora-system:def/model#hasModel> <info:fedora/islandora:sp_cmdiCModel> .
     }";
     return $query;
 }

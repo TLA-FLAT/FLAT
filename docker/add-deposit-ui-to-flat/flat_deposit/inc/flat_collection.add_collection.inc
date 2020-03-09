@@ -242,8 +242,12 @@ function flat_collection_add_form_final_validate($form, &$form_state) {
     //****************************//
     // Perform general validation //
     //****************************//
-
+    // Check wether there are any bundles being processed in the collection hierarchy
     $bundles_being_processed = FlatNode::processing_nodes_exist_in_hierarchy($fid);
+    if ($bundles_being_processed) {
+        form_set_error('error', t('Bundles are currently being processed on this collection hierarchy. Please wait until they are ready before making new collections.'));
+        return $form;
+    }
 
     // Validate that selected profile is not empty
     if ($form_state['values']['select_profile_name'] === '-- Select --') {
