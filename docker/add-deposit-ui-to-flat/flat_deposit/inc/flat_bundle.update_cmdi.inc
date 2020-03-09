@@ -128,6 +128,7 @@ function flat_bundle_update_form_final_validate($form, &$form_state)
 
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
     module_load_include('inc', 'flat_deposit', 'inc/class.FlatTuque');
+    module_load_include('inc', 'flat_deposit', 'inc/class.FlatNode');
     $owner = $form_state['values']['owner'];
     $profile = $form_state['values']['select_profile_name'];
     $export_dir = 'metadata://' . str_replace('@', '_at_', $owner) . "/.collection/";
@@ -136,6 +137,13 @@ function flat_bundle_update_form_final_validate($form, &$form_state)
     $fidParent = FlatTuque::getIsPartOfCollection($fid);
 
     $form_state['values']['cmdiFile'] = $cmdiFile;
+
+    // Check wether there are any bundles being processed in the collection hierarchy
+    $bundles_being_processed = FlatNode::processing_nodes_exist_in_hierarchy($fid);
+    if ($bundles_being_processed) {
+        form_set_error('error', t('Bundles are currently being processed on this collection hierarchy. Please wait until they are ready before updating bundle metadata.'));
+        return $form;
+    }
 
     // Validate if owner exists.
     if (!user_load_by_name($owner)) {
