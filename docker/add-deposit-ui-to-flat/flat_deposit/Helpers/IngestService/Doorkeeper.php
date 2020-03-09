@@ -31,7 +31,6 @@ class Doorkeeper
             break;
         }
 
-        $config = variable_get('flat_deposit_doorkeeper');
         $config_general = variable_get('flat_deposit_general');
         if (is_null($namespace) && is_null($parentFid)) {
         // Use default namespace from config, should not really be happening as there should always be a parent
