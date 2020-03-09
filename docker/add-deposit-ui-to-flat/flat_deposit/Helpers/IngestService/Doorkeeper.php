@@ -20,7 +20,16 @@ class Doorkeeper
      *
      * @throws IngestServiceException
      */
-    public function triggerServlet($sipId, $to=NULL, $namespace = NULL, $parentFid = NULL) {
+    public function triggerServlet($sipId, $to=NULL, $namespace = NULL, $parentFid = NULL, $instance = 1) {
+
+        switch ($instance) {
+            case 1:
+                $config = variable_get('flat_deposit_doorkeeper');
+                break;
+            case 2:
+                $config = variable_get('flat_deposit_doorkeeper_2');
+            break;
+        }
 
         $config = variable_get('flat_deposit_doorkeeper');
         $config_general = variable_get('flat_deposit_general');
@@ -84,10 +93,17 @@ class Doorkeeper
      *
      * @return mixed
      */
-    public function doGetRequest($sipId, $code_only=FALSE)
+    public function doGetRequest($sipId, $code_only=FALSE, $instance = 1)
     {
 
-        $config = variable_get('flat_deposit_doorkeeper');
+        switch ($instance) {
+            case 1:
+                $config = variable_get('flat_deposit_doorkeeper');
+                break;
+            case 2:
+                $config = variable_get('flat_deposit_doorkeeper_2');
+            break;
+        }
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $config['url'] . $sipId);
@@ -114,7 +130,7 @@ class Doorkeeper
      *
      * todo check return value of doorkeeper
      */
-    public function checkStatus(String $sipId, int $maxWait = 1800){
+    public function checkStatus(String $sipId, int $maxWait = 1800, $instance = 1){
 
         #initial check request
         $httpcode = $this->doGetRequest($sipId, TRUE);
@@ -124,7 +140,7 @@ class Doorkeeper
         while ($httpcode != 200 && $time <= $maxWait) {
             sleep(5);
             $time = $time + 5;
-            $httpcode = $this->doGetRequest($sipId, TRUE);
+            $httpcode = $this->doGetRequest($sipId, TRUE, $instance);
         };
 
         // Check time criterion
@@ -134,7 +150,7 @@ class Doorkeeper
         }
 
         // check outcome doorkeeper
-        $val = $this->doGetRequest($sipId);
+        $val = $this->doGetRequest($sipId, FALSE, $instance);
         $xml =simplexml_load_string($val) ;
 
 

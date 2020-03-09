@@ -187,6 +187,27 @@ function flat_deposit_set_doorkeeper($updated_values = null)
     return TRUE;
 }
 
+function flat_deposit_set_doorkeeper_2($updated_values = null)
+{
+    $defaults =  array(
+        'url' => "http://localhost/flat/doorkeeper/",
+        'port' => 8080
+    );
+
+    //clean up stored values
+    $values_stored_in_database = variable_get('flat_deposit_doorkeeper_2', array());
+
+    //already installed
+    if (!empty($values_stored_in_database[0])) {
+        variable_del('flat_deposit_doorkeeper_2');
+    }
+
+    // set or update values
+    $values = $updated_values ? array_merge($values_stored_in_database, $updated_values) : $defaults;
+    variable_set('flat_deposit_doorkeeper_2', $values);
+
+    return TRUE;
+}
 
 function flat_deposit_set_fedora($updated_values = null)
 {

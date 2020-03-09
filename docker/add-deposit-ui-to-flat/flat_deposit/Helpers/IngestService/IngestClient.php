@@ -24,8 +24,10 @@ class IngestClient
      * @param String $parentFid Fedora ID of the parent to which SIP should be attached
      *
      * @param bool $test Should ingest be completed or only validated
+     *
+     * @param int $instance Which Doorkeeper instance should be used
      */
-    public function __construct($sipClassName, $owner, $cmdiFileName, $parentFid, $test=FALSE, $namespace=NULL)
+    public function __construct($sipClassName, $owner, $cmdiFileName, $parentFid, $test=FALSE, $namespace=NULL, $instance = 1)
     {
         if (!$sipClassName OR !$owner OR !$cmdiFileName OR !$parentFid){
             throw new IngestServiceException('One or more required constructor parameters are not set.');
@@ -33,7 +35,7 @@ class IngestClient
 
         $this->IngestFactory = new IngestFactory();
 
-        $this->sipConcrete = new $sipClassName($owner, $cmdiFileName, $parentFid, $test, $namespace);
+        $this->sipConcrete = new $sipClassName($owner, $cmdiFileName, $parentFid, $test, $namespace, $instance);
 
     }
 

@@ -108,7 +108,7 @@ function flat_deposit_admin_form($form, &$form_state)
         '#default_value' => $service['host_scheme'],
         '#required' => TRUE,
     );
-    
+
     $form['ingest_service']['java_home'] = array(
         '#type' => 'textfield',
         '#title' => t('Java home'),
@@ -271,6 +271,32 @@ function flat_deposit_admin_form($form, &$form_state)
         '#type' => 'textfield',
         '#title' => t('Port used by DoorKeeper servlet'),
         '#default_value' => $doorkeeper['port'],
+        '#required' => TRUE,
+    );
+
+    // DOORKEEPER 2 (Option to configure second doorkeeper for actions that require instant response.
+    // If this is not needed, can be configured the same as Doorkeeper 1)
+    $form['doorkeeper_2'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('DoorKeeper 2 configuration (if not needed, use the same values as the first Doorkeeper'),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+        '#tree' => TRUE
+    );
+
+    $doorkeeper_2 = variable_get('flat_deposit_doorkeeper_2');
+
+    $form['doorkeeper_2']['url'] = array (
+        '#type' => 'textfield',
+        '#title' => t('URL of the doorkeeper 2 servlet'),
+        '#default_value' => $doorkeeper_2['url'],
+        '#required' => TRUE,
+    );
+
+    $form['doorkeeper_2']['port'] = array (
+        '#type' => 'textfield',
+        '#title' => t('Port used by DoorKeeper 2 servlet'),
+        '#default_value' => $doorkeeper_2['port'],
         '#required' => TRUE,
     );
 
@@ -466,6 +492,7 @@ function flat_deposit_admin_form_save_submit($form, &$form_state)
     flat_deposit_set_ingest_service($form_state['values']['ingest_service']);
     flat_deposit_set_sword($form_state['values']['sword']);
     flat_deposit_set_doorkeeper($form_state['values']['doorkeeper']);
+    flat_deposit_set_doorkeeper_2($form_state['values']['doorkeeper_2']);
     flat_deposit_set_fedora($form_state['values']['fedora']);
     flat_deposit_set_solr($form_state['values']['solr']);
     drupal_set_message(t('Changed values have been saved'));
@@ -483,6 +510,7 @@ function flat_deposit_admin_form_reset_submit($form, &$form_state)
     flat_deposit_set_ingest_service();
     flat_deposit_set_sword();
     flat_deposit_set_doorkeeper();
+    flat_deposit_set_doorkeeper_2();
     flat_deposit_set_fedora();
     flat_deposit_set_solr();
 
@@ -500,6 +528,7 @@ function flat_deposit_admin_form_export_submit()
         'ingest_service' => variable_get('flat_deposit_ingest_service'),
         'sword' => variable_get('flat_deposit_sword'),
         'doorkeeper' => variable_get('flat_deposit_doorkeeper'),
+        'doorkeeper_2' => variable_get('flat_deposit_doorkeeper_2'),
         'fedora' => variable_get('flat_deposit_fedora'),
         'solr' => variable_get('flat_deposit_solr'),
     );
@@ -588,6 +617,7 @@ function flat_deposit_admin_form_import_submit($form, &$form_state)
     variable_set('flat_deposit_ingest_service', $form_state['values']['imported_values']['ingest_service']);
     variable_set('flat_deposit_sword', $form_state['values']['imported_values']['sword']);
     variable_set('flat_deposit_doorkeeper', $form_state['values']['imported_values']['doorkeeper']);
+    variable_set('flat_deposit_doorkeeper_2', $form_state['values']['imported_values']['doorkeeper_2']);
     variable_set('flat_deposit_fedora', $form_state['values']['imported_values']['fedora']);
     variable_set('flat_deposit_solr', $form_state['values']['imported_values']['solr']);
 

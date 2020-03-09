@@ -213,7 +213,7 @@ abstract class SIP
         $this->logging('Starting createBag');
 
         $bagit_executable = variable_get('flat_deposit_ingest_service')['bag_exe'];
-        
+
         $java_home = variable_get('flat_deposit_ingest_service')['java_home'];
 
         $command = 'JAVA_HOME=' . $java_home . ' ' . $bagit_executable . ' baginplace ' . '"' . $this->frozenSipDir .  '"';
@@ -300,9 +300,11 @@ abstract class SIP
 
         $parentFid = $this->parentFid ? $this->parentFid : NULL;
 
+        $instance = $this->instance ? $this->instance : 1;
+
         module_load_include('php', 'flat_deposit', '/Helpers/IngestService/Doorkeeper');
         $dk = new Doorkeeper();
-        $dk->triggerServlet($this->sipId, $query, $namespace, $parentFid);
+        $dk->triggerServlet($this->sipId, $query, $namespace, $parentFid, $instance);
         $fid = $dk->checkStatus($this->sipId, 1800);
 
         $this->fid =$fid ;
