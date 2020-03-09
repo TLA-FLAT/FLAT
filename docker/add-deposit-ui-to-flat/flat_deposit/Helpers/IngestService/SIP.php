@@ -41,6 +41,9 @@ abstract class SIP
     // full file name of copied cmdi file
     protected $cmdiTarget;
 
+    // Doorkeeper instance that should be used
+    protected $instance;
+
     // configuration parameters necessary for successful processing of a bundle
     protected $info;
 
@@ -60,7 +63,7 @@ abstract class SIP
 
     abstract function customRollback($message);
 
-    public function __construct($owner, $cmdiFileName, $parentFid, $test, $namespace)
+    public function __construct($owner, $cmdiFileName, $parentFid, $test, $namespace, $instance)
     {
         $uuid = uniqid();
 
@@ -96,6 +99,8 @@ abstract class SIP
         $this->frozenSipDir = drupal_realpath('freeze://') . '/SIPS/' .  str_replace('@', '_at_', $this->owner) . '/' . $this->sipId . '/';
 
         $this->cmdiTarget = $this->frozenSipDir .  '/data/metadata/record.cmdi';
+
+        $this->instance = $instance;
 
         $this->logging('Finishing SIP constructor');
 
@@ -305,7 +310,7 @@ abstract class SIP
         module_load_include('php', 'flat_deposit', '/Helpers/IngestService/Doorkeeper');
         $dk = new Doorkeeper();
         $dk->triggerServlet($this->sipId, $query, $namespace, $parentFid, $instance);
-        $fid = $dk->checkStatus($this->sipId, 1800);
+        $fid = $dk->checkStatus($this->sipId, 1800, $instance);
 
         $this->fid =$fid ;
 
