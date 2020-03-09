@@ -124,6 +124,23 @@ function create_query_all_owned_files($user) {
     return $query;
 }
 
+
+/**
+ * Fedora SPARQL query to get ancestors with CMDI content model for the given Fedora ID
+ *
+ * @param string $fid Fedora ID of the object for which to query the ancestors, without prefix
+ *
+ * @return array of ancestors
+ */
+function get_cmdi_ancestors($fid) {
+    $query = "PREFIX relex: <info:fedora/fedora-system:def/relations-external#>
+    SELECT ?x WHERE {
+        <info:fedora/" . $fid . "> relex:isMemberOfCollection>+ ?x .
+        ?x <info:fedora/fedora-system:def/model#hasModel> <info:fedora/islandora:sp_cmdiCModel> .
+    }";
+    return $query;
+}
+
 #function export_array_to_db($array) {
 
 #db_create_table('temp_ingested_data');

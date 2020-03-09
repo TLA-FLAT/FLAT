@@ -269,10 +269,12 @@ function flat_collection_update_form_final_validate($form, &$form_state)
     $sipType = 'Collection';
     $test = false;
 
+    $instance = 2; // use second instance of Doorkeeper to bypass main queue and get (almost) instant response
+
     module_load_include('php', 'flat_deposit', 'Helpers/IngestService/IngestClient');
 
     try {
-        $ingest_client = new IngestClient($sipType, $owner, $cmdiFile, $fidParent, $test);
+        $ingest_client = new IngestClient($sipType, $owner, $cmdiFile, $fidParent, $test, $instance);
     } catch (IngestServiceException $exception) {
         form_set_error('debug', $exception->getMessage());
         return $form;

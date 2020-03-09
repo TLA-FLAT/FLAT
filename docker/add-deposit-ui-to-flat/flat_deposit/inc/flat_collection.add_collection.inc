@@ -222,6 +222,7 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject)
 
 function flat_collection_add_form_final_validate($form, &$form_state) {
     module_load_include('inc', 'flat_deposit', 'inc/class.FlatTuque');
+    module_load_include('inc', 'flat_deposit', 'inc/class.FlatNode');
     // Form Validation setup
     $owner = $form_state['values']['owner'];
     $namespace = $form_state['values']['namespace'];
@@ -241,6 +242,8 @@ function flat_collection_add_form_final_validate($form, &$form_state) {
     //****************************//
     // Perform general validation //
     //****************************//
+
+    $bundles_being_processed = FlatNode::processing_nodes_exist_in_hierarchy($fid);
 
     // Validate that selected profile is not empty
     if ($form_state['values']['select_profile_name'] === '-- Select --') {

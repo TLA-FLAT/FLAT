@@ -38,4 +38,35 @@ class FlatNode
         }
         return transliteration_process($text, $unknown, $source_langcode);
     }
+
+    /**
+     * Check whether any bundles are currently being processed in the CMDI hierarchy of the current node
+     *
+     * @param string $fid Fedora ID without prefix
+     * @return bool True or False whether any bundles in the hierarchy are being processed
+     */
+    public static function processing_nodes_exist_in_hierarchy($fid)
+    {
+        module_load_include('php', 'flat_deposit','/inc/fedora_queries');
+
+        // query bundles that are currently being processed
+        $query = new EntityFieldQuery();
+        $query->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', 'flat_bundle')
+            ->propertyCondition('flat_bundle_status_value', 'processing');
+
+        $processing_bundles = $query->execute();
+
+        // get cmdi ancestors of the current node
+        $connection = islandora_get_tuque_connection();
+        $ri = $connection->repository->ri;
+
+        $ancestors_query = get_cmdi_ancestors($fid);
+
+        $ancestors = $ri->sparqlQuery($ancestors_query);
+
+        dd($processing_bundles);
+        dd($ancestors);
+
+    }
 }
