@@ -173,7 +173,7 @@ function flat_collection_update_form_final_validate($form, &$form_state)
     // Check wether there are any bundles being processed in the collection hierarchy
     $bundles_being_processed = FlatNode::processing_nodes_exist_in_hierarchy($fid);
     if ($bundles_being_processed) {
-        form_set_error('error', t('Bundles are currently being processed on this collection hierarchy. Please wait until they are ready before updating collections.'));
+        form_set_error('error', t('Bundles are currently being processed on this collection hierarchy. Please wait until they are ready before updating collection metadata.'));
         return $form;
     }
 
