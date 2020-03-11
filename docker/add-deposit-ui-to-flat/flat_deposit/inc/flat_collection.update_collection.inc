@@ -167,6 +167,7 @@ function flat_collection_update_form_final_validate($form, &$form_state)
     module_load_include('inc', 'flat_deposit', 'inc/class.FlatTuque');
 
     $fid = $form_state['values']['data']['fid'];
+    $namespace = explode(':', $fid)[0];
     $fidParent = FlatTuque::getIsPartOfCollection($fid);
 
     //*******************//
@@ -272,7 +273,7 @@ function flat_collection_update_form_final_validate($form, &$form_state)
     module_load_include('php', 'flat_deposit', 'Helpers/IngestService/IngestClient');
 
     try {
-        $ingest_client = new IngestClient($sipType, $owner, $cmdiFile, $fidParent, $test);
+        $ingest_client = new IngestClient($sipType, $owner, $cmdiFile, $fidParent, $test, $namespace);
     } catch (IngestServiceException $exception) {
         form_set_error('debug', $exception->getMessage());
         return $form;
