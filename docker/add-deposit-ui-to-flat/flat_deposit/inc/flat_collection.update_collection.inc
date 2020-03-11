@@ -168,6 +168,7 @@ function flat_collection_update_form_final_validate($form, &$form_state)
     module_load_include('inc', 'flat_deposit', 'inc/class.FlatNode');
 
     $fid = $form_state['values']['data']['fid'];
+    $namespace = explode(':', $fid)[0];
     $fidParent = FlatTuque::getIsPartOfCollection($fid);
 
     // Check wether there are any bundles being processed in the collection hierarchy
@@ -282,7 +283,7 @@ function flat_collection_update_form_final_validate($form, &$form_state)
     module_load_include('php', 'flat_deposit', 'Helpers/IngestService/IngestClient');
 
     try {
-        $ingest_client = new IngestClient($sipType, $owner, $cmdiFile, $fidParent, $test, $instance);
+        $ingest_client = new IngestClient($sipType, $owner, $cmdiFile, $fidParent, $test, $namespace, $instance);
     } catch (IngestServiceException $exception) {
         form_set_error('debug', $exception->getMessage());
         return $form;

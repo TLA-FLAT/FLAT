@@ -132,7 +132,7 @@ class Doorkeeper
     public function checkStatus(String $sipId, int $maxWait = 1800, $instance = 1){
 
         #initial check request
-        $httpcode = $this->doGetRequest($sipId, TRUE);
+        $httpcode = $this->doGetRequest($sipId, TRUE, $instance);
         $time = 0;
 
         // loop and wait until doorkeeper signals end of request

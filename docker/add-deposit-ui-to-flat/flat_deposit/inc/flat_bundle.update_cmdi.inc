@@ -134,6 +134,7 @@ function flat_bundle_update_form_final_validate($form, &$form_state)
     $export_dir = 'metadata://' . str_replace('@', '_at_', $owner) . "/.collection/";
     $cmdiFile = $export_dir . '/' . $profile . '_' . uniqid() . '.cmdi';
     $fid = $form_state['values']['data']['fid'];
+    $namespace = explode(':', $fid)[0];
     $fidParent = FlatTuque::getIsPartOfCollection($fid);
 
     $form_state['values']['cmdiFile'] = $cmdiFile;
@@ -304,7 +305,7 @@ function flat_bundle_update_form_final_validate($form, &$form_state)
     module_load_include('php', 'flat_deposit', 'Helpers/IngestService/IngestClient');
 
     try {
-        $ingest_client = new IngestClient($sipType, $owner, $cmdiFile, $fidParent, $test, $instance);
+        $ingest_client = new IngestClient($sipType, $owner, $cmdiFile, $fidParent, $test, $namespace, $instance);
     } catch (IngestServiceException $exception) {
         form_set_error('debug', $exception->getMessage());
         return $form;

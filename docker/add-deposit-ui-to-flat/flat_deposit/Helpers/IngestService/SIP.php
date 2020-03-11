@@ -307,6 +307,8 @@ abstract class SIP
 
         $instance = $this->instance ? $this->instance : 1;
 
+        $this->logging('Using Doorkeeper instance: ' . $instance);
+
         module_load_include('php', 'flat_deposit', '/Helpers/IngestService/Doorkeeper');
         $dk = new Doorkeeper();
         $dk->triggerServlet($this->sipId, $query, $namespace, $parentFid, $instance);

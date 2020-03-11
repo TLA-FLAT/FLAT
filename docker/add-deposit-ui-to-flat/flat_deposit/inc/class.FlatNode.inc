@@ -98,7 +98,7 @@ class FlatNode
 
         // get cmdi ancestors of the current node
             $current_ancestors_query = get_cmdi_ancestors($fid);
-            $current_ancestors = $ri->sparqlQuery($ancestors_query);
+            $current_ancestors = $ri->sparqlQuery($current_ancestors_query);
             $current_ancestor_fids = [];
             foreach ($current_ancestors as $ancestor) {
             $current_ancestor_fids[] = $ancestor['pid']['value'];
