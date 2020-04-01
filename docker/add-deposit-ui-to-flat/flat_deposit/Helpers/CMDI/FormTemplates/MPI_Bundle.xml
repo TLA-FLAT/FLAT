@@ -18,7 +18,7 @@ and children:
 - component (optional): specifies whether a item is located within a component.
 - default (optional): specifies a default value for the field. Will be overridden by existing values when editing existing metadata.
 - skipParentInCMDI (optional): Can be used to have a fieldset wrapper that will only be used for the web form and will be skipped in the CMDI generation. Useful for fields that have attributes. Set this attribute to "true" on the first child item of the fieldset.
-Additional fied is data. data items are hidden in drupal. Required info is the clarin profile ID, to which this transform refers
+Additional field is data. Data items are hidden in drupal. Required info is the clarin profile ID, to which this transform refers
  -->
 <profileToDrupal>
     <header>
@@ -217,19 +217,32 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                 <title>URL</title>
                 <type>textfield</type>
             </item>
+            <item id="fieldset_05" type="Composite" name="Funder" multival="true" inherited="false" minOccurrence="0">
+                <title>Funder</title>
+                <type>fieldset</type>
+		<container>Funders</container>
+                <item id="field_17" name="fundingAgency" type="Leaf" inherited="false" minOccurrence="1">
+                    <title>Funding Agency</title>
+                    <type>textfield</type>
+                </item>
+                <item id="field_18" name="fundingReferenceNumber" type="Leaf" inherited="false" minOccurrence="0">
+                    <title>Funding Reference Number</title>
+                    <type>textfield</type>
+                </item>
+            </item>
         </item>
-        <item id="fieldset_05" type="Composite" name="Content_Language" multival="true" inherited="true" minOccurrence="0">
+        <item id="fieldset_06" type="Composite" name="Content_Language" multival="true" inherited="true" minOccurrence="0">
             <title>Content_Language</title>
             <type>fieldset</type>
             <container>Content Languages</container>
-            <item id="field_17" name="Name" type="Leaf" inherited="true" minOccurrence="1">
+            <item id="field_19" name="Name" type="Leaf" inherited="true" minOccurrence="1">
                 <title>Name</title>
                 <type>textfield</type>
         	<data>
             		<role>flat-lang-autocomplete</role>
         	</data>
             </item>
-            <item id="field_18" name="Id" type="Leaf" inherited="true" minOccurrence="1">
+            <item id="field_20" name="Id" type="Leaf" inherited="true" minOccurrence="1">
                 <title>Id</title>
                 <type>textfield</type>
                 <description>Valid entries are: ISO639-3 language code (e.g. ISO639-3:nld) | Unknown | Unspecified</description>
@@ -238,11 +251,11 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
         	</data>
             </item>
         </item>
-        <item id="fieldset_06" type="Composite" name="Location" multival="true" inherited="true" minOccurrence="0">
+        <item id="fieldset_07" type="Composite" name="Location" multival="true" inherited="true" minOccurrence="0">
             <type>fieldset</type>
             <title>Location</title>
             <container>Locations</container>
-            <item id="field_19" name="Continent" type="Leaf" inherited="true" minOccurrence="1">
+            <item id="field_21" name="Continent" type="Leaf" inherited="true" minOccurrence="1">
                 <title>Continent</title>
                 <type>dropdown</type>
                 <options>
@@ -258,56 +271,56 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                     <option>South-America</option>
                 </options>
             </item>
-            <item id="field_20" type="Leaf" name="Country" inherited="true" minOccurrence="1">
+            <item id="field_22" type="Leaf" name="Country" inherited="true" minOccurrence="1">
                 <title>Country</title>
                 <type>textfield</type>
             </item>
-            <item id="field_21" type="Leaf" name="PlaceName" multival="true" inherited="true" minOccurrence="0">
+            <item id="field_23" type="Leaf" name="PlaceName" multival="true" inherited="true" minOccurrence="0">
                 <title>Place Name</title>
                 <type>textfield</type>
             </item>
-            <item id="fieldset_07" name="geoCoordinates" type="Composite"  multival="true" inherited="true" minOccurrence="0">
-                <title>Geo coordinates</title>
+            <item id="fieldset_08" name="geoCoordinates" type="Composite"  multival="true" inherited="true" minOccurrence="0">
+                <title>geoCoordinates</title>
                 <type>fieldset</type>
-                <item id="field_22" name="Latitude" type="Leaf" inherited="true" minOccurrence="1">
+                <item id="field_24" name="Latitude" type="Leaf" inherited="true" minOccurrence="1">
                     <title>Latitude</title>
                     <type>textfield</type>
                     <description>Latitude in decimal degrees</description>
                 </item>
-                <item id="field_23" name="Longitude" type="Leaf" inherited="true" minOccurrence="1">
+                <item id="field_25" name="Longitude" type="Leaf" inherited="true" minOccurrence="1">
                     <title>Longitude</title>
                     <type>textfield</type>
                     <description>Longitude in decimal degrees</description>
                 </item>
-                <item id="field_24" name="Elevation" type="Leaf" inherited="true" minOccurrence="0">
+                <item id="field_26" name="Elevation" type="Leaf" inherited="true" minOccurrence="0">
                     <title>Elevation</title>
                     <type>textfield</type>
                     <description>Elevation in metres above sea level</description>
                 </item>
             </item>
         </item>
-        <item id="fieldset_08" name="Publication" type="Composite" multival="true" inherited="true" minOccurrence="0">
+        <item id="fieldset_09" name="Publication" type="Composite" multival="true" inherited="true" minOccurrence="0">
             <type>fieldset</type>
             <title>Publication</title>
             <container>Publications</container>
-            <item id="field_25" name="Reference" type="Leaf" inherited="true" minOccurrence="1">
+            <item id="field_27" name="Reference" type="Leaf" inherited="true" minOccurrence="1">
                 <title>Reference</title>
                 <type>textarea</type>
             </item>
-            <item id="field_26" name="Url" type="Leaf" inherited="true" minOccurrence="0">
+            <item id="field_28" name="Url" type="Leaf" inherited="true" minOccurrence="0">
                 <title>URL</title>
                 <type>textfield</type>
             </item>
         </item>
-        <item id="fieldset_09" name="License" type="Composite" multival="true" inherited="true" minOccurrence="0">
+        <item id="fieldset_10" name="License" type="Composite" multival="true" inherited="true" minOccurrence="0">
             <title>License</title>
             <type>fieldset</type>
             <container>Licenses</container>
-            <item id="field_27" name="License" type="Leaf" inherited="true" minOccurrence="1">
+            <item id="field_29" name="License" type="Leaf" inherited="true" minOccurrence="1">
                 <title>License</title>
                 <type>textfield</type>
             </item>
-            <item id="field_28" name="LicenseURL" type="Leaf" inherited="true" minOccurrence="1">
+            <item id="field_30" name="LicenseURL" type="Leaf" inherited="true" minOccurrence="1">
                 <title>License URL</title>
                 <type>textfield</type>
             </item>

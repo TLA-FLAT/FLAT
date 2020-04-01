@@ -20,7 +20,7 @@ and children:
 - component (optional): specifies whether a item is located within a component.
 - default (optional): specifies a default value for the field. Will be overridden by existing values when editing existing metadata.
 - skipParentInCMDI (optional): Can be used to have a fieldset wrapper that will only be used for the web form and will be skipped in the CMDI generation. Useful for fields that have attributes. Set this attribute to "true" on the first child item of the fieldset.
-Additional fied is data. data items are hidden in drupal. Required info is the clarin profile ID, to which this transform refers
+Additional field is data. Data items are hidden in drupal. Required info is the clarin profile ID, to which this transform refers
  -->
 <profileToDrupal>
     <header>
