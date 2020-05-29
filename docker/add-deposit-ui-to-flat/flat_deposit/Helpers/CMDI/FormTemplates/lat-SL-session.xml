@@ -92,7 +92,7 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
                 <type>textfield</type>
             </item>
             <item id="fieldset_04" name="geoCoordinates" type="Composite" multival="true" minOccurrence="0">
-                <title>Geo coordinates</title>
+                <title>geoCoordinates</title>
                 <type>fieldset</type>
                 <item id="field_11" name="Latitude" type="Leaf" inherited="true" minOccurrence="1">
                     <title>Latitude</title>
@@ -219,11 +219,11 @@ Additional fied is data. data items are hidden in drupal. Required info is the c
         <item id="fieldset_11" name="SL-Content" type="Composite" minOccurrence="1">
             <type>fieldset</type>
             <title>SL-Content</title>
-            <item id="field_24" name="Genre" type="Leaf" minOccurrence="1">
+            <item id="field_24" name="Genre" type="Leaf" mmultival="true" minOccurrence="1">
                 <title>Genre</title>
                 <type>textfield</type>
             </item>
-            <item id="field_25" name="SubGenre" type="Leaf" minOccurrence="0">
+            <item id="field_25" name="SubGenre" type="Leaf" multival="true" minOccurrence="0">
                 <title>SubGenre</title>
                 <type>textfield</type>
             </item>

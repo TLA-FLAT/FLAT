@@ -368,7 +368,7 @@ function flat_collection_add_form_final_validate($form, &$form_state) {
             $profile_filename = FormBuilder::FORM_TEMPLATES_PATH . $profile_name .".xml";
             $template_xml = simplexml_load_file($profile_filename);
             $template_name = (string)$template_xml->xpath('/profileToDrupal/header/template_name')[0];
-            $title_field = (string)$template_xml->xpath('/profileToDrupal/items/item[@id="title_field"]/title')[0];
+            $title_field = (string)$template_xml->xpath('/profileToDrupal/items/item[@id="title_field"]/@name')[0];
             $values = FlatTuque::getChildrenLabels($fid);
             $title = (string)$cmdi->xpath("/cmd:CMD/cmd:Components/cmd:$template_name/cmd:$title_field")[0];
             if (!$title) {
