@@ -62,12 +62,8 @@ RUN apt-get update &&\
 RUN apt-get -y install libapache2-mod-php php-gd php-pgsql php-xsl php-curl
 
 # Java 8
-RUN apt-get -y install software-properties-common python-software-properties && \
-    add-apt-repository ppa:webupd8team/java && \
-    apt-get update && \
-    echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections && \
-    apt-get -y install oracle-java8-installer maven
-ENV JAVA_HOME "/usr/lib/jvm/java-8-oracle"
+RUN apt-get -y install openjdk-8-jdk maven
+ENV JAVA_HOME "/usr/lib/jvm/java-8-openjdk-amd64"
 
 # dev
 RUN apt-get -y install libxml2-utils vim
