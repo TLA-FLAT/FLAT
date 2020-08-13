@@ -223,6 +223,9 @@ function flat_deposit_cmdi_form($form, &$form_state)
         // Generate the form elements
         $formBuilder->setForm($templateName, $inheritedData, $pressedButtonsRoot);
 
+        // Clear form state input for when switching between templates
+        unset($form_state['input']['template_container']['elements']);
+
         // Attach form elements to base form
         $elements = $formBuilder->getForm();
         $form['template_container']['elements'] = $elements;

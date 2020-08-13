@@ -187,7 +187,12 @@ class FormBuilder
             return;
         }
         if (!empty($dataNode)) {
-            $title = $dataNode->children('cmd', TRUE)->Title;
+            if (!empty($dataNode->children('cmd', TRUE)->Name)) {
+                $title = $dataNode->children('cmd', TRUE)->Name;
+                }
+            else {
+                $title = $dataNode->children('cmd', TRUE)->Title;
+            }
 
             if (isset($title[0])) {
                     $title[0] = '';

@@ -472,6 +472,16 @@ function flat_deposit_menu()
         'access arguments' => array('use deposit module', 1),
     );
 
+    // Flat bundle edit cmdi file form.
+    $items['node/%node/edit_cmdi'] = array(
+        'title' => 'Edit Bundle Metadata',
+        'type' => MENU_CALLBACK,
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('flat_deposit_bundle_edit_cmdi_form', 1),
+        'file' => 'inc/flat_bundle.edit_cmdi.inc',
+        'access arguments' => array('use deposit module', 1),
+    );
+
     // FLAT_Collection.
     $items['islandora/object/%islandora_object/add_collection'] = array(
         'title' => 'Add Collection',
