@@ -27,17 +27,22 @@ function flat_bundle_action_form($form, &$form_state)
         '#access' => FALSE,
     );
 
+    $form['actions']['edit_metadata'] = array(
+        '#type' => 'submit',
+        '#value' => t('Edit metadata for bundle'),
+        '#description' => t('Edit the metadata for this bundle'),
+        '#access' => TRUE,
+    );
+
     $form['actions']['upload_data'] = array(
         '#type' => 'submit',
         '#value' => t('Upload data'),
         '#access' => FALSE,
     );
 
-
     $form['actions']['markup_1'] = array(
         '#markup' => '<div><br></div>'
     );
-
 
     $form['actions']['validate_bundle'] = array(
         '#type' => 'submit',
@@ -108,7 +113,6 @@ function flat_bundle_action_form($form, &$form_state)
 
 function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $form_id){
 
-
     $node = menu_get_object();
     $wrapper = entity_metadata_wrapper('node', $node);
 
@@ -119,7 +123,6 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
     # deactivate link to file browser for local bundles
     $source = $wrapper->flat_source->value();
     $enable_file_browser = in_array($source, array('local', 'cloud')) ? FALSE : TRUE;
-
 
     switch ($status) {
         case 'open': {
@@ -141,6 +144,7 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
         case 'validating': {
             $name = 'process_bundle';
             $form['actions']['reopen_bundle']['#disabled'] = FALSE;
+            $form['actions']['edit_metadata']['#disabled'] = TRUE;
             break;
         }
 
@@ -149,6 +153,7 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
             $form['actions']['bundle_image']['#disabled'] = !$enable_file_browser;
             $form['actions']['validate_bundle']['#disabled'] = FALSE;
             $form['actions']['edit_bundle']['#disabled'] = FALSE;
+            $form['actions']['edit_metadata']['#disabled'] = FALSE;
             $name = 'closed_bundle_failed';
             break;
         }
@@ -157,6 +162,7 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
             $form['actions']['archive_bundle']['#disabled'] = FALSE;
             $form['actions']['reopen_bundle']['#disabled'] = FALSE;
             $form['actions']['archive_bundle']['#attributes']['class'][] = 'btn-success';
+            $form['actions']['edit_metadata']['#disabled'] = TRUE;
             $name = 'closed_bundle';
             break;
         }
@@ -169,13 +175,13 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
 
     $form['actions']['bundle_image']['#src'] = drupal_get_path('module', 'flat_deposit') . '/Images/' . $name . '.png';
 
-
     // Activate metadata creation button only if 1) cmdi option is 'new' 2) status is either open or failed and 3) no cmdi has been created
     // If metadata creation button is active (.e.g. if metadata file has been removed), validate button should be disabled.
     if ($wrapper->flat_cmdi_option->value() == 'new' AND ($status == 'open' OR $status == 'failed') AND (empty($node->flat_cmdi_file))) {
 
         $form['actions']['describe_bundle']['#access'] = TRUE;
         $form['actions']['describe_bundle']['#attributes']['class'][] = 'btn-success';
+        $form['actions']['edit_metadata']['#access'] = FALSE;
         $form['actions']['validate_bundle']['#disabled'] = TRUE;
 
     }
@@ -340,6 +346,11 @@ function flat_bundle_action_form_submit($form, &$form_state)
             $url = array('node/' . $node->nid . '/cmdi');
             $form_state['redirect'] = $url;
             break;
+
+        case 'Edit metadata for bundle':
+            $url = array('node/' . $node->nid . '/edit_cmdi');
+            $form_state['redirect'] = $url;
+            break;    
 
 
         case 'Validate bundle':
