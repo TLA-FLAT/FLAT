@@ -320,7 +320,7 @@ class FormField
 
         // attributes of the composite items
 
-        if (isset($this->formTemplateNode->attribute)) {
+        if ($this->formTemplateNode['type'] == 'Composite' && isset($this->formTemplateNode->attribute)) {
 
             foreach ($this->formTemplateNode->attribute as $attribute) {
 
