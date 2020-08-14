@@ -90,7 +90,6 @@ function flat_deposit_bundle_edit_cmdi_form($form, &$form_state)
 
 
     if (array_key_exists($profile, $availableFormTemplates)) {
-        unset($form_state['build_info']['args']);
         // Load form builder app
         module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
         $formBuilder = new FormBuilder($form_state['build_info']['args'][0]);
