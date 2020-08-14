@@ -76,35 +76,6 @@ class FormBuilder
         return TRUE;
     }
 
-
-    /**
-     * Searches for the xml element id with the name (T|t)itle
-     *
-     * @param $profile the specific profile
-     *
-     * @return String the id of the field
-     */
-    public static function getTitleId($profile)
-    {
-
-        $check = FormBuilder::checkTemplateItems($profile);
-        if ($check !== TRUE) {
-            return false;
-        }
-
-        $filename = self::FORM_TEMPLATES_PATH . $profile .".xml";
-
-        $xml = simplexml_load_file($filename);
-        $res = $xml->xpath('/profileToDrupal/items/item[@name="Title"]');
-
-        if (empty($res)) {
-            return false;
-        }
-
-        $str = (String)$res[0]['id'];
-        return $str;
-    }
-
     /**
      * Template2FormParser constructor.
      */
