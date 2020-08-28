@@ -5,14 +5,9 @@ function flat_deposit_bundle_edit_cmdi_form($form, &$form_state)
 
     drupal_set_title(t('Edit Bundle Metadata'));
 
-    $node = menu_get_object();
+    $nid = $form_state['build_info']['args'][0]->nid;
 
-    $form['nid'] = array(
-        '#value' => $node->nid,
-        '#type' => 'hidden',
-      );
-
-    $wrapper = entity_metadata_wrapper('node', $node);
+    $wrapper = entity_metadata_wrapper('node', $nid);
 
     ctools_add_js('ajax-responder');
 
@@ -125,7 +120,7 @@ function flat_deposit_bundle_edit_cmdi_form_final_validate($form, &$form_state)
 {
 
     // Form Validation setup
-    $nid = $form_state['values']['nid'];
+    $nid = $form_state['build_info']['args'][0]->nid;
     $node = node_load($nid);
     $wrapper = entity_metadata_wrapper('node', $node);
 
@@ -246,7 +241,7 @@ function flat_deposit_bundle_edit_cmdi_form_submit($form, &$form_state)
     ctools_include('ajax');
     ctools_add_js('ajax-responder');
 
-    $nid = $form_state['values']['nid'];
+    $nid = $form_state['build_info']['args'][0]->nid;
     $node = node_load($nid);
 
     drupal_set_message(t('Metadata for bundle %title has been saved', array('%title' => $node->title)));
