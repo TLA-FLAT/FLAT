@@ -224,7 +224,8 @@ function flat_deposit_cmdi_form($form, &$form_state)
         $formBuilder->setForm($templateName, $inheritedData, $pressedButtonsRoot);
 
         // Clear form state input for when switching between templates
-        unset($form_state['input']['template_container']['elements']);
+        // -> TODO: need to figure out a different way to do this, as this will clear the form on all ajax callbacks
+        //unset($form_state['input']['template_container']['elements']);
 
         // Attach form elements to base form
         $elements = $formBuilder->getForm();
