@@ -9,7 +9,7 @@
 [acl:accessTo <sip>; acl:mode acl:Read, acl:Write;  acl:agent <#owner>].
 
 # authenticated users (= the standard drupal role 'authenticated user')
-<#academic> a foaf:Group;
+<#authenticated> a foaf:Group;
    foaf:account [foaf:accountServiceHomepage <#flat>; foaf:accountName "authenticated user"].
 
 # the owner
