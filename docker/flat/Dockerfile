@@ -1,5 +1,4 @@
 FROM ubuntu:16.04
-MAINTAINER  Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 
 #
 # Configure FLAT

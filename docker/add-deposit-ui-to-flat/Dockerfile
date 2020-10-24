@@ -1,5 +1,4 @@
 FROM        flat
-MAINTAINER	Daniel von Rhein <daniel.vonrhein@mpi.nl>
 
 # Add deposit module to installation
 ADD flat_deposit /var/www/html/flat/sites/all/modules/custom/flat_deposit
