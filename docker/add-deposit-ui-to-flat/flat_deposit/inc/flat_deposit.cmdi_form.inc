@@ -223,6 +223,10 @@ function flat_deposit_cmdi_form($form, &$form_state)
         // Generate the form elements
         $formBuilder->setForm($templateName, $inheritedData, $pressedButtonsRoot);
 
+        // Clear form state input for when switching between templates
+        // -> TODO: need to figure out a different way to do this, as this will clear the form on all ajax callbacks
+        //unset($form_state['input']['template_container']['elements']);
+
         // Attach form elements to base form
         $elements = $formBuilder->getForm();
         $form['template_container']['elements'] = $elements;
@@ -336,13 +340,6 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     //*******************//
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
     $templateName = $form_state['selected'];
-    /*
-    $id = FormBuilder::getTitleId($templateName);
-    if (!$id) {
-        form_set_error('error', 'Cannot find title field in form profile');
-        return $form;
-    }
-    */
 
     $title = $form_state['values']['template_container']['elements']['title_field'][0];
 

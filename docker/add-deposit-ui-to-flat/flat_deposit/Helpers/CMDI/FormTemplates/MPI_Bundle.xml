@@ -176,6 +176,7 @@ Additional field is data. Data items are hidden in drupal. Required info is the 
         </item>
         <item id="field_09" name="ORCID" type="Leaf" inherited="true" minOccurrence="0">
             <title>ORCID</title>
+            <description>Enter your ORCID iD as a URL (starting with https://orcid.org/)</description>
             <type>textitem</type>
             <component>Contributor</component>
         </item>

@@ -1059,6 +1059,21 @@ class CmdiHandler extends SimpleXMLElement
         return $resources_root_node[0];
     }
 
+    /**
+    * Set the title of a CMDI XML object. Title field is retrieved from form templates
+    * @param string $title New title for the CMDI object 
+    *
+    */
+    public function setTitle($title)
+    {
+        $profile = $this->getNameById();
+        $xml = simplexml_load_file(CmdiHandler::FORM_TEMPLATES_PATH . "/$profile.xml");
+        $title_element = $xml->xpath("/profileToDrupal/items/item[@id='title_field']");
+        $title_element_name = (string)$title_element[0]->attributes()->{'name'};
+        $cmdi_title_element = $this->xpath("//cmd:Components/cmd:*/cmd:$title_element_name");
+        $cmdi_title_element[0][0] = $title;
+    }
+
     public function logging($message)
     {
             error_log(date(DATE_ATOM) . "\t" . $message ."\n", $message_type = 3 , '/easylat/www/htdocs/cmdi_handler.log');

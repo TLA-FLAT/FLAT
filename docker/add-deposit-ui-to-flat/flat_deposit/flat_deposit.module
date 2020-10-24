@@ -472,6 +472,16 @@ function flat_deposit_menu()
         'access arguments' => array('use deposit module', 1),
     );
 
+    // Flat bundle edit cmdi file form.
+    $items['node/%node/edit_cmdi'] = array(
+        'title' => 'Edit Bundle Metadata',
+        'type' => MENU_CALLBACK,
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('flat_deposit_bundle_edit_cmdi_form', 1),
+        'file' => 'inc/flat_bundle.edit_cmdi.inc',
+        'access arguments' => array('use deposit module', 1),
+    );
+
     // FLAT_Collection.
     $items['islandora/object/%islandora_object/add_collection'] = array(
         'title' => 'Add Collection',
@@ -1242,6 +1252,11 @@ function flat_bundle_node_form_add_import_validate($form, &$form_state)
 function flat_bundle_node_form_add_validate($form, &$form_state)
 {
 
+    $file = file_save_upload('cmdi_file', array(
+        // Validate file extensions
+        'file_validate_extensions' => array('cmd cmdi xml'),
+    ));
+
     // Prevent deletion of a node to run through validation.
     $form['actions']['delete']['#limit_validation_errors'] = array();
 
@@ -1304,6 +1319,15 @@ function flat_bundle_node_form_add_validate($form, &$form_state)
             form_set_error('flat_cmdi_file', t('Your uploaded CMDI file has a profile that is not accepted as a Bundle profile. See the deposit manual for more information about accepted CMDI profiles.'));
             return $form;
             }
+
+        // Set title of uploaded CMDI file to title of Bundle
+        $cmdi->setTitle($bundle_name);
+        $exported = $cmdi->asXML($cmdi_file);
+    
+        if (!$exported) {
+            form_set_error('error', t('Unable to save CMDI file'));
+            return $form;
+        }
 
     }
 
@@ -1860,7 +1884,7 @@ function flat_deposit_form_alter(&$form, &$form_state, $form_id)
  * Custom form submit handler for flat_bundle in order to get rid of "node created" messages.
  */
 function flat_deposit_flat_bundle_node_form_submit($form, &$form_state)
-{
+{    
 
     $node = node_form_submit_build_node($form, $form_state);
     $insert = empty($node->nid);
