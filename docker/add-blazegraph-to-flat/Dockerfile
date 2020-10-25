@@ -1,5 +1,4 @@
 FROM        flat
-MAINTAINER  Paul Trilsbeek <Paul.Trilsbeek@mpi.nl>
 
 # adds Blazegraph triple store and DGI trippi-sail to replace Mulgara
 # procedure largely copied from Giancarlo Birello http://v2p2dev.to.cnr.it/doku.php?id=repo381:blazeg
