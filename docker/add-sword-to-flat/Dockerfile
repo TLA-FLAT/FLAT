@@ -7,6 +7,16 @@ RUN apt-get update &&\
 #
 # easy-deposit
 #
+RUN cd /tmp &&\
+    git clone https://github.com/DANS-KNAW/easy-sword2-lib.git &&\
+    cd /tmp/easy-sword2-lib &&\
+    # checkout version v1.0-beta-2 (has no tag)
+    git checkout ec7d65ddf1967bef3b92f3bb9816645b83451c23
+ADD sword/pom.xml /tmp/easy-sword2-lib/pom.xml
+RUN cd /tmp/easy-sword2-lib &&\
+    mvn clean install &&\
+    cd .. &&\
+    rm -rf easy-sword2-lib
 
 RUN cd /tmp &&\
     git clone https://github.com/DANS-KNAW/easy-deposit easy-deposit &&\
