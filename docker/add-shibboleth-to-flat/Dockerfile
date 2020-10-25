@@ -1,5 +1,4 @@
 FROM		flat 
-MAINTAINER	Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 
 RUN mkdir -p /tmp/islandora &&\
 	mkdir -p /var/www/html/drupal/sites/all/modules/contrib

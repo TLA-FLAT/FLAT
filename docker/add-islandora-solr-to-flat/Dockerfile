@@ -1,5 +1,4 @@
 FROM		flat
-MAINTAINER	Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 
 RUN apt-get update &&\
 	apt-get -y dist-upgrade

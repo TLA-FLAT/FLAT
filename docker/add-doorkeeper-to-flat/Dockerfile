@@ -1,5 +1,4 @@
 FROM		flat
-MAINTAINER	Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 
 RUN apt-get update &&\
 	apt-get -y dist-upgrade &&\
@@ -13,6 +12,7 @@ RUN apt-get update &&\
 ADD fits /tmp/fits
 RUN ls /tmp/
 RUN cd /tmp/fits &&\
+    rm README.md &&\
     if [ ! -f fits-1.4.0.zip ]; then wget https://github.com/harvard-lts/fits/releases/download/1.4.0/fits-1.4.0.zip; fi &&\
     unzip fits-1.4.0.zip &&\
     mkdir -p /app/fits &&\

@@ -1,5 +1,4 @@
 FROM flat
-MAINTAINER  Menzo Windhouwer <menzo.windhouwer@meertens.knaw.nl>
 
 #
 # Update and install all system libraries
