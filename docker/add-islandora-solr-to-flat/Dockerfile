@@ -5,9 +5,9 @@ RUN apt-get update &&\
 
 RUN mkdir /tmp/islandora &&\
 	cd /tmp/islandora &&\
-	wget -O islandora_gsearch_module-7.x-1.10.zip "https://github.com/Islandora/islandora_solr_search/archive/7.x-1.10.zip" &&\
-	unzip -o islandora_gsearch_module-7.x-1.10.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
-	sed -i 's|self::\$facet_dates = isset(\$islandora_solr_query->islandoraSolrResult)|self::$facet_dates = isset($islandora_solr_query->islandoraSolrResult['"'"'facet_counts'"'"']['"'"'facet_dates'"'"'])|g' /var/www/html/flat/sites/all/modules/contrib/islandora_solr_search-7.x-1.10/includes/results.inc
+	wget -O islandora_gsearch_module-7.x-1.13.zip "https://github.com/Islandora/islandora_solr_search/archive/7.x-1.13.zip" &&\
+	unzip -o islandora_gsearch_module-7.x-1.13.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
+	sed -i 's|self::\$facet_dates = isset(\$islandora_solr_query->islandoraSolrResult)|self::$facet_dates = isset($islandora_solr_query->islandoraSolrResult['"'"'facet_counts'"'"']['"'"'facet_dates'"'"'])|g' /var/www/html/flat/sites/all/modules/contrib/islandora_solr_search-7.x-1.13/includes/results.inc
 ADD drupal/flat_search /var/www/html/$FLAT_NAME/sites/all/modules/custom/
 
 RUN	service supervisor start &&\

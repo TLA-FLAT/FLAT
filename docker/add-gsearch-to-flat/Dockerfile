@@ -10,8 +10,8 @@ RUN apt-get update &&\
 
 RUN mkdir -p /tmp/fedora-gsearch &&\
 	cd /tmp/fedora-gsearch &&\
-	wget -O fedoragsearch-2.8.zip "http://downloads.sourceforge.net/project/fedora-commons/services/3.7/fedoragsearch-2.8.zip?r=&use_mirror=heanet" &&\
-	unzip "fedoragsearch-2.8.zip" && cp "fedoragsearch-2.8/fedoragsearch.war" "/var/www/fedora/tomcat/webapps/fedoragsearch.war" &&\
+	wget -O fedoragsearch-2.9.1.zip "https://github.com/discoverygarden/gsearch/releases/download/v2.9.1/fedoragsearch-2.9.1.zip" &&\
+	unzip "fedoragsearch-2.9.1.zip" && cp "fedoragsearch-2.9.1/fedoragsearch.war" "/var/www/fedora/tomcat/webapps/fedoragsearch.war" &&\
 	mkdir /var/www/fedora/tomcat/webapps/fedoragsearch &&\
 	cd /var/www/fedora/tomcat/webapps/fedoragsearch/ &&\
 	unzip ../fedoragsearch.war &&\
