@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM ubuntu:20.04
 
 #
 # Configure FLAT
@@ -26,9 +26,22 @@ ENV HOME /root
 ENV PATH="/app/flat/bin:${PATH}"
 
 # expose ports
-
 EXPOSE 80
 EXPOSE 8080
+
+# set debconf to Noninteractive
+RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+
+# install apt-utils, software-properties-common
+RUN apt-get update &&\
+	apt-get -y dist-upgrade &&\
+	apt-get -y install apt-utils software-properties-common &&\
+	apt-get update
+
+# add ondrej PPA apt repos for Apache, PHP 7.2, 
+RUN add-apt-repository -y ppa:ondrej/php &&\
+	add-apt-repository -y ppa:ondrej/apache2 && \
+	apt-get update
 
 #
 # locale
@@ -36,12 +49,12 @@ EXPOSE 8080
 
 ENV TZ 'Europe/Amsterdam'
 RUN echo $TZ > /etc/timezone && \
-    apt-get update && apt-get install -y tzdata && \
+    apt-get -y install tzdata && \
     rm /etc/localtime && \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
     dpkg-reconfigure -f noninteractive tzdata
 
-RUN apt-get update && apt-get install -y locales && \
+RUN apt-get -y install locales && \
 	sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     echo 'LANG="en_US.UTF-8"'>/etc/default/locale && \
     dpkg-reconfigure --frontend=noninteractive locales && \
@@ -53,16 +66,15 @@ ENV LC_ALL "en_US.UTF-8"
 #
 # Update and install all system libraries
 #
-RUN apt-get update &&\
-	apt-get -y dist-upgrade &&\
-	apt-get -y install supervisor curl wget openssl apache2 postgresql unzip ssh rsync git
+RUN apt-get -y install supervisor curl wget openssl apache2 postgresql unzip ssh rsync git
 
 # PHP
-RUN apt-get -y install libapache2-mod-php php-gd php-pgsql php-xsl php-curl
+RUN apt-get -y install php7.1 libapache2-mod-php7.1 php7.1-gd php7.1-pgsql php7.1-xsl php7.1-curl
 
 # Java 8
 RUN apt-get -y install openjdk-8-jdk maven
 ENV JAVA_HOME "/usr/lib/jvm/java-8-openjdk-amd64"
+RUN update-java-alternatives -s /usr/lib/jvm/java-1.8.0-openjdk-amd64
 
 # dev
 RUN apt-get -y install libxml2-utils vim
@@ -163,9 +175,9 @@ RUN cd /var/www/fedora/data/fedora-xacml-policies/repository-policies/ &&\
 	rm master.zip &&\
 	mv islandora-xacml-policies-master islandora
 
-# authorisation filter
+# authorisation filter (there is no specific 7.1.13 tagged release but there have been no changes since 7.1.9)
 RUN cd /var/www/fedora/tomcat/webapps/fedora/WEB-INF/lib &&\
-	wget "https://github.com/Islandora/islandora_drupal_filter/releases/download/7.1.10/fcrepo-drupalauthfilter-3.8.1.jar"
+	wget "https://github.com/Islandora/islandora_drupal_filter/releases/download/7.1.12/fcrepo-drupalauthfilter-3.8.1.jar"
 ADD fedora/jaas.conf /var/www/fedora/server/config/jaas.conf
 ADD fedora/filter-drupal.xml /var/www/fedora/server/config/filter-drupal.xml
 
@@ -175,10 +187,10 @@ RUN mkdir -p /var/www/composer &&\
 	curl -sS https://getcomposer.org/installer | php &&\
 	mv composer.phar composer
 ENV COMPOSER_HOME=/var/www/composer
-RUN $COMPOSER_HOME/composer global require drush/drush:7.*
+RUN $COMPOSER_HOME/composer global require drush/drush:8.*
 
 RUN cd /var/www/html &&\
-	/var/www/composer/vendor/drush/drush/drush -v dl drupal --drupal-project-rename=$FLAT_NAME
+	/var/www/composer/vendor/drush/drush/drush -v dl drupal-7 --drupal-project-rename=$FLAT_NAME
 ENV PGPASSWORD=fedora
 RUN service supervisor start &&\
     /wait-postgres.sh &&\
@@ -208,37 +220,35 @@ RUN sed -i "s|base64_encode(\$uri\['user'\]|base64_encode(rawurldecode(\$uri['us
 
 RUN mkdir /tmp/tuque &&\
 	cd /tmp/tuque &&\
-	wget "https://github.com/islandora/tuque/archive/1.10.zip" &&\
-	unzip 1.10.zip &&\
-	mv /tmp/tuque/tuque-1.10 /var/www/html/$FLAT_NAME/sites/all/libraries/tuque &&\
+	wget "https://github.com/islandora/tuque/archive/1.13.zip" &&\
+	unzip 1.13.zip &&\
+	mv /tmp/tuque/tuque-1.13 /var/www/html/$FLAT_NAME/sites/all/libraries/tuque &&\
 	sed -i 's|public $verifyPeer = TRUE;|public $verifyPeer = FALSE;|g' /var/www/html/$FLAT_NAME/sites/all/libraries/tuque/HttpConnection.php
 
 RUN mkdir -p /tmp/islandora &&\
 	mkdir -p /var/www/html/$FLAT_NAME/sites/all/modules/contrib &&\
 	mkdir -p /var/www/html/$FLAT_NAME/sites/all/themes &&\
 	cd /tmp/islandora &&\
-	wget "https://github.com/Islandora/islandora/archive/7.x-1.10.tar.gz" &&\
-	tar -xf 7.x-1.10.tar.gz -C /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
+	wget "https://github.com/Islandora/islandora/archive/7.x-1.13.tar.gz" &&\
+	tar -xf 7.x-1.13.tar.gz -C /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
-	wget -O islandora_solution_pack_collection-7.x-1.10.zip "https://github.com/islandora/islandora_solution_pack_collection/archive/7.x-1.10.zip" &&\
-	unzip islandora_solution_pack_collection-7.x-1.10.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
+	wget -O islandora_solution_pack_collection-7.x-1.13.zip "https://github.com/islandora/islandora_solution_pack_collection/archive/7.x-1.13.zip" &&\
+	unzip islandora_solution_pack_collection-7.x-1.13.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
-	wget -O islandora_xacml_editor-7.x-1.10.zip "https://github.com/Islandora/islandora_xacml_editor/archive/7.x-1.10.zip" &&\
-	unzip islandora_xacml_editor-7.x-1.10.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
+	wget -O islandora_xacml_editor-7.x-1.13.zip "https://github.com/Islandora/islandora_xacml_editor/archive/7.x-1.13.zip" &&\
+	unzip islandora_xacml_editor-7.x-1.13.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
-	wget -O islandora_solution_pack_compound-7.x-1.10.zip "https://github.com/Islandora/islandora_solution_pack_compound/archive/7.x-1.10.zip" &&\
-	unzip islandora_solution_pack_compound-7.x-1.10.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
-    sed -i 's|function islandora_compound_object_islandora_compoundCModel_islandora_view_object|function islandora_compound_object_islandora_compoundCModel_islandora_view_object_DISABLED_BY_FLAT|g' /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora_solution_pack_compound-7.x-1.10/islandora_compound_object.module
-# overwrites the collection object view, so we get file details
-ADD islandora/islandora_basic_collection.module /var/www/html/flat/sites/all/modules/contrib/islandora_solution_pack_collection-7.x-1.10/islandora_basic_collection.module
+	wget -O islandora_solution_pack_compound-7.x-1.13.zip "https://github.com/Islandora/islandora_solution_pack_compound/archive/7.x-1.13.zip" &&\
+	unzip islandora_solution_pack_compound-7.x-1.13.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
+    sed -i 's|function islandora_compound_object_islandora_compoundCModel_islandora_view_object|function islandora_compound_object_islandora_compoundCModel_islandora_view_object_DISABLED_BY_FLAT|g' /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora_solution_pack_compound-7.x-1.13/islandora_compound_object.module
 
 # add CMDI solution pack
 RUN mkdir -p /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora_solution_pack_cmdi
 ADD flat/islandora_solution_pack_cmdi /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora_solution_pack_cmdi
 
 # tell islandora about CMDI
-RUN sed -i "/\"json\"/a \"cmdi\" => \"application/x-cmdi+xml\"," /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora-7.x-1.10/includes/mimetype.utils.inc &&\
-	sed -i "/header('Content-type: ' . \$datastream/a if (\$datastream->ID == 'CMD') {\nheader('Content-type: ' . 'application/xml');\n}" /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora-7.x-1.10/includes/datastream.inc
+RUN sed -i "/\"json\"/a \"cmdi\" => \"application/x-cmdi+xml\"," /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora-7.x-1.13/includes/mimetype.utils.inc &&\
+	sed -i "/header('Content-type: ' . \$datastream/a if (\$datastream->ID == 'CMD') {\nheader('Content-type: ' . 'application/xml');\n}" /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora-7.x-1.13/includes/datastream.inc
     
 RUN mkdir -p /tmp/bootstrap &&\
 	cd /tmp/bootstrap &&\
