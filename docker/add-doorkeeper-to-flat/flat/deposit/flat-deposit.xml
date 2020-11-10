@@ -75,7 +75,7 @@
         <action name="persist resources" class="nl.mpi.tla.flat.deposit.action.Persist">
             <parameter name="resourcesDir" value="/app/flat/data"/>
             <parameter name="policyFile" value="{$base}/policies/persistence-policy.xml"/>
-            <parameter name="xpathDatasetName" value="replace(replace(replace(/cmd:CMD/cmd:Header/cmd:MdSelfLink/@lat:flatURI,'.*{$epicPrefix}_',''),'#.*',''),'_','-')"/>
+            <parameter name="xpathDatasetName" value="(replace(replace(replace(/cmd:CMD/cmd:Header/cmd:MdSelfLink/@lat:flatURI,'.*{$epicPrefix}_',''),'#.*',''),'_','-'),replace(/cmd:CMD/cmd:Header/cmd:MdSelfLink,'.*{$epicPrefix}/',''))[.!=''][1]"/>
         </action>
         <action class="nl.mpi.tla.flat.deposit.action.ACL">
             <parameter name="policy" value="{$work}/metadata/policy.n3"/>
