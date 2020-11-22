@@ -18,6 +18,7 @@
         <property name="gsearchPassword" value="fgsAdmin"/>
         <property name="gsearchServer" value="http://localhost:8080/fedoragsearch"/>
         <property name="dk-rollbackLog" value="{$work}/rollback.log"/>
+        <property name="dk-pidList" value="{$work}/pids.csv"/>
     </config>
     <init>
         <action name="logSetup" class="nl.mpi.tla.flat.deposit.action.WorkspaceLogSetup">
@@ -151,6 +152,9 @@
             <parameter name="gsearchUser" value="{$gsearchUser}"/>
             <parameter name="gsearchPassword" value="{$gsearchPassword}"/>
         </action>
+        <action name="status" class="nl.mpi.tla.flat.deposit.action.UpdateSwordStatus">
+            <parameter name="props" value="{$bag}/deposit.properties"/>
+        </action>
         <!--
         <action class="nl.mpi.tla.flat.deposit.action.WorkspaceCleanup"/>
         -->        
@@ -169,9 +173,6 @@
             <parameter name="tmpl-user" value="{if (sx:fileExists(concat('file:',$work,'/acl/owner.xml') cast as xs:anyURI)) then (doc(concat($work,'/acl/owner.xml'))/user/name) else ('')}"/>
         </action>
         -->
-        <action name="status" class="nl.mpi.tla.flat.deposit.action.UpdateSwordStatus">
-            <parameter name="props" value="{$bag}/deposit.properties"/>
-        </action>
         <action name="logTeardown" class="nl.mpi.tla.flat.deposit.action.WorkspaceLogCleanup"/>        
     </final>
 </flow>

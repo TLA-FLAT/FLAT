@@ -55,8 +55,10 @@ public class DoorKeeperServlet {
     ) {
         DoorKeeperContextListener doorkeeperContext = (DoorKeeperContextListener)servletContext.getAttribute("DOORKEEPER");
         Flow flow = doorkeeperContext.executed(sip);
+        if (flow != null && flow.getNext()!=null && !start.isEmpty())
+            flow = null;
         if (flow==null) {
-            Map<String,XdmValue> params = new HashMap();
+            Map<String,XdmValue> params = new HashMap<>();
             params.put("sip", new XdmAtomicValue(sip));
             for (Entry<String, List<String>> entry : uriInfo.getQueryParameters().entrySet()) {
                 String key = entry.getKey();
