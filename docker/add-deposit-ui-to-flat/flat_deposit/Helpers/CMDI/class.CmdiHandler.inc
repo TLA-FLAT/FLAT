@@ -377,15 +377,6 @@ class CmdiHandler extends SimpleXMLElement
                 }
                 break;
             case 'import':
-                if (!$fid) {
-                    // stripping resources from newly uploaded CMDI (same as template), as they cause errors if not all linked files are provided.
-                    // need to find a different solution for still allowing resource-specific metadata (e.g. description)
-                    $result = $this->stripResourceProxyAndResources();
-                    if (!$result) {
-                        throw new CmdiHandlerException(t("Strip of Resources was not successful"));
-                    }
-                }
-                break;
             case 'existing':
                 break;
         }
@@ -552,6 +543,13 @@ class CmdiHandler extends SimpleXMLElement
 
 
         foreach ($proxies as $proxy) {
+            $rid = $proxy['id'];
+            // remove all references to this proxy
+            // (removing entire ref attribute even though they can be multi-value, because we're stripping all resources anyway)
+            $nodes = $xml->xpath("//cmd:*[contains('$rid', @ref)]");
+            foreach ($nodes as $node) {
+                unset($node[0]['ref']);
+            }
             unset($proxy[0]);
         }
 
@@ -983,7 +981,7 @@ class CmdiHandler extends SimpleXMLElement
                 return FALSE;
             }
 
-            // change value of existing attribute or add new one
+            // change value of existing ResourceRef attribute or add new one
             $attributes = $proxy[0]->children('cmd', TRUE)->ResourceRef->attributes('lat', TRUE);
             if (isset($attributes['localURI'])) {
                 $attributes['localURI'] = 'file:' . $file_name;
@@ -991,12 +989,13 @@ class CmdiHandler extends SimpleXMLElement
                 $proxy[0]->children('cmd', TRUE)->ResourceRef->addAttribute('lat:localURI', 'file:' . $file_name, "http://lat.mpi.nl/");
             }
 
-            /*
+            // delete value of the resourceproxy "ResourceRef" in case it is not a handle
             $value = (String)$proxy[0]->children('cmd',TRUE)->ResourceRef;
             if(!empty($value)){
-                $proxy[0]->children('cmd',TRUE)->ResourceRef = '';
+                if (strpos($value,'http://hdl') !== 0 && strpos($value,'https://hdl') !== 0 && strpos($value,'hdl:') !== 0) {
+                    $proxy[0]->children('cmd',TRUE)->ResourceRef = '';
+                }
             }
-            */
 
             //Update resources in Components section
             $profile = $this->getNameById();

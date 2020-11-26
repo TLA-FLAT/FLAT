@@ -293,6 +293,22 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
         return $form;
     }
 
+    // for imported (uploaded) CMDI file, check that the resourceproxy resourcerefs match with the provided files
+    $md_type = isset($wrapper->flat_cmdi_option) ? $wrapper->flat_cmdi_option->value() : NULL;
+    $flat_type = isset($wrapper->flat_type) ? $wrapper->flat_type->value() : NULL;
+    if ($flat_type == 'update') {
+        $md_type = 'existing';
+    }
+    if ($md_type == 'import') {
+        $has_flat_uri = has_flat_uri($nid);
+        if(!$has_flat_uri) {
+            $files_mismatch = bundle_files_mismatch($nid);
+        }
+        else {
+            $files_mismatch = FALSE;
+        }
+    }
+
     $errors = [];
 
     if (!$has_new_or_deleted_files) {
@@ -316,6 +332,15 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
     if ($invalid_file_extensions) {
         $invalid_file_extensions_list = implode (", ", $invalid_file_extensions);
         $errors[] = t('The selected folder contains files that have a disallowed file extension: !invalid_file_extensions_list. See the deposit manual for allowed file types and extensions.', ['!invalid_file_extensions_list' => $invalid_file_extensions_list]);
+    }
+
+    if ($has_flat_uri){
+        $errors[] = t('Your uploaded CMDI file contains references to files that are already in the archive. To use this CMDI file for a different set of files, use the "upload CMDI file as template" option, see deposit manual.');
+    }
+
+    if ($files_mismatch) {
+        $files_mismatch_list = implode(", ", $files_mismatch);
+        $errors[] = t('There is a mismatch between the files listed in your uploaded CMDI file and the files you provided in the selected folder. Missing file(s): !files_mismatch_list. In case you wish to use this CMDI file for a different set of files, use the "upload CMDI file as template" option, see deposit manual.', ['!files_mismatch_list' => $files_mismatch_list]);
     }
 
     if (!empty($errors)) {

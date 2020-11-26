@@ -703,6 +703,10 @@ Additional field is data. Data items are hidden in drupal. Required info is the 
                 <insert_before>Source</insert_before>
                 <insert_before>Anonyms</insert_before>
             </tag>
+            <tag id="Source">
+            <!-- not used for newly created files. Will be stripped for files used as templates or left for other uploaded files. -->
+                <insert_before>Anonyms</insert_before>
+            </tag>
         </allowed_tags>
     </resources>
     <data>
