@@ -545,8 +545,8 @@ class CmdiHandler extends SimpleXMLElement
         foreach ($proxies as $proxy) {
             $rid = $proxy['id'];
             // remove all references to this proxy
-            // (removing entire ref attribute even though they can be multi-value, because we're stripping all resources anyway)
-            $nodes = $xml->xpath("//cmd:*[contains('$rid', @ref)]");
+            // (removing entire ref attribute even though it can have multiple values, because we're stripping all resources anyway)
+            $nodes = $this->xpath("//cmd:*[contains(@ref, '$rid')]");
             foreach ($nodes as $node) {
                 unset($node[0]['ref']);
             }
