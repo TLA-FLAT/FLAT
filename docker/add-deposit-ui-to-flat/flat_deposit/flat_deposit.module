@@ -1191,7 +1191,8 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
 
                 $form['title']['#disabled'] = true;
                 $form['flat_parent_nid']['und']['#disabled'] = true;
-                //$form['flat_cmdi_option']['und']['#disabled'] = true;
+                $form['flat_cmdi_option']['und']['#disabled'] = true;
+                hide($form['flat_cmdi_file']);
 
                 // Attach fedora object to validation.
                 $form['bundleInFedora'] = array(
