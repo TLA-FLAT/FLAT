@@ -12,3 +12,7 @@ docker/add-doorkeeper-to-flat/flat/deposit/ServiceFLAT/.project
 docker/add-gsearch-to-flat/flat/FindProfiles/.classpath
 docker/add-gsearch-to-flat/flat/FindProfiles/.project
 docker/add-doorkeeper-to-flat/flat/deposit/ServiceFLAT/target/classes/GETResult.xsl
+docker/do-doorkeeper.sh
+docker/do-example-doorkeeper.sh
+docker/do-example.sh
+docker/do.sh
