@@ -11,8 +11,10 @@ docker/add-doorkeeper-to-flat/flat/deposit/ServiceFLAT/.project
 *.prefs
 docker/add-gsearch-to-flat/flat/FindProfiles/.classpath
 docker/add-gsearch-to-flat/flat/FindProfiles/.project
-docker/add-doorkeeper-to-flat/flat/deposit/ServiceFLAT/target/classes/GETResult.xsl
-docker/do-doorkeeper.sh
-docker/do-example-doorkeeper.sh
-docker/do-example.sh
-docker/do.sh
+docker/add-doorkeeper-to-flat/flat/deposit/ServiceFLAT/target/
+docker/do*.sh
+docker/add-sword-to-flat/sword/.classpath
+docker/add-sword-to-flat/sword/.project
+docker/flat/flat/LAT2FOX/.classpath
+docker/flat/flat/LAT2FOX/.project
+docker/flat/flat/LAT2FOX/target/
