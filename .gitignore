@@ -5,3 +5,10 @@ docker/add-deposit-ui-to-flat/flat_deposit/flat_test/*
 docker/add-deposit-ui-to-flat/flat_deposit/flat_test_mvd/*
 docker/add-doorkeeper-to-flat/fits/*
 docker/add-doorkeeper-to-flat/DoorKeeper/*
+docker/add-doorkeeper-to-flat/flat/deposit/ServiceFLAT/.classpath
+docker/add-doorkeeper-to-flat/flat/deposit/ServiceFLAT/.factorypath
+docker/add-doorkeeper-to-flat/flat/deposit/ServiceFLAT/.project
+*.prefs
+docker/add-gsearch-to-flat/flat/FindProfiles/.classpath
+docker/add-gsearch-to-flat/flat/FindProfiles/.project
+docker/add-doorkeeper-to-flat/flat/deposit/ServiceFLAT/target/classes/GETResult.xsl
