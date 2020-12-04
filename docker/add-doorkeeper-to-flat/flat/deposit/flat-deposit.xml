@@ -77,7 +77,7 @@
             <parameter name="policyFile" value="{$base}/policies/persistence-policy.xml"/>
             <parameter name="xpathDatasetName" value="replace(/cmd:CMD/cmd:Header/cmd:MdSelfLink,'.*{$epicPrefix}/','')"/>
         </action>
-        <action class="nl.mpi.tla.flat.deposit.action.ACL">
+        <action name="acl" class="nl.mpi.tla.flat.deposit.action.ACL">
             <parameter name="policy" value="{$work}/metadata/policy.n3"/>
             <parameter name="roles" value="{$base}/policies/roles.xml"/>
             <parameter name="dir" value="{$work}/acl"/>
