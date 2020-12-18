@@ -51,7 +51,7 @@ class CmdiLeaf extends CmdiComponent{
                                 $child->addAttribute($attributeName, $attributeData);
                             }
                         }
-                    
+
                     }
 
                 }

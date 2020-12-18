@@ -7,6 +7,16 @@ function autoload_formbuilder()
     include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormComposite.inc';
     include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormLeaf.inc';
     include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormField.inc';
+    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiModalBuilder.inc';
+    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiDropdownBuilder.inc';
+    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateBuilder.inc';
+    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateRebuilder.inc';
+    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateSaveLoaded.inc';
+    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateLoader.inc';
+    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateSaver.inc';
+    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateDb.inc';
+    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateData.inc';
+    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateManager.inc';
 
 }
 
@@ -39,6 +49,11 @@ class FormBuilder
      */
 
     private $node = null;
+
+    /**
+     * @var this contains selected cmdi profile template name
+     */
+    private $templateName = null;
 
     /**
      * Scans the cmdi2Drupal form path for profiles and returns profile names of a certain content type
@@ -84,6 +99,25 @@ class FormBuilder
         $this->node = $node;
     }
 
+    public static function getDataForTemplate($templateName)
+    {
+        $fName = self::FORM_TEMPLATES_PATH . $templateName . '.xml';
+        $template = simplexml_load_file($fName);
+
+        if (!$template) {
+            return false;
+        }
+
+        $data = [];
+
+        // loop through array to get core attributes of each element
+        foreach ($template->data->children() as $key => $value) {
+            $data[$key] = (string)$value;
+        }
+
+        return $data;
+    }
+
 
     /**
      * Builds the form based on a template file.
@@ -116,6 +150,10 @@ class FormBuilder
                 $this->clearInheritedTitle($dataNode);
             }
         }
+
+        // adding this so profile can be referenced in CmdiTemplateManager
+        // for the CmdiTemplate functionality
+        $this->templateName = $templateName;
 
         $setComponets = $this->setFormComponents($template, $dataNode, $pressedButtons, $index = 0, $inheritAll);
         if (!$setComponets) {
@@ -197,10 +235,14 @@ class FormBuilder
 
         foreach ($template->items->item as $component) {
             $className = "Form" . (string)$component['type'];
+
             $numberElements = isset($component['minOccurrence']) ? (int)$component['minOccurrence'] : 0;
             $formComponent = new $className($numberElements);
-            $formComponent->setFormComponent($component, $dataNode, $pressedButtons, $index, $inheritAll);
+
             $nodeName = $formComponent->getFormKeyName($component);
+            $formComponent->setCmdiProfile($this->templateName);
+            $formComponent->setCmdiTree([$nodeName]);
+            $formComponent->setFormComponent($component, $dataNode, $pressedButtons, $index, $inheritAll);
             $this->formComponents[$nodeName] = $formComponent->getFormComponent();
         }
 
@@ -258,6 +300,11 @@ class FormBuilder
     {
         // return if no button has been pressed
         if (!isset($form_state['clicked_button'])) {
+            return false;
+        }
+
+        // return if button has ignore flag set to true
+        if (isset($form_state['clicked_button']['#flat_ignore_button']) && $form_state['clicked_button']['#flat_ignore_button'] === true) {
             return false;
         }
 

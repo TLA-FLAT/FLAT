@@ -21,6 +21,17 @@ abstract class FormComponent
     private $minNumberElements = 1;
 
     /**
+     * @var string cmdi profile name
+     */
+    protected $cmdiProfile = null;
+
+    /**
+     * @var array cmdi node tree
+     */
+    protected $cmdiTree = [];
+
+
+    /**
      * FormComponent constructor.
      *
      * @param $numberElements
@@ -30,6 +41,16 @@ abstract class FormComponent
 
         $this->numberElements = $numberElements;
         $this->minNumberElements = $numberElements;
+    }
+
+    public function setCmdiTree($tree)
+    {
+        $this->cmdiTree = $tree;
+    }
+
+    public function setCmdiProfile($profile)
+    {
+        $this->cmdiProfile = $profile;
     }
 
     abstract public function nestComponentElements($templateNode, $componentElements);
@@ -81,11 +102,11 @@ abstract class FormComponent
             $data = isset($existingCmdiNode->attributes(){$componentName}) ? $existingCmdiNode->attributes(){$componentName} : null;
             if ($data) {
                 $count = 1; // there can be only one attribute with the same name
-                $is_attribute = true;	
+                $is_attribute = true;
             }
         }
 
-        // in case of a template node with a skipParentInCMDI attribute, the default value is the value of the existing CMDI node itself 
+        // in case of a template node with a skipParentInCMDI attribute, the default value is the value of the existing CMDI node itself
         if (isset($templateNode->attributes()['skipParentInCMDI'])) {
             $defaultValues[] = (string)$existingCmdiNode;
         }
@@ -107,6 +128,10 @@ abstract class FormComponent
 
         $componentElements = array();
 
+        if (isset($templateNode->container)) {
+            $this->cmdiTree[] = (string)$templateNode['id'];
+        }
+
         for ($index = 0; $index < $this->numberElements; $index++) {
 
             $defaultValue = isset($defaultValues[$index]) ? $defaultValues[$index] : null;
@@ -114,16 +139,20 @@ abstract class FormComponent
                 // see if there's a default value in the template and use that
                 $defaultValue = (string)$templateNode->default;
             }
-            
+
             if ($is_attribute) {
             $defaultValue = isset($existingCmdiNode->attributes(){$componentName}) ? (string)$existingCmdiNode->attributes(){$componentName} : null;
             }
 
+            $tree = $this->cmdiTree;
+            $tree[] = $index;
+
             $element = new FormField($templateNode, $defaultValue, $inheritAll);
+            $element->setCmdiProfile($this->cmdiProfile);
+            $element->setCmdiTree($tree);
             $element->setFormField();
             $element->addNestedComponents($existingCmdiNode, $componentButtonPresses, $index, $buttonId, $inheritAll);
             $componentElements[] = $element->getFormField();
-
         }
 
         $this->addButtonsToFormComponent($templateNode, $componentElements, $buttonId);
@@ -131,7 +160,6 @@ abstract class FormComponent
 #        $this->addMenuToFormComponent($templateNode, $componentElements, $buttonId);
 
         $this->formComponent = $this->nestComponentElements($templateNode, $componentElements);
-
     }
 
     public function getNumberElements()
@@ -151,6 +179,14 @@ abstract class FormComponent
      */
     public function getFormComponent()
     {
+        $formComponentFields = array_keys($this->formComponent);
+        $cmdiTemplateFields  = array_filter($formComponentFields, function($field) {
+            // return $field !== 'add' && $field !== 'remove';
+            return $field !== 'wut';
+        });
+
+        $this->formComponent['#cmdi_template_fields'] = $cmdiTemplateFields;
+
         return $this->formComponent;
     }
 

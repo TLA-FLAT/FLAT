@@ -14,6 +14,17 @@ class FormField
     private $inheritAll = false;
 
     /**
+     * @var string selected cmdi profile
+     */
+    private $cmdiProfile = null;
+
+    /**
+     * @var array cmdi node tree path
+     */
+    private $cmdiTree = [];
+
+
+    /**
      * FormField constructor.
      *
      * @param $formTemplateNode SimpleXMLElement Form Template node containing render-specific info
@@ -30,6 +41,16 @@ class FormField
         $this->defaultValue = $defaultValue;
 
         $this->inheritAll = $inheritAll;
+    }
+
+    public function setCmdiProfile($profile)
+    {
+        $this->cmdiProfile = $profile;
+    }
+
+    public function setCmdiTree($tree)
+    {
+        $this->cmdiTree = $tree;
     }
 
     /**
@@ -149,6 +170,10 @@ class FormField
             case 'fieldset':
 
                 $type = 'fieldset';
+
+                $component_id = (string)$this->formTemplateNode['id'];
+                $formField['#flat_cmdi_metadata'] = ['component_id' => $component_id, 'profile' => $this->cmdiProfile, 'tree' => $this->cmdiTree];
+                $formField['#panel_actions'] = CmdiTemplateManager::buildActions($component_id, $this->cmdiProfile, $this->cmdiTree);
 
                 break;
 
@@ -273,9 +298,15 @@ class FormField
 
                 $numberElements = isset($nestedNode['minOccurrence']) ? (int)$nestedNode['minOccurrence'] : 0;
 
+                $key = $this->getFormField()['#title'];
+
                 $nestedFormComponent = new $className($numberElements);
 
-                $key = $this->getFormField()['#title'];
+                $tree   = $this->cmdiTree;
+                $tree[] = $nestedFormComponent->getFormKeyName($nestedNode);
+
+                $nestedFormComponent->setCmdiProfile($this->cmdiProfile);
+                $nestedFormComponent->setCmdiTree($tree);
 
                 $nestedDataNode = isset($existingCmdiNode->{$key}[$index]) ? $existingCmdiNode->{$key}[$index] : null;
 
@@ -348,6 +379,9 @@ class FormField
 
         }
 
+        $this->formField['#cmdi_template_fields'] = array_filter(array_keys($this->formField), function($field) {
+            return $field !== '#panel_actions';
+        });
     }
 
 }
