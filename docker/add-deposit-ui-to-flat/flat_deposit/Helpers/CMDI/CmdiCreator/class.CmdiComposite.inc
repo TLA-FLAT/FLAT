@@ -76,7 +76,7 @@ class CmdiComposite extends CmdiComponent {
                     $converted = $this->convertValue((string)$component->type, $entry);
                     $child = $rootNewComponents->addChild($name, htmlspecialchars($converted));
                 }
-                    
+
                 elseif ($isRequired & !$skip){
 
                     $child = $rootNewComponents->addChild($name);
@@ -87,7 +87,7 @@ class CmdiComposite extends CmdiComponent {
                 elseif ($childValues && !$skip) {
 
                     $child = $rootNewComponents->addChild($name);
-                
+
                 }
 
                 // Add nested components
@@ -98,10 +98,10 @@ class CmdiComposite extends CmdiComponent {
                         $nestedCmdiComponent = new $className();
                         $name = (string)$component['name'];
                         $nestedCmdiComponent->setCmdiComponent($rootNewComponents->{$name}[$index], $nestedTemplateNode, $componentData[$index]);
-                        
+
                         }
                     }
-                    
+
 		        elseif ($childValues) {
                     foreach ($component->item as $nestedTemplateNode) {
 
@@ -109,10 +109,10 @@ class CmdiComposite extends CmdiComponent {
                         $nestedCmdiComponent = new $className();
                         $name = (string)$component['name'];
                         $nestedCmdiComponent->setCmdiComponent($rootNewComponents, $nestedTemplateNode, $componentData[$index]);
-                    
+
                         }
                 }
-                
+
                 // Add attributes
                 foreach ($component->attribute as $attribute) {
 
@@ -124,7 +124,7 @@ class CmdiComposite extends CmdiComponent {
                             $child->addAttribute($attributeName, $attributeData);
                         }
                     }
-                
+
                 }
 
             }

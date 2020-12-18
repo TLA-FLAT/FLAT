@@ -275,12 +275,3 @@ function reload_workspace_navigation_container_ajax_callback ($form, $form_state
     return $form['workspace_navigation'];
 
 }
-
-
-
-
-
-
-
-
-
