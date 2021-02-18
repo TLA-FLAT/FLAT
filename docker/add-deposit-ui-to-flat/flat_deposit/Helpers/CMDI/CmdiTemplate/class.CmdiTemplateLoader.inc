@@ -39,6 +39,7 @@ class CmdiTemplateLoader
             $copy = $block['element'];
             $metadata = $copy['#flat_cmdi_metadata'];
             $copy['flat_cmdi_templates'] = CmdiTemplateManager::build($metadata['component_id'], $metadata['profile'], $metadata['tree']);
+            $copy['#panel_actions'] = CmdiTemplateManager::buildActions($metadata['profile'], $metadata['component_id']);
 
             $element = $copy;
         }
@@ -46,16 +47,16 @@ class CmdiTemplateLoader
 
     public static function load(&$elements, &$form_state)
     {
-        // if (count($form_state['loaded_cmdi_templates']) > 0) {
+        if (count($form_state['loaded_cmdi_templates']) > 0) {
 
-        //     foreach ($form_state['loaded_cmdi_templates'] as $loadable) {
+            foreach ($form_state['loaded_cmdi_templates'] as $loadable) {
 
-        //         $block = static::getLoadedBlock($loadable['id']);
+                $block = static::getLoadedBlock($loadable['id']);
 
-        //         if (false !== $block) {
-        //             static::loadElement($elements, $loadable['cmdi_tree'], $block);
-        //         }
-        //     }
-        // }
+                if (false !== $block) {
+                    static::loadElement($elements, $loadable['cmdi_tree'], $block);
+                }
+            }
+        }
     }
 }

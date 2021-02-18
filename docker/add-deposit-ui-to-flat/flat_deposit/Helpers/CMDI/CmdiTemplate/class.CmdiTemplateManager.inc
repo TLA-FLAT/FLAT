@@ -33,9 +33,9 @@ class CmdiTemplateManager
         return CmdiTemplateBuilder::build($component_id, $profile, $cmdi_tree);
     }
 
-    public static function buildActions($component_id, $profile, $cmdi_tree)
+    public static function buildActions($profile, $component_id)
     {
-        return CmdiTemplateBuilder::buildActions($component_id, $profile, $cmdi_tree);
+        return CmdiActionsBuilder::build($profile, $component_id);
     }
 
     public static function rebuild(&$elements, $cmdi_tree, $profile, $component_id)

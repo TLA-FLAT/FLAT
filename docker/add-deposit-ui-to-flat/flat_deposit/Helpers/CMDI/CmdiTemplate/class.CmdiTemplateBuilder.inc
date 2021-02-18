@@ -61,12 +61,6 @@ class CmdiTemplateBuilder
         return $fields;
     }
 
-    public static function buildActions($component_id, $profile, $cmdi_tree)
-    {
-        $available_templates = CmdiTemplateData::getAvailableTemplates($profile, $component_id);
-        return CmdiActionsBuilder::build($available_templates, $component_id);
-    }
-
     public static function buildLoadTemplateElement($profile, $component_id)
     {
         $available_templates = CmdiTemplateData::getAvailableTemplates($profile, $component_id);
@@ -76,11 +70,13 @@ class CmdiTemplateBuilder
         }
 
         return [
+
           '#type' => 'select',
           '#options' => $available_templates,
-        //   '#attributes' => [
-        //       'class' => ['hide'],
-        //   ],
+          '#attributes' => [
+              'class' => ['hide'],
+            'data-role' => 'flat-cmdi-template-loadable-' . $component_id,
+          ],
           '#component_id' => $component_id,
           '#ajax' => [
 

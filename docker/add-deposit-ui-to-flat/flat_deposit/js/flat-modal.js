@@ -103,6 +103,17 @@
           modal.modal('hide');
           $('[data-role="open-flat-modal"][data-cmdi-id="' + cmdi_id + '"]').trigger(cmdi_id);
       });
+
+      $('body').on('click', '[data-role="load-flat-cmdi-template"]', function(event) {
+
+        event.preventDefault();
+
+        var el = $(this);
+        var component_id = el.data('component-id');
+        var cmdi_template_id = el.data('cmdi-template-id');
+
+        $('[data-role="flat-cmdi-template-loadable-' + component_id + '"]').val(cmdi_template_id).change();
+      });
     }
   };
 

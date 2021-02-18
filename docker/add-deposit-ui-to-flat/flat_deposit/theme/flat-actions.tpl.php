@@ -4,9 +4,9 @@
     <i class="fas fa-search"></i>
   </button>
   <ul class="dropdown-menu pull-right" aria-labelledby="load-menu-<?php echo $component_id; ?>">
-    <?php foreach ($available_templates as $available_template) : ?>
+    <?php foreach ($available_templates as $cmdi_template_id => $available_template) : ?>
     <li>
-      <a class="flat-cmdi-template-select" href="#"><?php echo $available_template; ?></a>
+      <a class="flat-cmdi-template-select" data-role="load-flat-cmdi-template" data-component-id="<?php echo $component_id; ?>" data-cmdi-template-id="<?php echo $cmdi_template_id; ?>" href="#"><?php echo $available_template; ?></a>
       <a class="flat-cmdi-template-delete" href="#"><i class="fas fa-trash-alt"></i></a>
     </li>
     <?php endforeach; ?>
