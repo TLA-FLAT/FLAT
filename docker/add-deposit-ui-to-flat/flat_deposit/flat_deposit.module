@@ -771,8 +771,8 @@ function flat_deposit_theme()
             ]
         ],
 
-        'flat_dropdown' => [
-            'template' => 'theme/flat-dropdown',
+        'flat_actions' => [
+            'template' => 'theme/flat-actions',
         ],
 
         'flat_cmdi_fieldset' => [
@@ -785,10 +785,6 @@ function flat_deposit_theme()
 
     return $themes;
 
-}
-
-function theme_flat_cmdi_fieldset($element) {
-    return 'fucku';
 }
 
 /**

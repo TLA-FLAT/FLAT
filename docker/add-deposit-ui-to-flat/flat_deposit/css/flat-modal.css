@@ -40,8 +40,17 @@
 }
 
 /**
- * aligning panel actions to the right, and adding padding between the actions
+ * aligning panel actions to the right, and fixing padding between the actions
+ * to prevent newlines in the panel block
  */
-.panel-heading--actions .panel-actions a {
-  padding: 10px;
+.panel-actions {
+  display: flex;
+}
+
+.panel-actions .dropdown {
+  flex: 1;
+}
+
+.panel-actions .dropdown button {
+  padding: 0;
 }

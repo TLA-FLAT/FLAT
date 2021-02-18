@@ -8,7 +8,7 @@ function autoload_formbuilder()
     include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormLeaf.inc';
     include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormField.inc';
     include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiModalBuilder.inc';
-    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiDropdownBuilder.inc';
+    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiActionsBuilder.inc';
     include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateBuilder.inc';
     include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateRebuilder.inc';
     include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateSaveLoaded.inc';
