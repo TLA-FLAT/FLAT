@@ -39,7 +39,7 @@ class CmdiTemplateLoader
             $copy = $block['element'];
             $metadata = $copy['#flat_cmdi_metadata'];
             $copy['flat_cmdi_templates'] = CmdiTemplateManager::build($metadata['component_id'], $metadata['profile'], $metadata['tree']);
-            $copy['#panel_actions'] = CmdiTemplateManager::buildActions($metadata['profile'], $metadata['component_id']);
+            $copy['#panel_actions'] = CmdiTemplateManager::buildActions($metadata['profile'], $metadata['component_id'], $metadata['tree']);
 
             $element = $copy;
         }

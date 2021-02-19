@@ -21,7 +21,7 @@ class CmdiTemplateBuilder
                 '#name' => $label_field_name,
                 '#default_value' => '',
                 '#attributes' => [
-                    'class' => ['flat-cmdi-templates-field'],
+                    'class' => ['hide'],
                     'placeholder' => 'Label of new template' . $id,
                 ],
             ],
@@ -37,15 +37,7 @@ class CmdiTemplateBuilder
                 '#label_field_name' => $label_field_name,
                 '#limit_validation_errors' => [],
                 '#attributes' => [
-                    'data-role' => 'open-flat-modal',
-                    'data-cmdi-id' => $id,
-                    'data-check-url' => url('flat_deposit/save_check'),
-                    'data-cmdi-template-data' => json_encode([
-                        'cmdi_id' => $id,
-                        'profile' => $profile,
-                        'component_id' => $component_id,
-                        'label_field_name' => $label_field_name,
-                    ]),
+                    'class' => ['hide'],
                 ],
                 '#ajax' => [
 
@@ -53,7 +45,7 @@ class CmdiTemplateBuilder
                     'method' => 'replace',
                     'effect' => 'fade',
                     'wrapper' => 'template-form',
-                    'event' => $id,
+                    'event' => 'saving_' . $id,
                 ],
             ],
         ];

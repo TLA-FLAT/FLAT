@@ -520,7 +520,8 @@ function flat_deposit_menu()
 
         'type' => MENU_LOCAL_TASK,
         'page callback' => 'flat_deposit_save_check',
-        'access callback' => true,
+        // 'access callback' => 'flat_deposit_menu_access',
+        'access arguments' => array('use deposit module'),
     ];
 
     return $items;
@@ -541,7 +542,7 @@ function flat_deposit_save_check() {
     $data = file_get_contents('php://input');
     $data = json_decode($data, true);
 
-    if (false === is_array($data) || !isset($data['cmdi_template'])) {
+    if (false === is_array($data) || !isset($data['cmdi_data'])) {
 
         // post data invalid
         return drupal_json_output([
@@ -554,10 +555,10 @@ function flat_deposit_save_check() {
     global $user;
 
     $uid = $user->uid;
-    $cmdi_id = $data['cmdi_template']['cmdi_id'];
-    $profile = $data['cmdi_template']['profile'];
-    $label = $data['cmdi_template']['label'];
-    $component_id = $data['cmdi_template']['component_id'];
+    $cmdi_id = $data['cmdi_data']['cmdi_id'];
+    $profile = $data['cmdi_data']['profile'];
+    $label = $data['cmdi_data']['label'];
+    $component_id = $data['cmdi_data']['component_id'];
 
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateDb');
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiModalBuilder');

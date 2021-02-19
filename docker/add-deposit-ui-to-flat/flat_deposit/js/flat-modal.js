@@ -5,19 +5,19 @@
 
       $('body').on('click', '[data-role="open-flat-modal"]', function(event) {
 
-        console.log('testing');
         event.preventDefault();
 
         var modal = $('[data-role="flat-modal"]');
         var content = $('[data-role="flat-modal-content"]');
         var button  = $(this);
-        var url = button.data('check-url');
-        var data = button.data('cmdi-template-data');
-        var label = $('input[name="' + data.label_field_name + '"]').val();
+        var data = button.data('cmdi-data');
+        var label = $('[data-role="cmdi-label-' + data.cmdi_id + '"]').val();
+
+        // updating label form field
+        $('input[name="' + data.label_name + '"]').val(label);
 
         if (label.trim() === '') {
 
-          console.log(label);
           // empty label, show error message
           content.html(settings.flat_modal_blank);
 
@@ -36,18 +36,18 @@
         modal.modal('show');
 
         // prepare post data
-        var postData = {
+        var postData = JSON.stringify({
 
-          cmdi_template: {
+          cmdi_data: {
 
             cmdi_id: data.cmdi_id,
             profile: data.profile,
+            label: label,
             component_id: data.component_id,
-            label: label
           },
-        };
+        });
 
-        jQuery.post(url, JSON.stringify(postData), function(result) {
+        jQuery.post(data.url, postData, function(result) {
 
           if (result && result.type === 'error') {
 
@@ -68,28 +68,11 @@
 
             // label is not found in db, hide modal and trigger save
             $('[data-role="flat-modal"]').modal('hide');
-            button.trigger(result.cmdi_id);
+            $('button[name="' + data.save_name + '"]').trigger('saving_' + data.cmdi_id);
 
             return;
           }
         });
-
-        // var button  = $(this);
-        // var modalId = button.data('modal-id');
-        // var modal   = $('[data-role="flat-modal"][data-model-id="' + modalId + '"]');
-        // var submit  = $('[data-role="confirm-flat-modal"][data-model-id="' + modalId + '"]');
-
-        // button.prop('disabled', true);
-        // modal.modal('show');
-
-        // modal.on('hidden.bs.modal', function() {
-        //   button.prop('disabled', false);
-        // });
-
-        // submit.on('click', function() {
-        //   button.prop('disabled', false);
-        //   button.trigger('your_custom_click');
-        // });
       });
 
       $('body').on('click', '[data-role="confirm-flat-modal"]', function(event) {
@@ -101,7 +84,7 @@
           var cmdi_id = button.data('cmdi-id');
 
           modal.modal('hide');
-          $('[data-role="open-flat-modal"][data-cmdi-id="' + cmdi_id + '"]').trigger(cmdi_id);
+          $('button[name="save_cmdi_template_' + cmdi_id + '"]').trigger('saving_' + cmdi_id);
       });
 
       $('body').on('click', '[data-role="load-flat-cmdi-template"]', function(event) {
