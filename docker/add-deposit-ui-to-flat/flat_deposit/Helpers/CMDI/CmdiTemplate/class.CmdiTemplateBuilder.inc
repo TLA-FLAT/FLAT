@@ -113,7 +113,7 @@ class CmdiTemplateBuilder
     private static function noTemplatesFound()
     {
         return [
-            '#markup' => '<strong>No templates available for this block</strong><br /><br />',
+            // '#markup' => '<strong>No templates available for this block</strong><br /><br />',
         ];
     }
 }

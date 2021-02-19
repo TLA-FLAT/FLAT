@@ -106,6 +106,22 @@ class CmdiTemplateDb
     }
 
     /**
+     * Delete specific template
+     *
+     * @param string $id
+     * @param int    $uid user id
+     *
+     * @return boolean
+     */
+    public static function delete($id, $uid)
+    {
+        return db_delete('flat_cmdi_templates')
+                ->condition('id', $id, '=')
+                ->condition('uid', $uid, '=')
+                ->execute();
+    }
+
+    /**
      * db error was found, send drupal message to show what
      * went wrong
      *

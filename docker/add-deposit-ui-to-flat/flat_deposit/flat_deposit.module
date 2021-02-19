@@ -524,17 +524,27 @@ function flat_deposit_menu()
         'access arguments' => array('use deposit module'),
     ];
 
+    $items['flat_deposit/delete_cmdi_template'] = [
+
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'flat_deposit_delete_cmdi_template',
+        // 'access callback' => 'flat_deposit_menu_access',
+        'access arguments' => array('use deposit module'),
+    ];
+
     return $items;
 }
 
 function flat_deposit_save_check() {
+
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiModalBuilder');
 
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
         return drupal_json_output([
 
             'type' => 'error',
-            'modal' => theme('flat_modal_error'),
+            'modal' => CmdiModalBuilder::error(),
         ]);
     }
 
@@ -548,7 +558,7 @@ function flat_deposit_save_check() {
         return drupal_json_output([
 
             'type' => 'error',
-            'modal' => theme('flat_modal_error'),
+            'modal' => CmdiModalBuilder::error(),
         ]);
     }
 
@@ -561,7 +571,6 @@ function flat_deposit_save_check() {
     $component_id = $data['cmdi_data']['component_id'];
 
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateDb');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiModalBuilder');
 
     $exists = CmdiTemplateDb::exists($profile, $label, $component_id, $uid);
 
@@ -579,6 +588,50 @@ function flat_deposit_save_check() {
 
         'type' => 'new',
         'cmdi_id' => $cmdi_id,
+        'modal' => CmdiModalBuilder::success(),
+    ]);
+}
+
+function flat_deposit_delete_cmdi_template() {
+
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiModalBuilder');
+
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+
+        return drupal_json_output([
+
+            'type' => 'error',
+            'modal' => CmdiModalBuilder::error(),
+        ]);
+    }
+
+    // Getting post data and decode it as it is sent as JSON
+    $data = file_get_contents('php://input');
+    $data = json_decode($data, true);
+
+    if (!isset($data['cmdi_template'])) {
+
+        // post data invalid
+        return drupal_json_output([
+
+            'type' => 'error',
+            'modal' => CmdiModalBuilder::error(),
+        ]);
+    }
+
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateDb');
+
+    global $user;
+
+    $id = intval($data['cmdi_template']);
+    $uid = $user->uid;
+
+    CmdiTemplateDb::delete($id, $uid);
+
+    return drupal_json_output([
+
+        'type' => 'deleted',
+        'modal' => CmdiModalBuilder::successDelete(),
     ]);
 }
 
@@ -763,6 +816,16 @@ function flat_deposit_theme()
             'template' => 'theme/flat-modal-blank',
         ],
 
+        'flat_modal_success' => [
+
+            'template' => 'theme/flat-modal-success',
+            'variables' => [
+
+                'title' => 'Title',
+                'description' => 'Description',
+            ],
+        ],
+
         'flat_modal_confirm' => [
             'template' => 'theme/flat-modal-confirm',
             'variables' => [
@@ -772,15 +835,16 @@ function flat_deposit_theme()
             ]
         ],
 
-        'flat_actions' => [
-            'template' => 'theme/flat-actions',
+        'flat_modal_confirm_delete' => [
+            'template' => 'theme/flat-modal-confirm-delete',
+            'variables' => [
+                'title' => 'Title',
+                'description' => 'Description',
+            ]
         ],
 
-        'flat_cmdi_fieldset' => [
-            // 'template' => 'theme/flat-fieldset',
-            'arguments' => [
-                'element' => null,
-            ],
+        'flat_actions' => [
+            'template' => 'theme/flat-actions',
         ],
     );
 

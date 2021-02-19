@@ -24,6 +24,7 @@ class CmdiModalBuilder
 
         'flat_modal_blank' => static::blank(),
         'flat_modal_loader' => static::loader(),
+        'flat_modal_confirm_delete' => static::confirmDelete(),
 
       ], 'setting');
     }
@@ -43,6 +44,11 @@ class CmdiModalBuilder
       return theme('flat_modal_loader');
     }
 
+    public static function error()
+    {
+      return theme('flat_modal_error');
+    }
+
     public static function confirm($cmdi_id)
     {
       return theme('flat_modal_confirm', [
@@ -50,6 +56,34 @@ class CmdiModalBuilder
         'cmdi_id' => $cmdi_id,
         'title' => 'Provided label already exists',
         'description' => 'The label you provided for this template block already exists. Would you like to override this template?',
+      ]);
+    }
+
+    public static function success()
+    {
+      return theme('flat_modal_success', [
+
+        'title' => 'Success',
+        'description' => 'Your cmdi block was successfully saved as a template.',
+      ]);
+    }
+
+    public static function confirmDelete()
+    {
+      return theme('flat_modal_confirm_delete', [
+
+        'title' => 'Are you sure?',
+        'description' => 'Are you sure you want to delete this template? This action is permanent!',
+        'url' => url('flat_deposit/delete_cmdi_template'),
+      ]);
+    }
+
+    public static function successDelete()
+    {
+      return theme('flat_modal_success', [
+
+        'title' => 'Success',
+        'description' => 'Your template has successfully been deleted.',
       ]);
     }
 }

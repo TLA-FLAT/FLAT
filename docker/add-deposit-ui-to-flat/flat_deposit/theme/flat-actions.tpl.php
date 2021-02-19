@@ -5,9 +5,9 @@
   </button>
   <ul class="dropdown-menu pull-right" aria-labelledby="load-menu-<?php echo $component_id; ?>">
     <?php foreach ($available_templates as $cmdi_template_id => $available_template) : ?>
-    <li>
+    <li data-role="available-template-<?php echo $cmdi_template_id; ?>">
       <a class="flat-cmdi-template-select" data-role="load-flat-cmdi-template" data-component-id="<?php echo $component_id; ?>" data-cmdi-template-id="<?php echo $cmdi_template_id; ?>" href="#"><?php echo $available_template; ?></a>
-      <a class="flat-cmdi-template-delete" href="#"><i class="fas fa-trash-alt"></i></a>
+      <a class="flat-cmdi-template-delete" data-role="delete-flat-cmdi-template" data-cmdi-template-id="<?php echo $cmdi_template_id; ?>" href="#"><i class="fas fa-trash-alt"></i></a>
     </li>
     <?php endforeach; ?>
   </ul>
