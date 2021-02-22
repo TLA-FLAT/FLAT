@@ -2,7 +2,6 @@
 
   // because of ajax, attach gets called a lot
   var FlatDepositModalAttached = false;
-  console.log(FlatDepositModalAttached);
 
   Drupal.behaviors.FlatDepositModal = {
 

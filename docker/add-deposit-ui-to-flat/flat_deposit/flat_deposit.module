@@ -636,6 +636,42 @@ function flat_deposit_delete_cmdi_template() {
 }
 
 /**
+ * Altering theme registry to register the panel actions
+ * that is defined by our CMDI template builder
+ *
+ * @param array $theme_registry drupal's theme registry
+ *
+ * @return void
+ */
+function flat_deposit_theme_registry_alter(&$theme_registry) {
+    if (isset($theme_registry['bootstrap_panel'])) {
+        $theme_registry['bootstrap_panel']['preprocess functions'][] = 'flat_deposit_preprocess_bootstrap_panel';
+    }
+}
+
+/**
+ * Bootstrap panel preprocessor to register the panel actions
+ * provided by element to be used inside the template file.
+ *
+ * @param array $variables
+ *
+ * @return void
+ */
+function flat_deposit_preprocess_bootstrap_panel(&$variables) {
+
+    if (isset($variables['element'])) {
+
+        $element = &$variables['element'];
+
+        // check for actions
+        $variables['panel_actions'] = null;
+        if (isset($element['#panel_actions'])) {
+            $variables['panel_actions'] = $element['#panel_actions'];
+        }
+    }
+}
+
+/**
  *
  */
 function flat_deposit_dashboard_access()
