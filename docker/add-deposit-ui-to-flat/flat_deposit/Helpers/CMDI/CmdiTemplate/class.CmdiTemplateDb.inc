@@ -72,6 +72,36 @@ class CmdiTemplateDb
     }
 
     /**
+     * Find existing block
+     *
+     * @param string $profile
+     * @param string $label
+     * @param string $component_id
+     * @param string $uid
+     *
+     * @return boolean
+     */
+    public static function find($profile, $label, $component_id, $uid)
+    {
+        try {
+
+            return db_select('flat_cmdi_templates', 'fct')
+                    ->fields('fct')
+                    ->condition('profile', $profile)
+                    ->condition('label', $label)
+                    ->condition('component_id', $component_id)
+                    ->condition('uid', $uid)
+                    ->execute()
+                    ->fetchAssoc();
+
+        } catch (Exception $e) {
+
+            static::error($e);
+            return false;
+        }
+    }
+
+    /**
      * save cmdi template block to db
      *
      * @param string $profile
@@ -86,15 +116,13 @@ class CmdiTemplateDb
     {
         try {
 
-            db_insert('flat_cmdi_templates')
-            ->fields([
-                'profile'      => $profile,
-                'label'        => $label,
-                'component_id' => $component_id,
-                'block'        => $block,
-                'uid'          => $uid,
-            ])
-            ->execute();
+            $record = static::find($profile, $label, $component_id, $uid);
+
+            if (false === $record) {
+                static::insert($profile, $label, $component_id, $block, $uid);
+            } else {
+                static::override($record['id'], $uid, $block);
+            }
 
             return true;
 
@@ -103,6 +131,52 @@ class CmdiTemplateDb
             static::error($e);
             return false;
         }
+    }
+
+    /**
+     * Override existing template block in db
+     *
+     * @param string $profile
+     * @param string $label
+     * @param string $component_id
+     * @param string $block
+     * @param string $uid
+     *
+     * @return boolean
+     */
+    public static function override($id, $uid, $block)
+    {
+        return db_update('flat_cmdi_templates')
+                ->fields([
+                    'block' => $block,
+                ])
+                ->condition('id', $id)
+                ->condition('uid', $uid)
+                ->execute();
+    }
+
+    /**
+     * Insert record into db
+     *
+     * @param string $profile
+     * @param string $label
+     * @param string $component_id
+     * @param string $block
+     * @param string $uid
+     *
+     * @return boolean
+     */
+    public static function insert($profile, $label, $component_id, $block, $uid)
+    {
+        return db_insert('flat_cmdi_templates')
+                ->fields([
+                    'profile'      => $profile,
+                    'label'        => $label,
+                    'component_id' => $component_id,
+                    'block'        => $block,
+                    'uid'          => $uid,
+                ])
+                ->execute();
     }
 
     /**
