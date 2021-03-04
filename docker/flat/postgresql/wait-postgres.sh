@@ -5,7 +5,7 @@ TO=`expr $FLAT_TIMEOUT / 10`
 # give supervisor a little time to start postgres, create the log to monitor and first entries to appear
 sleep $TO
 
-PLOG="/var/log/postgresql/postgresql-9.5-main.log"
+PLOG="/var/log/postgresql/postgresql-12-main.log"
 if [ -f /var/log/postgresql/postgresql.log ]; then
     PLOG="/var/log/postgresql/postgresql.log"
 fi

@@ -168,7 +168,7 @@ function bundle_max_files_exceeded($nid) {
         foreach ($cmd->children('cmd',true)->Resources->ResourceProxyList->ResourceProxy as $resource){
 
             $resource_type = (String)$resource->children('cmd',true)->ResourceType;
-            if ($resource_type == 'LandingPage'){
+            if ($resource_type == 'LandingPage' || $resource_type == 'searchpage'){
                 continue;
             }
 
@@ -299,6 +299,123 @@ function bundle_invalid_file_extensions($nid) {
     if (!empty($invalid_file_extensions)) {
 
         return $invalid_file_extensions;
+
+    }
+
+    else {
+
+        return FALSE;
+
+    }
+
+}
+
+/**
+ *
+ * Function to check whether any resourceproxy has a flatUR attribute, which means it is referring to a file that is already archived
+ *
+ */
+function has_flat_uri($nid) {
+    module_load_include('inc','flat_deposit','Helpers/CMDI/class.CmdiHandler');
+
+    $node = node_load($nid);
+    $wrapper = entity_metadata_wrapper('node', $node);
+    $location = $wrapper->flat_location->value();
+
+    $fedora_id = $wrapper->flat_fid->value();
+
+    $cmdi_file = $wrapper->flat_cmdi_file->value();
+    $cmdi_file_uri = $cmdi_file['uri'];
+
+    if (file_exists(drupal_realpath($cmdi_file_uri))){
+        $cmd = @CmdiHandler::simplexml_load_cmdi_file(drupal_realpath($cmdi_file_uri));
+    }
+
+    if ($cmd) {
+
+        foreach ($cmd->children('cmd',true)->Resources->ResourceProxyList->ResourceProxy as $resource){
+            $resourceref_attributes = $resource->children('cmd',true)->ResourceRef->attributes('lat', TRUE);
+            $fid = $resourceref_attributes['flatURI'];
+                    if ($fid) {
+                        return TRUE;
+                    }
+                }
+            }
+
+    return FALSE;
+
+}
+
+/**
+ *
+ * Function to check whether there is a matching file in the selected bundle directory for each of the resourceproxies in the CMDI
+ *
+ */
+function bundle_files_mismatch($nid) {
+
+    module_load_include('inc','flat_deposit','Helpers/CMDI/class.CmdiHandler');
+
+    $node = node_load($nid);
+    $wrapper = entity_metadata_wrapper('node', $node);
+    $location = $wrapper->flat_location->value();
+
+    $fedora_id = $wrapper->flat_fid->value();
+
+    $cmdi_file = $wrapper->flat_cmdi_file->value();
+    $cmdi_file_uri = $cmdi_file['uri'];
+
+    if (file_exists(drupal_realpath($cmdi_file_uri))){
+        $cmd = @CmdiHandler::simplexml_load_cmdi_file(drupal_realpath($cmdi_file_uri));
+    }
+
+    $new_files = [];
+
+    if (file_exists($location)) {
+
+        $new_files = array_diff(preg_grep('/^([^.])/', scandir($location)), array('..', '.'));
+
+    }
+
+    $existing_files = [];
+
+    if ($cmd) {
+
+        foreach ($cmd->children('cmd',true)->Resources->ResourceProxyList->ResourceProxy as $resource){
+
+            $resource_type = (String)$resource->children('cmd',true)->ResourceType;
+            if ($resource_type == 'LandingPage' || $resource_type == 'searchpage'){
+                continue;
+            }
+
+            else {
+
+                $resource_id = (string)$resource->attributes()->id;
+                $resourceref_attributes = $resource->children('cmd',true)->ResourceRef->attributes('lat', TRUE);
+                $localURI = $resourceref_attributes['localURI'];
+                if ($localURI) {
+                    $label = basename($localURI);
+                    $existing_files[] = $label;
+                }
+                else {
+                    $fid = $resourceref_attributes['flatURI'];
+                    if ($fid) {
+                        $fObj = islandora_object_load($fid);
+                        $label = $fObj->label;
+                        $existing_files[] = $label;
+                    }
+                }
+
+            }
+
+        }
+
+    }
+
+    $files_mismatch = array_diff($existing_files, $new_files);
+
+    if (!empty($files_mismatch)) {
+
+        return $files_mismatch;
 
     }
 

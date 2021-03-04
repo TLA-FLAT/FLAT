@@ -7,8 +7,8 @@ RUN apt-get update &&\
 
 RUN mkdir -p /tmp/islandora &&\
 	cd /tmp/islandora &&\
-	wget -O islandora_oai_module-7.x-1.10.zip "https://github.com/Islandora/islandora_oai/archive/7.x-1.10.zip" &&\
-	unzip islandora_oai_module-7.x-1.10.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/
+	wget -O islandora_oai_module-7.x-1.13.zip "https://github.com/Islandora/islandora_oai/archive/7.x-1.13.zip" &&\
+	unzip islandora_oai_module-7.x-1.13.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/
 
 # Module to add CMD as output format to the Islandora OAI provider
 

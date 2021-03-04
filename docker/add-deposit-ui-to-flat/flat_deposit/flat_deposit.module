@@ -1022,7 +1022,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
             array(
                 array(
                     ':input[name="flat_cmdi_option[und]"]' => array('value' => 'import'),
-                    ':input[name="flat_type[und]"]' => array('value' => 'new'),
+                    //':input[name="flat_type[und]"]' => array('value' => 'new'),
                 ),
                 'or',
                 array(':input[name="flat_cmdi_option[und]"]' => array('value' => 'template')),
@@ -1146,8 +1146,8 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
                 // Prevent altering bundle name (title), policy.
                 $form['title']['#disabled'] = true;
                 // $form['flat_policies']['und']['#disabled'] = TRUE;.
-                $form['flat_cmdi_option']['und']['#disabled'] = true;
-                $form['flat_source']['und']['#disabled'] = true;
+                //$form['flat_cmdi_option']['und']['#disabled'] = true;
+                //$form['flat_source']['und']['#disabled'] = true;
 
                 // Hide cmdi file field.
                 $status = $node_wrapper->flat_bundle_status->value();
@@ -1192,6 +1192,7 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
                 $form['title']['#disabled'] = true;
                 $form['flat_parent_nid']['und']['#disabled'] = true;
                 $form['flat_cmdi_option']['und']['#disabled'] = true;
+                hide($form['flat_cmdi_file']);
 
                 // Attach fedora object to validation.
                 $form['bundleInFedora'] = array(

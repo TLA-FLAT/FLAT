@@ -78,22 +78,19 @@ RUN cd /var/www/html/flat/ &&\
     sleep 1
 
 RUN apt-get update &&\
-    apt-get install -y php-zip php-mbstring
+    apt-get install -y sudo zip unzip php7.1-zip php7.1-mbstring php7.1-gmp php7.1-bcmath php7.1-intl php-imagick
 
 # add owncloud to version
-RUN wget -nv https://download.owncloud.org/download/repositories/stable/Ubuntu_16.04/Release.key -O Release.key &&\
+RUN wget -nv https://download.owncloud.org/download/repositories/10.4.1/prod/Ubuntu_19.10/Release.key -O Release.key &&\
     apt-key add - < Release.key
 
-RUN sh -c "echo 'deb http://download.owncloud.org/download/repositories/stable/Ubuntu_16.04/ /' >> /etc/apt/sources.list.d/owncloud.list" &&\
+RUN sh -c "echo 'deb https://download.owncloud.org/download/repositories/10.4.1/prod/Ubuntu_19.10/ /' >> /etc/apt/sources.list.d/owncloud.list" &&\
     apt-get update &&\
     apt-get install -y --allow-unauthenticated owncloud-files
 
 RUN /etc/init.d/postgresql start &&\
     su -c "createdb -O fedora owncloud" postgres &&\
     /etc/init.d/postgresql stop
-
-RUN apt-get update &&\
-    apt-get install sudo
 
 RUN /etc/init.d/postgresql start &&\
     cd /var/www/owncloud &&\
@@ -108,12 +105,9 @@ RUN mv /var/www/owncloud/config/config.php /var/www/owncloud/config/config.backu
 COPY owncloud/changeRights.sh /tmp/changeRights.sh
 RUN /tmp/changeRights.sh
 
-#RUN /etc/init.d/postgresql start &&\
-#   /var/www/fedora/tomcat/bin/startup.sh &&\
-#   sleep 10 &&\
-#   cd /var/www/owncloud/ &&\
-#   sudo -u www-data php occ app:enable files_external
+COPY /apache/000-default.conf /etc/apache2/sites-available/000-default.conf
 
+RUN service apache2 restart
 
 #Add bagit to image
 RUN cd /app/flat &&\
@@ -125,9 +119,7 @@ RUN cd /app/flat &&\
     cd /usr/local/bin/ &&\
     unzip bagit-4.9.0-bin.zip &&\
     PATH=/usr/local/bin/bagit-4.9.0/bin:$PATH &&\
-    chmod 777 /usr/local/bin/bagit-4.9.0/bin/bag &&\
-    apt-get -y install zip unzip
-
+    chmod 777 /usr/local/bin/bagit-4.9.0/bin/bag
 
 #Add accessible freeze directory to server
 RUN mkdir -p /app/flat/backend &&\

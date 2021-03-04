@@ -2,7 +2,7 @@
 
 TO=`expr $FLAT_TIMEOUT / 10`
 
-PLOG="/var/log/postgresql/postgresql-9.5-main.log"
+PLOG="/var/log/postgresql/postgresql-12-main.log"
 if [ -f /var/log/postgresql/postgresql.log ]; then
     PLOG="/var/log/postgresql/postgresql.log"
 fi
