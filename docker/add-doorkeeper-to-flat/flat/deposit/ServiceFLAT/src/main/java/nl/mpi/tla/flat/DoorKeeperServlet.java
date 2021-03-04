@@ -55,8 +55,10 @@ public class DoorKeeperServlet {
     ) {
         DoorKeeperContextListener doorkeeperContext = (DoorKeeperContextListener)servletContext.getAttribute("DOORKEEPER");
         Flow flow = doorkeeperContext.executed(sip);
+        if (flow != null && flow.getNext()!=null /*&& !start.isEmpty()*/)
+            flow = null;
         if (flow==null) {
-            Map<String,XdmValue> params = new HashMap();
+            Map<String,XdmValue> params = new HashMap<>();
             params.put("sip", new XdmAtomicValue(sip));
             for (Entry<String, List<String>> entry : uriInfo.getQueryParameters().entrySet()) {
                 String key = entry.getKey();
@@ -85,10 +87,14 @@ public class DoorKeeperServlet {
                     return Response.status(Status.NOT_FOUND).entity("The SIP["+sip+"] directory["+sipDir+"] doesn't exist!").type("text/plain").build();
                 }
             } catch (Exception ex) {
-                return Response.status(Status.INTERNAL_SERVER_ERROR).entity(ex.getMessage()).type("text/plain").build();
+                // stack trace to catalina.out
+                System.err.println(""+this.getClass().getCanonicalName()+":ERROR["+ex.getClass().getCanonicalName()+"]["+ex.getMessage()+"]");
+                ex.printStackTrace(System.err);
+                return Response.status(Status.INTERNAL_SERVER_ERROR).entity("["+ex.getClass().getCanonicalName()+"]"+ex.getMessage()).type("text/plain").build();
             }
-            if (doorkeeperContext.execute(sip,flow))
+            if (doorkeeperContext.execute(sip,flow)) {
                 return Response.status(Status.ACCEPTED).entity("sip["+sip+"] directory["+sipDir+"]\n").type("text/plain").build();
+            } //else
         }
         return Response.status(Status.CONFLICT).entity("ERROR: sip["+sip+"] is already being executed!"+(flow.getStatus()!=null?(flow.getStatus().booleanValue()?" And succeeded.\n":" And failed.\n"):"\n")).type("text/plain").build();
     }
