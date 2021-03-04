@@ -18,6 +18,7 @@
         <property name="gsearchPassword" value="fgsAdmin"/>
         <property name="gsearchServer" value="http://localhost:8080/fedoragsearch"/>
         <property name="dk-rollbackLog" value="{$work}/rollback.log"/>
+        <property name="dk-pidList" value="{$work}/pids.csv"/>
     </config>
     <init>
         <action name="logSetup" class="nl.mpi.tla.flat.deposit.action.WorkspaceLogSetup">
@@ -75,7 +76,7 @@
         <action name="persist resources" class="nl.mpi.tla.flat.deposit.action.Persist">
             <parameter name="resourcesDir" value="/app/flat/data"/>
             <parameter name="policyFile" value="{$base}/policies/persistence-policy.xml"/>
-            <parameter name="xpathDatasetName" value="replace(/cmd:CMD/cmd:Header/cmd:MdSelfLink,'.*{$epicPrefix}/','')"/>
+            <parameter name="xpathDatasetName" value="(replace(replace(replace(/cmd:CMD/cmd:Header/cmd:MdSelfLink/@lat:flatURI,'.*{$epicPrefix}_',''),'#.*',''),'_','-'),replace(/cmd:CMD/cmd:Header/cmd:MdSelfLink,'.*{$epicPrefix}/',''))[.!=''][1]"/>
         </action>
         <action name="acl" class="nl.mpi.tla.flat.deposit.action.ACL">
             <parameter name="policy" value="{$work}/metadata/policy.n3"/>
