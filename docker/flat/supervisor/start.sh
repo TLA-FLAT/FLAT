@@ -7,4 +7,4 @@ supervisorctl start tomcat &&\
 
 #http://patorjk.com/software/taag/#p=display&f=Slant%20Relief&t=FLAT
 cat /flat.txt &&\
-/bin/bash -l $*
+tail -f /dev/null
