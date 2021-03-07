@@ -11,6 +11,10 @@ ENV FLAT_ICON_DIR=/app/flat/data/icons
 ENV FLAT_TIMEOUT=150
 ENV CMD_EXTENSION=cmdi
 ENV FLAT_NAMESPACE=lat
+#docker: ENV FLAT_START="/bin/bash -l \$*"
+#compose: ENV FLAT_START="tail -f /dev/null"
+ENV FLAT_START_MODE=fg
+
 
 #
 # Setup workdir
@@ -28,6 +32,8 @@ ENV PATH="/app/flat/bin:${PATH}"
 # expose ports
 EXPOSE 80
 EXPOSE 8080
+EXPOSE 443
+EXPOSE 8983
 
 # set debconf to Noninteractive
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
@@ -92,6 +98,14 @@ RUN a2enmod ssl &&\
 	sed -i "s|FLAT_NAME|${FLAT_NAME}|g" /etc/apache2/apache2.conf
 
 #
+# enable HTTPS
+#
+
+RUN a2enmod ssl &&\
+    a2enmod headers &&\
+    a2ensite default-ssl
+
+#
 # Configure postgres
 #   - initialise databases for fedora and drupal
 ADD postgresql/wait-postgres.sh /wait-postgres.sh
@@ -144,6 +158,7 @@ RUN	chmod u+x /start-*.sh
 ADD supervisor/*.conf /etc/supervisor/conf.d/
 ADD supervisor/start.sh /start.sh
 RUN	chmod u+x /start.sh
+#RUN echo " " >> /start.sh && echo "${FLAT_START}" >> /start.sh 
 RUN echo ". /etc/environment" >> /etc/default/supervisor
 
 ENTRYPOINT /start.sh
@@ -252,13 +267,13 @@ RUN sed -i "/\"json\"/a \"cmdi\" => \"application/x-cmdi+xml\"," /var/www/html/$
     
 RUN mkdir -p /tmp/bootstrap &&\
 	cd /tmp/bootstrap &&\
-	wget "https://ftp.drupal.org/files/projects/bootstrap-7.x-3.14.zip" &&\
-	unzip bootstrap-7.x-3.14.zip &&\
+	wget "https://ftp.drupal.org/files/projects/bootstrap-7.x-3.26.zip" &&\
+	unzip bootstrap-7.x-3.26.zip &&\
 	mv /tmp/bootstrap/bootstrap /var/www/html/$FLAT_NAME/sites/all/themes/bootstrap
 
-RUN cp -r /var/www/html/$FLAT_NAME/sites/all/themes/bootstrap/starterkits/cdn  /var/www/html/$FLAT_NAME/sites/all/themes/flat_bootstrap_theme &&\
+RUN cp -r /var/www/html/$FLAT_NAME/sites/all/themes/bootstrap/starterkits/THEMENAME  /var/www/html/$FLAT_NAME/sites/all/themes/flat_bootstrap_theme &&\
 	cd /var/www/html/$FLAT_NAME/sites/all/themes/flat_bootstrap_theme/ &&\
-	mv cdn.starterkit flat_bootstrap_theme.info &&\
+	mv THEMENAME.starterkit flat_bootstrap_theme.info &&\
     echo ";; FLAT settings" >> flat_bootstrap_theme.info &&\
 	echo "settings[bootstrap_cdn_jsdelivr_theme] = 'flatly'" >> flat_bootstrap_theme.info &&\
     echo "settings[bootstrap_fluid_container] = 1" >> flat_bootstrap_theme.info &&\
