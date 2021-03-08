@@ -5,57 +5,43 @@ RUN apt-get update &&\
     apt-get -y install zip unzip
 
 #
-# easy-deposit
-#
+# easy-sword2
 RUN cd /tmp &&\
-    git clone https://github.com/DANS-KNAW/easy-sword2-lib.git &&\
-    cd /tmp/easy-sword2-lib &&\
-    # checkout version v1.0-beta-2 (has no tag)
-    git checkout ec7d65ddf1967bef3b92f3bb9816645b83451c23
-ADD sword/pom.xml /tmp/easy-sword2-lib/pom.xml
-RUN cd /tmp/easy-sword2-lib &&\
-    mvn clean install &&\
-    cd .. &&\
-    rm -rf easy-sword2-lib
+    git clone https://github.com/DANS-KNAW/easy-sword2 easy-sword2 &&\
+    cd /tmp/easy-sword2 &&\
+    # checkout version 1.8.9
+    git checkout v1.8.9 &&\
+    sed -i 's|DANS-EASY|FLAT|g' src/main/scala/nl.knaw.dans.easy.sword2/StatementManagerImpl.scala &&\
+    sed -i 's|DANS Default Data Collection|FLAT Deposit Bag Collection|g' src/main/scala/nl.knaw.dans.easy.sword2/ServiceDocumentManagerImpl.scala
 
-RUN cd /tmp &&\
-    git clone https://github.com/DANS-KNAW/easy-deposit easy-deposit &&\
-    cd /tmp/easy-deposit &&\
-    # checkout version 1.0.2 (has no tag)
-    git checkout 64378e6be6ff83994fd675eb61a6ea332b39ff67 &&\
-    sed -i 's|https://easy.dans.knaw.nl/maven/|https://maven.dans.knaw.nl/releases/|g' pom.xml &&\
-    sed -i 's|DANS-EASY|FLAT|g' src/main/scala/nl/knaw/dans/api/sword2/StatementManagerImpl.scala &&\
-    sed -i 's|DANS Default Data Collection|FLAT Deposit Bag Collection|g' src/main/scala/nl/knaw/dans/api/sword2/ServiceDocumentManagerImpl.scala
+RUN cd /tmp/easy-sword2 &&\
+    mvn clean install assembly:single
 
-ADD sword/web.xml /tmp/easy-deposit/src/main/webapp/WEB-INF/web.xml
-
-RUN cd /tmp/easy-deposit &&\
-    mvn clean install &&\    
-	cp target/easy-deposit.war /var/www/fedora/tomcat/webapps/easy-deposit.war &&\
-	mkdir /var/www/fedora/tomcat/webapps/easy-deposit &&\
-	cd /var/www/fedora/tomcat/webapps/easy-deposit/ &&\
-	unzip ../easy-deposit.war &&\
-	rm -r /tmp/easy-deposit
+RUN tar -xf /tmp/easy-sword2/target/easy-sword2-1.8.9.tar.gz -C /tmp/easy-sword2/ &&\    
+    mkdir -p /app/easy-sword2 &&\
+    mv /tmp/easy-sword2/easy-sword2-1.8.9/bin /app/easy-sword2 &&\
+    mv /app/easy-sword2/bin/easy-sword2-1.8.9.jar /app/easy-sword2/bin/easy-sword2.jar &&\
+    mv /tmp/easy-sword2/easy-sword2-1.8.9/lib /app/easy-sword2 &&\
+    mv /tmp/easy-sword2/easy-sword2-1.8.9/cfg /app/easy-sword2/bin &&\
+    mkdir /app/easy-sword2/cfg/ &&\
+    rm -r /tmp/easy-sword2
     
-RUN mkdir -p /app/flat/deposit/sword/cfg &&\
-    mkdir -p /app/flat/deposit/sword/tmp &&\
+RUN mkdir -p /app/flat/deposit/sword/tmp &&\
     mkdir -p /app/flat/deposit/bags
     
-ADD sword/logback.xml /app/flat/deposit/sword/cfg/logback.xml
-ADD sword/application.properties /app/flat/deposit/sword/cfg/application.properties
-RUN sed -i "s|FLAT_HOST|${FLAT_HOST}|g" /app/flat/deposit/sword/cfg/application.properties &&\
-    sed -i "s|FLAT_NAME|${FLAT_NAME}|g" /app/flat/deposit/sword/cfg/application.properties
+ADD sword/logback.xml /app/easy-sword2/cfg/logback.xml
+ADD sword/application.properties /app/easy-sword2/cfg/application.properties
+RUN sed -i "s|FLAT_HOST|${FLAT_HOST}|g" /app/easy-sword2/cfg/application.properties &&\
+    sed -i "s|FLAT_NAME|${FLAT_NAME}|g" /app/easy-sword2/cfg/application.properties
     
-ENV EASY_DEPOSIT_HOME="/app/flat/deposit/sword"
-RUN if [ `grep 'environment=' /etc/supervisor/conf.d/supervisord-tomcat.conf` ]; \
-      then sed -i 's|^environment=\(.*\)$|environment=\1,EASY_DEPOSIT_HOME="/app/flat/deposit/sword"|g' /etc/supervisor/conf.d/supervisord-tomcat.conf; \
-      else echo '' >> /etc/supervisor/conf.d/supervisord-tomcat.conf; echo 'environment=EASY_DEPOSIT_HOME="/app/flat/deposit/sword"' >> /etc/supervisor/conf.d/supervisord-tomcat.conf; \
-    fi
+ADD supervisor/supervisord-easy-deposit.conf /etc/supervisor/conf.d/supervisord-easy-deposit.conf
+ADD supervisor/start.sh /start.sh
+RUN	chmod u+x /start.sh
 
 # Add proxy to Apache
 
 RUN echo '# open up access to SWORD' >> /etc/apache2/apache2.conf &&\ 
-    echo 'ProxyPass "/'${FLAT_NAME}'/easy-deposit" "http://localhost:8080/easy-deposit"' >> /etc/apache2/apache2.conf
+    echo 'ProxyPass "/'${FLAT_NAME}'/easy-deposit" "http://localhost:20100/easy-deposit"' >> /etc/apache2/apache2.conf
 
 #
 # Add bagit
@@ -70,8 +56,6 @@ RUN cd /tmp &&\
 
 #
 # Add FLAT's own scripts and tools 
-#
-
 ADD flat/scripts/* /app/flat/bin/
 RUN chmod +x /app/flat/bin/*.sh
 
