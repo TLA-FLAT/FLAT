@@ -41,8 +41,7 @@ RUN	chmod u+x /start.sh
 # Add proxy to Apache
 
 RUN echo '# open up access to SWORD' >> /etc/apache2/apache2.conf &&\ 
-    echo 'ProxyPass "/'${FLAT_NAME}'/easy-deposit" "http://localhost:8082"' >> /etc/apache2/apache2.conf &&\
-    supervisorctl restart apache2
+    echo 'ProxyPass "/'${FLAT_NAME}'/easy-deposit" "http://localhost:8082"' >> /etc/apache2/apache2.conf
 
 #
 # Add bagit
