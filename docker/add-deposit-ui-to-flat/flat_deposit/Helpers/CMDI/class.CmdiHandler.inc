@@ -1060,7 +1060,7 @@ class CmdiHandler extends SimpleXMLElement
 
     /**
     * Set the title of a CMDI XML object. Title field is retrieved from form templates
-    * @param string $title New title for the CMDI object 
+    * @param string $title New title for the CMDI object
     *
     */
     public function setTitle($title)

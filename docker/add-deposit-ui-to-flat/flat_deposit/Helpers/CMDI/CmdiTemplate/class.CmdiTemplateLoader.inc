@@ -58,5 +58,7 @@ class CmdiTemplateLoader
                 }
             }
         }
+
+        $form_state['loaded_cmdi_templates'] = [];
     }
 }
