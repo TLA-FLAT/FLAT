@@ -20,7 +20,16 @@ class CmdiTemplateSaver
 
     public function getProfile()
     {
+        if (isset($this->form_state['complete form']['select_profile_name']['#value'])) {
+
+            // update_collection.inc does not have the trigger field
+            // using this
+            return $this->form_state['complete form']['select_profile_name']['#value'];
+        }
+
         if (!isset($this->form_state['complete form']['trigger']['select_profile_name']['#value'])) {
+
+            // trigger was not found
             return null;
         }
 

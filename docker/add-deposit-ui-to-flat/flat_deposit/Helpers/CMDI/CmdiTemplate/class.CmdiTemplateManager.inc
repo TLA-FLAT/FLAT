@@ -17,7 +17,7 @@ class CmdiTemplateManager
 
             // template was saved, 'load_template' element needs to be rebuilt
             $cmdi_tree = $form_state['triggering_element']['#cmdi_tree'];
-            $profile = $form_state['complete form']['trigger']['select_profile_name']['#value'];
+            $profile = isset($form_state['complete form']['trigger']['select_profile_name']['#value']) ? $form_state['complete form']['trigger']['select_profile_name']['#value'] : (isset($form_state['complete form']['select_profile_name']['#value']) ? $form_state['complete form']['select_profile_name']['#value'] : null);
             $component_id = $form_state['triggering_element']['#component_id'];
 
             // rebuild 'load_template' element

@@ -220,6 +220,10 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject)
     return $form;
 }
 
+function flat_deposit_form_flat_collection_add_form_alter(&$form, &$form_state) {
+    CmdiTemplateManager::alter($form, $form_state);
+}
+
 function flat_collection_add_form_final_validate($form, &$form_state) {
     module_load_include('inc', 'flat_deposit', 'inc/class.FlatTuque');
     // Form Validation setup
