@@ -23,6 +23,17 @@
         isModalOpen = false;
       });
 
+      $('body').on('keydown', '[data-cmdi-enter="true"]', function(event) {
+
+        var keycode = (event.keyCode ? event.keyCode : event.which);
+        var element = $(this);
+        if (keycode == '13') {
+
+          // enter detected, submit label
+          element.siblings('[data-role="open-flat-modal"]:first').trigger('click');
+        }
+      });
+
       $('body').on('click', '[data-role="open-flat-modal"]', function(event) {
 
         event.preventDefault();

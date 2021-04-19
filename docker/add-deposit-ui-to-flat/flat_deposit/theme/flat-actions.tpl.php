@@ -19,7 +19,7 @@
   </button>
   <div class="dropdown-menu pull-right" aria-labelledby="save-menu-<?php echo $component_id; ?>">
     <div class="flat-dropdown-save">
-      <input type="text" class="form-control" placeholder="Label" data-role="cmdi-label-<?php echo $cmdi_id; ?>" />
+      <input type="text" class="form-control" placeholder="Label" data-role="cmdi-label-<?php echo $cmdi_id; ?>" data-cmdi-enter="true" />
       <button type="button" class="btn btn-success" data-role="open-flat-modal" data-cmdi-data='<?php echo $cmdi_data; ?>'>Save</button>
     </div>
   </div>
