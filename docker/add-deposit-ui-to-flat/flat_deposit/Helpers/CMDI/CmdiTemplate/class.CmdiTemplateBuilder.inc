@@ -80,7 +80,7 @@ class CmdiTemplateBuilder
         ];
     }
 
-    public static function buildTemplateBlock($element)
+    public static function buildTemplateBlock($element, &$form_state)
     {
         if (!isset($element['#cmdi_template_fields']) || count($element['#cmdi_template_fields']) === 0) {
             return null;
@@ -89,16 +89,21 @@ class CmdiTemplateBuilder
         $fields = $element['#cmdi_template_fields'];
         $block = [];
 
-        if (isset($element['#value']) && $element['#value'] !== null) {
-            $block['#value'] = $element['#value'];
-        }
-
         foreach ($fields as $field) {
 
             if (isset($element[$field]['#cmdi_template_fields'])) {
 
                 if (count($element[$field]['#cmdi_template_fields']) > 0) {
-                    $block[$field] = static::buildTemplateBlock($element[$field]);
+
+                    $block[$field] = static::buildTemplateBlock($element[$field], $form_state);
+                    $input = static::getElementInput($element[$field], $form_state);
+
+                    if (false === is_array($input)) {
+
+                        // input comes as array first and string second
+                        $block[$field]['#value'] = $input;
+                        $block[$field]['#default_value'] = $input;
+                    }
                 }
 
             } else {
@@ -108,6 +113,17 @@ class CmdiTemplateBuilder
 
         $block['#cmdi_template_fields'] = $fields;
         return $block;
+    }
+
+    private static function getElementInput($element, &$form_state)
+    {
+        return array_reduce($element['#array_parents'], function($result, $index) {
+
+            if ($result && !is_null($index)) {
+              return (array_key_exists($index, $result)) ? $result[$index] : null;
+            }
+
+        }, $form_state['input']);
     }
 
     private static function noTemplatesFound()

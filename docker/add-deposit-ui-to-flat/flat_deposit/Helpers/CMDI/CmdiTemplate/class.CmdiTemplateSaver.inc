@@ -80,7 +80,7 @@ class CmdiTemplateSaver
         }
 
         // build element
-        $element = CmdiTemplateBuilder::buildTemplateBlock($formElement);
+        $element = CmdiTemplateBuilder::buildTemplateBlock($formElement, $this->form_state);
 
         if (null === $element) {
 
