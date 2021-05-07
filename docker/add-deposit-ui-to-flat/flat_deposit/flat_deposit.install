@@ -764,7 +764,6 @@ function flat_deposit_install()
             'type' => 'flat_bundle', // content type
         ))
         ->execute();
-
 }
 
 
@@ -830,4 +829,104 @@ function flat_deposit_uninstall(){
     drupal_set_message($t('Flat deposit has been uninstalled'));
 
 
+}
+
+function flat_deposit_schema() {
+
+    $schema = [];
+    $schema['flat_cmdi_templates'] = [
+
+        'description' => 'Table that stores blocks inside cmdi as templates for Flat CMDI Templates module',
+        'fields'      => [
+
+            'id' => [
+
+                'type'        => 'serial',
+                'not null'    => true,
+                'unsigned'    => true,
+                'description' => 'The primary id',
+            ],
+
+            'uid' => [
+
+                'type' => 'int',
+                'unsigned' => true,
+                'not null' => true,
+                'description' => 'Adding user_id field to templates table',
+                'default' => 0,
+            ],
+
+            'profile' => [
+
+                'type'        => 'varchar',
+                'length'      => 500,
+                'not null'    => true,
+                'description' => 'Profile CMDI template',
+            ],
+
+            'label' => [
+
+                'type'        => 'varchar',
+                'length'      => 500,
+                'not null'    => true,
+                'description' => 'Label for cmdi template block',
+            ],
+
+            'component_id' => [
+
+                'type'        => 'varchar',
+                'length'      => 500,
+                'not null'    => true,
+                'description' => 'Component id in form of cmdi metadata',
+            ],
+
+            'block' => [
+
+                'type'        => 'blob',
+                'size'        => 'normal',
+                'not null'    => true,
+                'description' => 'Actual CMDI template block',
+            ],
+        ],
+        'primary key' => ['id'],
+    ];
+
+    return $schema;
+}
+
+/**
+ * Implements hook_schema_alter
+ */
+// function flat_deposit_schema_alter(&$schema) {
+
+//     $schema['flat_cmdi_templates']['fields'];
+// }
+
+/**
+ * Adding CMDI Templates table
+ */
+function flat_deposit_update_7003() {
+
+    $schema = flat_deposit_schema();
+
+    if (!db_table_exists('flat_cmdi_templates')) {
+        db_create_table('flat_cmdi_templates', $schema['flat_cmdi_templates']);
+    }
+}
+
+/**
+ * Adding user id field 'uid' to flat_cmdi_templates
+ */
+function flat_deposit_update_7004() {
+
+    global $user;
+
+    $schema = drupal_get_schema('flat_cmdi_templates');
+    $field = $schema['fields']['uid'];
+
+    // setting all current rows to currently logged in user
+    $field['initial'] = $user->uid;
+
+    // and adding it
+    db_add_field('flat_cmdi_templates', 'uid', $field);
 }

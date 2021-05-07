@@ -103,6 +103,7 @@ function flat_deposit_bundle_edit_cmdi_form($form, &$form_state)
 
         // Attach form elements to base form
         $elements = $formBuilder->getForm();
+
         $form['template_container']['elements'] = $elements;
 
         // check if everything worked as expected
@@ -115,6 +116,11 @@ function flat_deposit_bundle_edit_cmdi_form($form, &$form_state)
     }
     return $form;
 }
+
+function flat_deposit_form_flat_deposit_bundle_edit_cmdi_form_alter(&$form, &$form_state) {
+    CmdiTemplateManager::alter($form, $form_state);
+}
+
 
 function flat_deposit_bundle_edit_cmdi_form_final_validate($form, &$form_state)
 {

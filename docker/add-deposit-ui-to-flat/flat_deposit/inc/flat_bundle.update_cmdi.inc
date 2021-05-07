@@ -86,8 +86,6 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object)
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
     $availableFormTemplates = FormBuilder::getAvailableTemplates('flat_bundle');
 
-
-
     if (array_key_exists($profile, $availableFormTemplates)) {
         // Load form builder app
         module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
@@ -102,11 +100,13 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object)
         } else {
             $pressedButtonsRoot = null;
         }
+
         // Generate the form elements
         $formBuilder->setForm($profile, $inheritedData, $pressedButtonsRoot, $inheritAll = true);
 
         // Attach form elements to base form
         $elements = $formBuilder->getForm();
+
         $form['template_container']['elements'] = $elements;
 
         // check if everything worked as expected
@@ -118,6 +118,10 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object)
         $form['Submit']['#disabled'] = TRUE;
     }
     return $form;
+}
+
+function flat_deposit_form_flat_bundle_update_cmdi_form_alter(&$form, &$form_state) {
+    CmdiTemplateManager::alter($form, $form_state);
 }
 
 function flat_bundle_update_form_final_validate($form, &$form_state)
