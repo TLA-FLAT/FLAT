@@ -136,6 +136,10 @@ function flat_collection_update_form($form, &$form_state, $fedora_object)
     return $form;
 }
 
+function flat_deposit_form_flat_collection_update_form_alter(&$form, &$form_state) {
+    CmdiTemplateManager::alter($form, $form_state);
+}
+
 function flat_collection_update_form_ajax_handler(&$form, &$form_state)
 {
     return $form;

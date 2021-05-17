@@ -75,8 +75,8 @@ rm flat-base.tar
 docker run -p 80:80 -p 8443:8443 -p 8080:8080 -p 8222:22 -v <local_path>:<remote_path> --name <Container> -i -t <name FLAT base image>
 ```
 
-
-
+## CMDI templates functionality
+To enable the fieldsets to have CMDI template management capabilities, you must copy `drupal/bootstrap-panel.tpl.php` file in this repository into your bootstrap folder inside your subtheme template folder: `templates/<subtheme>/bootstrap`.
 
 ## Notes ##
 Solution packs do interfere with some other modules and cause notifications.

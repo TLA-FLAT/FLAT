@@ -516,7 +516,159 @@ function flat_deposit_menu()
         'weight' => 95,
     );
 
+    $items['flat_deposit/save_check'] = [
+
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'flat_deposit_save_check',
+        // 'access callback' => 'flat_deposit_menu_access',
+        'access arguments' => array('use deposit module'),
+    ];
+
+    $items['flat_deposit/delete_cmdi_template'] = [
+
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'flat_deposit_delete_cmdi_template',
+        // 'access callback' => 'flat_deposit_menu_access',
+        'access arguments' => array('use deposit module'),
+    ];
+
     return $items;
+}
+
+function flat_deposit_save_check() {
+
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiModalBuilder');
+
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+
+        return drupal_json_output([
+
+            'type' => 'error',
+            'modal' => CmdiModalBuilder::error(),
+        ]);
+    }
+
+    // Getting post data and decode it as it is sent as JSON
+    $data = file_get_contents('php://input');
+    $data = json_decode($data, true);
+
+    if (false === is_array($data) || !isset($data['cmdi_data'])) {
+
+        // post data invalid
+        return drupal_json_output([
+
+            'type' => 'error',
+            'modal' => CmdiModalBuilder::error(),
+        ]);
+    }
+
+    global $user;
+
+    $uid = $user->uid;
+    $cmdi_id = $data['cmdi_data']['cmdi_id'];
+    $profile = $data['cmdi_data']['profile'];
+    $label = $data['cmdi_data']['label'];
+    $component_id = $data['cmdi_data']['component_id'];
+
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateDb');
+
+    $exists = CmdiTemplateDb::exists($profile, $label, $component_id, $uid);
+
+    if (true === $exists) {
+
+        return drupal_json_output([
+
+            'type' => 'exists',
+            'cmdi_id' => $cmdi_id,
+            'modal' => CmdiModalBuilder::confirm($cmdi_id),
+        ]);
+    }
+
+    return drupal_json_output([
+
+        'type' => 'new',
+        'cmdi_id' => $cmdi_id,
+        'modal' => CmdiModalBuilder::success(),
+    ]);
+}
+
+function flat_deposit_delete_cmdi_template() {
+
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiModalBuilder');
+
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+
+        return drupal_json_output([
+
+            'type' => 'error',
+            'modal' => CmdiModalBuilder::error(),
+        ]);
+    }
+
+    // Getting post data and decode it as it is sent as JSON
+    $data = file_get_contents('php://input');
+    $data = json_decode($data, true);
+
+    if (!isset($data['cmdi_template'])) {
+
+        // post data invalid
+        return drupal_json_output([
+
+            'type' => 'error',
+            'modal' => CmdiModalBuilder::error(),
+        ]);
+    }
+
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateDb');
+
+    global $user;
+
+    $id = intval($data['cmdi_template']);
+    $uid = $user->uid;
+
+    CmdiTemplateDb::delete($id, $uid);
+
+    return drupal_json_output([
+
+        'type' => 'deleted',
+        'modal' => CmdiModalBuilder::successDelete(),
+    ]);
+}
+
+/**
+ * Altering theme registry to register the panel actions
+ * that is defined by our CMDI template builder
+ *
+ * @param array $theme_registry drupal's theme registry
+ *
+ * @return void
+ */
+function flat_deposit_theme_registry_alter(&$theme_registry) {
+    if (isset($theme_registry['bootstrap_panel'])) {
+        $theme_registry['bootstrap_panel']['preprocess functions'][] = 'flat_deposit_preprocess_bootstrap_panel';
+    }
+}
+
+/**
+ * Bootstrap panel preprocessor to register the panel actions
+ * provided by element to be used inside the template file.
+ *
+ * @param array $variables
+ *
+ * @return void
+ */
+function flat_deposit_preprocess_bootstrap_panel(&$variables) {
+
+    if (isset($variables['element'])) {
+
+        $element = &$variables['element'];
+
+        // check for actions
+        $variables['panel_actions'] = null;
+        if (isset($element['#panel_actions'])) {
+            $variables['panel_actions'] = $element['#panel_actions'];
+        }
+    }
 }
 
 /**
@@ -684,6 +836,52 @@ function flat_deposit_theme()
             'render element' => 'form',
         ),
 
+        'flat_modal' => [
+            'template' => 'theme/flat-modal',
+        ],
+
+        'flat_modal_error' => [
+            'template' => 'theme/flat-modal-error',
+        ],
+
+        'flat_modal_loader' => [
+            'template' => 'theme/flat-modal-loader',
+        ],
+
+        'flat_modal_blank' => [
+            'template' => 'theme/flat-modal-blank',
+        ],
+
+        'flat_modal_success' => [
+
+            'template' => 'theme/flat-modal-success',
+            'variables' => [
+
+                'title' => 'Title',
+                'description' => 'Description',
+            ],
+        ],
+
+        'flat_modal_confirm' => [
+            'template' => 'theme/flat-modal-confirm',
+            'variables' => [
+                'title' => 'Title',
+                'description' => 'Description',
+                'cmdi_id' => 'CMDI id',
+            ]
+        ],
+
+        'flat_modal_confirm_delete' => [
+            'template' => 'theme/flat-modal-confirm-delete',
+            'variables' => [
+                'title' => 'Title',
+                'description' => 'Description',
+            ]
+        ],
+
+        'flat_actions' => [
+            'template' => 'theme/flat-actions',
+        ],
     );
 
     return $themes;
@@ -1324,7 +1522,7 @@ function flat_bundle_node_form_add_validate($form, &$form_state)
         // Set title of uploaded CMDI file to title of Bundle
         $cmdi->setTitle($bundle_name);
         $exported = $cmdi->asXML($cmdi_file);
-    
+
         if (!$exported) {
             form_set_error('error', t('Unable to save CMDI file'));
             return $form;
@@ -1885,7 +2083,7 @@ function flat_deposit_form_alter(&$form, &$form_state, $form_id)
  * Custom form submit handler for flat_bundle in order to get rid of "node created" messages.
  */
 function flat_deposit_flat_bundle_node_form_submit($form, &$form_state)
-{    
+{
 
     $node = node_form_submit_build_node($form, $form_state);
     $insert = empty($node->nid);

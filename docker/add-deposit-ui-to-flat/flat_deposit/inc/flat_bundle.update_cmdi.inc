@@ -120,6 +120,10 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object)
     return $form;
 }
 
+function flat_deposit_form_flat_bundle_update_cmdi_form_alter(&$form, &$form_state) {
+    CmdiTemplateManager::alter($form, $form_state);
+}
+
 function flat_bundle_update_form_final_validate($form, &$form_state)
 {
 

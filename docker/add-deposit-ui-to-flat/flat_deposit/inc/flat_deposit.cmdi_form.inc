@@ -208,6 +208,7 @@ function flat_deposit_cmdi_form($form, &$form_state)
         // Load form builder app
         $templateName = $form_state['selected'];
         $node = $form_state['build_info']['args'][0];
+
         $formBuilder = new FormBuilder($node);
 
         // count button presses per field
@@ -229,6 +230,8 @@ function flat_deposit_cmdi_form($form, &$form_state)
 
         // Attach form elements to base form
         $elements = $formBuilder->getForm();
+
+        // assigning form
         $form['template_container']['elements'] = $elements;
 
         // check if everything worked as expected
@@ -240,6 +243,11 @@ function flat_deposit_cmdi_form($form, &$form_state)
     return $form;
 
 }
+
+function flat_deposit_form_flat_deposit_cmdi_form_alter(&$form, &$form_state) {
+    CmdiTemplateManager::alter($form, $form_state);
+}
+
 /*
 function upload_image($form, $form_state) {
 
@@ -373,7 +381,6 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
 
 
     $form_data = $form_state['values']['template_container']['elements'];
-
     $owner = $form_state['values']['owner'];
 
     $creator = new CmdiCreator();
@@ -381,6 +388,7 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     try {
         $creator->setCmdi($templateName, $form_data, $owner);
         $cmdi = $creator->getCmdi();
+
     } catch (CmdiCreatorException $e) {
         form_set_error('error', $e->getMessage());
         return $form;

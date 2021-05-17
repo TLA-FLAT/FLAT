@@ -1,0 +1,56 @@
+.flat-modal-spinner {
+  background-image: url(../Images/loader.gif);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center;
+  height: 200px;
+}
+
+/**
+ * adding .flat-cmdi-template-select and .flat-cmdi-template-delete
+ * to display label and trash icon next to each other
+ */
+.dropdown-menu > li {
+  display: flex;
+}
+.dropdown-menu > li > a.flat-cmdi-template-select {
+  flex: 1;
+}
+
+.dropdown-menu > li > a.flat-cmdi-template-delete {
+
+  width:30px;
+  color: red;
+}
+
+
+/**
+ * this css modifier will style panel actions added to form fieldset,
+ * modifying panel-heading to include actions (see: bootstrap-panel.tpl.php)
+ */
+.panel-heading.panel-heading--actions {
+  display: flex;
+}
+
+/**
+ * aligning panel title to the left
+ */
+.panel-heading--actions .panel-title {
+  flex: 1;
+}
+
+/**
+ * aligning panel actions to the right, and fixing padding between the actions
+ * to prevent newlines in the panel block
+ */
+.panel-actions {
+  display: flex;
+}
+
+.panel-actions .dropdown {
+  flex: 1;
+}
+
+.panel-actions .dropdown button {
+  padding: 0;
+}
