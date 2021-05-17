@@ -1,7 +1,7 @@
 <?php if (is_array($available_templates) && count($available_templates) > 0) : ?>
 <div class="dropdown">
   <button class="btn btn-secondary dropdown-toggle" type="button" id="load-menu-<?php echo $component_id; ?>" data-toggle="dropdown">
-    <i class="fas fa-search"></i>
+    <i class="fas fa-list-alt"></i>
   </button>
   <ul class="dropdown-menu pull-right" aria-labelledby="load-menu-<?php echo $component_id; ?>">
     <?php foreach ($available_templates as $cmdi_template_id => $available_template) : ?>

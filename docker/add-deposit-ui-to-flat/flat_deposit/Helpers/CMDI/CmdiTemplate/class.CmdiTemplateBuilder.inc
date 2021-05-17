@@ -22,7 +22,7 @@ class CmdiTemplateBuilder
                 '#default_value' => '',
                 '#attributes' => [
                     'class' => ['hide'],
-                    'placeholder' => 'Label of new template' . $id,
+                    'placeholder' => 'Label of new preset' . $id,
                 ],
             ],
 
@@ -30,7 +30,7 @@ class CmdiTemplateBuilder
 
                 '#type' => 'button',
                 '#name' => 'save_cmdi_template_' . $id,
-                '#value' => 'Save as template',
+                '#value' => 'Save as preset',
                 '#flat_ignore_button' => true,
                 '#cmdi_tree' => $cmdi_tree,
                 '#component_id' => $component_id,

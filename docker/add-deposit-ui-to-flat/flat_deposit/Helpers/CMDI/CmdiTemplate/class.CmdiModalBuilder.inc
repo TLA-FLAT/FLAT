@@ -55,7 +55,7 @@ class CmdiModalBuilder
 
         'cmdi_id' => $cmdi_id,
         'title' => 'Provided label already exists',
-        'description' => 'The label you provided for this template block already exists. Would you like to override this template?',
+        'description' => 'A preset with this label already exists. Would you like to replace it?',
       ]);
     }
 
@@ -64,7 +64,7 @@ class CmdiModalBuilder
       return theme('flat_modal_success', [
 
         'title' => 'Success',
-        'description' => 'Your cmdi block was successfully saved as a template.',
+        'description' => 'Your preset was successfully saved.',
       ]);
     }
 
@@ -73,7 +73,7 @@ class CmdiModalBuilder
       return theme('flat_modal_confirm_delete', [
 
         'title' => 'Are you sure?',
-        'description' => 'Are you sure you want to delete this template? This action is permanent!',
+        'description' => 'Are you sure you want to delete this preset? This action is permanent!',
         'url' => url('flat_deposit/delete_cmdi_template'),
       ]);
     }
@@ -83,7 +83,7 @@ class CmdiModalBuilder
       return theme('flat_modal_success', [
 
         'title' => 'Success',
-        'description' => 'Your template has successfully been deleted.',
+        'description' => 'Your preset was successfully deleted.',
       ]);
     }
 }
