@@ -3,5 +3,5 @@
   <h4 class="modal-title">Blank label</h4>
 </div>
 <div class="modal-body">
-  <p>To save this block as a template, you need to provide a label.</p>
+  <p>To save this block as a preset, you need to provide a label.</p>
 </div>

@@ -117,7 +117,7 @@ class CmdiTemplateSaver
 
         if (empty($label)) {
 
-            form_set_error('flat_cmdi_templates', 'Please provide a label for the cmdi template block');
+            form_set_error('flat_cmdi_templates', 'Please provide a label for saving this block as a prest.');
             return false;
         }
 
