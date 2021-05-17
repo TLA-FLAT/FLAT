@@ -26,10 +26,10 @@ class Sword
         $ch = curl_init();
 
         $url = $config['url'].'collection';
-        #$url = 'http://localhost/easy-deposit/collection';
+        #$url = 'http://localhost/flat/easy-deposit/collection';
 
         $port = $config['port'];
-        #$port = '8080';
+        #$port = '80';
 
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_PORT, $config['port']);

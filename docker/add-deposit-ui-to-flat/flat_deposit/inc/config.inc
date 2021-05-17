@@ -95,7 +95,7 @@ function flat_deposit_set_ingest_service($updated_values = null)
         # host name of http server
         'host_scheme' => 'http',
         # java home
-        'java_home' => '/usr/lib/jvm/java-8-oracle',
+        'java_home' => '/usr/lib/jvm/java-8-openjdk-amd64',
         # the bagit executable
         'bag_exe' => '/usr/local/bin/bagit-4.9.0/bin/bag',
         #backend directory where bags will be placed
@@ -142,8 +142,8 @@ function flat_deposit_set_ingest_service($updated_values = null)
 function flat_deposit_set_sword($updated_values = null)
 {
     $defaults = array(
-        'url' => 'https://localhost/easy-deposit/',
-        'port' => 8443,
+        'url' => 'http://localhost/flat/easy-deposit/',
+        'port' => 80,
         'user' => 'flat',
         'password' => 'sword',
 

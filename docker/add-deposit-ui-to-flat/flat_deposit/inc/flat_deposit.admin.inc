@@ -441,7 +441,7 @@ function keep_default_password($form, &$form_state)
 
 function flat_deposit_admin_form_save_validate($form, &$form_state)
 {
-    $excluded = []; #fill with values if general get extra values that are not paths to check
+    $excluded = ['namespace']; #fill with values if general get extra values that are not paths to check
     foreach ($form_state['values']['general'] as $key => $path) {
         if (!is_numeric(array_search($key, $excluded))) {
             if (!file_exists($path)) {
