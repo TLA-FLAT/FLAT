@@ -27,6 +27,7 @@
 
         var keycode = (event.keyCode ? event.keyCode : event.which);
         var element = $(this);
+
         if (keycode == '13') {
 
           // enter detected, submit label
