@@ -142,12 +142,14 @@ function flat_deposit_form_flat_collection_update_form_alter(&$form, &$form_stat
 
 function flat_collection_update_form_ajax_handler(&$form, &$form_state)
 {
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueSyncer');
+    CmdiValueSyncer::sync($form, $form_state);
+
     return $form;
 }
 
 function flat_collection_update_form_final_validate($form, &$form_state)
 {
-
     // stop validation if errors have previously occurred
     if (form_get_errors()) {
         return $form;
@@ -221,10 +223,11 @@ function flat_collection_update_form_final_validate($form, &$form_state)
     $form_state['values']['cmdiFile'] = $cmdiFile;
 
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueExtractor');
 
     $templateName = $form_state['values']['select_profile_name'];
-    $form_data = $form_state['values']['template_container']['elements'];
     $owner = $form_state['values']['owner'];
+    $form_data = CmdiValueExtractor::extract($form_state);
 
     $creator = new CmdiCreator();
 

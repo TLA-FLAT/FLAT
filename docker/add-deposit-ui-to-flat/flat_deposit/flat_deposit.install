@@ -913,20 +913,3 @@ function flat_deposit_update_7003() {
         db_create_table('flat_cmdi_templates', $schema['flat_cmdi_templates']);
     }
 }
-
-/**
- * Adding user id field 'uid' to flat_cmdi_templates
- */
-function flat_deposit_update_7004() {
-
-    global $user;
-
-    $schema = drupal_get_schema('flat_cmdi_templates');
-    $field = $schema['fields']['uid'];
-
-    // setting all current rows to currently logged in user
-    $field['initial'] = $user->uid;
-
-    // and adding it
-    db_add_field('flat_cmdi_templates', 'uid', $field);
-}
