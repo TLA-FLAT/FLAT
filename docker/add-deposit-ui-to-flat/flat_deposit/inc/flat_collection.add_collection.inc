@@ -225,6 +225,7 @@ function flat_deposit_form_flat_collection_add_form_alter(&$form, &$form_state) 
 }
 
 function flat_collection_add_form_final_validate($form, &$form_state) {
+
     module_load_include('inc', 'flat_deposit', 'inc/class.FlatTuque');
     module_load_include('inc', 'flat_deposit', 'inc/class.FlatNode');
     // Form Validation setup
@@ -317,10 +318,11 @@ function flat_collection_add_form_final_validate($form, &$form_state) {
             // Generate Cmdi file//
             //*******************//
             module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
+            module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueExtractor');
 
             $templateName = $form_state['selected'];
-            $form_data = $form_state['values']['template_container']['elements'];
             $owner = $form_state['values']['owner'];
+            $form_data = CmdiValueExtractor::extract($form_state);
 
             $creator = new CmdiCreator();
 
@@ -511,8 +513,10 @@ function create_collection_node($label, $uid, $fid)
     node_save($new_node);
 }
 
-
 function flat_collection_add_form_ajax_handler(&$form, &$form_state)
 {
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueSyncer');
+    CmdiValueSyncer::sync($form, $form_state);
+
     return $form;
 }

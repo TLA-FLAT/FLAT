@@ -8,7 +8,7 @@ function flat_deposit_cmdi_form($form, &$form_state)
     if (isset($form_state['parent_nid'])) {
         $parent_nid = $form_state['parent_nid'];
     } else {
-        $node = menu_get_object();
+        $node = node_load($form_state['build_info']['args'][0]->nid);
         $wrapper = entity_metadata_wrapper('node', $node);
         $parent_nid = $wrapper->flat_parent_nid->value();
         $form_state['parent_nid'] = $parent_nid;
@@ -41,6 +41,11 @@ function flat_deposit_cmdi_form($form, &$form_state)
     $available_profiles = FormBuilder::getAvailableTemplates('flat_bundle');
 
     // $available_profiles ['Import'] = 'I want to upload a CMDI metadata file';
+
+
+    // @TODO (metadata template issue): ask paul for this
+    $form['#prefix'] = "<div id='flat_deposit_cmdi_form_wrapper'>";
+    $form['#suffix'] = "</div>";
 
     global $user;
     $form['owner'] = array(
@@ -177,6 +182,12 @@ function flat_deposit_cmdi_form($form, &$form_state)
     $form['Submit'] = array(
         '#type' => 'submit',
         '#value' => t('Submit'),
+        // @TODO: (metadata template issue) ask paul for this
+        '#ajax' => array(
+            'callback' => 'flat_deposit_cmdi_form_ajax_handler',
+            'wrapper' => 'flat_deposit_cmdi_form_wrapper',
+            'effect' => 'fade',
+        ),
         '#validate' => array('flat_deposit_cmdi_form_final_validate'),
     );
 
@@ -248,6 +259,14 @@ function flat_deposit_form_flat_deposit_cmdi_form_alter(&$form, &$form_state) {
     CmdiTemplateManager::alter($form, $form_state);
 }
 
+function flat_deposit_cmdi_form_ajax_handler(&$form, &$form_state) {
+
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueSyncer');
+    CmdiValueSyncer::sync($form, $form_state);
+
+    return $form;
+}
+
 /*
 function upload_image($form, $form_state) {
 
@@ -289,7 +308,8 @@ function upload_cmdi($form, $form_state) {
 function flat_deposit_cmdi_form_final_validate($form, &$form_state)
 {
     // Form Validation setup
-    $node = menu_get_object();
+    $nid = $form_state['build_info']['args'][0]->nid;
+    $node = node_load($nid);
     $wrapper = entity_metadata_wrapper('node', $node);
 
     $title = $node->title;
@@ -378,10 +398,10 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     // Generate Cmdi file//
     //*******************//
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueExtractor');
 
-
-    $form_data = $form_state['values']['template_container']['elements'];
     $owner = $form_state['values']['owner'];
+    $form_data = CmdiValueExtractor::extract($form_state);
 
     $creator = new CmdiCreator();
 
@@ -425,7 +445,13 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
 
 function flat_deposit_cmdi_form_submit($form, &$form_state)
 {
-    $node = menu_get_object();
+    // $node = menu_get_object();
+    // $wrapper = entity_metadata_wrapper('node', $node);
+    ctools_include('ajax');
+    ctools_add_js('ajax-responder');
+
+    $nid = $form_state['build_info']['args'][0]->nid;
+    $node = node_load($nid);
     $wrapper = entity_metadata_wrapper('node', $node);
 
     $new_file = file_save((object)array(
@@ -444,12 +470,17 @@ function flat_deposit_cmdi_form_submit($form, &$form_state)
     $wrapper->flat_cmdi_file->file->set($new_file);
     $wrapper->save();
 
-    $node = menu_get_object();
+    $node = node_load($nid);
     $wrapper = entity_metadata_wrapper('node', $node);
+
     $wrapper->flat_location->set($flat_location_original);
     $wrapper->flat_original_path->set($flat_original_path_original);
     $wrapper->save();
-    $form_state['redirect'] = 'node/' .$node->nid;
 
     drupal_set_message(t('Metadata for bundle %title has been saved', array('%title' => $node->title)));
+
+    $commands[] = ctools_ajax_command_redirect('node/' . $nid);
+
+    print ajax_render($commands);
+    exit;
 }

@@ -23,34 +23,23 @@
   color: red;
 }
 
-
-/**
- * this css modifier will style panel actions added to form fieldset,
- * modifying panel-heading to include actions (see: bootstrap-panel.tpl.php)
- */
-.panel-heading.panel-heading--actions {
-  display: flex;
-}
-
-/**
- * aligning panel title to the left
- */
-.panel-heading--actions .panel-title {
-  flex: 1;
-}
-
 /**
  * aligning panel actions to the right, and fixing padding between the actions
  * to prevent newlines in the panel block
  */
 .panel-actions {
+
   display: flex;
+  float: right;
 }
 
 .panel-actions .dropdown {
+
   flex: 1;
+  margin-left: 5px;
 }
 
-.panel-actions .dropdown button {
+.panel-actions .dropdown button.dropdown-toggle {
   padding: 0;
+  background: none;
 }

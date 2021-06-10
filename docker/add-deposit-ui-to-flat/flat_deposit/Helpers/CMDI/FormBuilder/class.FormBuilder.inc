@@ -17,6 +17,8 @@ function autoload_formbuilder()
     include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateDb.inc';
     include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateData.inc';
     include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateManager.inc';
+    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiValueExtractor.inc';
+    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiValueSyncer.inc';
 
 }
 

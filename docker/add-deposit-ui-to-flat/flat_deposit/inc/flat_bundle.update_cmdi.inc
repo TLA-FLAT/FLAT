@@ -126,7 +126,6 @@ function flat_deposit_form_flat_bundle_update_cmdi_form_alter(&$form, &$form_sta
 
 function flat_bundle_update_form_final_validate($form, &$form_state)
 {
-
     $file = file_save_upload('cmdi', array(
         'file_validate_extensions' => array('cmd cmdi xml')));
 
@@ -247,12 +246,11 @@ function flat_bundle_update_form_final_validate($form, &$form_state)
         //*******************//
         // Generate Cmdi file //
         //*******************//
-
         module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
+        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueExtractor');
 
         $templateName = $form_state['values']['select_profile_name'];
-        $form_data = $form_state['values']['template_container']['elements'];
-
+        $form_data = CmdiValueExtractor::extract($form_state);
         $owner = $form_state['values']['owner'];
 
         $creator = new CmdiCreator();
@@ -361,5 +359,8 @@ function flat_bundle_update_cmdi_form_submit($form, &$form_state)
 
 function flat_bundle_update_form_ajax_handler(&$form, &$form_state)
 {
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueSyncer');
+    CmdiValueSyncer::sync($form, $form_state);
+
     return $form;
 }

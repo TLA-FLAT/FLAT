@@ -57,8 +57,8 @@ class CmdiTemplateLoader
                     static::loadElement($elements, $loadable['cmdi_tree'], $block);
                 }
             }
-        }
 
-        $form_state['loaded_cmdi_templates'] = [];
+            $form_state['loaded_cmdi_templates'] = [];
+        }
     }
 }
