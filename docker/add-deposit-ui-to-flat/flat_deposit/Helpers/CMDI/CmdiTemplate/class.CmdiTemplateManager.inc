@@ -2,32 +2,6 @@
 
 class CmdiTemplateManager
 {
-    public static function alter(&$form, &$form_state)
-    {
-        $form['flat_modal'] = CmdiModalBuilder::build();
-
-        if (!isset($form_state['loaded_cmdi_templates'])) {
-            $form_state['loaded_cmdi_templates'] = [];
-        }
-
-        // saving template blocks
-        $saved = static::save($form_state);
-
-        if (true === $saved) {
-
-            // template was saved, 'load_template' element needs to be rebuilt
-            $cmdi_tree = $form_state['triggering_element']['#cmdi_tree'];
-            $profile = isset($form_state['complete form']['trigger']['select_profile_name']['#value']) ? $form_state['complete form']['trigger']['select_profile_name']['#value'] : (isset($form_state['complete form']['select_profile_name']['#value']) ? $form_state['complete form']['select_profile_name']['#value'] : null);
-            $component_id = $form_state['triggering_element']['#component_id'];
-
-            // rebuild 'load_template' element
-            static::rebuild($form['template_container']['elements'], $cmdi_tree, $profile, $component_id);
-        }
-
-        $saved = static::saveLoaded($form_state);
-        $loaded = static::load($form['template_container']['elements'], $form_state);
-    }
-
     public static function build($component_id, $profile, $cmdi_tree)
     {
         return CmdiTemplateBuilder::build($component_id, $profile, $cmdi_tree);
@@ -36,6 +10,11 @@ class CmdiTemplateManager
     public static function buildActions($profile, $component_id, $cmdi_tree)
     {
         return CmdiActionsBuilder::build($profile, $component_id, $cmdi_tree);
+    }
+
+    public static function modal()
+    {
+        return CmdiModalBuilder::build();
     }
 
     public static function rebuild(&$elements, $cmdi_tree, $profile, $component_id)
@@ -49,8 +28,8 @@ class CmdiTemplateManager
 
     public static function save(&$form_state): bool
     {
-      $saver = new CmdiTemplateSaver($form_state);
-      return $saver->save();
+        $saver = new CmdiTemplateSaver($form_state);
+        return $saver->save();
     }
 
     public static function saveLoaded(&$form_state)
@@ -58,9 +37,9 @@ class CmdiTemplateManager
         return CmdiTemplateSaveLoaded::saveLoaded($form_state);
     }
 
-    public static function load(&$elements, &$form_state)
+    public static function load(&$form_state)
     {
-        return CmdiTemplateLoader::load($elements, $form_state);
+        return CmdiTemplateLoader::load($form_state);
     }
 }
 

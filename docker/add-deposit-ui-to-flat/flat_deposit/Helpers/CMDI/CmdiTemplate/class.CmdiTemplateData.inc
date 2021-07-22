@@ -29,10 +29,6 @@ class CmdiTemplateData
             }
         }
 
-        // if (count($options) > 0) {
-        //     $options = [0 => '- select template -'] + $options;
-        // }
-
         return $options;
     }
 }

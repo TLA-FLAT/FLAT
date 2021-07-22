@@ -334,7 +334,6 @@ class FormBuilder
 
         // Get saved value or set to 0;
 
-
         if ($isAddButton) {
             $pointer = $pointer + 1;
         } else {
