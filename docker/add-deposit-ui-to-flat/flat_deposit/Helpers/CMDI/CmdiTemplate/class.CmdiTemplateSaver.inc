@@ -1,23 +1,45 @@
 <?php
-
 module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
 autoload_cmdicreator();
 
+/**
+ * Saving CMDI fieldset block as a template for reuse
+ *
+ * @author  Ibrahim Abdullah <ibrahim.abdullah@mpi.nl>
+ * @package FLAT CMDI Templates
+ */
 class CmdiTemplateSaver
 {
+    /**
+     * @var array Reference to drupal form_state
+     */
     private $form_state;
-    private $profile;
 
+    /**
+     * Storing form_state reference
+     *
+     * @param array $form_state
+     */
     public function __construct(&$form_state)
     {
         $this->form_state = &$form_state;
     }
 
+    /**
+     * Checking whether save cmdi template ajax action was triggered
+     *
+     * @return bool
+     */
     public function isSubmitted(): bool
     {
         return isset($this->form_state['triggering_element']['#ajax']['callback']) && $this->form_state['triggering_element']['#ajax']['callback'] === 'flat_cmdi_templates_ajax_save_callback';
     }
 
+    /**
+     * Get selected profile
+     *
+     * @return string|null
+     */
     public function getProfile()
     {
         if (isset($this->form_state['complete form']['select_profile_name']['#value'])) {
@@ -36,63 +58,25 @@ class CmdiTemplateSaver
         return $this->form_state['complete form']['trigger']['select_profile_name']['#value'];
     }
 
-    public function getOwner()
+    /**
+     * Get uid
+     *
+     * @return string
+     */
+    public function getUid()
     {
         global $user;
-        return $user->name;
+        return $user->uid;
     }
 
+    /**
+     * Get tree of cmdi block to be saved
+     *
+     * @return array
+     */
     public function getCmdiTree()
     {
         return $this->form_state['triggering_element']['#cmdi_tree'];
-    }
-
-    public function getElements()
-    {
-        return $this->form_state['complete form']['template_container']['elements'];
-    }
-
-    public function getElement()
-    {
-        return array_reduce($this->getCmdiTree(), function($result, $index) {
-
-            if ($result && !is_null($index)) {
-              return (array_key_exists($index, $result)) ? $result[$index] : null;
-            }
-
-        }, $this->getElements());
-    }
-
-    public function generate()
-    {
-        $tree = $this->getCmdiTree();
-
-        // removing final node from tree, because element should be added into the parent
-        array_pop($tree);
-
-        // get specific form element
-        $formElement = $this->getElement();
-
-        if (null === $formElement) {
-
-            // form element could not be found
-            return null;
-        }
-
-        // build element
-        $element = CmdiTemplateBuilder::buildTemplateBlock($formElement, $this->form_state);
-
-        if (null === $element) {
-
-            // element could not be built
-            return null;
-        }
-
-        return json_encode([
-
-            'tree'    => $tree,
-            'element' => $element,
-        ]);
     }
 
     public function getComponentId()
@@ -107,6 +91,45 @@ class CmdiTemplateSaver
         ];
     }
 
+    /**
+     * Generate json encoded string representation of template block to be saved to database
+     *
+     * @return string
+     */
+    public function generate()
+    {
+        // get component id
+        $componentId = $this->getComponentId();
+
+        // tree of the current block in the form
+        $tree = $this->getCmdiTree();
+
+        // get pressedButtons for tree
+        $pressed = drupal_array_get_nested_value($this->form_state['pressedButtons']['template_container']['elements'], $tree);
+
+        // getting form state for tree
+        $state = drupal_array_get_nested_value($this->form_state['input']['template_container']['elements'], $tree);
+
+        // removing all occurences of flat_cmdi_templates from form state for tree
+        $state = drupal_array_unset_recursive($state, 'flat_cmdi_templates');
+
+        // removing the last item from tree, which is the position in the current form
+        // this is necessary so later this template can be loaded in any position
+        array_pop($tree);
+
+        return json_encode([
+
+            'tree' => $tree,
+            'state' => $state,
+            'pressed' => $pressed,
+        ]);
+    }
+
+    /**
+     * Saving template block to db
+     *
+     * @return bool
+     */
     public function save()
     {
         if (false === $this->isSubmitted()) {
@@ -128,15 +151,42 @@ class CmdiTemplateSaver
         }
 
         $block = $this->generate();
-
+        // dfb('saving');
+        // $tree = $this->getCmdiTree();
+        // dfb($tree);
+        // dfb($this->form_state['input']['template_container']['elements']['Projects']['fieldset_05']);
+        // dfb($this->form_state['values']['template_container']['elements']['Projects']['fieldset_05']);
+        // dfb($this->form_state['pressedButtons']['template_container']['elements']['Projects']['fieldset_05']);
         if (null !== $block) {
 
-            global $user;
-
-            CmdiTemplateDb::save($profile, $label, $this->getComponentId(), $block, $user->uid);
+            CmdiTemplateDb::save($profile, $label, $this->getComponentId(), $block, $this->getUid());
             return true;
         }
 
         return false;
+    }
+}
+function drupal_array_unset_recursive($haystack, $unsetKey) {
+
+    if(is_array($haystack)) {
+
+        unset($haystack[$unsetKey]);
+
+        foreach ($haystack as $key => $val) {
+            $haystack[$key] = drupal_array_unset_recursive($val, $unsetKey);
+            unset($haystack[$unsetKey]);
+        }
+    }
+
+    return $haystack;
+}
+
+function generate_pressed_buttons_state($input, &$form_state) {
+
+    $pressed = [];
+    foreach ($input as $key => $val) {
+        if (is_array($val)) {
+            $pressed[$key]['base'] = count($val);
+        }
     }
 }

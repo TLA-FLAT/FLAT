@@ -243,7 +243,7 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
     $has_cmdi = has_cmdi($nid);
     $valid_xml = is_valid_xml($nid, $has_cmdi);
     //$good_name = has_correct_filename($nid); filename here not relevant, only in SIP that is offered to doorkeeper
-    $file_exists = bundle_file_exists($nid);  
+    $file_exists = bundle_file_exists($nid);
     $user_has_permissions = user_has_permissions($nid);
     $max_files_exceeded = bundle_max_files_exceeded($nid);
     $max_file_size_exceeded = bundle_max_file_size_exceeded($nid);
@@ -334,11 +334,11 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
         $errors[] = t('The selected folder contains files that have a disallowed file extension: !invalid_file_extensions_list. See the deposit manual for allowed file types and extensions.', ['!invalid_file_extensions_list' => $invalid_file_extensions_list]);
     }
 
-    if ($has_flat_uri){
+    if (isset($has_flat_uri) && $has_flat_uri){
         $errors[] = t('Your uploaded CMDI file contains references to files that are already in the archive. To use this CMDI file for a different set of files, use the "upload CMDI file as template" option, see deposit manual.');
     }
 
-    if ($files_mismatch) {
+    if (isset($files_mismatch) && $files_mismatch) {
         $files_mismatch_list = implode(", ", $files_mismatch);
         $errors[] = t('There is a mismatch between the files listed in your uploaded CMDI file and the files you provided in the selected folder. Missing file(s): !files_mismatch_list. In case you wish to use this CMDI file for a different set of files, use the "upload CMDI file as template" option, see deposit manual.', ['!files_mismatch_list' => $files_mismatch_list]);
     }
@@ -375,7 +375,7 @@ function flat_bundle_action_form_submit($form, &$form_state)
         case 'Edit metadata for bundle':
             $url = array('node/' . $node->nid . '/edit_cmdi');
             $form_state['redirect'] = $url;
-            break;    
+            break;
 
 
         case 'Validate bundle':

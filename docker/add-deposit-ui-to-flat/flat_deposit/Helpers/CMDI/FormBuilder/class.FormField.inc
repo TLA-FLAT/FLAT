@@ -172,7 +172,8 @@ class FormField
                 $type = 'fieldset';
 
                 $component_id = (string)$this->formTemplateNode['id'];
-                $formField['#flat_cmdi_metadata'] = ['component_id' => $component_id, 'profile' => $this->cmdiProfile, 'tree' => $this->cmdiTree];
+
+                // $formField['#flat_cmdi_metadata'] = ['component_id' => $component_id, 'profile' => $this->cmdiProfile, 'tree' => $this->cmdiTree];
                 $formField['flat_cmdi_templates'] = CmdiTemplateManager::build($component_id, $this->cmdiProfile, $this->cmdiTree);
                 $formField['#panel_actions'] = CmdiTemplateManager::buildActions($this->cmdiProfile, $component_id, $this->cmdiTree);
 
@@ -380,9 +381,9 @@ class FormField
 
         }
 
-        $this->formField['#cmdi_template_fields'] = array_filter(array_keys($this->formField), function($field) {
-            return $field !== 'flat_cmdi_templates' || $field !== '#panel_actions';
-        });
+        // $this->formField['#cmdi_template_fields'] = array_filter(array_keys($this->formField), function($field) {
+        //     return $field !== 'flat_cmdi_templates' || $field !== '#panel_actions';
+        // });
     }
 
 }
