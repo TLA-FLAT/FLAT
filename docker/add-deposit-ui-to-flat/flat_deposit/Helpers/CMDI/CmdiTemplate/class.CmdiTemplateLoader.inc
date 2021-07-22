@@ -54,6 +54,15 @@ class CmdiTemplateLoader
                 $block = static::getLoadedBlock($loadable['id']);
 
                 if (false !== $block) {
+
+                    if (isset($form_state['pressedButtons'])) {
+
+                        # when block gets loaded, we need to reset the pressedButtons state
+                        # back to null to prevent FormBuilder from rebuilding previous form states
+                        $tree = array_merge(['template_container', 'elements'], $loadable['cmdi_tree']);
+                        drupal_array_set_nested_value($form_state['pressedButtons'], $tree, null);
+                    }
+
                     static::loadElement($elements, $loadable['cmdi_tree'], $block);
                 }
             }
