@@ -57,7 +57,8 @@ class Doorkeeper
         curl_setopt($ch, CURLOPT_URL, $config['url'] . $sipId . $query);
         curl_setopt($ch, CURLOPT_PORT, $config['port']);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+	curl_setopt($ch, CURLOPT_USERPWD, "flat:sword");
         curl_setopt($ch, CURLOPT_PUT, 1);
 
         $val = curl_exec($ch);
@@ -93,7 +94,8 @@ class Doorkeeper
         curl_setopt($ch, CURLOPT_URL, $config['url'] . $sipId);
         curl_setopt($ch, CURLOPT_PORT, $config['port']);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+	curl_setopt($ch, CURLOPT_USERPWD, "flat:sword");
 
         $val = curl_exec($ch);
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);

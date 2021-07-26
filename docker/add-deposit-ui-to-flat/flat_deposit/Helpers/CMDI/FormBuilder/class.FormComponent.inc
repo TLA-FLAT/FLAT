@@ -181,8 +181,7 @@ abstract class FormComponent
     {
         $formComponentFields = array_keys($this->formComponent);
         $cmdiTemplateFields  = array_filter($formComponentFields, function($field) {
-            // return $field !== 'add' && $field !== 'remove';
-            return $field !== 'wut';
+            return $field !== 'flat_cmdi_templates' || $field !== '#panel_actions';
         });
 
         $this->formComponent['#cmdi_template_fields'] = $cmdiTemplateFields;
