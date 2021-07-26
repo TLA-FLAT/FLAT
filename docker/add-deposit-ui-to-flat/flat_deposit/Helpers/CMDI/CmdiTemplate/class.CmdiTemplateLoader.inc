@@ -38,6 +38,7 @@ class CmdiTemplateLoader
 
             $copy = $block['element'];
             $metadata = $copy['#flat_cmdi_metadata'];
+
             $copy['flat_cmdi_templates'] = CmdiTemplateManager::build($metadata['component_id'], $metadata['profile'], $metadata['tree']);
             $copy['#panel_actions'] = CmdiTemplateManager::buildActions($metadata['profile'], $metadata['component_id'], $metadata['tree']);
 
@@ -54,6 +55,25 @@ class CmdiTemplateLoader
                 $block = static::getLoadedBlock($loadable['id']);
 
                 if (false !== $block) {
+                    // $tree = array_merge(['template_container', 'elements'], $loadable['cmdi_tree']);
+                    // dfb($loadable);
+                    // dfb($tree);
+                    // dfb($form_state['pressedButtons']);
+                    if (isset($form_state['pressedButtons'])) {
+
+                        # when block gets loaded, we need to reset the pressedButtons state
+                        # back to null to prevent FormBuilder from rebuilding previous form states
+                        $tree = array_merge(['template_container', 'elements'], $loadable['cmdi_tree']);
+                        // dfb($tree);
+                        // dfb($form_state['input']['template_container']);
+                        // dfb($form_state['input']['template_container']['elements']['Contributors']);
+                        // dfb($form_state['values']['template_container']);
+                        // dfb($form_state['values']['template_container']['elements']['Contributors']);
+                        // drupal_array_set_nested_value($form_state['pressedButtons'], $tree, null);
+                        // dfb($form_state['pressedButtons']);
+                        drupal_array_set_nested_value($form_state['pressedButtons'], $tree, []);
+                    }
+
                     static::loadElement($elements, $loadable['cmdi_tree'], $block);
                 }
             }

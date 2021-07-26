@@ -4,6 +4,11 @@ class CmdiTemplateManager
 {
     public static function alter(&$form, &$form_state)
     {
+        // if (isset($form_state['pressedButtons'])) {
+        //     dfb('------- PRESSED BUTTONS ------ ');
+        //     dfb($form_state['pressedButtons']);
+        //     dfb('------- PRESSED BUTTONS ------ ');
+        // }
         $form['flat_modal'] = CmdiModalBuilder::build();
 
         if (!isset($form_state['loaded_cmdi_templates'])) {
@@ -24,7 +29,7 @@ class CmdiTemplateManager
             static::rebuild($form['template_container']['elements'], $cmdi_tree, $profile, $component_id);
         }
 
-        $saved = static::saveLoaded($form_state);
+        $saved  = static::saveLoaded($form_state);
         $loaded = static::load($form['template_container']['elements'], $form_state);
     }
 
