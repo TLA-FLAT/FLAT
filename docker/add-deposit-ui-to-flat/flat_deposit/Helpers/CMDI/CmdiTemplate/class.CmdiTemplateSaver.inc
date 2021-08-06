@@ -105,7 +105,11 @@ class CmdiTemplateSaver
         $tree = $this->getCmdiTree();
 
         // get pressedButtons for tree
-        $pressed = drupal_array_get_nested_value($this->form_state['pressedButtons']['template_container']['elements'], $tree);
+        $pressed = null;
+
+        if (isset($this->form_state['pressedButtons']['template_container']['elements'])) {
+            $pressed = drupal_array_get_nested_value($this->form_state['pressedButtons']['template_container']['elements'], $tree);
+        }
 
         // getting form state for tree
         $state = drupal_array_get_nested_value($this->form_state['input']['template_container']['elements'], $tree);

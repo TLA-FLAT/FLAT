@@ -9,6 +9,9 @@ spl_autoload_register(function ($class_name) {
  */
 abstract class FormComponent
 {
+    // enable/disable dfb (to allow only showing it per component)
+    protected $dfb = false;
+
     /**
      * @var array containing one ore more instances of a drupal form fields
      */
@@ -78,6 +81,8 @@ abstract class FormComponent
      **/
     public function setFormComponent($templateNode, $existingCmdiNode = null, $pressedButtons = null, $buttonId = null, $inheritAll = false)
     {
+        $fieldset_to_debug = false; // 'fieldset_02' // if you want to debug Contributors;
+        $this->dfb = (string)$templateNode['id'] === $fieldset_to_debug;
 
         $componentName = (string)$templateNode['name'];
 
@@ -90,9 +95,18 @@ abstract class FormComponent
             $count = 0;
         }
 
+        if (true === $this->dfb) {
+            dfb('#setFormComponent');
+            dfb(['count_1' => $count]);
+        }
+
         // in case a node is present once in the existing CMDI but it has no value (empty XML element), we do not want to see it if it's optional.
         if (($count == 1) && $defaultValues && (strlen($defaultValues[0]) == 0)) {
             $count = 0;
+        }
+
+        if (true === $this->dfb) {
+            dfb(['count_2' => $count]);
         }
 
 
@@ -106,24 +120,60 @@ abstract class FormComponent
             }
         }
 
+        if (true === $this->dfb) {
+            dfb(['count_3' => $count]);
+        }
+
         // in case of a template node with a skipParentInCMDI attribute, the default value is the value of the existing CMDI node itself
         if (isset($templateNode->attributes()['skipParentInCMDI'])) {
             $defaultValues[] = (string)$existingCmdiNode;
         }
 
-        $numberElements = max($count, $this->minNumberElements);
-
+        // BUGFIX TRY IBO
+        // moved determination of numberElements of no children in existing CMDI
+        // to this position in code before determining max numberElements to always have
+        // the correct number of elements generated
         // in case of an optional composite component which has no children in the existing CMDI, we do not want to see it
         if (((string) $templateNode['type'] == 'Composite') && empty($existingCmdiNode->{$componentName}[0])) {
             $numberElements = 0;
         }
 
+        $numberElements = max($count, $this->minNumberElements);
+
+        if (true === $this->dfb) {
+            dfb(['minNumberElements' => $this->minNumberElements]);
+            dfb(['numberElements' => $numberElements]);
+        }
+
+        /**
+         * BUGFIX TRY IBO
+         * disabling this block at this position and moving it above
+         * because this should be calculated before max of numberElements is determined above here
+         *      // in case of an optional composite component which has no children in the existing CMDI, we do not want to see it
+         *      if (((string) $templateNode['type'] == 'Composite') && empty($existingCmdiNode->{$componentName}[0])) {
+         *          $numberElements = 0;
+         *      }
+         */
+
+        if (true === $this->dfb) {
+            dfb(['numberElements' => $numberElements]);
+        }
+
         $this->numberElements = $numberElements;
 
+        if (true === $this->dfb) {
+            dfb(['numberElements' => $numberElements]);
+        }
+
         $componentButtonPresses = $this->getComponentButtonPresses($templateNode, $pressedButtons);
-
+        if (true === $this->dfb) {
+            dfb(['pressedButtons' => $pressedButtons]);
+            dfb(['componentButtonPresses' => $componentButtonPresses]);
+        }
         $this->adaptNumberElementsByButtonPresses($componentButtonPresses);
-
+        if (true === $this->dfb) {
+            dfb(['numberElements' => $this->numberElements]);
+        }
         $this->setButtonId($buttonId, (string)$templateNode['id']);
 
         $componentElements = array();
@@ -131,7 +181,9 @@ abstract class FormComponent
         if (isset($templateNode->container)) {
             $this->cmdiTree[] = (string)$templateNode['id'];
         }
-
+        if (true === $this->dfb) {
+            dfb(['numberElementsFINAL' => $this->numberElements]);
+        }
         for ($index = 0; $index < $this->numberElements; $index++) {
 
             $defaultValue = isset($defaultValues[$index]) ? $defaultValues[$index] : null;
@@ -211,18 +263,29 @@ abstract class FormComponent
      * @param int $index determines the branch in which button presses will be searched for
      *
      */
-    private function adaptNumberElementsByButtonPresses($pressedButtons, $index = 0)
+    private function adaptNumberElementsByButtonPresses($pressedButtons, $index = 0, $dfb = false)
     {
+        if (true === $this->dfb) {
+
+            dfb('#adaptNumberElementsByButtonPresses');
+            dfb(['pressedButtons' => $pressedButtons, 'index' => $index]);
+        }
 
         if (isset($pressedButtons['base'])) {
 
             $this->setNumberElements($this->getNumberElements() + $pressedButtons['base']);
+            if (true === $this->dfb) {
+                dfb(['number_elements_if_base_exists' => $this->numberElements]);
+            }
         }
 
         if ($this->getNumberElements() < $this->getMinNumberElements()) {
 
             $this->setNumberElements($this->getMinNumberElements());
-        };
+            if (true === $this->dfb) {
+                dfb(['number_elements_if_less_than_min_number_elements' => ['numberElements' => $this->numberElements, 'minNumberElements' => $this->minNumberElements]]);
+            }
+        }
 
     }
 

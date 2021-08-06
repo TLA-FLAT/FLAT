@@ -43,17 +43,20 @@ class CmdiTemplateLoader
             // to create the necessary elements
             drupal_array_set_nested_value($form_state['input']['template_container']['elements'], $target_tree, $block['state']);
 
-            // create pressedButtons form state if it doesn't exist
-            if (!isset($form_state['pressedButtons'])) {
-                $form_state['pressedButtons'] = ['template_container' => ['elements' => []]];
-            }
-            dfb('before');
-            dfb($form_state['pressedButtons']);
-            // create pressedButtons tree in form state pressedButtons for saved block
-            drupal_array_set_nested_value($form_state['pressedButtons']['template_container']['elements'], $target_tree, $block['pressed']);
-            dfb($form_state['pressedButtons']);
-            dfb('after');
+            if (null !== $block['pressed']) {
 
+                // create pressedButtons form state if it doesn't exist
+                if (!isset($form_state['pressedButtons']['template_container']['elements'])) {
+                    $form_state['pressedButtons']['template_container']['elements'] = [];
+                }
+
+                dfb('before');
+                dfb($form_state['pressedButtons']);
+                // create pressedButtons tree in form state pressedButtons for saved block
+                drupal_array_set_nested_value($form_state['pressedButtons']['template_container']['elements'], $target_tree, $block['pressed']);
+                dfb($form_state['pressedButtons']);
+                dfb('after');
+            }
             // if (!isset($form_state['pressedButtons']))
 
             // set pressedButtons for loaded element

@@ -2,8 +2,9 @@
 
 function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object)
 {
+    dfb('t');
 
-    drupal_set_title(t('Update Bundle Metadata'));
+    drupal_set_title(t('Update Bundle Metadatas'));
 
     ctools_add_js('ajax-responder');
 
@@ -83,6 +84,15 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object)
     // Generate profile specific form render array and attach to container
     //********************************************************************
 
+    // load template if selected
+    CmdiTemplateManager::load($form_state);
+
+    // adding modal component to form
+    $form['flat_modal'] = CmdiTemplateManager::modal();
+
+    // adding save cmdi template feature
+    $saved = CmdiTemplateManager::save($form_state);
+
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
     $availableFormTemplates = FormBuilder::getAvailableTemplates('flat_bundle');
 
@@ -121,7 +131,7 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object)
 }
 
 function flat_deposit_form_flat_bundle_update_cmdi_form_alter(&$form, &$form_state) {
-    CmdiTemplateManager::alter($form, $form_state);
+    // CmdiTemplateManager::alter($form, $form_state);
 }
 
 function flat_bundle_update_form_final_validate($form, &$form_state)
@@ -349,8 +359,8 @@ function flat_bundle_update_cmdi_form_submit($form, &$form_state)
 
 function flat_bundle_update_form_ajax_handler(&$form, &$form_state)
 {
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueSyncer');
-    CmdiValueSyncer::sync($form, $form_state);
+    // module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueSyncer');
+    // CmdiValueSyncer::sync($form, $form_state);
 
     return $form;
 }
