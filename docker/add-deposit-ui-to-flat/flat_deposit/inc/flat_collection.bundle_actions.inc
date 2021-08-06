@@ -142,7 +142,7 @@ function flat_collection_bundle_action_form_reopen_validate($form, &$form_state)
 
             $form_state['values']['reopen_bundles'][] = $nid;
             $form_state['values']['reopen_bundle_titles'][] = $title;
-	    
+
         }
 
     }
@@ -184,7 +184,7 @@ function flat_collection_bundle_action_form_validate_validate($form, &$form_stat
 
             $form_state['values']['validate_bundles'][] = $nid;
             $form_state['values']['validate_bundle_titles'][] = $title;
-            
+
         } else {
 
             $form_state['values']['reject_bundles'][] = $nid;
@@ -198,8 +198,8 @@ function flat_collection_bundle_action_form_validate_validate($form, &$form_stat
 
         }
 
-    }    
-    
+    }
+
 }
 
 function flat_collection_bundle_action_form_archive_validate($form, &$form_state){
@@ -230,7 +230,7 @@ function flat_collection_bundle_action_form_archive_validate($form, &$form_state
 }
 
 function implode_comma_and($array) {
-    //helper function to implode an array with commas except for the final value, there it will be 'and'. 
+    //helper function to implode an array with commas except for the final value, there it will be 'and'.
     $last  = array_slice($array, -1);
     $first = implode(', ', array_slice($array, 0, -1));
     $both  = array_filter(array_merge(array($first), $last), 'strlen');

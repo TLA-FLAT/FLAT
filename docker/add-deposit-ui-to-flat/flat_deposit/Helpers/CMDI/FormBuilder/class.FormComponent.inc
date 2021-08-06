@@ -78,7 +78,6 @@ abstract class FormComponent
      **/
     public function setFormComponent($templateNode, $existingCmdiNode = null, $pressedButtons = null, $buttonId = null, $inheritAll = false)
     {
-
         $componentName = (string)$templateNode['name'];
 
         $defaultValues = $this->extractValuesFromNode($existingCmdiNode, $componentName);
@@ -95,7 +94,6 @@ abstract class FormComponent
             $count = 0;
         }
 
-
         // in case node is not present in the existing CMDI, check whether an attribute with the name is present
         $is_attribute = false;
             if ($existingCmdiNode && ($count == 0)) {
@@ -111,19 +109,18 @@ abstract class FormComponent
             $defaultValues[] = (string)$existingCmdiNode;
         }
 
-        $numberElements = max($count, $this->minNumberElements);
-
         // in case of an optional composite component which has no children in the existing CMDI, we do not want to see it
         if (((string) $templateNode['type'] == 'Composite') && empty($existingCmdiNode->{$componentName}[0])) {
             $numberElements = 0;
         }
+
+        $numberElements = max($count, $this->minNumberElements);
 
         $this->numberElements = $numberElements;
 
         $componentButtonPresses = $this->getComponentButtonPresses($templateNode, $pressedButtons);
 
         $this->adaptNumberElementsByButtonPresses($componentButtonPresses);
-
         $this->setButtonId($buttonId, (string)$templateNode['id']);
 
         $componentElements = array();
@@ -179,14 +176,6 @@ abstract class FormComponent
      */
     public function getFormComponent()
     {
-        $formComponentFields = array_keys($this->formComponent);
-        $cmdiTemplateFields  = array_filter($formComponentFields, function($field) {
-            // return $field !== 'add' && $field !== 'remove';
-            return $field !== 'wut';
-        });
-
-        $this->formComponent['#cmdi_template_fields'] = $cmdiTemplateFields;
-
         return $this->formComponent;
     }
 
@@ -215,16 +204,13 @@ abstract class FormComponent
      */
     private function adaptNumberElementsByButtonPresses($pressedButtons, $index = 0)
     {
-
         if (isset($pressedButtons['base'])) {
-
             $this->setNumberElements($this->getNumberElements() + $pressedButtons['base']);
         }
 
         if ($this->getNumberElements() < $this->getMinNumberElements()) {
-
             $this->setNumberElements($this->getMinNumberElements());
-        };
+        }
 
     }
 

@@ -179,6 +179,15 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject)
     // Generate profile specific form render array and attach to container
     //********************************************************************
 
+    // load template if selected
+    CmdiTemplateManager::load($form_state);
+
+    // adding modal component to form
+    $form['flat_modal'] = CmdiTemplateManager::modal();
+
+    // adding save cmdi template feature
+    $saved = CmdiTemplateManager::save($form_state);
+
     if (isset($form_state['selected']) and $form_state['selected'] != 'Import' AND $form_state['selected'] != '') {
 
         $inheritedData = null;
@@ -221,7 +230,7 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject)
 }
 
 function flat_deposit_form_flat_collection_add_form_alter(&$form, &$form_state) {
-    CmdiTemplateManager::alter($form, $form_state);
+    // CmdiTemplateManager::alter($form, $form_state);
 }
 
 function flat_collection_add_form_final_validate($form, &$form_state) {
