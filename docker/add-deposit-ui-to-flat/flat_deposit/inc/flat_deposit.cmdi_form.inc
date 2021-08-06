@@ -1,6 +1,5 @@
 <?php
 
-
 function flat_deposit_cmdi_form($form, &$form_state)
 {
 
@@ -42,8 +41,6 @@ function flat_deposit_cmdi_form($form, &$form_state)
 
     // $available_profiles ['Import'] = 'I want to upload a CMDI metadata file';
 
-
-    // @TODO (metadata template issue): ask paul for this
     $form['#prefix'] = "<div id='flat_deposit_cmdi_form_wrapper'>";
     $form['#suffix'] = "</div>";
 
@@ -195,6 +192,15 @@ function flat_deposit_cmdi_form($form, &$form_state)
     // Generate profile specific form render array and attach to container
     //********************************************************************
 
+    // load template if selected
+    CmdiTemplateManager::load($form_state);
+
+    // adding modal component to form
+    $form['flat_modal'] = CmdiTemplateManager::modal();
+
+    // adding save cmdi template feature
+    CmdiTemplateManager::save($form_state);
+
     if (isset($form_state['selected']) AND !empty($form_state['selected'])) {
         module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
         $check = FormBuilder::checkTemplateItems($form_state['selected']);
@@ -252,11 +258,6 @@ function flat_deposit_cmdi_form($form, &$form_state)
     }
 
     return $form;
-
-}
-
-function flat_deposit_form_flat_deposit_cmdi_form_alter(&$form, &$form_state) {
-    CmdiTemplateManager::alter($form, $form_state);
 }
 
 function flat_deposit_cmdi_form_ajax_handler(&$form, &$form_state) {

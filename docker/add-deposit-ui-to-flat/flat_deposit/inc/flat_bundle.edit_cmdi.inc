@@ -78,8 +78,17 @@ function flat_deposit_bundle_edit_cmdi_form($form, &$form_state)
     //********************************************************************
     // Generate profile specific form render array and attach to container
     //********************************************************************
-
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
+
+    // load template if selected
+    CmdiTemplateManager::load($form_state);
+
+    // adding modal component to form
+    $form['flat_modal'] = CmdiTemplateManager::modal();
+
+    // adding save cmdi template feature
+    $saved = CmdiTemplateManager::save($form_state);
+
     $availableFormTemplates = FormBuilder::getAvailableTemplates('flat_bundle');
 
 
@@ -115,10 +124,6 @@ function flat_deposit_bundle_edit_cmdi_form($form, &$form_state)
         $form['Submit']['#disabled'] = TRUE;
     }
     return $form;
-}
-
-function flat_deposit_form_flat_deposit_bundle_edit_cmdi_form_alter(&$form, &$form_state) {
-    CmdiTemplateManager::alter($form, $form_state);
 }
 
 function flat_bundle_edit_cmdi_form_ajax_handler(&$form, &$form_state)
