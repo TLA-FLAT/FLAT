@@ -83,6 +83,7 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object)
     //********************************************************************
     // Generate profile specific form render array and attach to container
     //********************************************************************
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
 
     // load template if selected
     CmdiTemplateManager::load($form_state);
@@ -93,12 +94,10 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object)
     // adding save cmdi template feature
     $saved = CmdiTemplateManager::save($form_state);
 
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
     $availableFormTemplates = FormBuilder::getAvailableTemplates('flat_bundle');
 
     if (array_key_exists($profile, $availableFormTemplates)) {
         // Load form builder app
-        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
         $formBuilder = new FormBuilder($form_state['build_info']['args'][0]);
 
         // count button presses per field

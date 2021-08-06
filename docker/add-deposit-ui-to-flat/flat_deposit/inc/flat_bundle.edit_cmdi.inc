@@ -78,6 +78,7 @@ function flat_deposit_bundle_edit_cmdi_form($form, &$form_state)
     //********************************************************************
     // Generate profile specific form render array and attach to container
     //********************************************************************
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
 
     // load template if selected
     CmdiTemplateManager::load($form_state);
@@ -88,7 +89,6 @@ function flat_deposit_bundle_edit_cmdi_form($form, &$form_state)
     // adding save cmdi template feature
     $saved = CmdiTemplateManager::save($form_state);
 
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
     $availableFormTemplates = FormBuilder::getAvailableTemplates('flat_bundle');
 
 

@@ -100,6 +100,7 @@ function flat_collection_update_form($form, &$form_state, $fedora_object)
     //********************************************************************
     // Generate profile specific form render array and attach to container
     //********************************************************************
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
 
     // load template if selected
     CmdiTemplateManager::load($form_state);
@@ -110,7 +111,6 @@ function flat_collection_update_form($form, &$form_state, $fedora_object)
     // adding save cmdi template feature
     $saved = CmdiTemplateManager::save($form_state);
 
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
     $availableFormTemplates = FormBuilder::getAvailableTemplates('flat_collection');
 
     if (array_key_exists($profile, $availableFormTemplates)) {
