@@ -235,7 +235,7 @@ RUN sed -i "s|base64_encode(\$uri\['user'\]|base64_encode(rawurldecode(\$uri['us
 
 RUN mkdir /tmp/tuque &&\
 	cd /tmp/tuque &&\
-	wget "https://github.com/islandora/tuque/archive/1.13.zip" &&\
+	wget "https://github.com/Islandora/tuque/archive/refs/tags/1.13.zip" &&\
 	unzip 1.13.zip &&\
 	mv /tmp/tuque/tuque-1.13 /var/www/html/$FLAT_NAME/sites/all/libraries/tuque &&\
 	sed -i 's|public $verifyPeer = TRUE;|public $verifyPeer = FALSE;|g' /var/www/html/$FLAT_NAME/sites/all/libraries/tuque/HttpConnection.php
@@ -244,16 +244,16 @@ RUN mkdir -p /tmp/islandora &&\
 	mkdir -p /var/www/html/$FLAT_NAME/sites/all/modules/contrib &&\
 	mkdir -p /var/www/html/$FLAT_NAME/sites/all/themes &&\
 	cd /tmp/islandora &&\
-	wget "https://github.com/Islandora/islandora/archive/7.x-1.13.tar.gz" &&\
+	wget "https://github.com/Islandora/islandora/archive/refs/tags/7.x-1.13.tar.gz" &&\
 	tar -xf 7.x-1.13.tar.gz -C /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
-	wget -O islandora_solution_pack_collection-7.x-1.13.zip "https://github.com/islandora/islandora_solution_pack_collection/archive/7.x-1.13.zip" &&\
+	wget -O islandora_solution_pack_collection-7.x-1.13.zip "https://github.com/islandora/islandora_solution_pack_collection/archive/refs/tags/7.x-1.13.zip" &&\
 	unzip islandora_solution_pack_collection-7.x-1.13.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
-	wget -O islandora_xacml_editor-7.x-1.13.zip "https://github.com/Islandora/islandora_xacml_editor/archive/7.x-1.13.zip" &&\
+	wget -O islandora_xacml_editor-7.x-1.13.zip "https://github.com/Islandora/islandora_xacml_editor/archive/refs/tags/7.x-1.13.zip" &&\
 	unzip islandora_xacml_editor-7.x-1.13.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
 	cd /tmp/islandora &&\
-	wget -O islandora_solution_pack_compound-7.x-1.13.zip "https://github.com/Islandora/islandora_solution_pack_compound/archive/7.x-1.13.zip" &&\
+	wget -O islandora_solution_pack_compound-7.x-1.13.zip "https://github.com/Islandora/islandora_solution_pack_compound/archive/refs/tags/7.x-1.13.zip" &&\
 	unzip islandora_solution_pack_compound-7.x-1.13.zip -d /var/www/html/$FLAT_NAME/sites/all/modules/contrib/ &&\
     sed -i 's|function islandora_compound_object_islandora_compoundCModel_islandora_view_object|function islandora_compound_object_islandora_compoundCModel_islandora_view_object_DISABLED_BY_FLAT|g' /var/www/html/$FLAT_NAME/sites/all/modules/contrib/islandora_solution_pack_compound-7.x-1.13/islandora_compound_object.module
 
