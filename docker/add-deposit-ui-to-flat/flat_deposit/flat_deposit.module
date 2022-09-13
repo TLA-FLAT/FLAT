@@ -835,6 +835,9 @@ function flat_deposit_theme()
         'flat_bundle_cmdi_resource_table' => array(
             'render element' => 'form',
         ),
+        'flat_bundle_manage_resources' => array(
+            'render element' => 'form',
+        ),
 
         'flat_modal' => [
             'template' => 'theme/flat-modal',
@@ -997,6 +1000,38 @@ function theme_flat_bundle_cmdi_resource_table($variables)
         $row[] = drupal_render($form[$index]['label']);
 
         $rows[] = $row;
+    }
+
+    // Return the themed table:
+    return theme('table', array('header' => $header, 'rows' => $rows));
+}
+
+/**
+ *
+ */
+function theme_flat_bundle_manage_resources($variables)
+{
+    // Note: $form will be $form['table_container'] from your
+    // form definition, as that is the element that #theme was
+    // applied to.
+    $form = $variables['form'];
+
+    // Define our $header and $rows variables
+    // $header = array(t('Resource ID'), t('File name'), t('Select'));.
+    $header = [
+        ['data' => t('Mark for encryption'), 'class' => 'resource-table-select'],
+        ['data' => t('File name'), 'class' => 'resource-table-filename'],
+    ];
+
+    $rows = [];
+
+    foreach (element_children($form) as $index) {
+
+        $rows[] = [
+
+            drupal_render($form[$index]['encrypt']),
+            drupal_render($form[$index]['filename']),
+        ];
     }
 
     // Return the themed table:
@@ -1209,6 +1244,8 @@ function flat_deposit_form_flat_bundle_node_form_alter(&$form, &$form_state, $fo
     hide($form['flat_original_path']);
     hide($form['flat_parent_title']);
     hide($form['flat_deleted_resources']);
+    hide($form['flat_encrypted_resources']);
+    hide($form['flat_encrypted_auth_endpoint']);
     hide($form['actions']['preview']);
 
     $form['flat_type']['und']['#disabled'] = true;
@@ -2190,38 +2227,19 @@ function flat_deposit_block_view($delta = '')
 
         case 'node_file_listing':
 
+            module_load_include('inc', 'flat_deposit', 'inc/flat_bundle.manage_resources_form');
+
             $node = menu_get_object();
             $node_wrapper = entity_metadata_wrapper('node', $node);
 
-            $location = $node_wrapper->flat_location->value();
             $orig_location = $node_wrapper->flat_original_path->value();
-
-            $dirname = basename($location);
             $orig_dirname = basename($orig_location);
-
-            $file_found = [];
-            if (file_exists($location)) {
-                // We ignore hidden files (starting with a dot). These will not be added to the bundle later on either.
-                $file_found = array_diff(preg_grep('/^([^.])/', scandir($location)), array('..', '.'));
-            }
-
-            if (empty($file_found)) {
-                $file_found[] = 'Folder does not contain any (accessible) files';
-            }
-
-            $rows = array();
-
-            foreach ($file_found as $value) {
-
-                $rows[] = array($value);
-            }
-
-            $content = theme('table', array('rows' => $rows));
 
             $block = array(
                 'subject' => t("Files in folder \"@dirname\" to be added to this bundle:", array('@dirname' => $orig_dirname)),
-                'content' => $content,
+                'content' => drupal_get_form('flat_bundle_manage_resources_form', ['node' => $node]),
             );
+
             break;
 
         case 'cmdi_resource_actions':

@@ -1,0 +1,280 @@
+<?php
+
+define('FLAT_AUTH_THRESHOLD_EXPIRE', 60 * 5);
+define('FLAT_AUTH_THRESHOLD_DELETE', 60 * 10);
+define('FLAT_AUTH_MAX_ERROR_COUNT', 10);
+define('FLAT_AUTH_MAX_USAGE_COUNT', 10);
+
+function flat_auth_menu() {
+
+  $items = [];
+  $items['flat_auth'] = [
+
+    'type' => MENU_LOCAL_TASK,
+    'title' => 'Flat Auth - Check Token',
+    'description' => 'Flat Auth - Check Token',
+    'page callback' => 'flat_auth_check_token',
+    'access callback' => true,
+  ];
+
+  $items['flat_auth/create'] = [
+
+    'type' => MENU_LOCAL_TASK,
+    'title' => 'Flat Auth - Create Token',
+    'description' => 'Flat Auth - Create Token',
+    'page callback' => 'flat_auth_create_token',
+    'access callback' => true,
+  ];
+
+  $items['flat_auth/renew'] = [
+
+    'type' => MENU_LOCAL_TASK,
+    'title' => 'Flat Auth - Renew Token',
+    'description' => 'Flat Auth - Renew Token',
+    'page callback' => 'flat_auth_renew_token',
+    'access callback' => true,
+  ];
+
+  $items['flat_auth/download'] = [
+
+    'type' => MENU_LOCAL_TASK,
+    'title' => 'Flat Auth - Download file',
+    'description' => 'Flat Auth - Downloading file test function',
+    'page callback' => 'flat_auth_download_file',
+    'access callback' => true,
+  ];
+
+  $items['flat_auth/stream'] = [
+
+    'type' => MENU_LOCAL_TASK,
+    'title' => 'Flat Auth - Stream file',
+    'description' => 'Flat Auth - Streaming file test function',
+    'page callback' => 'flat_auth_stream_file',
+    'access callback' => true,
+  ];
+
+  $items['admin/config/flat_deposit/flat_auth'] = [
+
+    'title' => 'FLAT Auth Configuration',
+    'description' => 'FLAT Auth Configuration',
+    'access arguments' => array('admin deposit module'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('flat_auth_admin_form'),
+    'file' => 'includes/admin.inc',
+    'weight' => 999,
+  ];
+
+  return $items;
+}
+
+function flat_auth_authtoken_type_info() {
+
+    return [
+
+        'flat_auth' => [
+
+            'entity type' => 'user',
+            'label' => 'FLAT Auth',
+            'settings' => [
+
+                'threshold expire' => variable_get('flat_auth_expiration_time', FLAT_AUTH_THRESHOLD_EXPIRE),
+                'threshold delete' => variable_get('flat_auth_deletion_time', FLAT_AUTH_THRESHOLD_DELETE),
+                'max error count'  => variable_get('flat_auth_max_error_count', FLAT_AUTH_MAX_ERROR_COUNT),
+                'max usage count'  => variable_get('flat_auth_max_usage_count', FLAT_AUTH_MAX_USAGE_COUNT),
+            ],
+            'generate token callback' => 'flat_auth_generate_token',
+        ],
+    ];
+}
+
+/**
+ * Generate an unique token
+ *
+ * @return string
+ */
+function flat_auth_generate_token() {
+    return drupal_strtoupper(bin2hex(drupal_random_bytes(16)));
+}
+
+/**
+ * Get the bearer token
+ */
+function flat_auth_get_bearer_token() {
+
+    $bearer_token = NULL;
+
+    if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+        $bearer_token = str_replace('Bearer ', '', $_SERVER['HTTP_AUTHORIZATION']);
+    } elseif (isset($_SERVER['HTTP_X_AUTHORIZATION'])) {
+        $bearer_token = str_replace('Bearer ', '', $_SERVER['HTTP_X_AUTHORIZATION']);
+    } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+        $bearer_token = str_replace('Bearer ', '', $_SERVER['REDIRECT_HTTP_AUTHORIZATION']);
+    }
+
+    return $bearer_token;
+}
+
+function flat_auth_check_token() {
+
+    $token = flat_auth_get_bearer_token();
+    $authtoken = authtoken_load($token);
+
+    if ($authtoken) {
+
+        if (authtoken_authenticate($authtoken->token(), [$authtoken->type()])) {
+
+            return drupal_json_output([
+
+                'type' => 'success',
+                'expiration_time' => (int)variable_get('flat_auth_expiration_time', FLAT_AUTH_THRESHOLD_EXPIRE),
+                'deletion_time' => (int)variable_get('flat_auth_deletion_time', FLAT_AUTH_THRESHOLD_DELETE),
+            ]);
+        }
+    }
+
+    return drupal_json_output([
+
+        'type' => 'error',
+        'message' => 'Invalid token2',
+    ]);
+}
+
+function flat_auth_get_token() {
+
+    global $user;
+    return flat_auth_get_token_for_user($user);
+}
+
+function flat_auth_get_token_for_user($user) {
+
+    $entity = $user;
+
+    $authtoken = authtoken_assign('flat_auth', $user, $entity);
+    return $authtoken->token();
+}
+
+function flat_auth_renew_token() {
+
+    $token = flat_auth_get_bearer_token();
+    $authtoken = authtoken_load($token);
+
+    if ($authtoken) {
+
+        if (authtoken_authenticate($authtoken->token(), [$authtoken->type()])) {
+
+            if ($user = user_load($authtoken->uid())) {
+
+                // renew in db
+                flat_auth_renew_token_db($authtoken);
+
+                $token = flat_auth_get_token_for_user($user);
+                drupal_add_http_header('Authorization', 'Bearer ' . $token);
+
+                return drupal_json_output([
+
+                    'type' => 'success',
+                    'expiration_time' => (int)variable_get('flat_auth_expiration_time', FLAT_AUTH_THRESHOLD_EXPIRE),
+                    'deletion_time' => (int)variable_get('flat_auth_deletion_time', FLAT_AUTH_THRESHOLD_DELETE),
+                ]);
+            }
+        }
+    }
+
+    return drupal_json_output([
+
+        'type' => 'error',
+        'message' => 'Invalid token',
+    ]);
+}
+
+function flat_auth_create_token() {
+
+    return drupal_json_output([
+        'token' => flat_auth_get_token(),
+    ]);
+}
+
+function flat_auth_download_file($pid, $dsid) {
+
+    flat_auth_serve($pid, $dsid, true);
+    exit;
+    // require_once __DIR__ . '/vendor/autoload.php';
+
+    // $params['download'] = '1';
+
+    // return $this->getClient()
+    //             ->request('GET', '/tla-decryption/render/' . $pid . '/' . $dsid . '/' . $appToken, [
+    //               'query' => $params,
+    //               'version' => 1.0,
+    //               'read_timeout' => 6000,
+    //             ]);
+
+    // exit;
+}
+
+function flat_auth_stream_file($pid, $dsid) {
+
+    flat_auth_serve($pid, $dsid, false);
+    exit;
+}
+
+function flat_auth_serve($pid, $dsid, $download = false) {
+
+    global $base_url;
+    $appToken = base64_encode($base_url . '/flat_auth|apptoken|' . flat_auth_get_token());
+
+    $url = $base_url . '/tla-decryption/render/' . $pid . '/' . $dsid . '/' . $appToken . '?download=' . ($download ? '1' : '0');
+    header('Location: ' . $url);
+    exit;
+    // $size = get_size($url);
+
+    // header('Accept-Ranges: bytes');
+    // header('Content-Disposition: attachment; filename="test.mp4"');
+    // header('Content-Length: '. $size);
+    // header('Content-Type: video/mp4');
+
+    // readfile($url);
+    // exit;
+}
+
+function get_size($url) {
+
+    $my_ch = curl_init();
+    curl_setopt($my_ch, CURLOPT_URL,$url);
+    curl_setopt($my_ch, CURLOPT_HEADER, true);
+    curl_setopt($my_ch, CURLOPT_NOBODY, true);
+    curl_setopt($my_ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($my_ch, CURLOPT_TIMEOUT, 10);
+    $r = curl_exec($my_ch);
+
+    foreach(explode("\n", $r) as $header) {
+
+        if(strpos($header, 'Content-Length:') === 0) {
+            return trim(substr($header,16));
+        }
+    }
+
+    return '';
+}
+
+/**
+ * renew auth token
+ *
+ * @param Authtoken $authtoken
+ *   The authentication token.
+ * @return bool
+ *   Whether the operation was successful.
+ */
+function flat_auth_renew_token_db(Authtoken $authtoken) {
+
+    $query = db_update('authtoken')
+      ->fields(array(
+        'updated' => REQUEST_TIME,
+      ))
+      ->expression('created', 'NOW()')
+      ->expression('updated', 'NOW()');
+
+    $query->condition('token', $authtoken->token());
+
+    return ($query->execute() > 0);
+  }
