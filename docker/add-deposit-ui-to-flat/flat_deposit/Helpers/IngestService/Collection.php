@@ -189,4 +189,5 @@ class Collection extends SIP
 
 
     function customRollback($message){}
+    function generateFlatEncryptionMetadata() {}
 }

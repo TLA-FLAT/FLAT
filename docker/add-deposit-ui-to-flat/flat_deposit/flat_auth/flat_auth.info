@@ -1,0 +1,7 @@
+name = FLAT Auth
+package = FLAT
+description = FLAT Auth
+core = 7.x
+version = 7.x-0.1-dev
+dependencies[] = flat_deposit
+dependencies[] = authtoken

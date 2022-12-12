@@ -467,6 +467,7 @@ function flat_deposit_cmdi_form_submit($form, &$form_state)
     // for some unknown reason flat_location and flat_original_path are messed up by attaching the newly created cmdi file, so we need to restore it
     $flat_location_original = $wrapper->flat_location->value();
     $flat_original_path_original = $wrapper->flat_original_path->value();
+    $flat_encrypted_auth_endpoint = $wrapper->flat_encrypted_auth_endpoint->value();
 
     $wrapper->flat_cmdi_file->file->set($new_file);
     $wrapper->save();
@@ -476,6 +477,7 @@ function flat_deposit_cmdi_form_submit($form, &$form_state)
 
     $wrapper->flat_location->set($flat_location_original);
     $wrapper->flat_original_path->set($flat_original_path_original);
+    $wrapper->flat_encrypted_auth_endpoint->set($flat_encrypted_auth_endpoint);
     $wrapper->save();
 
     drupal_set_message(t('Metadata for bundle %title has been saved', array('%title' => $node->title)));

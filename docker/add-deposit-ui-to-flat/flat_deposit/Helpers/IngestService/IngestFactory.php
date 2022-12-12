@@ -38,6 +38,7 @@ class IngestFactory
             $this->processLog['addResourcesToCmdi'] = $this->factorySIP->addResourcesToCmdi();
             //throw new IngestServiceException('Debug');
             $this->processLog['generatePolicy'] = $this->factorySIP->generatePolicy();
+            $this->processLog['generateFlatEncryptionMetadata'] = $this->factorySIP->generateFlatEncryptionMetadata();
             $this->processLog['createBag'] = $this->factorySIP->createBag();
             $this->processLog['doSword'] = $this->factorySIP->doSword();
             $this->processLog['doDoorkeeper'] = $this->factorySIP->doDoorkeeper();

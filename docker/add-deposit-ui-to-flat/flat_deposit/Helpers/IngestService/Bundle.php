@@ -418,5 +418,49 @@ class Bundle extends SIP
 
     }
 
+    function generateFlatEncryptionMetadata()
+    {
+        $this->logging('Starting generateFlatEncryptionMetadata');
 
+        // normalizing currently saved metadata, null, empty str will be marked as empty array
+        $marked    = $this->wrapper->flat_encrypted_resources->value();
+        $marked    = empty($marked) ? [] : explode(',', $marked);
+
+        $flat_auth_endpoint = $this->wrapper->flat_encrypted_auth_endpoint->value();
+        $this->logging('FLAT ENCRYPTED AUTH URL: ' . $flat_auth_endpoint);
+
+        $user      = $this->getUserResourceForUserName($this->owner);
+
+        $app_token = base64_encode($flat_auth_endpoint . '|apptoken|' . flat_auth_get_token_for_user($user));
+
+        $cmdi_dir  = dirname($this->cmdiTarget);
+        $write     = file_put_contents($cmdi_dir . '/flat_encryption.json', json_encode([
+
+            'marked' => $marked,
+            'token' => $app_token,
+        ]));
+
+        $this->logging('Files marked for encryption: ' . var_export($marked, true));
+        $this->logging('FLAT ENCRYPTED AUTH URL: ' . $flat_auth_endpoint);
+
+        if (!$write) {
+            throw new IngestServiceException('Unable to write flat encryption metadata to target location (' . $cmdi_dir . ')');
+        }
+
+        $this->logging('Finishing generateFlatEncryptionMetadata');
+        return TRUE;
+    }
+
+    /**
+     * This method will fetch the user object, based on his username credential.
+     * If it doesn't find a user, it will default to null
+     *
+     * @param string $username
+     *
+     * @return stdClass|null
+     */
+    private function getUserResourceForUserName($username)
+    {
+        return user_load_by_name($username);
+    }
 }

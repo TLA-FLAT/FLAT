@@ -913,3 +913,110 @@ function flat_deposit_update_7003() {
         db_create_table('flat_cmdi_templates', $schema['flat_cmdi_templates']);
     }
 }
+
+/**
+ * Adding encryption tagging
+ */
+function flat_deposit_update_7005() {
+
+    $fields = [];
+
+    $fields['flat_encrypted_resources'] = [
+        'field_name' => 'flat_encrypted_resources',
+        'type' => 'text',
+        'cardinality' => 1,
+        'settings' => [
+            'max_length' => 5000
+        ],
+    ];
+
+    foreach ($fields as $field) {
+        field_create_field($field);
+    }
+
+    $instances = [];
+
+    $instances['flat_encrypted_resources'] = [
+
+        'field_name' => 'flat_encrypted_resources',
+        'bundle' => 'flat_bundle',
+        'label' => 'Encrypted Resources',
+        'description' => 'Resources of bundle that need to be encrypted',
+        'widget' => [
+            'type' => 'text_textfield',
+        ],
+        'required' => false,
+        'settings' => [
+            'text_processing' => 0,
+        ],
+        'display' => [
+            'default' => [
+                'type' => 'hidden',
+                'label' => 'inline',
+            ],
+            'error' => [
+                'label' => 'inline',
+            ],
+        ],
+    ];
+
+    foreach ($instances as $instance) {
+
+        $instance['entity_type'] = 'node';
+        field_create_instance($instance);
+    }
+}
+
+
+/**
+ * Adding encryption auth endpoint
+ */
+function flat_deposit_update_7006() {
+
+    $fields = [];
+
+    $fields['flat_encrypted_auth_endpoint'] = [
+        'field_name' => 'flat_encrypted_auth_endpoint',
+        'type' => 'text',
+        'cardinality' => 1,
+        'settings' => [
+            'max_length' => 5000
+        ],
+    ];
+
+    foreach ($fields as $field) {
+        field_create_field($field);
+    }
+
+    $instances = [];
+
+    $instances['flat_encrypted_auth_endpoint'] = [
+
+        'field_name' => 'flat_encrypted_auth_endpoint',
+        'bundle' => 'flat_bundle',
+        'label' => 'Auth Url For Encrypted Resources Access',
+        'description' => 'Auth Url For Encrypted Resources Access',
+        'widget' => [
+            'type' => 'text_textfield',
+        ],
+        'required' => false,
+        'settings' => [
+            'text_processing' => 0,
+        ],
+        'display' => [
+            'default' => [
+                'type' => 'hidden',
+                'label' => 'inline',
+            ],
+            'error' => [
+                'label' => 'inline',
+            ],
+        ],
+    ];
+
+    foreach ($instances as $instance) {
+
+        $instance['entity_type'] = 'node';
+        field_create_instance($instance);
+    }
+}
