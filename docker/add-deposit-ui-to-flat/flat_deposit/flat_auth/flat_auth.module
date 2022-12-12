@@ -123,20 +123,24 @@ function flat_auth_check_token() {
 
         if (authtoken_authenticate($authtoken->token(), [$authtoken->type()])) {
 
-            return drupal_json_output([
+            echo drupal_json_output([
 
                 'type' => 'success',
                 'expiration_time' => (int)variable_get('flat_auth_expiration_time', FLAT_AUTH_THRESHOLD_EXPIRE),
                 'deletion_time' => (int)variable_get('flat_auth_deletion_time', FLAT_AUTH_THRESHOLD_DELETE),
             ]);
+
+            exit;
         }
     }
 
-    return drupal_json_output([
+    echo drupal_json_output([
 
         'type' => 'error',
         'message' => 'Invalid token2',
     ]);
+
+    exit;
 }
 
 function flat_auth_get_token() {
@@ -170,46 +174,40 @@ function flat_auth_renew_token() {
                 $token = flat_auth_get_token_for_user($user);
                 drupal_add_http_header('Authorization', 'Bearer ' . $token);
 
-                return drupal_json_output([
+                echo drupal_json_output([
 
                     'type' => 'success',
                     'expiration_time' => (int)variable_get('flat_auth_expiration_time', FLAT_AUTH_THRESHOLD_EXPIRE),
                     'deletion_time' => (int)variable_get('flat_auth_deletion_time', FLAT_AUTH_THRESHOLD_DELETE),
                 ]);
+
+                exit;
             }
         }
     }
 
-    return drupal_json_output([
+    echo drupal_json_output([
 
         'type' => 'error',
         'message' => 'Invalid token',
     ]);
+
+    exit;
 }
 
 function flat_auth_create_token() {
 
-    return drupal_json_output([
+    echo drupal_json_output([
         'token' => flat_auth_get_token(),
     ]);
+
+    exit;
 }
 
 function flat_auth_download_file($pid, $dsid) {
 
     flat_auth_serve($pid, $dsid, true);
     exit;
-    // require_once __DIR__ . '/vendor/autoload.php';
-
-    // $params['download'] = '1';
-
-    // return $this->getClient()
-    //             ->request('GET', '/tla-decryption/render/' . $pid . '/' . $dsid . '/' . $appToken, [
-    //               'query' => $params,
-    //               'version' => 1.0,
-    //               'read_timeout' => 6000,
-    //             ]);
-
-    // exit;
 }
 
 function flat_auth_stream_file($pid, $dsid) {
@@ -226,35 +224,6 @@ function flat_auth_serve($pid, $dsid, $download = false) {
     $url = $base_url . '/tla-decryption/render/' . $pid . '/' . $dsid . '/' . $appToken . '?download=' . ($download ? '1' : '0');
     header('Location: ' . $url);
     exit;
-    // $size = get_size($url);
-
-    // header('Accept-Ranges: bytes');
-    // header('Content-Disposition: attachment; filename="test.mp4"');
-    // header('Content-Length: '. $size);
-    // header('Content-Type: video/mp4');
-
-    // readfile($url);
-    // exit;
-}
-
-function get_size($url) {
-
-    $my_ch = curl_init();
-    curl_setopt($my_ch, CURLOPT_URL,$url);
-    curl_setopt($my_ch, CURLOPT_HEADER, true);
-    curl_setopt($my_ch, CURLOPT_NOBODY, true);
-    curl_setopt($my_ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($my_ch, CURLOPT_TIMEOUT, 10);
-    $r = curl_exec($my_ch);
-
-    foreach(explode("\n", $r) as $header) {
-
-        if(strpos($header, 'Content-Length:') === 0) {
-            return trim(substr($header,16));
-        }
-    }
-
-    return '';
 }
 
 /**
